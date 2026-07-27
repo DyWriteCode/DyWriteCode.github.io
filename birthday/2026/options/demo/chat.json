@@ -1,4 +1,5 @@
 [
+    { "msgs": ["事先说明，github直连有一点慢，图片与视频加载较慢"], "msgInputSpeed": 80 },
     { "msgs": ["普通消息，有输入动画"], "msgInputSpeed": 80 },
     { "msgs": ["普通消息支持回退，比如下面这条"], "msgInputSpeed": 80 },
     {
