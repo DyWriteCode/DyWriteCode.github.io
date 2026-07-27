@@ -29,7 +29,7 @@ body {
 
 .hero-section {
     align-items: flex-start;
-    background-image: #ffffff;
+    background-color: #F5F2EB;
     display: flex;
     min-height: 100%;
     justify-content: center;
