@@ -28,13 +28,16 @@ body {
 }
 
 .hero-section {
-    background-color: #F5F2EB;
     align-items: flex-start;
     display: flex;
     min-height: 100%;
     justify-content: center;
     padding: var(--spacing-xxl) var(--spacing-l);
     padding: 100px 0 0 0;
+}
+
+.background_color {
+    background-color: #F5F2EB;
 }
 
 .card-grid {
