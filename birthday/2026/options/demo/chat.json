@@ -36,7 +36,7 @@
     { "msgs": ["消息支持输入图片"], "msgInputSpeed": 80 },
     { "msgs": ["<img src='options/demo/imgs/test.png'/>"] },
     { "msgs": ["消息支持输入VLog"], "msgInputSpeed": 80 },
-    { "msgs": ["看看我为你做的VLog"], "msgInputSpeed": 80 },
+    { "msgs": ["看看我上网摘的VLog"], "msgInputSpeed": 80 },
     {
         "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
         "triggerNextAction": { "type": "componentClose" }
@@ -93,7 +93,7 @@
             }
         }
     },
-    { "msgs": ["我是在想打游戏", "我是在想你呢"], "msgInputSpeed": 80 },
+    { "msgs": ["我是在想打游戏", "我是在想自己呢"], "msgInputSpeed": 80 },
     { "msgs": ["看看这个视频"], "msgInputSpeed": 80 },
     {
         "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
