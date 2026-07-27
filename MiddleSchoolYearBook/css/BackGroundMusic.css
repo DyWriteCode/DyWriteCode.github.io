@@ -1,0 +1,38 @@
+/*BackGround Music*/
+#music{
+    width: 14.49vw;
+    height: 14.49vw;
+    position: fixed;
+    top:2.42vw;
+    left:80%;
+    z-index: 9;
+}
+
+.musicIg{
+    width: 10.63vw;
+    height: 10.63vw;
+    position: absolute;
+    top:1.93vw;
+    left: 1.93vw;
+    cursor: pointer;
+}
+
+.musicImg{
+    width: 14.49vw;
+    height: 14.49vw;
+}
+
+.musicIg {
+    animation: turn 6s infinite linear;
+}
+
+@keyframes turn {
+    0%
+    {
+        transform: rotate(0deg);
+    }
+    100%
+    {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,91 @@
+/*Third Page*/
+.showpage.page3_1{
+    width: 100vw;
+    height: 59.26vw;
+    top: 0px;
+    left: 0px;
+}
+.showpage.page3_2{
+    width: 100vw;
+    height: 75.66vw;
+    top: 101.59vw;
+    left: 0px;
+    opacity: 0.69;
+}
+.showpage.page3_3{
+    width: 100vw;
+    height: 41.98vw;
+    top: 59.26vw;
+    left: 0px;
+    opacity: 0.3;
+}
+.showpage.page3_4{
+    width: 99.22vw;
+    height: 27.86vw;
+    top: 65.79vw;
+    left: 4.53vw;
+}
+.el-text.text3_1{
+    width: 99.22vw;
+    height: 27.86vw;
+    font-family: qiaoqiaoti;
+    border-color: rgb(0, 0, 0);
+    border-style: none;
+    border-radius: 0px;
+    font-style: normal;
+    font-weight: normal;
+    text-align: center;
+    color: rgb(0, 0, 0);
+    font-size: 4.375vw;
+    line-height: 1.8;
+    box-shadow: black 0px 0px 0px;
+    letter-spacing: 0px;
+    top: 0px;
+    left: 0px;
+}
+.showpage.page3_5{
+    width: 100vw;
+    height: 20.28vw;
+    top: 60.85vw;
+    left: -100vw;
+    opacity: 0.5;
+}
+.showpage.page3_6{
+    width: 100vw;
+    height: 20.28vw;
+    top: 81.13vw;
+    left: 100vw;
+    opacity: 0.5;
+}
+.showpage.page3_7{
+    width: 45.31vw;
+    height: 57.14vw;
+    top: 0px;
+    left: 3.59vw;
+}
+.showpage.page3_8{
+    width: 90vw;
+    height: 72.84vw;
+    top: 103.7vw;
+    left: 5vw;
+}
+.showpage.page3_9{
+    width: 26.88vw;
+    height: 26.1vw;
+    top: 41.45vw;
+    left: -4.22px;
+    transform: rotate(130deg);
+}
+.showpage.page3_10{
+    width: 24.22vw;
+    height: 25.57vw;
+    top: 92.59vw;
+    left: 76.72vw;
+    transform: rotate(324deg);
+}
+.showpage.page3_11{
+    width: 45vw;
+    height: 57.32vw;
+    top: 0px;
+    left: 50.78vw;
+} 

@@ -1,0 +1,23 @@
+@import url("./BackGroundMusic.css");
+@import url("./Container.css");
+@import url("./Pages/InitPage.css");
+@import url("./Pages/FirstPage.css");
+@import url("./Pages/SecondPage.css");
+@import url("./Pages/ThirdPage.css");
+@import url("./Pages/FourthPage.css");
+@import url("./Pages/FifthPage.css");
+@import url("./Pages/SixthPage.css");
+
+@font-face {
+    font-family: qiaoqiaoti;
+    src: url("../font/HandWrittenFont.ttf");
+}
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}

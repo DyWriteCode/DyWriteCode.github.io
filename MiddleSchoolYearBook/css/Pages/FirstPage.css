@@ -1,0 +1,110 @@
+/*First Page*/
+.showpage.page1_1{
+    width: 64.06vw;
+    height: 49.56vw;
+    top: 30.69vw;
+    left: 16.72vw;
+    transform: rotate(178deg);
+}
+.amious {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.blue_bg{
+    width: 100%;
+    height: 100%;
+    background: rgb(189, 254, 255);
+}
+.showpage.page1_2{
+    width: 67.19vw;
+    height: 51.15vw;
+    top: 30.51vw;
+    left: 16.25vw;
+    transform: rotate(358deg);
+}
+.el-bgimg{
+    width: 100%;
+    height: 100%;
+    display: block;
+    top: 0px;
+    left: 0px;
+    border-radius: 0px;
+    box-shadow: black 0px 0px 0px;
+    border-style: none;
+}
+.showpage.page1_3{
+    width: 2.5vw;
+    height: 3.53vw;
+    top: 29.63vw;
+    left: 13.28vw;
+}
+.showpage.page1_4{
+    width: 2.5vw;
+    height: 3.53vw;
+    top: 79.54vw;
+    left: 84.06vw;
+    transform: rotate(182deg);
+}
+.showpage.page1_5{
+    width: 56.41vw;
+    height: 9.35vw;
+    top: 99.12vw;
+    left: 26.88vw;
+}
+.showpage.page1_6{
+    width: 56.25vw;
+    height: 6.88vw;
+    top: 92.24vw;
+    left: 15.94vw;
+}
+.showpage.page1_7{
+    width: 17.66vw;
+    height: 13.23vw;
+    top: 124.34vw;
+    left: 41.25vw;
+}
+.showpage.page1_8{
+    width: 19.69vw;
+    height: 3.35vw;
+    top: 141.09vw;
+    left: 40.47vw;
+}
+.showpage.page1_9{
+    width: 7.34vw;
+    height: 4.56vw;
+    top: 147.62vw;
+    left: 46.72vw;
+}
+.showpage.page1_10{
+    width: 16.875vw;
+    height: 6.70vw;
+    top: 27.69vw;
+    left: 40.47vw;
+    opacity: 0.5;
+    transform: rotate(179deg);
+}
+.showpage.page1_11{
+    width: 143.91vw;
+    height: 162.43vw;
+    top: 7.58vw;
+     left: -152.19vw;
+}
+.showpage.page1_12{
+    width: 143.91vw;
+    height: 162.43vw;
+    top: 7.41vw;
+    left: 108.28vw;
+}
+.showpage.page1_13{
+    width: 143.91vw;
+    height: 162.43vw;
+    top: -170.72vw;
+    left: -18.75vw;
+}
+.showpage.page1_14{
+    width: 143.91vw;
+    height: 162.43vw;
+    top: 167.9vw;
+    left: -21.56vw;
+}
