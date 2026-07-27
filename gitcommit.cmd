@@ -28,47 +28,46 @@ goto parse
 :endparse
 
 if not defined MSG (
-    set /p MSG="请输入提交信息: "
+set /p MSG="[notice]Please enter the commit message: "
 )
 
-echo 正在添加所有更改...
+echo Adding all changes...
 git add .
 if errorlevel 1 (
-    echo [错误] git add 失败，请检查是否在 Git 仓库中。
-    exit /b 1
+echo [Error] git add failed, please check if you are in a Git repository.
+exit /b 1
 )
 
-echo 正在提交...
+echo Committing...
 git commit -m "%MSG%"
 if errorlevel 1 (
-    echo [错误] git commit 失败。
-    exit /b 1
+echo [Error] git commit failed.
+exit /b 1
 )
 
 if %PUSH%==1 (
-    echo 正在推送到远程仓库...
+    echo [notice]Pushing to the remote repository...
     git push
     if errorlevel 1 (
-        echo [错误] git push 失败。
+        echo [Error] git push failed.
         exit /b 1
     )
 ) else (
-    echo [跳过] 未推送（使用了 -np 选项）。
+    echo [Skipped] Not pushed (used -np option).
 )
 
-echo 操作成功完成！
+echo [notice]Operation completed successfully!
 goto :eof
 
 :help
-echo 用法: %~nx0 [选项] [提交信息]
+echo Usage: %~nx0 [options] [commit message]
 echo.
-echo 选项:
-echo   -np, --no-push    只提交，不推送（默认会推送）
-echo   -h, --help        显示此帮助信息
+echo Options:
+echo -np, --no-push Only commit, do not push (default is to push)
+echo -h, --help Show this help message
 echo.
-echo 如果未提供提交信息，脚本会交互式提示输入。
-echo 示例:
-echo   %~nx0 "修复登录bug"          # 提交并推送
-echo   %~nx0 -np "更新文档"         # 只提交不推送
-echo   %~nx0                        # 交互式输入信息并推送
-exit /b 0
+echo If no commit message is provided, the script will prompt you interactively.
+echo Example:
+echo %~nx0 "Fix login bug" # Commit and push
+echo %~nx0 -np "Update docs" # Only commit, do not push
+echo %~nx0 # Interactively enter message and pushexit /b 0
