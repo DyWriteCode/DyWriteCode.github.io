@@ -8,6 +8,28 @@
     </head>
     <body>
         <script type="text/javascript" src="preview_assets/click.js"></script>
+        <script type="text/javascript" src="preview_assets/modal_box.js"></script>
+        <!-- 模态框 -->
+        <div id="detailModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <div id="modalTitle" class="modal-title">标题</div>
+                <div id="modalDesc" class="modal-desc">描述文字</div>
+                <div id="modalCarousel" class="modal-carousel">
+                    <button class="carousel-btn prev" id="carouselPrev">❮</button>
+                    <img id="carouselImg" src="" alt="图片">
+                    <button class="carousel-btn next" id="carouselNext">❯</button>
+                </div>
+                <div class="modal-messages">
+                    <h4>留言板</h4>
+                    <ul id="messageList"></ul>
+                    <div class="message-input">
+                        <input type="text" id="messageInput" placeholder="写下你的祝福...">
+                        <button id="sendMessageBtn">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <section class="hero-section background_color">
             <div class="card-grid"">
                 <a class="card" href="birthday/index.html">
