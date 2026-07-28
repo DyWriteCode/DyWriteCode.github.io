@@ -5,6 +5,31 @@
         <title>BirthdayGift</title>
         <link rel="stylesheet" href="../preview_assets/style.css" />
         <link rel="icon" type="image/png" href="preview_assets/happy.ico">
+        <style>
+        .card__content {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;   /* 垂直居中 */
+            align-items: center !important;       /* 水平居中 */
+            text-align: center !important;
+            padding: var(--spacing-l) !important;
+            height: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .card__heading {
+            word-spacing: normal !important;      /* 取消分散对齐 */
+            margin: 0 !important;
+        }
+        .card__qrcode {
+            margin: 10px 0 0 0 !important;        /* 与文字间距 */
+            display: none !important;
+            width: 180px;
+            height: 180px;
+        }
+        .card:hover .card__qrcode {
+            display: block !important;
+        }
+        </style>
     </head>
     <body>
         <section class="hero-section background_color">
