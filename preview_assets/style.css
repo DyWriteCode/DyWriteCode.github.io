@@ -114,6 +114,7 @@ body {
     justify-content: center;
     align-items: center;
     padding: var(--spacing-l);
+    transform: translate(-50%, -50%);
 }
 
 .card__category {
@@ -151,5 +152,5 @@ body {
 }
 
 .card:hover .card__qrcode {
-    display: block;     /* 改为 block 配合 Flex 居中 */
+    display: inline-block;     /* 改为 block 配合 Flex 居中 */
 }
