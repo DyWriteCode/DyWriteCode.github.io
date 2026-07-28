@@ -126,17 +126,3 @@ body {
     line-height: 1.4;
     word-spacing: 100vw;
 }
-
-.card__qrcode {
-    width: 180px;
-    height: 180px;
-    margin: 20px auto 0;
-    display: none;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.card:hover .card__qrcode {
-    display: block;
-}
