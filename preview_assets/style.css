@@ -84,7 +84,7 @@ body {
     right: 0;
     top: 0;
     transform-origin: center;
-    trsnsform: scale(1) translateZ(0);
+    transform: scale(1) translateZ(0);
     transition: filter 200ms linear, transform 200ms linear;
 }
 
@@ -93,12 +93,27 @@ body {
     filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
 }
 
+/**
 .card__content {
     left: 0;
     padding: var(--spacing-l);
     position: absolute;
     top: 0;
     text-align: center;
+}
+**/
+
+.card__content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-l);
 }
 
 .card__category {
@@ -125,4 +140,15 @@ body {
     text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
     line-height: 1.4;
     word-spacing: 100vw;
+}
+
+.card__qrcode {
+    width: 180px;
+    height: 180px;
+    margin-top: 10px;   /* 可调整与文字间距 */
+    display: none;
+}
+
+.card:hover .card__qrcode {
+    display: block;     /* 改为 block 配合 Flex 居中 */
 }
