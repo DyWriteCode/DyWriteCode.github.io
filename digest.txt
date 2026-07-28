@@ -4,14 +4,14 @@ Directory structure:
     ├── LICENSE
     ├── birthday/
     │   ├── index.html
-    │   ├── preview_assets/
-    │   │   └── style.css
     │   └── zhongsinger/
     │       ├── index.html
     │       ├── 2025/
+    │       │   ├── click.js
     │       │   ├── index.html
     │       │   ├── memory.html
-    │       │   └── secret.html
+    │       │   ├── secret.html
+    │       │   └── style.css
     │       ├── 2026/
     │       │   ├── index.html
     │       │   ├── assets/
@@ -31,7 +31,6 @@ Directory structure:
     │       │           └── chat.json
     │       └── assets/
     │           ├── moon.webp
-    │           ├── style.css
     │           └── sun.webp
     ├── MiddleSchoolYearBook/
     │   ├── index.html
@@ -39,6 +38,7 @@ Directory structure:
     │   │   ├── BackGroundMusic.css
     │   │   ├── Container.css
     │   │   ├── index.css
+    │   │   ├── style.css
     │   │   ├── swiper.css
     │   │   └── Pages/
     │   │       ├── FifthPage.css
@@ -49,11 +49,13 @@ Directory structure:
     │   │       ├── SixthPage.css
     │   │       └── ThirdPage.css
     │   └── js/
+    │       ├── click.js
     │       ├── index.js
     │       ├── swiper.esm.bundle.js
     │       ├── swiper.esm.js
     │       └── swiper.js
     └── preview_assets/
+        ├── click.js
         └── style.css
 
 ================================================
@@ -68,8 +70,9 @@ FILE: index.html
         <link rel="icon" type="image/png" href="preview_assets/home.ico">
     </head>
     <body>
+        <script type="text/javascript" src="preview_assets/click.js"></script>
         <section class="hero-section background_color">
-            <div class="card-grid">
+            <div class="card-grid"">
                 <a class="card" href="birthday/index.html">
                     <div
                         class="card__background"
@@ -134,7 +137,7 @@ FILE: birthday/index.html
     <head>
         <meta charset="UTF-8" />
         <title>BirthdayGift</title>
-        <link rel="stylesheet" href="preview_assets/style.css" />
+        <link rel="stylesheet" href="../preview_assets/style.css" />
         <link rel="icon" type="image/png" href="preview_assets/happy.ico">
     </head>
     <body>
@@ -159,140 +162,6 @@ FILE: birthday/index.html
 
 
 ================================================
-FILE: birthday/preview_assets/style.css
-================================================
-:root {
-    --background-dark: #2d3548;
-    --text-light: rgba(255, 255, 255, 0.6);
-    --text-lighter: rgba(255, 255, 255, 0.9);
-    --spacing-s: 8px;
-    --spacing-m: 16px;
-    --spacing-l: 24px;
-    --spacing-xl: 32px;
-    --spacing-xxl: 64px;
-    --width-container: 1200px;
-}
-
-* {
-    border: 0;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    height: 100%;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-}
-
-body {
-    height: 100%;
-}
-
-.hero-section {
-    align-items: flex-start;
-    display: flex;
-    min-height: 100%;
-    justify-content: center;
-    padding: var(--spacing-xxl) var(--spacing-l);
-    padding: 100px 0 0 0;
-}
-
-.background_color {
-    background-color: #F5F2EB;
-}
-
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    grid-column-gap: var(--spacing-l);
-    grid-row-gap: var(--spacing-l);
-    max-width: var(--width-container);
-    width: 100%;
-}
-
-@media (min-width: 540px) {
-    .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 960px) {
-    .card-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.card {
-    list-style: none;
-    position: relative;
-}
-
-.card:before {
-    content: '';
-    display: block;
-    padding-bottom: 150%;
-    width: 100%;
-}
-
-.card__background {
-    background-size: cover;
-    background-position: center;
-    border-radius: var(--spacing-l);
-    bottom: 0;
-    filter: brightness(0.75) saturate(1.2) contrast(0.85);
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    transform-origin: center;
-    trsnsform: scale(1) translateZ(0);
-    transition: filter 200ms linear, transform 200ms linear;
-}
-
-.card:hover .card__background {
-    transform: scale(1.05) translateZ(0);
-    filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
-}
-
-.card__content {
-    left: 0;
-    padding: var(--spacing-l);
-    position: absolute;
-    top: 0;
-    text-align: center;
-}
-
-.card__category {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-s);
-    text-transform: uppercase;
-}
-
-.card__qrcode {
-    width: 180px;
-    height: 180px;
-    margin-top: 20px;
-    display: none;
-}
-
-.card:hover .card__qrcode {
-    display: unset;
-}
-
-.card__heading {
-    color: var(--text-lighter);
-    font-size: 1.9rem;
-    text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
-    line-height: 1.4;
-    word-spacing: 100vw;
-}
-
-
-
-================================================
 FILE: birthday/zhongsinger/index.html
 ================================================
 <!DOCTYPE html>
@@ -300,7 +169,7 @@ FILE: birthday/zhongsinger/index.html
     <head>
         <meta charset="UTF-8" />
         <title>BirthdayGift</title>
-        <link rel="stylesheet" href="assets/style.css" />
+        <link rel="stylesheet" href="../../preview_assets/style.css" />
         <link rel="icon" type="image/png" href="assets/happy.ico">
     </head>
     <body>
@@ -317,12 +186,10 @@ FILE: birthday/zhongsinger/index.html
                         <img class="card__qrcode"src="assets/moon.webp"/>
                     </div>
                 </a>
-            </div>
-            <div class="card-grid">
                 <a class="card" href="2026/index.html">
                     <div
                         class="card__background"
-                        style="background-image: url(assets/sun.webp);"
+                        style="background-image: url(assets/sunshine.webp);"
                     ></div>
                     <div class="card__content">
                         <p class="card__category">To 钟芯尔</p>
@@ -338,6 +205,48 @@ FILE: birthday/zhongsinger/index.html
 
 
 ================================================
+FILE: birthday/zhongsinger/2025/click.js
+================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // 创建涟漪容器（如果不存在）
+    let container = document.querySelector('.ripple-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'ripple-container';
+        document.body.appendChild(container);
+    }
+
+    // 随机颜色生成
+    function getRandomColor() {
+        var colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff', '#00d2ff', '#f368e0'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // 点击涟漪效果
+    document.addEventListener('click', function(e) {
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+
+        const x = e.clientX;
+        const y = e.clientY;
+        const size = 30 + Math.random() * 50; // 30~80px
+        ripple.style.width = size + 'px';
+        ripple.style.height = size + 'px';
+        ripple.style.left = (x - size / 2) + 'px';
+        ripple.style.top = (y - size / 2) + 'px';
+        ripple.style.background = getRandomColor();
+
+        container.appendChild(ripple);
+
+        // 动画结束后移除元素
+        ripple.addEventListener('animationend', function() {
+            ripple.remove();
+        });
+    });
+});
+
+
+================================================
 FILE: birthday/zhongsinger/2025/index.html
 ================================================
 <!DOCTYPE html>
@@ -346,6 +255,7 @@ FILE: birthday/zhongsinger/2025/index.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/png" href="images/happy.ico">
+    <link rel="stylesheet" href="style.css" />
     <title>钟芯尔的生日空间</title>
     <style>
         * {
@@ -518,6 +428,7 @@ FILE: birthday/zhongsinger/2025/index.html
     </style>
 </head>
 <body>
+    <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
     <audio id="music" src="music/bir.mp3" autoplay loop preload="auto"></audio>
     <div class="container">
@@ -593,6 +504,7 @@ FILE: birthday/zhongsinger/2025/memory.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/png" href="images/happy.ico">
+    <link rel="stylesheet" href="style.css" />
     <title>我们的时光走廊</title>
     <style>
         body {
@@ -853,6 +765,7 @@ FILE: birthday/zhongsinger/2025/memory.html
     </style>
 </head>
 <body>
+    <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
     <audio id="music" src="music/bir.mp3" autoplay loop preload="auto"></audio>
     <div class="timeline-container">
@@ -1064,6 +977,7 @@ FILE: birthday/zhongsinger/2025/secret.html
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>专属生日祝福</title>
     <link rel="icon" type="image/png" href="images/happy.ico">
+    <link rel="stylesheet" href="style.css" />
     <style>
         * {
             margin: 0;
@@ -1616,6 +1530,7 @@ FILE: birthday/zhongsinger/2025/secret.html
     </style>
 </head>
 <body>
+    <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
     <audio id="music" src="music/bir.mp3" autoplay loop preload="auto"></audio>
     <!-- 背景动画 -->
@@ -2100,6 +2015,37 @@ FILE: birthday/zhongsinger/2025/secret.html
 
 
 ================================================
+FILE: birthday/zhongsinger/2025/style.css
+================================================
+.ripple-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;  
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: rippleAnim 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes rippleAnim {
+    to {
+        transform: scale(3.0);
+        opacity: 0;
+    }
+}
+
+
+================================================
 FILE: birthday/zhongsinger/2026/index.html
 ================================================
 <!DOCTYPE html>
@@ -2318,140 +2264,6 @@ FILE: birthday/zhongsinger/assets/moon.webp
 
 
 ================================================
-FILE: birthday/zhongsinger/assets/style.css
-================================================
-:root {
-    --background-dark: #2d3548;
-    --text-light: rgba(255, 255, 255, 0.6);
-    --text-lighter: rgba(255, 255, 255, 0.9);
-    --spacing-s: 8px;
-    --spacing-m: 16px;
-    --spacing-l: 24px;
-    --spacing-xl: 32px;
-    --spacing-xxl: 64px;
-    --width-container: 1200px;
-}
-
-* {
-    border: 0;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    height: 100%;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-}
-
-body {
-    height: 100%;
-}
-
-.hero-section {
-    align-items: flex-start;
-    display: flex;
-    min-height: 100%;
-    justify-content: center;
-    padding: var(--spacing-xxl) var(--spacing-l);
-    padding: 100px 0 0 0;
-}
-
-.background_color {
-    background-color: #F5F2EB;
-}
-
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    grid-column-gap: var(--spacing-l);
-    grid-row-gap: var(--spacing-l);
-    max-width: var(--width-container);
-    width: 100%;
-}
-
-@media (min-width: 540px) {
-    .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 960px) {
-    .card-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.card {
-    list-style: none;
-    position: relative;
-}
-
-.card:before {
-    content: '';
-    display: block;
-    padding-bottom: 150%;
-    width: 100%;
-}
-
-.card__background {
-    background-size: cover;
-    background-position: center;
-    border-radius: var(--spacing-l);
-    bottom: 0;
-    filter: brightness(0.75) saturate(1.2) contrast(0.85);
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    transform-origin: center;
-    trsnsform: scale(1) translateZ(0);
-    transition: filter 200ms linear, transform 200ms linear;
-}
-
-.card:hover .card__background {
-    transform: scale(1.05) translateZ(0);
-    filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
-}
-
-.card__content {
-    left: 0;
-    padding: var(--spacing-l);
-    position: absolute;
-    top: 0;
-    text-align: center;
-}
-
-.card__category {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-s);
-    text-transform: uppercase;
-}
-
-.card__qrcode {
-    width: 180px;
-    height: 180px;
-    margin-top: 20px;
-    display: none;
-}
-
-.card:hover .card__qrcode {
-    display: unset;
-}
-
-.card__heading {
-    color: var(--text-lighter);
-    font-size: 1.9rem;
-    text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
-    line-height: 1.4;
-    word-spacing: 100vw;
-}
-
-
-
-================================================
 FILE: birthday/zhongsinger/assets/sun.webp
 ================================================
 [Binary file]
@@ -2470,9 +2282,11 @@ FILE: MiddleSchoolYearBook/index.html
     <link rel="stylesheet" href="css/swiper.min.css">
     <link rel="stylesheet" href="css/animate.min.css">
     <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<!--Container-->
+    <script type="text/javascript"  src="js/click.js"></script>
+    <!--Container-->
     <div class="swiper-container">
         <div class="swiper-wrapper">
 
@@ -3554,6 +3368,37 @@ FILE: MiddleSchoolYearBook/css/index.css
 
 html, body {
     height: 100%;
+}
+
+
+================================================
+FILE: MiddleSchoolYearBook/css/style.css
+================================================
+.ripple-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;  
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: rippleAnim 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes rippleAnim {
+    to {
+        transform: scale(3.0);
+        opacity: 0;
+    }
 }
 
 
@@ -4963,6 +4808,48 @@ FILE: MiddleSchoolYearBook/css/Pages/ThirdPage.css
     top: 0px;
     left: 50.78vw;
 } 
+
+
+================================================
+FILE: MiddleSchoolYearBook/js/click.js
+================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // 创建涟漪容器（如果不存在）
+    let container = document.querySelector('.ripple-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'ripple-container';
+        document.body.appendChild(container);
+    }
+
+    // 随机颜色生成
+    function getRandomColor() {
+        var colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff', '#00d2ff', '#f368e0'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // 点击涟漪效果
+    document.addEventListener('click', function(e) {
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+
+        const x = e.clientX;
+        const y = e.clientY;
+        const size = 30 + Math.random() * 50; // 30~80px
+        ripple.style.width = size + 'px';
+        ripple.style.height = size + 'px';
+        ripple.style.left = (x - size / 2) + 'px';
+        ripple.style.top = (y - size / 2) + 'px';
+        ripple.style.background = getRandomColor();
+
+        container.appendChild(ripple);
+
+        // 动画结束后移除元素
+        ripple.addEventListener('animationend', function() {
+            ripple.remove();
+        });
+    });
+});
 
 
 ================================================
@@ -25467,6 +25354,51 @@ return Swiper$1;
 
 
 ================================================
+FILE: preview_assets/click.js
+================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // 创建涟漪容器（如果不存在）
+    let container = document.querySelector('.ripple-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'ripple-container';
+        document.body.appendChild(container);
+    }
+
+    // 随机颜色生成
+    function getRandomColor() {
+        const colors = ['radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 200, 255, 0.4) 60%, rgba(0, 100, 200, 0) 100%)',
+        'radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(64, 224, 208, 0.4) 50%, rgba(0, 128, 128, 0) 100%)',
+        'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(135, 206, 250, 0.4) 50%, rgba(70, 130, 180, 0) 100%)',
+        'radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 191, 255, 0.5) 60%, rgba(0, 0, 139, 0) 100%)',];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // 点击涟漪效果
+    document.addEventListener('click', function(e) {
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+
+        const x = e.clientX;
+        const y = e.clientY;
+        const size = 30 + Math.random() * 50; // 30~80px
+        ripple.style.width = size + 'px';
+        ripple.style.height = size + 'px';
+        ripple.style.left = (x - size / 2) + 'px';
+        ripple.style.top = (y - size / 2) + 'px';
+        ripple.style.background = getRandomColor();
+
+        container.appendChild(ripple);
+
+        // 动画结束后移除元素
+        ripple.addEventListener('animationend', function() {
+            ripple.remove();
+        });
+    });
+});
+
+
+================================================
 FILE: preview_assets/style.css
 ================================================
 :root {
@@ -25555,7 +25487,7 @@ body {
     right: 0;
     top: 0;
     transform-origin: center;
-    trsnsform: scale(1) translateZ(0);
+    transform: scale(1) translateZ(0);
     transition: filter 200ms linear, transform 200ms linear;
 }
 
@@ -25564,12 +25496,27 @@ body {
     filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
 }
 
+/**
 .card__content {
     left: 0;
     padding: var(--spacing-l);
     position: absolute;
     top: 0;
     text-align: center;
+}
+**/
+
+.card__content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-l);
 }
 
 .card__category {
@@ -25596,6 +25543,46 @@ body {
     text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
     line-height: 1.4;
     word-spacing: 100vw;
+    text-align: center;
 }
 
+.card__qrcode {
+    width: 180px;
+    height: 180px;
+    margin-top: 10px;   
+    display: none;
+    object-fit: cover;
+}
+
+.card:hover .card__qrcode {
+    display: inline-block;     
+}
+
+
+.ripple-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;  
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: rippleAnim 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes rippleAnim {
+    to {
+        transform: scale(3.0);
+        opacity: 0;
+    }
+}
 
