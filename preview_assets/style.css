@@ -114,7 +114,6 @@ body {
     justify-content: center;
     align-items: center;
     padding: var(--spacing-l);
-    transform: translate(-50%, -50%);
 }
 
 .card__category {
