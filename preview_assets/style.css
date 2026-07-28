@@ -148,6 +148,7 @@ body {
     height: 180px;
     margin-top: 10px;   /* 可调整与文字间距 */
     display: none;
+    object-fit: cover;
 }
 
 .card:hover .card__qrcode {
