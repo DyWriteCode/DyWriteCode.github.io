@@ -93,6 +93,7 @@ body {
     filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
 }
 
+/**
 .card__content {
     left: 0;
     padding: var(--spacing-l);
@@ -125,4 +126,35 @@ body {
     text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
     line-height: 1.4;
     word-spacing: 100vw;
+}
+**/
+
+.card__content {
+    /* 保持原有绝对定位，但让内容可伸缩 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;          /* 水平居中 */
+    justify-content: flex-start;  /* 文字从顶部开始 */
+    padding: var(--spacing-l);
+    height: 100%;                 /* 撑满卡片 */
+    pointer-events: none;         /* 避免干扰点击，但保留可点区域 */
+}
+
+.card__category,
+.card__heading {
+    flex-shrink: 0;              /* 防止文字被压缩 */
+    width: 100%;
+    text-align: center;
+}
+
+.card__qrcode {
+    margin: auto 0;              /* 自动上下居中，关键！ */
+    width: 180px;
+    height: 180px;
+    display: none;
+    flex-shrink: 0;
+}
+
+.card:hover .card__qrcode {
+    display: block;
 }
