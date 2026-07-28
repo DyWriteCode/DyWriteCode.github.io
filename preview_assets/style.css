@@ -178,7 +178,7 @@ body {
 
 @keyframes rippleAnim {
     to {
-        transform: scale(4);
+        transform: scale(3.0);
         opacity: 0;
     }
 }
