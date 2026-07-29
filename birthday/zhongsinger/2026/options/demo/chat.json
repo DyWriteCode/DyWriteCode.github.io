@@ -35,17 +35,17 @@
         }
     },
     { "msgs": ["消息支持输入图片"], "msgInputSpeed": 70 },
-    { "msgs": ["<img src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'/>"] },
+    { "msgs": ["<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'/>"] },
     { "msgs": ["消息支持输入VLog"], "msgInputSpeed": 70 },
     { "msgs": ["看看我上网摘的VLog"], "msgInputSpeed": 70 },
     {
-        "msgs": ["<vlog src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"],
+        "msgs": ["<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"],
         "triggerNextAction": { "type": "componentClose" }
     },
     { "msgs": ["消息支持输入信件"], "msgInputSpeed": 70 },
     { "msgs": ["看看我想对你说的话"], "msgInputSpeed": 70 },
     {
-        "msgs": ["<letter src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"],
+        "msgs": ["<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"],
         "triggerNextAction": { "type": "componentClose" }
     },
     { "msgs": ["接下来是一些通用测试"], "msgInputSpeed": 70 },
@@ -74,7 +74,7 @@
     },
     { "msgs": ["心里话都在这封信里"], "msgInputSpeed": 70 },
     {
-        "msgs": ["<letter src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"],
+        "msgs": ["<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"],
         "triggerNextAction": { "type": "componentClose" }
     },
     {
@@ -89,7 +89,7 @@
                     "你猜错了～",
                     ["给你提示一下～", "是个人~"],
                     "这都猜不中？？？",
-                    ["好吧，看图吧。", "<img src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'>"]
+                    ["好吧，看图吧。", "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'>"]
                 ]
             }
         }
@@ -97,7 +97,7 @@
     { "msgs": ["我是在想打游戏", "我是在想自己呢"], "msgInputSpeed": 70 },
     { "msgs": ["看看这个视频"], "msgInputSpeed": 70 },
     {
-        "msgs": ["<vlog src='https://cdn.jsdelivr.net/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"],
+        "msgs": ["<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"],
         "triggerNextAction": { "type": "componentClose" }
     },
     {
