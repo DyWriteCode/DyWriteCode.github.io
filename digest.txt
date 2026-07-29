@@ -161,13 +161,13 @@ FILE: birthday/index.html
         <div class="card-grid">
             <a class="card" href="javascript:void(0)" onclick="alert('小秘密，不给看！');return false;">
                 <div class="card__background"
-                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpg);">
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jepg);">
                 </div>
                 <div class="card__content">
                     <p class="card__category">To 自己</p>
                     <h3 class="card__heading">爱你老己</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpg" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jepg" />
                 </div>
             </a>
             <a class="card" href="zhongsinger/index.html">
