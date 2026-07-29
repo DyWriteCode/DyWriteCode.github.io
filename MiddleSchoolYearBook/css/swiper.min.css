@@ -459,6 +459,7 @@ button.swiper-pagination-bullet {
     border-radius: 10px;
     position: relative;
     -ms-touch-action: none;
+    touch-action: none;
     background: rgba(0, 0, 0, .1)
 }
 
@@ -697,5 +698,6 @@ button.swiper-pagination-bullet {
 }
 
 .swiper-container-coverflow .swiper-wrapper {
-    -ms-perspective: 1200px
+    -ms-perspective: 1200px;
+    perspective: 1200px;
 }
