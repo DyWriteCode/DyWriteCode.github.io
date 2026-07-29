@@ -159,6 +159,17 @@ FILE: birthday/index.html
 <body>
     <section class="hero-section background_color">
         <div class="card-grid">
+            <a class="card" href="javascript:void(0)" onclick="alert('小秘密，不给看！');return false;">
+                <div class="card__background"
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpg);">
+                </div>
+                <div class="card__content">
+                    <p class="card__category">To 自己</p>
+                    <h3 class="card__heading">爱你老己</h3>
+                    <img class="card__qrcode"
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpg" />
+                </div>
+            </a>
             <a class="card" href="zhongsinger/index.html">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/flower.jpg);">
@@ -14244,20 +14255,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // 创建涟漪容器（如果不存在）
     let container = document.querySelector('.ripple-container');
     if (!container) {
-        container = document.createElement('div');
+        container = document.createElement('article');
         container.className = 'ripple-container';
         document.body.appendChild(container);
     }
 
     // 随机颜色生成
     function getRandomColor() {
-        var colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6bff', '#00d2ff', '#f368e0'];
+        const colors = ['radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 200, 255, 0.4) 60%, rgba(0, 100, 200, 0) 100%)',
+            'radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(64, 224, 208, 0.4) 50%, rgba(0, 128, 128, 0) 100%)',
+            'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(135, 206, 250, 0.4) 50%, rgba(70, 130, 180, 0) 100%)',
+            'radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 191, 255, 0.5) 60%, rgba(0, 0, 139, 0) 100%)',];
         return colors[Math.floor(Math.random() * colors.length)];
     }
 
     // 点击涟漪效果
     document.addEventListener('click', function (e) {
-        const ripple = document.createElement('div');
+        const ripple = document.createElement('article');
         ripple.className = 'ripple';
 
         const x = e.clientX;
