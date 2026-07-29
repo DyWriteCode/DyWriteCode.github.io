@@ -462,8 +462,21 @@
         function goToIndex() {
             window.location.href = 'index.html';
         }
+
+        function toggleSound() {
+            var music = document.getElementById("music");//获取ID  
+            if (music.paused) {   
+                music.paused=false;
+                music.play(); //没有就播放 
+                }
+        }
+
+        window.onload.apply(function() {
+            createStars();
+            setInterval("toggleSound()", 10);
+        });
         
-        window.onload = createHearts;
+        window.onload.apply(createHearts);
     </script>
 </body>
 </html>
