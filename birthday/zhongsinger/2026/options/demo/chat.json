@@ -1,5 +1,10 @@
 [
     { "msgs": ["事先说明，github直连有一点慢，图片与视频加载较慢"], "msgInputSpeed": 70 },
+    { "msgs": ["看看我上网摘的VLog"], "msgInputSpeed": 70 },
+    {
+        "msgs": ["<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"],
+        "triggerNextAction": { "type": "componentClose" }
+    },
     { "msgs": ["普通消息，有输入动画"], "msgInputSpeed": 70 },
     { "msgs": ["普通消息支持回退，比如下面这条"], "msgInputSpeed": 70 },
     {
