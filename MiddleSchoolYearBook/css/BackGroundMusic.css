@@ -1,23 +1,23 @@
 /*BackGround Music*/
-#music{
+#music {
     width: 14.49vw;
     height: 14.49vw;
     position: fixed;
-    top:2.42vw;
-    left:80%;
+    top: 2.42vw;
+    left: 80%;
     z-index: 9;
 }
 
-.musicIg{
+.musicIg {
     width: 10.63vw;
     height: 10.63vw;
     position: absolute;
-    top:1.93vw;
+    top: 1.93vw;
     left: 1.93vw;
     cursor: pointer;
 }
 
-.musicImg{
+.musicImg {
     width: 14.49vw;
     height: 14.49vw;
 }
@@ -27,12 +27,11 @@
 }
 
 @keyframes turn {
-    0%
-    {
+    0% {
         transform: rotate(0deg);
     }
-    100%
-    {
+
+    100% {
         transform: rotate(360deg);
     }
 }

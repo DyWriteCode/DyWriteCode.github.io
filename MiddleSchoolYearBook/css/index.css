@@ -13,11 +13,12 @@
     src: url("https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/MiddleSchoolYearBook/font/HandWrittenFont.ttf");
 }
 
-*{
+* {
     margin: 0;
     padding: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
 }

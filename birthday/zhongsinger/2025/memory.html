@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <link rel="preload" href="https://cdn.jsdmirror.com/gh/birthday/zhongsinger/2025/music/bir.mp3" as="audio" type="audio/mpeg" crossorigin="anonymous">
-    <link rel="icon" type="image/png" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
+    <link rel="preload" href="https://cdn.jsdmirror.com/gh/birthday/zhongsinger/2025/music/bir.mp3" as="audio"
+        type="audio/mpeg" crossorigin="anonymous">
+    <link rel="icon" type="image/png"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
     <link rel="stylesheet" href="style.css" />
     <title>我们的时光走廊</title>
     <style>
@@ -17,14 +20,14 @@
             overflow: hidden;
             touch-action: manipulation;
         }
-        
+
         .timeline-container {
             position: relative;
             height: 100vh;
             padding-top: 20px;
             overflow-y: auto;
         }
-        
+
         .back-button {
             position: absolute;
             top: 20px;
@@ -40,38 +43,41 @@
             cursor: pointer;
             z-index: 10;
         }
-        
+
         .back-button:hover {
             background: rgba(255, 255, 255, 0.4);
         }
-        
+
         .timeline-title {
             text-align: center;
             padding: 40px 0 20px;
             font-size: 2.5rem;
         }
-        
+
         .timeline {
             position: relative;
             max-width: 95%;
             margin: 0 auto;
             padding: 20px 0;
         }
+
         .memory-container {
             padding: 10px 40px;
             position: relative;
             width: 50%;
             margin-bottom: 60px;
         }
+
         .memory-container:nth-of-type(odd) {
             left: 0;
             text-align: right;
         }
+
         .memory-container:nth-of-type(even) {
             left: 50%;
             text-align: left;
         }
-        
+
         .memory-card {
             padding: 20px;
             background: rgba(255, 255, 255, 0.15);
@@ -83,24 +89,24 @@
             opacity: 0;
             transition: all 0.8s;
         }
-        
+
         .memory-card.visible {
             transform: translateY(0);
             opacity: 1;
         }
-        
+
         .memory-content {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-        
+
         .memory-date {
             font-size: 1.4rem;
             color: #ffd166;
             font-weight: bold;
         }
-        
+
         .memory-photo {
             width: 100%;
             height: 250px;
@@ -109,18 +115,18 @@
             position: relative;
             background: #333;
         }
-        
+
         .memory-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s;
         }
-        
+
         .memory-photo:hover img {
             transform: scale(1.05);
         }
-        
+
         .memory-photo .photo-caption {
             position: absolute;
             bottom: 0;
@@ -131,23 +137,23 @@
             font-size: 0.9rem;
             text-align: center;
         }
-        
+
         .memory-desc {
             font-size: 1.1rem;
             line-height: 1.6;
             min-height: 80px;
         }
-        
+
         .memory-container:nth-of-type(odd) {
             left: 0;
         }
-        
+
         .memory-container:nth-of-type(even) {
             left: 50%;
         }
-        
+
         /* 注意：请确保 .timeline 里只有 .memory-container 元素，注释不要换行插入其中，否则排列会错乱 */
-        
+
         .memory-container::after {
             content: '';
             position: absolute;
@@ -160,11 +166,11 @@
             border-radius: 50%;
             z-index: 1;
         }
-        
+
         .memory-container:nth-child(even)::after {
             left: -13px;
         }
-        
+
         .heart-passage {
             position: absolute;
             top: 0;
@@ -172,13 +178,13 @@
             height: 100%;
             pointer-events: none;
         }
-        
+
         .heart {
             position: absolute;
             opacity: 0;
             animation: floatHeart var(--duration) linear infinite;
         }
-        
+
         .photo-lightbox {
             position: fixed;
             top: 0;
@@ -194,24 +200,24 @@
             visibility: hidden;
             transition: all 0.5s;
         }
-        
+
         .photo-lightbox.active {
             opacity: 1;
             visibility: visible;
         }
-        
+
         .lightbox-content {
             max-width: 90%;
             max-height: 90%;
             position: relative;
         }
-        
+
         .lightbox-content img {
             max-width: 100%;
             max-height: 90vh;
             border-radius: 5px;
         }
-        
+
         .close-lightbox {
             position: absolute;
             top: -40px;
@@ -219,7 +225,7 @@
             color: white;
             font-size: 2rem;
             cursor: pointer;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -227,38 +233,40 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         @keyframes floatHeart {
             0% {
                 transform: translateY(100vh) rotate(0deg);
                 opacity: 1;
             }
+
             100% {
                 transform: translateY(-100px) rotate(360deg);
                 opacity: 0;
             }
         }
-        
+
         @media (max-width: 768px) {
             .timeline::after {
                 left: 30px;
             }
-            
+
             .memory-container {
                 width: 100%;
                 left: 0 !important;
                 padding-left: 60px;
                 padding-right: 20px;
             }
-            
+
             .memory-container::after {
                 left: 17px !important;
             }
-            
+
             .memory-container:nth-child(even) {
                 transform: translateX(0);
             }
         }
+
         .memory-container,
         .memory-card {
             position: relative;
@@ -266,70 +274,81 @@
         }
     </style>
 </head>
+
 <body>
     <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
-    <audio id="music" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3" autoplay loop preload="auto"></audio>
+    <audio id="music"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3"
+        autoplay loop preload="auto"></audio>
     <div class="timeline-container">
         <div class="back-button" onclick="goToIndex()">
             ←
         </div>
-        
+
         <div class="timeline-title">
             <h1>我们的时光走廊</h1>
             <p>轻触照片打开珍贵回忆</p>
         </div>
-        
+
         <div class="timeline">
             <!-- 回忆点1 -->
             <div class="memory-container" style="--translate: -20px">
                 <div class="memory-card">
                     <div class="memory-content">
                         <div class="memory-date">2022年9月</div>
-                        <div class="memory-photo" onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/sunshine.jpeg', '第一次相遇')">
-                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/sunshine.jpeg" alt="我们的第一次偶遇">
+                        <div class="memory-photo"
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/sunshine.jpeg', '第一次相遇')">
+                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/sunshine.jpeg"
+                                alt="我们的第一次偶遇">
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">迎着初中的第一抹阳光，认识了你这样一位好朋友</div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 回忆点2 -->
             <div class="memory-container" style="--translate: 20px">
                 <div class="memory-card">
                     <div class="memory-content">
                         <div class="memory-date">2024年3月</div>
-                        <div class="memory-photo" onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history1.png', '试图教会我')">
-                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history1.png" controls style="width:100%;height:100%;object-fit:cover;">
+                        <div class="memory-photo"
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history1.png', '试图教会我')">
+                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history1.png"
+                                controls style="width:100%;height:100%;object-fit:cover;">
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">企图教会我这个一窍不通的地理废物，对了我还问了很多特基础的问题</div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 回忆点3 -->
             <div class="memory-container" style="--translate: -20px">
                 <div class="memory-card">
                     <div class="memory-content">
                         <div class="memory-date">2024年3月</div>
-                        <div class="memory-photo" onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history2.png', '试图教会你')">
-                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history2.png" controls style="width:100%;height:100%;object-fit:cover;">
+                        <div class="memory-photo"
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history2.png', '试图教会你')">
+                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history2.png"
+                                controls style="width:100%;height:100%;object-fit:cover;">
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">企图教会你这个基础不牢的物理"天才"，当初你还问了很多特基础的问题</div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 回忆点4 -->
             <div class="memory-container" style="--translate: 20px 20px 0">
                 <div class="memory-card">
                     <div class="memory-content">
                         <div class="memory-date">2025年9月</div>
-                        <div class="memory-photo" onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history3.jpg', '深刻的印象')">
-                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history3.jpg" alt="深刻的印象">
+                        <div class="memory-photo"
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history3.jpg', '深刻的印象')">
+                            <img src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/history3.jpg"
+                                alt="深刻的印象">
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">要不是看到朋友圈我都不知道，正常对朋友关心一点，会对人造成如此深刻的印象</div>
@@ -337,7 +356,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 添加跳转到秘密页面的按钮 -->
         <div style="text-align: center; padding: 40px 0;">
             <button onclick="goToSecret()" style="
@@ -356,7 +375,7 @@
             </button>
         </div>
     </div>
-    
+
     <!-- 照片/视频灯箱 -->
     <div class="photo-lightbox" id="photoLightbox" onclick="closeLightbox()">
         <div class="lightbox-content" onclick="event.stopPropagation()">
@@ -364,14 +383,14 @@
             <div class="close-lightbox" onclick="closeLightbox()">×</div>
         </div>
     </div>
-    
+
     <div class="heart-passage" id="heartPassage"></div>
-    
+
     <script>
         // 添加漂浮的心形
         function createHearts() {
             const passage = document.getElementById('heartPassage');
-            
+
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.className = 'heart';
@@ -379,23 +398,23 @@
                 heart.style.fontSize = `${Math.random() * 20 + 15}px`;
                 heart.style.color = '#ff6b6b';
                 heart.style.left = `${Math.random() * 100}%`;
-                
+
                 const duration = Math.random() * 10 + 5;
                 heart.style.setProperty('--duration', `${duration}s`);
-                
+
                 passage.appendChild(heart);
-                
+
                 setTimeout(() => {
                     heart.remove();
                 }, duration * 1000);
             }, 1000);
         }
-        
+
         // 滚动时展示回忆卡片
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             const memoryCards = document.querySelectorAll('.memory-card');
             const windowHeight = window.innerHeight;
-            
+
             memoryCards.forEach(card => {
                 const position = card.getBoundingClientRect().top;
                 if (position < windowHeight * 0.9) {
@@ -403,12 +422,12 @@
                 }
             });
         });
-        
+
         // 触发初始展示
         setTimeout(() => {
             document.querySelectorAll('.memory-card').forEach(card => card.classList.add('visible'));
         }, 500);
-        
+
         // 照片/视频灯箱功能
         function openLightbox(src, alt) {
             const lightbox = document.getElementById('photoLightbox');
@@ -437,27 +456,27 @@
             lightbox.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeLightbox() {
             const lightbox = document.getElementById('photoLightbox');
             lightbox.classList.remove('active');
-            
+
             // 恢复背景滚动
             document.body.style.overflow = '';
         }
-        
+
         // 按ESC键关闭灯箱
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeLightbox();
             }
         });
-        
+
         // 跳转到秘密页面
         function goToSecret() {
             window.location.href = 'secret.html';
         }
-        
+
         // 返回首页
         function goToIndex() {
             window.location.href = 'index.html';
@@ -465,18 +484,19 @@
 
         function toggleSound() {
             var music = document.getElementById("music");//获取ID  
-            if (music.paused) {   
-                music.paused=false;
+            if (music.paused) {
+                music.paused = false;
                 music.play(); //没有就播放 
-                }
+            }
         }
 
-        window.onload.apply(function() {
+        window.onload.apply(function () {
             createStars();
             setInterval("toggleSound()", 10);
         });
-        
+
         window.onload.apply(createHearts);
     </script>
 </body>
+
 </html>

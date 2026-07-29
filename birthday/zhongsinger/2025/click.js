@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // 创建涟漪容器（如果不存在）
     let container = document.querySelector('.ripple-container');
     if (!container) {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 点击涟漪效果
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const ripple = document.createElement('div');
         ripple.className = 'ripple';
 
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         container.appendChild(ripple);
 
         // 动画结束后移除元素
-        ripple.addEventListener('animationend', function() {
+        ripple.addEventListener('animationend', function () {
             ripple.remove();
         });
     });

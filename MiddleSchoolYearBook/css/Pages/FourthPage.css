@@ -1,98 +1,110 @@
 /*FourthPage*/
-.showpage.page4_1{
+.showpage.page4_1 {
     width: 99.84vw;
     height: 177.43vw;
     top: 0px;
     left: 0px;
     opacity: 0.15;
 }
-.showpage.page4_2{
+
+.showpage.page4_2 {
     width: 65.47vw;
     height: 44.44vw;
     top: 133.33vw;
     left: 17.79vw;
 }
-.showpage.page4_3{
+
+.showpage.page4_3 {
     width: 65.47vw;
     height: 44.27vw;
     top: 88.36vw;
     left: 17.19vw;
 }
-.showpage.page4_4{
+
+.showpage.page4_4 {
     width: 65vw;
     height: 44.44vw;
     top: 0px;
     left: 17.19vw;
 }
-.showpage.page4_5{
+
+.showpage.page4_5 {
     width: 65.16vw;
     height: 44.27vw;
     top: 44.62vw;
     left: 17.66vw;
 }
-.ling_right{
+
+.ling_right {
     width: 17.19vw;
     height: 19.4vw;
     left: 82.81vw;
     opacity: 0.4;
 }
-.showpage.page4_6,.showpage.page4_15{
+
+.showpage.page4_6,
+.showpage.page4_15 {
     top: 1.59vw;
 }
-.showpage.page4_7,.showpage.page4_16{
+
+.showpage.page4_7,
+.showpage.page4_16 {
     top: 20.99vw;
 }
-.showpage.page4_8,.showpage.page4_17{
+
+.showpage.page4_8,
+.showpage.page4_17 {
     top: 40.39vw;
 }
-.showpage.page4_9,.showpage.page4_20{
+
+.showpage.page4_9,
+.showpage.page4_20 {
     top: 98.59vw;
 }
-.showpage.page4_10,.showpage.page4_19{
+
+.showpage.page4_10,
+.showpage.page4_19 {
     top: 79.19vw;
 }
-.showpage.page4_11,.showpage.page4_18{
+
+.showpage.page4_11,
+.showpage.page4_18 {
     top: 59.79vw;
 }
-.showpage.page4_12,.showpage.page4_23{
+
+.showpage.page4_12,
+.showpage.page4_23 {
     top: 156.8vw;
 }
-.showpage.page4_13,.showpage.page4_22{
+
+.showpage.page4_13,
+.showpage.page4_22 {
     top: 137.39vw;
 }
-.showpage.page4_14,.showpage.page4_21{
+
+.showpage.page4_14,
+.showpage.page4_21 {
     top: 117.99vw;
 }
-.ling_left{
+
+.ling_left {
     width: 17.19vw;
     height: 19.4vw;
     left: 0px;
     opacity: 0.4;
 }
-.showpage.page4_24,.showpage.page4_24
-.showpage.page4_24,.showpage.page4_24,
-.showpage.page4_24,.showpage.page4_24{
+
+.showpage.page4_24,
+.showpage.page4_24 .showpage.page4_24,
+.showpage.page4_24,
+.showpage.page4_24,
+.showpage.page4_24 {
     width: 27.66vw;
     height: 11.29vw;
-    left:77.5vw;
+    left: 77.5vw;
 }
-.four_text{
-    width: 27.66vw;
-    height: 11.29vw;
-    font-family: fangmeng;
-    border-color: rgb(0, 0, 0);
-    border-style: none;
-    border-radius: 0px;
-    font-style: normal;
-    font-weight: normal;
-    text-align: center;
-    color: rgb(84, 84, 84);
-    font-size: 7.5vw;
-    line-height: 1.2;
-    box-shadow: black 0px 0px 0px;
-    letter-spacing: 0px;
-}
-.el-text.four_text{
+
+.four_text {
     width: 27.66vw;
     height: 11.29vw;
     font-family: fangmeng;
@@ -108,55 +120,97 @@
     box-shadow: black 0px 0px 0px;
     letter-spacing: 0px;
 }
-.four_text{
+
+.el-text.four_text {
+    width: 27.66vw;
+    height: 11.29vw;
+    font-family: fangmeng;
+    border-color: rgb(0, 0, 0);
+    border-style: none;
+    border-radius: 0px;
+    font-style: normal;
+    font-weight: normal;
+    text-align: center;
+    color: rgb(84, 84, 84);
+    font-size: 7.5vw;
+    line-height: 1.2;
+    box-shadow: black 0px 0px 0px;
+    letter-spacing: 0px;
+}
+
+.four_text {
     width: 27.66vw;
     height: 11.29vw;
 }
-.showpage.page4_24,.four_text1{
+
+.showpage.page4_24,
+.four_text1 {
     top: 25.57vw;
     left: 77.5vw;
 }
-.showpage.page4_25,.four_text2{
+
+.showpage.page4_25,
+.four_text2 {
     top: 44.62vw;
     left: 77.97vw;
 }
-.showpage.page4_26,.four_text3{
+
+.showpage.page4_26,
+.four_text3 {
     top: 64.37vw;
     left: 77.5vw;
 }
-.showpage.page4_27,.four_text4{
+
+.showpage.page4_27,
+.four_text4 {
     top: 83.6vw;
     left: 77.97vw;
 }
-.showpage.page4_28,.four_text5{
+
+.showpage.page4_28,
+.four_text5 {
     top: 103.53vw;
     left: 77.97vw;
 }
-.showpage.page4_29,.four_text6{
+
+.showpage.page4_29,
+.four_text6 {
     top: 143.36vw;
     left: -5.31vw;
 }
-.showpage.page4_30,.four_text7{
+
+.showpage.page4_30,
+.four_text7 {
     top: 122.58vw;
     left: -5.31vw;
 }
-.showpage.page4_31,.four_text8{
+
+.showpage.page4_31,
+.four_text8 {
     top: 102.47vw;
     left: -5.16vw;
 }
-.showpage.page4_32,.four_text9{
+
+.showpage.page4_32,
+.four_text9 {
     top: 63.85vw;
     left: -5.47vw;
 }
-.showpage.page4_33,.four_text10{
+
+.showpage.page4_33,
+.four_text10 {
     top: 83.42vw;
     left: -5.31vw;
 }
-.showpage.page4_34,.four_text11{
+
+.showpage.page4_34,
+.four_text11 {
     top: 7vw;
     left: 77.97vw;
 }
-.showpage.page4_35,.four_text12{
+
+.showpage.page4_35,
+.four_text12 {
     top: 162vw;
     left: -5.31vw;
 }

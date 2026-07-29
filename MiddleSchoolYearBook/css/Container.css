@@ -5,7 +5,8 @@
     margin-left: auto;
     margin-right: auto;
 }
-.swiper-slide{
+
+.swiper-slide {
     width: 100vw;
     height: 100vh;
     overflow: hidden;

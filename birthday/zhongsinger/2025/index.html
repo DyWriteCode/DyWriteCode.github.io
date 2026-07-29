@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <link rel="preload" href="https://cdn.jsdmirror.com/gh/birthday/zhongsinger/2025/music/bir.mp3" as="audio" type="audio/mpeg" crossorigin="anonymous">
-    <link rel="icon" type="image/png" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
+    <link rel="preload" href="https://cdn.jsdmirror.com/gh/birthday/zhongsinger/2025/music/bir.mp3" as="audio"
+        type="audio/mpeg" crossorigin="anonymous">
+    <link rel="icon" type="image/png"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
     <link rel="stylesheet" href="style.css" />
     <title>钟芯尔的生日空间</title>
     <style>
@@ -14,7 +17,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
@@ -24,7 +27,7 @@
             touch-action: manipulation;
             perspective: 1000px;
         }
-        
+
         .container {
             width: 100%;
             height: 100vh;
@@ -35,7 +38,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .heart-gate {
             width: 320px;
             height: 320px;
@@ -43,30 +46,28 @@
             transform-style: preserve-3d;
             animation: floatHeart 6s infinite ease-in-out;
         }
-        
+
         .heart {
             position: absolute;
             width: 100%;
             height: 100%;
             background: #ff6b6b;
             border-radius: 50%;
-            clip-path: polygon(
-                50% 15%, 
-                70% 0%, 
-                85% 15%, 
-                100% 35%,
-                85% 70%,
-                70% 90%,
-                50% 100%,
-                30% 90%,
-                15% 70%,
-                0% 35%,
-                15% 15%,
-                30% 0%
-            );
+            clip-path: polygon(50% 15%,
+                    70% 0%,
+                    85% 15%,
+                    100% 35%,
+                    85% 70%,
+                    70% 90%,
+                    50% 100%,
+                    30% 90%,
+                    15% 70%,
+                    0% 35%,
+                    15% 15%,
+                    30% 0%);
             box-shadow: 0 0 50px rgba(255, 107, 107, 0.6);
         }
-        
+
         .gate-knob {
             position: absolute;
             width: 40px;
@@ -79,14 +80,14 @@
             box-shadow: 0 0 15px rgba(255, 209, 102, 0.8);
             cursor: pointer;
         }
-        
+
         .welcome-text {
             text-align: center;
             margin-top: 30px;
             position: relative;
             z-index: 2;
         }
-        
+
         h1 {
             font-size: 3.5rem;
             margin-bottom: 15px;
@@ -96,7 +97,7 @@
             -webkit-text-fill-color: transparent;
             letter-spacing: 2px;
         }
-        
+
         .enter-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid #fff;
@@ -111,12 +112,12 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
             font-weight: 600;
         }
-        
+
         .enter-btn:hover {
             background: rgba(255, 255, 255, 0.4);
             transform: scale(1.05);
         }
-        
+
         .stars {
             position: absolute;
             top: 0;
@@ -125,7 +126,7 @@
             height: 100%;
             pointer-events: none;
         }
-        
+
         .star {
             position: absolute;
             background: #fff;
@@ -133,7 +134,7 @@
             animation: twinkle var(--duration) infinite ease-in-out;
             opacity: 0;
         }
-        
+
         .message-bubble {
             position: absolute;
             bottom: 80px;
@@ -148,7 +149,7 @@
             animation: floatBubble 8s infinite;
             transform-origin: bottom right;
         }
-        
+
         .message-bubble::after {
             content: '';
             position: absolute;
@@ -160,86 +161,115 @@
             border-right: 10px solid transparent;
             border-top: 10px solid rgba(255, 255, 255, 0.9);
         }
-        
+
         @keyframes twinkle {
-            0% { opacity: 0; transform: scale(0.3); }
-            50% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.3); }
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
         }
-        
+
         @keyframes floatHeart {
-            0%, 100% { transform: translateY(0) rotateY(0) scale(1); }
-            50% { transform: translateY(-15px) rotateY(10deg) scale(1.05); }
+
+            0%,
+            100% {
+                transform: translateY(0) rotateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-15px) rotateY(10deg) scale(1.05);
+            }
         }
-        
+
         @keyframes floatBubble {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.05); }
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-10px) scale(1.05);
+            }
         }
     </style>
 </head>
+
 <body>
     <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
-    <audio id="music" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3" autoplay loop preload="auto"></audio>
+    <audio id="music"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3"
+        autoplay loop preload="auto"></audio>
     <div class="container">
         <div class="stars" id="stars"></div>
-        
+
         <div class="heart-gate">
             <div class="heart"></div>
             <div class="gate-knob" onclick="openHeartGate()"></div>
         </div>
-        
+
         <div class="welcome-text">
             <h1>钟芯尔的<br>生日空间</h1>
             <p>点击心形门环，进入专属你的生日世界</p>
             <button class="enter-btn" onclick="openHeartGate()">开启神秘之旅</button>
         </div>
-        
+
         <div class="message-bubble">
             当你进入空间，将收到一个特别的惊喜
         </div>
     </div>
-    
+
     <script>
         function createStars() {
             const stars = document.getElementById('stars');
             const starCount = 50;
-            
+
             for (let i = 0; i < starCount; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                
+
                 const size = Math.random() * 4 + 1;
                 star.style.width = `${size}px`;
                 star.style.height = `${size}px`;
-                
+
                 star.style.left = `${Math.random() * 100}%`;
                 star.style.top = `${Math.random() * 100}%`;
-                
+
                 const duration = Math.random() * 5 + 2;
                 star.style.setProperty('--duration', `${duration}s`);
-                
+
                 stars.appendChild(star);
             }
         }
-        
+
         function openHeartGate() {
             window.location.href = 'memory.html';
         }
-        
+
         function toggleSound() {
             var music = document.getElementById("music");//获取ID  
-            if (music.paused) {   
-                music.paused=false;
+            if (music.paused) {
+                music.paused = false;
                 music.play(); //没有就播放 
-                }
+            }
         }
 
-        window.onload = function() {
+        window.onload = function () {
             createStars();
             setInterval("toggleSound()", 10);
         };
     </script>
 </body>
+
 </html>

@@ -1,59 +1,67 @@
 /*SixthPage*/
-.showpage.page6_1{
+.showpage.page6_1 {
     width: 100vw;
     height: 64.9vw;
     top: 112.7vw;
     left: 0px;
 }
-.showpage.page6_2{
+
+.showpage.page6_2 {
     width: 100vw;
     height: 112.88vw;
     top: 0px;
     left: 0px;
     opacity: 0.4;
 }
-.showpage.page6_3{
+
+.showpage.page6_3 {
     width: 50vw;
     height: 56.44vw;
     top: 0px;
     left: 0px;
     opacity: 0.25;
 }
-.showpage.page6_4{
+
+.showpage.page6_4 {
     width: 50vw;
     height: 56.44vw;
     top: 0px;
     left: 50vw;
     opacity: 0.25;
 }
-.showpage.page6_5{
+
+.showpage.page6_5 {
     width: 50vw;
     height: 56.44vw;
     top: 56.44vw;
     left: 0px;
     opacity: 0.25;
 }
-.showpage.page6_6{
+
+.showpage.page6_6 {
     width: 50vw;
     height: 56.44vw;
     top: 56.44vw;
     left: 50vw;
     opacity: 0.25;
 }
-.showpage.page6_7{
+
+.showpage.page6_7 {
     width: 82.81vw;
     height: 93.47vw;
     top: 10.94vw;
     left: 8.59vw;
     opacity: 0.6;
 }
-.showpage.page6_8{
+
+.showpage.page6_8 {
     width: 130.16vw;
     height: 54.32vw;
     top: 33.86vw;
     left: -14.84vw;
 }
-.el-text.text6_1{
+
+.el-text.text6_1 {
     width: 130.16vw;
     height: 54.32vw;
     text-align: center;
@@ -63,47 +71,54 @@
     top: 0px;
     left: 0px;
 }
-.showpage.page6_9{
+
+.showpage.page6_9 {
     width: 100vw;
     height: 16.23vw;
     top: 112.88vw;
     left: -100vw;
     opacity: 0.25;
 }
-.showpage.page6_10{
+
+.showpage.page6_10 {
     width: 100vw;
     height: 16.23vw;
     top: 129.1vw;
     left: 100.47vw;
     opacity: 0.25;
 }
-.showpage.page6_11{
+
+.showpage.page6_11 {
     width: 100vw;
     height: 16.23vw;
     top: 145.33vw;
     left: -100vw;
     opacity: 0.25;
 }
-.showpage.page6_12{
+
+.showpage.page6_12 {
     width: 100vw;
     height: 16.23vw;
     top: 161.55vw;
     left: -100vw;
     opacity: 0.25;
 }
-.showpage.page6_13{
+
+.showpage.page6_13 {
     width: 113.44vw;
     height: 20.46vw;
     top: 93.83vw;
     left: -13.44vw;
 }
-.showpage.page6_14{
+
+.showpage.page6_14 {
     width: 113.44vw;
     height: 20.46vw;
     top: 93.83vw;
     left: -13.44vw;
 }
-.el-text.text6_2{
+
+.el-text.text6_2 {
     width: 113.44vw;
     height: 20.46vw;
     text-align: right;
@@ -113,7 +128,8 @@
     top: 0px;
     left: 0px;
 }
-.el-text.text6_3{
+
+.el-text.text6_3 {
     width: 57.44vw;
     height: 20.46vw;
     text-align: center;
@@ -122,9 +138,10 @@
     line-height: 1.8;
     top: 0px;
     left: 0px;
-    right:0px;
+    right: 0px;
 }
-.el-text.text6_4{
+
+.el-text.text6_4 {
     width: 130.16vw;
     height: 54.32vw;
     text-align: center;

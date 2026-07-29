@@ -1,15 +1,15 @@
-var mySwiper = new Swiper ('.swiper-container', {
+var mySwiper = new Swiper('.swiper-container', {
     direction: 'vertical',
     mousewheel: true,
     loop: false,
     grabCursor: true,
 
-    on:{
-        init: function(){
+    on: {
+        init: function () {
             swiperAnimateCache(this); // Hide animated elements
             swiperAnimate(this); // Initialization completes the start animation
         },
-        slideChangeTransitionEnd: function(){
+        slideChangeTransitionEnd: function () {
             swiperAnimate(this); // The current slide animation is also run at the end of each slide toggle
         }
     },
@@ -35,7 +35,7 @@ music.onclick = function () {
         audio.play();
         flag = 1;
     }
-}; 
+};
 
 // Windows Setting
 window.onload = function setupInteractionDetection() {
