@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
+    console.error("click test");
     // 创建涟漪容器（如果不存在）
     let container = document.querySelector('.ripple-container');
     if (!container) {

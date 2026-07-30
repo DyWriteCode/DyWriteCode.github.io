@@ -1,6 +1,7 @@
 // 自动创建不可见音频播放器，并确保音乐能够播放
 (function () {
     var audio = document.createElement('audio');
+    console.error("music test");
     audio.src = 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3'; // 请替换为您的音乐地址
     audio.style.display = 'none';
     audio.style.width = '0';
