@@ -16,6 +16,18 @@
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <style>
+        /* 修复布局：顶部与底部文字居中 */
+        .hero-section {
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0 0 0;
+            /* 调整顶部间距 */
+        }
+
+        .hero-section>* {
+            width: 100%;
+        }
+
         /* 顶部与底部文字的全局样式 */
         .page-header {
             text-align: center;
@@ -38,6 +50,21 @@
             color: #666;
             font-weight: 700;
             font-size: 1.1em;
+        }
+
+        /* 链接样式美化 */
+        .page-header a {
+            color: #b5654b;
+            text-decoration: none;
+            border-bottom: 1px dashed #dccfc8;
+            transition: color 0.3s, border-color 0.3s;
+            padding-bottom: 1px;
+        }
+
+        .page-header a:hover {
+            color: #8a5a3a;
+            border-bottom-color: #b5654b;
+            border-bottom-style: solid;
         }
 
         @media (max-width: 540px) {
