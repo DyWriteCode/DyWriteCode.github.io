@@ -1,5 +1,6 @@
 Directory structure:
 └── DyWriteCode.github.io/
+    ├── base64_loop.py
     ├── index.html
     ├── LICENSE
     ├── birthday/
@@ -9,9 +10,11 @@ Directory structure:
     │   │       ├── index.encryption.css
     │   │       ├── index.encryption.js
     │   │       ├── index.html
+    │   │       ├── message.txt
     │   │       └── music.js
     │   ├── preview_assets/
-    │   │   └── click.js
+    │   │   ├── click.js
+    │   │   └── popup.js
     │   └── zhongsinger/
     │       ├── index.html
     │       ├── 2025/
@@ -65,6 +68,77 @@ Directory structure:
         ├── click.js
         ├── index.js
         └── style.css
+
+================================================
+FILE: base64_loop.py
+================================================
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Base64 多次编码/解码工具
+用法：
+    python base64_loop.py -e "hello" -n 3          # 编码 3 次
+    python base64_loop.py -d "aGVsbG8=" -n 2       # 解码 2 次
+    python base64_loop.py -e                       # 交互式输入文本，默认编码 1 次
+"""
+
+import sys
+import base64
+import argparse
+
+
+def b64encode(text: str) -> str:
+    """将字符串编码为 Base64（UTF-8 编码）"""
+    return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+
+
+def b64decode(text: str) -> str:
+    """将 Base64 字符串解码为原文（UTF-8）"""
+    return base64.b64decode(text.encode('utf-8')).decode('utf-8')
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Base64 编码/解码工具，支持多次循环处理",
+        epilog="示例: python base64_loop.py -e 'hello' -n 3"
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-e', '--encode', action='store_true', help="编码模式")
+    group.add_argument('-d', '--decode', action='store_true', help="解码模式")
+    parser.add_argument('-n', '--times', type=int, default=1,
+                        help="循环次数（默认 1），必须 >= 1")
+    parser.add_argument('text', nargs='?', default=None,
+                        help="待处理的文本，若不提供则进入交互式输入")
+
+    args = parser.parse_args()
+
+    # 获取输入文本
+    if args.text is None:
+        args.text = input("请输入要处理的文本: ").strip()
+        if not args.text:
+            print("输入不能为空。")
+            sys.exit(1)
+
+    times = args.times if args.times >= 1 else 1
+    action = "编码" if args.encode else "解码"
+    current = args.text
+
+    try:
+        for i in range(times):
+            if args.encode:
+                current = b64encode(current)
+            else:
+                current = b64decode(current)
+            print(f"第 {i+1} 次{action}结果: {current}")
+    except Exception as e:
+        print(f"错误: 第 {i+1} 次{action}失败，原因为: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
 
 ================================================
 FILE: index.html
@@ -168,13 +242,62 @@ FILE: birthday/index.html
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/happy.ico">
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
+    <style>
+        /* 顶部与底部文字的全局样式 */
+        .page-header {
+            text-align: center;
+            color: #888;
+            font-size: 18px;
+            padding: 24px 20px 12px 20px;
+            letter-spacing: 2px;
+        }
+
+        .page-footer {
+            text-align: center;
+            color: #999;
+            font-size: 16px;
+            padding: 30px 20px 24px 20px;
+            line-height: 2.2;
+            font-family: 'Georgia', 'SimSun', serif;
+        }
+
+        .page-footer strong {
+            color: #666;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 540px) {
+            .page-header {
+                font-size: 15px;
+                padding: 16px 12px 8px 12px;
+            }
+
+            .page-footer {
+                font-size: 14px;
+                padding: 20px 12px 16px 12px;
+                line-height: 2;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <script type="text/javascript" src="preview_assets/click.js"></script>
     <section class="hero-section background_color">
+
+        <!-- 顶部灰色居中文字 -->
+        <div class="page-header">
+            ✦ 愿每一份心意，都化作温暖的光 ✦
+            <p style="margin:0;">
+                <a href="message.txt">
+                    有时，最深的秘密就藏在最日常的触碰之中。
+                </a>
+            </p>
+        </div>
+
         <div class="card-grid">
-            <a class="card" href="javascript:void(0)" onclick="alert('小秘密，不给看！');return false;">
+            <a class="card" href="dingyang/egg/index.html" id="customLink" data-password="20090917">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpeg);">
                 </div>
@@ -197,7 +320,29 @@ FILE: birthday/index.html
                 </div>
             </a>
         </div>
+
+        <!-- 底部灰色居中诗歌（"三十三"加粗） -->
+        <div class="page-footer">
+            <p style="margin:0;"><strong>三</strong>十<strong>三</strong>重天外天，九霄云外有神仙</p>
+            <p style="margin:0;">神仙本是凡人变，唯恐凡人心不坚</p>
+            <p style="margin:0;">一言半句便通玄，何须丹书千万篇</p>
+            <p style="margin:0;">人若不为形所累，眼前便是大罗天。</p>
+        </div>
+
     </section>
+    <div id="myModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; text-align:center; min-width:280px;">
+            <h3>请输入访问密钥</h3>
+            <input type="password" id="codeInput" placeholder="请输入数字"
+                style="margin:15px 0; padding:10px; width:80%; border:1px solid #ccc; border-radius:6px;">
+            <div>
+                <button onclick="verifyAccess()"
+                    style="padding:8px 30px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;">确认</button>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="preview_assets/popup.js"></script>
 </body>
 
 </html>
@@ -372,9 +517,13 @@ FILE: birthday/dingyang/egg/index.html
                 </div>
 
                 <div class="divider">· · ·</div>
+                <p style="font-size:0.95rem; color:#8a7b70; opacity:0.6;">
+                    有时，最深的秘密就藏在最日常的触碰之中。
+                </p>
                 <p style="font-size:0.95rem; color:#8a7b70; opacity:0.8;">
                     有些光点散落在诗间，它们汇聚成塔，指引着方向。
                 </p>
+                <div class="divider">· · ·</div>
             </div>
 
             <footer class="footer">
@@ -492,6 +641,9 @@ FILE: birthday/dingyang/egg/index.html
                 </p>
 
                 <div class="divider">· · ·</div>
+                <p style="font-size:0.95rem; color:#8a7b70; opacity:0.6;">
+                    有时，最深的秘密就藏在最日常的触碰之中。
+                </p>
                 <p style="font-size:0.95rem; color:#8a7b70; opacity:0.8;">
                     心灵的钥匙需要依次转动，才能开启那扇门。
                 </p>
@@ -599,9 +751,9 @@ FILE: birthday/dingyang/egg/index.html
             </div>
 
             <div id="step-identity" class="egg-step">
-                <label for="identityInput">👤 最后一步：请告诉我，她的名字是？</label>
+                <label for="identityInput">👤 最后一步：请告诉我，你的名字是？</label>
                 <div class="input-group">
-                    <input type="text" id="identityInput" placeholder="她的名字..." autocomplete="off" />
+                    <input type="text" id="identityInput" placeholder="你的名字..." autocomplete="off" />
                     <button id="identityBtn">确认</button>
                 </div>
                 <div id="fb-identity"></div>
@@ -630,6 +782,14 @@ FILE: birthday/dingyang/egg/index.html
 </body>
 
 </html>
+
+
+================================================
+FILE: birthday/dingyang/egg/message.txt
+================================================
+download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
+
+Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0
 
 
 ================================================
@@ -723,6 +883,47 @@ document.addEventListener('DOMContentLoaded', function () {
             ripple.remove();
         });
     });
+});
+
+
+================================================
+FILE: birthday/preview_assets/popup.js
+================================================
+let targetHref = '';
+let correctPwd = '';
+
+// 绑定所有带密码的链接（核心复用逻辑）
+document.querySelectorAll('a[data-password]').forEach(link => {
+    link.addEventListener('click', function (e) {
+        e.preventDefault();
+        targetHref = this.href;
+        correctPwd = this.dataset.password; // 获取当前链接专属密码
+
+        document.getElementById('myModal').style.display = 'flex';
+        document.getElementById('codeInput').value = '';
+        document.getElementById('codeInput').focus();
+    });
+});
+
+function verifyAccess() {
+    const input = document.getElementById('codeInput').value;
+    if (input === correctPwd) {
+        window.location.href = targetHref;
+    } else {
+        alert('密码错误，请重试！');
+        document.getElementById('codeInput').value = '';
+        document.getElementById('codeInput').focus();
+    }
+}
+
+// 回车触发验证
+document.getElementById('codeInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') verifyAccess();
+});
+
+// 点击弹窗外部关闭（可选）
+document.getElementById('myModal').addEventListener('click', function (e) {
+    if (e.target === this) this.style.display = 'none';
 });
 
 
