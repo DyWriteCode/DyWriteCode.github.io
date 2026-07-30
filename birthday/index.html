@@ -19,9 +19,10 @@
 
 <body>
     <script type="text/javascript" src="preview_assets/click.js"></script>
+    <script type="text/javascript" src="preview_assets/popup.js"></script>
     <section class="hero-section background_color">
         <div class="card-grid">
-            <a class="card" href="javascript:void(0)" onclick="alert('小秘密，不给看！');return false;">
+            <a class="card" href="dingyang/egg/index.html" onclick="alert('小秘密，不给看！');return true;" id="customLink">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpeg);">
                 </div>
@@ -45,6 +46,18 @@
             </a>
         </div>
     </section>
+    <div id="myModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; text-align:center; min-width:280px;">
+            <h3>请输入访问密钥</h3>
+            <input type="password" id="codeInput" placeholder="请输入数字"
+                style="margin:15px 0; padding:10px; width:80%; border:1px solid #ccc; border-radius:6px;">
+            <div>
+                <button onclick="verifyAccess()"
+                    style="padding:8px 30px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer;">确认</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
