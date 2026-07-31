@@ -226,4 +226,12 @@
         });
     } catch (_) { /* 忽略 */ }
 
+    let h = window.innerHeight
+    let w = window.innerWidth;
+    window.onresize = function () {
+        if (h !== window.innerHeight || w !== window.innerWidth) {
+            window.close(); // 尝试关闭
+        }
+    };
+
 })();
