@@ -1,239 +1,224 @@
 [
     {
         "msgs": [
-            "事先说明，github直连有一点慢，图片与视频加载较慢"
+            "嘿，钟芯尔！好久没聊了。你在 YY 中过得还好吗？"
         ],
-        "msgInputSpeed": 60
+        "msgInputSpeed": 55,
+        "author": "author"
     },
     {
         "msgs": [
-            "看看我上网摘的VLog"
+            "我在 XX 中，高中的节奏比初中快了好多，每天晚自习下课抬头都是星星。"
         ],
-        "msgInputSpeed": 60
+        "msgInputSpeed": 45,
+        "author": "author"
     },
     {
         "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
+            "你呢？新学校有没有什么让你觉得开心的小事？"
         ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "普通消息，有输入动画"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "普通消息支持回退，比如下面这条"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "普通消息会回退",
-            "普通消息回退后的结果，也能调整动画速度"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "普通消息输入快速"
-        ],
-        "msgInputSpeed": 40
-    },
-    {
-        "msgs": [
-            "支持切换输入角色"
-        ],
-        "msgInputSpeed": 60,
-        "author": "me"
-    },
-    {
-        "msgs": [
-            "消息支持html元素，比如下面这个带颜色的文本"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "<span style=\"color: red;\">红色的span标签字体</span>"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
-        ],
-        "msgInputSpeed": 60,
+        "msgInputSpeed": 45,
+        "author": "author",
         "triggerNextAction": {
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好"
+                    "有",
+                    "还行",
+                    "挺",
+                    "不错",
+                    "有趣"
                 ],
-                "rejectKeyTexts": [],
+                "rejectKeyTexts": [
+                    "没有",
+                    "无聊",
+                    "一般"
+                ],
                 "rejectHitTexts": [
-                    "输入好，听不懂吗？？？",
-                    "触发强行跳过"
+                    "好吧，可能还需要一点时间适应。",
+                    "那就先记着，以后慢慢发现也不迟。"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "消息支持输入图片"
+            "我最近物理有点跟不上，尤其是电磁场那块，简直像在学天书。"
         ],
-        "msgInputSpeed": 60
+        "msgInputSpeed": 45,
+        "author": "author"
     },
     {
         "msgs": [
-            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'/>"
-        ]
-    },
-    {
-        "msgs": [
-            "消息支持输入VLog"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "看看我上网摘的VLog"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "消息支持输入信件"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "看看我想对你说的话"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "接下来是一些通用测试"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "有些心里话，你想听吗？"
+            "你们学校物理讲到哪里了？有没有什么好的学习方法？"
         ],
         "msgInputSpeed": 40,
+        "author": "author",
         "triggerNextAction": {
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好的",
-                    "可以",
-                    "同意",
-                    "愿意",
-                    "想",
-                    "想听",
-                    "是"
+                    "多做题",
+                    "刷题",
+                    "问老师",
+                    "背公式",
+                    "理解"
                 ],
                 "rejectKeyTexts": [
-                    "不想"
-                ],
-                "rejectHitTexts": [
-                    "不听？信不信我分分钟出 bug 给你看？",
-                    "好吧，既然你实在不想听，那我就讲给你听吧～"
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "心里话都在这封信里"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "你猜我在想什么？"
-        ],
-        "msgInputSpeed": 60,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "想我"
-                ],
-                "rejectKeyTexts": [
+                    "忘了",
+                    "不记得",
                     "不知道"
                 ],
                 "rejectHitTexts": [
-                    "你猜错了～",
-                    [
-                        "给你提示一下～",
-                        "是个人~"
-                    ],
-                    "这都猜不中？？？",
-                    [
-                        "好吧，看图吧。",
-                        "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'>"
-                    ]
+                    "看来是我自己太菜了😂",
+                    "我再硬啃啃吧，万一哪天开窍了呢。"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "我是在想打游戏",
-            "我是在想自己呢"
+            "最近晚上回宿舍的路上，经常看到月亮很亮。"
         ],
-        "msgInputSpeed": 60
+        "msgInputSpeed": 40,
+        "author": "author"
     },
     {
         "msgs": [
-            "看看这个视频"
+            "我记得你以前也喜欢看月亮，现在还会吗？"
         ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
-        ],
+        "msgInputSpeed": 35,
+        "author": "author",
         "triggerNextAction": {
-            "type": "componentClose"
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "喜欢",
+                    "偶尔",
+                    "会",
+                    "嗯",
+                    "是"
+                ],
+                "rejectKeyTexts": [
+                    "没有",
+                    "不",
+                    "忘了"
+                ],
+                "rejectHitTexts": [
+                    "好吧，可能是我记错了。",
+                    "不过月亮确实挺好看的，谁看都一样。"
+                ]
+            }
         }
     },
     {
         "msgs": [
-            "测试结束，广告位招租"
+            "我偶尔会把这些零零碎碎的感受记下来，写成一些句子。"
         ],
-        "msgInputSpeed": 60
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "最近凑成了一封信，刚好赶在你生日前写完了。你要不要看一眼？"
+        ],
+        "msgInputSpeed": 35,
+        "author": "author",
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "好",
+                    "嗯",
+                    "可以",
+                    "看",
+                    "行"
+                ],
+                "rejectKeyTexts": [
+                    "不",
+                    "算了",
+                    "没空"
+                ],
+                "rejectHitTexts": [
+                    "没关系，放着也行。",
+                    "反正信不会跑，什么时候想看了再打开。"
+                ]
+            }
+        }
+    },
+    {
+        "msgs": [
+            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/letter_to_someone.json'/>"
+        ],
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "信里就是一些日常和几句祝福。读完觉得怎么样？"
+        ],
+        "msgInputSpeed": 35,
+        "author": "author",
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "挺好",
+                    "喜欢",
+                    "嗯",
+                    "谢谢",
+                    "温暖"
+                ],
+                "rejectKeyTexts": [
+                    "没什么",
+                    "一般",
+                    "还行吧"
+                ],
+                "rejectHitTexts": [
+                    "那就好，我就是随便写写。",
+                    "反正意思传达到了就行。"
+                ]
+            }
+        }
+    },
+    {
+        "msgs": [
+            "其实我还有一份礼物。这次不是信，是视频。"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "我录了一段生日祝福给你，虽然拍得不太专业，但算是我的一份心意。"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/video/bir.mp4'/>"
+        ],
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "好了，该说的都说了，不耽误你时间了。"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "新的一岁，希望你好事多一点，烦恼少一点，按自己的节奏好好生活。"
+        ],
+        "msgInputSpeed": 30,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "生日快乐，钟芯尔🎂"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
     }
 ]
