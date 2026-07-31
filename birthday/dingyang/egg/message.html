@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <meta name="referrer" content="no-referrer" />
+    <title>秘密消息 · 解码器</title>
+    <style>
+        /* ===== 全局重置 & 字体 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', 'Songti SC', serif;
+            background: #faf8f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            color: #2d2a24;
+            line-height: 1.7;
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            max-width: 780px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.03);
+            padding: 48px 40px 52px;
+            border: 1px solid #f0ede8;
+            transition: opacity 0.5s ease;
+        }
+
+        /* ===== 头部 ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid #eae7e0;
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #e8e0d8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #5a4e44;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .site-title {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: #3d352e;
+            cursor: default;
+            user-select: none;
+        }
+
+        .site-title span {
+            font-weight: 200;
+            color: #b0a090;
+            font-size: 0.75em;
+        }
+
+        /* ===== 内容区 ===== */
+        .content {
+            font-size: 17px;
+            color: #3d352e;
+        }
+
+        .content p {
+            margin-bottom: 1.2em;
+        }
+
+        .highlight {
+            color: #b5654b;
+            font-weight: 500;
+            border-bottom: 1px dashed #dccfc8;
+            padding-bottom: 1px;
+        }
+
+        .code-block {
+            background: #f7f3ef;
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.92em;
+            color: #4a3f38;
+            margin: 1.2em 0;
+            border-left: 4px solid #b5654b;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.8;
+        }
+
+        .divider {
+            text-align: center;
+            color: #c9bdb2;
+            letter-spacing: 8px;
+            margin: 2em 0 1.6em;
+            font-size: 1.1rem;
+        }
+
+        /* ===== 解码器工具 ===== */
+        .decoder-section {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid #eae7e0;
+        }
+
+        .decoder-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3d352e;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .decoder-title small {
+            font-weight: 400;
+            font-size: 14px;
+            color: #8a7b70;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .input-group textarea {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #dccfc8;
+            background: #fcfaf8;
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            transition: 0.2s;
+            color: #2d2a24;
+            resize: vertical;
+            line-height: 1.6;
+            min-height: 80px;
+        }
+
+        .input-group textarea:focus {
+            border-color: #b5654b;
+            box-shadow: 0 0 0 4px rgba(181, 101, 75, 0.08);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #b5654b;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(181, 101, 75, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: #a0523a;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(181, 101, 75, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        .btn-secondary {
+            background: #e8e0d8;
+            color: #3d352e;
+        }
+
+        .btn-secondary:hover {
+            background: #ddd5cb;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.97);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #b5654b;
+            border: 1.5px solid #b5654b;
+        }
+
+        .btn-outline:hover {
+            background: #b5654b0d;
+        }
+
+        .btn-outline:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== 结果展示 ===== */
+        .result-area {
+            margin-top: 18px;
+            padding: 18px 20px;
+            background: #f7f3ef;
+            border-radius: 16px;
+            border-left: 4px solid #b5654b;
+            min-height: 60px;
+            transition: 0.3s;
+        }
+
+        .result-area .label {
+            font-size: 13px;
+            color: #8a7b70;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .result-area .result-text {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            color: #2d2a24;
+            word-break: break-all;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .result-area .result-text.empty {
+            color: #b0a090;
+            font-style: italic;
+        }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #8a7b70;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 30px;
+            background: #e8e0d8;
+            font-size: 12px;
+            color: #5a4e44;
+        }
+
+        .badge.active {
+            background: #b5654b;
+            color: #fff;
+        }
+
+        /* ===== 页脚 ===== */
+        .footer {
+            margin-top: 36px;
+            padding-top: 18px;
+            border-top: 1px solid #eae7e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #8a7b70;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer a {
+            color: #8a7b70;
+            text-decoration: none;
+            transition: color 0.2s;
+            border-bottom: 1px dashed #dccfc8;
+            padding-bottom: 1px;
+        }
+
+        .footer a:hover {
+            color: #b5654b;
+            border-bottom-color: #b5654b;
+        }
+
+        /* ===== 提示 & 动画 ===== */
+        .hint-subtle {
+            color: #b5654b;
+            opacity: 0.4;
+            font-size: 0.85em;
+            font-style: italic;
+        }
+
+        .fade-in {
+            animation: fadeSlideIn 0.5s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            .container {
+                padding: 28px 18px 32px;
+                border-radius: 24px;
+            }
+
+            .site-title {
+                font-size: 20px;
+            }
+
+            .content {
+                font-size: 15px;
+            }
+
+            .input-group textarea {
+                font-size: 14px;
+                min-height: 60px;
+                padding: 12px 14px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .decoder-title {
+                font-size: 16px;
+                flex-wrap: wrap;
+            }
+
+            .result-area .result-text {
+                font-size: 14px;
+            }
+
+            .footer {
+                font-size: 13px;
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px 12px 24px;
+            }
+
+            .site-title {
+                font-size: 17px;
+            }
+
+            .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .input-group textarea {
+                min-height: 50px;
+            }
+        }
+
+        /* ===== 涟漪容器（与网站一致） ===== */
+        .ripple-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: rippleAnim 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes rippleAnim {
+            to {
+                transform: scale(3.0);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 解码计数徽章 ===== */
+        .counter-badge {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 30px;
+            background: #b5654b;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-msg {
+            font-size: 14px;
+            color: #b5654b;
+            margin-top: 6px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 涟漪容器（点击特效） ===== -->
+    <div class="ripple-container" id="rippleContainer"></div>
+
+    <!-- ===== 主容器 ===== -->
+    <div class="container" id="app">
+
+        <!-- 头部 -->
+        <header class="header">
+            <div class="avatar">✦</div>
+            <h1 class="site-title">秘密消息 <span>· 解码器</span></h1>
+        </header>
+
+        <!-- 内容 -->
+        <div class="content">
+
+            <!-- 原始消息展示 -->
+            <p>
+                <span class="highlight">message.txt</span> 中藏着一行提示和一段密文：
+            </p>
+
+            <div class="code-block">
+                download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
+
+                Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=
+            </div>
+
+            <p style="font-size: 0.95rem; color: #8a7b70;">
+                它指引你下载 <span class="highlight">base64_loop.py</span> 来解码下方的字符串。
+                现在，你可以在浏览器中直接解码，无需安装 Python。
+            </p>
+
+            <div class="divider">· · ·</div>
+
+            <!-- 解码器 -->
+            <div class="decoder-section">
+                <div class="decoder-title">
+                    🔐 Base64 解码器
+                    <small>— 点击「解码」逐层揭开</small>
+                    <span class="counter-badge" id="stepBadge">第 0 层</span>
+                </div>
+
+                <div class="input-group">
+                    <textarea id="codeInput" spellcheck="false">Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=</textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="decodeBtn">🔓 解码</button>
+                    <button class="btn btn-secondary" id="resetBtn">↻ 重置</button>
+                    <button class="btn btn-outline" id="autoBtn">⚡ 自动解码</button>
+                </div>
+
+                <div id="statusMsg" class="status-msg"></div>
+
+                <!-- 结果 -->
+                <div class="result-area" id="resultArea">
+                    <div class="label">📄 解码结果</div>
+                    <div class="result-text empty" id="resultText">点击「解码」开始</div>
+                    <div class="result-meta">
+                        <span id="resultMeta">等待操作…</span>
+                        <span class="badge" id="isBase64Badge">Base64</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <span>© 2026 · 光影之间</span>
+            <div>
+                <a href="javascript:void(0)" onclick="resetAll()">重置</a>
+                <span style="margin:0 8px;opacity:0.3;">·</span>
+                <a href="javascript:void(0)" onclick="copyResult()">复制结果</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JavaScript -->
+    <!-- ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== DOM 引用 =====
+            const codeInput = document.getElementById('codeInput');
+            const decodeBtn = document.getElementById('decodeBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const autoBtn = document.getElementById('autoBtn');
+            const resultText = document.getElementById('resultText');
+            const resultMeta = document.getElementById('resultMeta');
+            const stepBadge = document.getElementById('stepBadge');
+            const statusMsg = document.getElementById('statusMsg');
+            const isBase64Badge = document.getElementById('isBase64Badge');
+
+            // ===== 状态 =====
+            let stepCount = 0;
+            let isAutoRunning = false;
+            let autoTimer = null;
+
+            // ===== 工具函数 =====
+
+            // 判断一个字符串是否是有效的 Base64（宽松检测）
+            function isBase64(str) {
+                if (!str || str.trim() === '') return false;
+                // 移除空白字符后检测
+                const clean = str.replace(/\s/g, '');
+                // Base64 字符集：A-Z a-z 0-9 + / = 
+                // 长度必须是 4 的倍数（末尾可以有 =）
+                const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+                if (!base64Regex.test(clean)) return false;
+                // 长度必须是 4 的倍数
+                if (clean.length % 4 !== 0) return false;
+                // 尝试解码，如果成功则认为是 Base64
+                try {
+                    const decoded = atob(clean);
+                    // 如果解码结果包含不可打印字符，可能不是文本 Base64
+                    // 但很多情况下是有效的，所以只做基本检查
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            // 安全的 Base64 解码
+            function safeDecode(str) {
+                try {
+                    // 移除空白字符
+                    const clean = str.replace(/\s/g, '');
+                    return atob(clean);
+                } catch (_) {
+                    return null;
+                }
+            }
+
+            // 更新界面
+            function updateUI(text, meta) {
+                if (text === null || text === undefined) {
+                    resultText.textContent = '❌ 解码失败，请检查输入是否为有效的 Base64。';
+                    resultText.className = 'result-text';
+                    isBase64Badge.textContent = '无效';
+                    isBase64Badge.className = 'badge';
+                    return;
+                }
+
+                const displayText = text || '（空字符串）';
+                resultText.textContent = displayText;
+                resultText.className = 'result-text';
+
+                // 检测是否还是 Base64
+                const stillBase64 = isBase64(text);
+                isBase64Badge.textContent = stillBase64 ? '🔁 Base64' : '📝 文本';
+                isBase64Badge.className = 'badge' + (stillBase64 ? ' active' : '');
+
+                if (meta) {
+                    resultMeta.textContent = meta;
+                }
+            }
+
+            // 执行一次解码
+            function performDecode() {
+                const input = codeInput.value;
+                if (!input || input.trim() === '') {
+                    statusMsg.textContent = '⚠️ 请输入要解码的内容。';
+                    return false;
+                }
+
+                // 检查是否是 Base64
+                if (!isBase64(input)) {
+                    statusMsg.textContent = '⚠️ 当前内容不是有效的 Base64 编码。';
+                    // 但仍然尝试解码
+                    const decoded = safeDecode(input);
+                    if (decoded !== null) {
+                        // 虽然格式不完全匹配，但 atob 成功了
+                        codeInput.value = decoded;
+                        stepCount++;
+                        stepBadge.textContent = '第 ' + stepCount + ' 层';
+                        updateUI(decoded, '解码成功（第 ' + stepCount + ' 层）');
+                        statusMsg.textContent = '✅ 解码成功！';
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 执行解码
+                const decoded = safeDecode(input);
+                if (decoded === null) {
+                    statusMsg.textContent = '❌ 解码失败，数据可能已损坏。';
+                    return false;
+                }
+
+                // 更新
+                codeInput.value = decoded;
+                stepCount++;
+                stepBadge.textContent = '第 ' + stepCount + ' 层';
+                updateUI(decoded, '解码成功（第 ' + stepCount + ' 层）');
+                statusMsg.textContent = '✅ 解码成功！' + (isBase64(decoded) ? ' 继续解码可深入。' : ' 已解码为最终文本。');
+                return true;
+            }
+
+            // 重置
+            function resetAll() {
+                if (autoTimer) {
+                    clearTimeout(autoTimer);
+                    autoTimer = null;
+                    isAutoRunning = false;
+                }
+                const initial = 'Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=';
+                codeInput.value = initial;
+                stepCount = 0;
+                stepBadge.textContent = '第 0 层';
+                updateUI(null, '已重置');
+                resultText.textContent = '点击「解码」开始';
+                resultText.className = 'result-text empty';
+                isBase64Badge.textContent = 'Base64';
+                isBase64Badge.className = 'badge active';
+                statusMsg.textContent = '已重置，准备就绪。';
+            }
+
+            // 自动解码
+            function autoDecode() {
+                if (isAutoRunning) {
+                    // 如果正在运行，停止
+                    if (autoTimer) {
+                        clearTimeout(autoTimer);
+                        autoTimer = null;
+                    }
+                    isAutoRunning = false;
+                    statusMsg.textContent = '⏹ 自动解码已停止。';
+                    autoBtn.textContent = '⚡ 自动解码';
+                    return;
+                }
+
+                isAutoRunning = true;
+                autoBtn.textContent = '⏹ 停止';
+                statusMsg.textContent = '⏳ 自动解码中…';
+
+                function step() {
+                    if (!isAutoRunning) {
+                        autoBtn.textContent = '⚡ 自动解码';
+                        return;
+                    }
+
+                    const current = codeInput.value;
+                    if (!current || current.trim() === '') {
+                        statusMsg.textContent = '✅ 自动解码完成（内容为空）。';
+                        isAutoRunning = false;
+                        autoBtn.textContent = '⚡ 自动解码';
+                        return;
+                    }
+
+                    // 检查是否还是 Base64
+                    if (!isBase64(current)) {
+                        statusMsg.textContent = '✅ 自动解码完成（已转为普通文本）。';
+                        isAutoRunning = false;
+                        autoBtn.textContent = '⚡ 自动解码';
+                        return;
+                    }
+
+                    // 执行解码
+                    const decoded = safeDecode(current);
+                    if (decoded === null) {
+                        statusMsg.textContent = '⚠️ 自动解码停止（解码失败）。';
+                        isAutoRunning = false;
+                        autoBtn.textContent = '⚡ 自动解码';
+                        return;
+                    }
+
+                    codeInput.value = decoded;
+                    stepCount++;
+                    stepBadge.textContent = '第 ' + stepCount + ' 层';
+                    updateUI(decoded, '自动解码（第 ' + stepCount + ' 层）');
+
+                    // 检查解码后是否还是 Base64
+                    if (isBase64(decoded)) {
+                        // 继续
+                        autoTimer = setTimeout(step, 400);
+                    } else {
+                        statusMsg.textContent = '✅ 自动解码完成（共 ' + stepCount + ' 层）。';
+                        isAutoRunning = false;
+                        autoBtn.textContent = '⚡ 自动解码';
+                    }
+                }
+
+                // 启动第一步
+                autoTimer = setTimeout(step, 300);
+            }
+
+            // 复制结果
+            function copyResult() {
+                const text = resultText.textContent;
+                if (!text || text === '点击「解码」开始' || text === '（空字符串）') {
+                    statusMsg.textContent = '⚠️ 没有可复制的内容。';
+                    return;
+                }
+                navigator.clipboard.writeText(text).then(() => {
+                    statusMsg.textContent = '📋 已复制到剪贴板！';
+                }).catch(() => {
+                    // Fallback
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                    statusMsg.textContent = '📋 已复制到剪贴板！';
+                });
+            }
+
+            // ===== 涟漪特效 =====
+            function setupRipple() {
+                const container = document.getElementById('rippleContainer');
+                if (!container) return;
+
+                const colors = [
+                    'radial-gradient(circle, #a08a70, #6a5a42, #a08a70 100%)',
+                ];
+
+                document.addEventListener('click', function(e) {
+                    const ripple = document.createElement('div');
+                    ripple.className = 'ripple';
+                    const x = e.clientX;
+                    const y = e.clientY;
+                    const size = 30 + Math.random() * 50;
+                    ripple.style.width = size + 'px';
+                    ripple.style.height = size + 'px';
+                    ripple.style.left = (x - size / 2) + 'px';
+                    ripple.style.top = (y - size / 2) + 'px';
+                    ripple.style.background = colors[0];
+                    container.appendChild(ripple);
+                    ripple.addEventListener('animationend', function() {
+                        ripple.remove();
+                    });
+                });
+            }
+
+            // ===== 初始化 =====
+            function init() {
+                // 设置初始值
+                const initial = 'Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=';
+                codeInput.value = initial;
+                stepCount = 0;
+                stepBadge.textContent = '第 0 层';
+                updateUI(null, '等待操作');
+                resultText.textContent = '点击「解码」开始';
+                resultText.className = 'result-text empty';
+                isBase64Badge.textContent = 'Base64';
+                isBase64Badge.className = 'badge active';
+                statusMsg.textContent = '';
+
+                // 绑定事件
+                decodeBtn.addEventListener('click', function() {
+                    if (isAutoRunning) {
+                        // 如果自动解码正在运行，先停止
+                        if (autoTimer) {
+                            clearTimeout(autoTimer);
+                            autoTimer = null;
+                        }
+                        isAutoRunning = false;
+                        autoBtn.textContent = '⚡ 自动解码';
+                    }
+                    performDecode();
+                });
+
+                resetBtn.addEventListener('click', resetAll);
+
+                autoBtn.addEventListener('click', autoDecode);
+
+                // 回车键快捷解码（在 textarea 中按 Ctrl+Enter 或 Cmd+Enter）
+                codeInput.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        decodeBtn.click();
+                    }
+                });
+
+                // 设置涟漪
+                setupRipple();
+
+                // 暴露函数到全局，供 HTML onclick 使用
+                window.resetAll = resetAll;
+                window.copyResult = copyResult;
+            }
+
+            // 页面加载完成后初始化
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
+
+        })();
+    </script>
+
+</body>
+</html>
