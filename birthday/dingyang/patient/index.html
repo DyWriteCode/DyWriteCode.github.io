@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer">
+    <link rel="preconnect" href="https://cdn.jsdmirror.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdmirror.com">
+    <link rel="stylesheet" href="index.encryption.css" />
+    <script type="module" crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
+    <link rel="icon" type="image/png"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico">
+    <title>Patient is the key of the life</title>
+    <style>
+        /* ===== 全局重置 & 浅色主题 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Georgia', 'Times New Roman', 'Songti SC', serif;
+            background: #f8f6f1;
+            /* 基础背景色，JS微调会在此基础上变化 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.4s ease;
+            color: #4a4035;
+        }
+
+        /* ===== 主容器 ===== */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.2s ease;
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ===== 主视图 ===== */
+        #mainView {
+            background: transparent;
+        }
+
+        .main-content {
+            text-align: center;
+            max-width: 900px;
+            padding: 1rem;
+        }
+
+        /* ---- 主标题 ---- */
+        .main-title {
+            font-size: clamp(2.8rem, 10vw, 5.2rem);
+            font-weight: 700;
+            color: #5c5346;
+            /* 基准色，JS微调 */
+            ;
+            letter-spacing: 0.12em;
+            line-height: 1.2;
+            margin-bottom: 0.5em;
+            text-shadow: 0 0 30px rgba(92, 83, 70, 0.08);
+            transform-origin: center;
+            transition: transform 0.2s ease;
+        }
+
+        /* ---- 副标题（翻译） ---- */
+        .sub-title {
+            font-size: clamp(1rem, 3vw, 1.6rem);
+            font-weight: 300;
+            color: #8a7e6e;
+            letter-spacing: 0.08em;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 2.4rem;
+            text-shadow: 0 0 20px rgba(138, 126, 110, 0.06);
+        }
+
+        /* ---- 沙漏图标（取代数字倒计时） ---- */
+        .countdown-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            transition: opacity 0.6s ease;
+        }
+
+        .hourglass-icon {
+            font-size: clamp(2.8rem, 6vw, 4.2rem);
+            display: inline-block;
+            color: #8f8474;
+            animation: hourglassFloat 3.2s ease-in-out infinite alternate;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.04));
+            transition: all 0.3s ease;
+        }
+
+        /* 沙漏轻微摇摆 + 浮动，细微但可察觉 */
+        @keyframes hourglassFloat {
+            0% {
+                transform: translateY(0px) rotate(-1.5deg);
+            }
+
+            100% {
+                transform: translateY(-8px) rotate(1.5deg);
+            }
+        }
+
+        /* ---- 底部细线装饰 ---- */
+        .divider-line {
+            width: 60px;
+            height: 1.5px;
+            background: rgba(92, 83, 70, 0.15);
+            margin: 2.2rem auto 0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* ===== 惊喜视图 ===== */
+        #surpriseView {
+            background: radial-gradient(ellipse at center, #fefcf8 0%, #f5f1ea 100%);
+        }
+
+        .surprise-content {
+            text-align: center;
+            animation: surpriseFadeIn 1.6s ease forwards;
+            padding: 1rem;
+        }
+
+        .surprise-emoji {
+            font-size: clamp(5rem, 18vw, 9rem);
+            display: block;
+            margin-bottom: 0.2em;
+            animation: emojiFloat 3s ease-in-out infinite alternate;
+            filter: drop-shadow(0 8px 30px rgba(180, 120, 50, 0.15));
+        }
+
+        .surprise-title {
+            font-size: clamp(2.6rem, 8vw, 4.8rem);
+            font-weight: 700;
+            color: #6a5a42;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 60px rgba(180, 150, 100, 0.12), 0 0 120px rgba(180, 150, 100, 0.05);
+            margin-bottom: 0.3em;
+            background: linear-gradient(135deg, #a08a70, #6a5a42, #a08a70);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerGold 4s ease-in-out infinite alternate;
+        }
+
+        .surprise-sub {
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            color: rgba(80, 70, 60, 0.7);
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            font-family: 'Arial', 'PingFang SC', sans-serif;
+        }
+
+        /* 跳转提示小字 */
+        .redirect-hint {
+            margin-top: 2.5rem;
+            font-size: 0.85rem;
+            color: rgba(80, 70, 60, 0.35);
+            letter-spacing: 0.1em;
+            font-family: 'Arial', sans-serif;
+            animation: pulseHint 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseHint {
+
+            0%,
+            100% {
+                opacity: 0.35;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* ===== 惊喜粒子装饰 ===== */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(160, 140, 110, 0.15);
+            animation: particleDrift linear infinite;
+            opacity: 0;
+        }
+
+        .particle:nth-child(1) {
+            left: 8%;
+            animation-duration: 22s;
+            animation-delay: 0s;
+            width: 6px;
+            height: 6px;
+        }
+
+        .particle:nth-child(2) {
+            left: 22%;
+            animation-duration: 26s;
+            animation-delay: 2s;
+            width: 10px;
+            height: 10px;
+            background: rgba(160, 140, 110, 0.10);
+        }
+
+        .particle:nth-child(3) {
+            left: 42%;
+            animation-duration: 20s;
+            animation-delay: 4s;
+            width: 5px;
+            height: 5px;
+        }
+
+        .particle:nth-child(4) {
+            left: 62%;
+            animation-duration: 28s;
+            animation-delay: 1s;
+            width: 9px;
+            height: 9px;
+            background: rgba(160, 140, 110, 0.08);
+        }
+
+        .particle:nth-child(5) {
+            left: 78%;
+            animation-duration: 23s;
+            animation-delay: 3s;
+            width: 6px;
+            height: 6px;
+        }
+
+        .particle:nth-child(6) {
+            left: 52%;
+            animation-duration: 30s;
+            animation-delay: 5s;
+            width: 11px;
+            height: 11px;
+            background: rgba(160, 140, 110, 0.06);
+        }
+
+        .particle:nth-child(7) {
+            left: 15%;
+            animation-duration: 24s;
+            animation-delay: 7s;
+            width: 7px;
+            height: 7px;
+            background: rgba(160, 140, 110, 0.12);
+        }
+
+        .particle:nth-child(8) {
+            left: 70%;
+            animation-duration: 25s;
+            animation-delay: 2.5s;
+            width: 5px;
+            height: 5px;
+        }
+
+        @keyframes particleDrift {
+            0% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            85% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(720deg) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 关键帧动画 ===== */
+        @keyframes surpriseFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.94) translateY(16px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes emojiFloat {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+
+            100% {
+                transform: translateY(-14px) scale(1.05);
+            }
+        }
+
+        @keyframes shimmerGold {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            .main-title {
+                letter-spacing: 0.06em;
+            }
+
+            .sub-title {
+                letter-spacing: 0.04em;
+            }
+
+            .divider-line {
+                width: 40px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .main-title {
+                font-size: clamp(2rem, 12vw, 2.8rem);
+            }
+
+            .sub-title {
+                font-size: clamp(0.85rem, 3.5vw, 1.1rem);
+            }
+
+            .hourglass-icon {
+                font-size: 2.4rem;
+            }
+        }
+
+        /* ===== 辅助 ===== */
+        .page * {
+            cursor: default;
+            user-select: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #surpriseView .surprise-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .ripple-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: rippleAnim 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes rippleAnim {
+            to {
+                transform: scale(3.0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript" src="click.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- 主视图 -->
+    <!-- ============================================================ -->
+    <div id="mainView" class="page active">
+        <div class="main-content">
+
+            <h1 class="main-title" id="mainTitle">
+                Patient is the key of the life
+            </h1>
+
+            <p class="sub-title" id="subTitle">
+                Watch patiently, wait patiently, and there will be a surprise
+            </p>
+
+            <!-- 沙漏图标，取代数字倒计时 -->
+            <div class="countdown-wrapper" id="countdownWrapper">
+                <span class="hourglass-icon" id="hourglassIcon">⌛</span>
+            </div>
+
+            <div class="divider-line" id="dividerLine"></div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 惊喜视图 -->
+    <!-- ============================================================ -->
+    <div id="surpriseView" class="page">
+        <!-- 粒子背景 -->
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+
+        <div class="surprise-content">
+            <span class="surprise-emoji">🌟</span>
+            <h2 class="surprise-title">惊喜！</h2>
+            <p class="surprise-sub">你发现了隐藏的宝藏 🎁</p>
+            <div class="redirect-hint">即将为你跳转…</div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            'use strict';
+            const CONFIG = {
+                // 等待跳转前的停留秒数（倒计时）
+                countdownSeconds: 12,
+                // 惊喜展示后，间隔几秒跳转到目标页面
+                redirectDelayAfterSurprise: 3,
+                // 目标页面 URL（请替换为你自己的链接）
+                redirectUrl: 'https://dywritecode.github.io/birthday',
+                // 是否在地址栏添加 hash 标记
+                useHash: true,
+                surpriseHash: 'surprise',
+            };
+
+            // ===== DOM 引用 =====
+            const mainView = document.getElementById('mainView');
+            const surpriseView = document.getElementById('surpriseView');
+            const mainTitle = document.getElementById('mainTitle');
+            const subTitle = document.getElementById('subTitle');
+            const countdownWrapper = document.getElementById('countdownWrapper');
+            const hourglassIcon = document.getElementById('hourglassIcon');
+            const dividerLine = document.getElementById('dividerLine');
+
+            // ===== 状态 =====
+            let remaining = CONFIG.countdownSeconds;
+            let timerId = null;
+            let animFrameId = null;
+            let isSurpriseShown = false;
+
+            // ===== 细微变化参数（浅色主题适配） =====
+            const MICRO = {
+                // 主文字颜色: 色相偏移 (HSL 的 H)
+                hueShift: { amplitude: 2.5, period: 22000, offset: 0 },
+                // 主文字亮度偏移 (HSL 的 L，单位 %)
+                lightShift: { amplitude: 2.8, period: 20000, offset: 1000 },
+                // 主文字大小偏移 (scale)
+                sizeShift: { amplitude: 0.5, period: 26000, offset: 600 },
+                // 主文字字母间距 (em)
+                letterShift: { amplitude: 0.02, period: 24000, offset: 400 },
+                // 主文字阴影模糊 (px)
+                shadowBlurShift: { amplitude: 6, period: 28000, offset: 1400 },
+                // 主文字阴影透明度 (rgba alpha)
+                shadowAlphaShift: { amplitude: 0.06, period: 21000, offset: 200 },
+                // 背景色亮度偏移 (body bg, L %)
+                bgLightShift: { amplitude: 1.8, period: 30000, offset: 800 },
+                // 副文字色相偏移
+                subHueShift: { amplitude: 2.0, period: 17000, offset: 900 },
+                // 副文字亮度偏移
+                subLightShift: { amplitude: 2.5, period: 23000, offset: 1300 },
+                // 分割线宽度偏移 (px)
+                lineWidthShift: { amplitude: 5, period: 27000, offset: 500 },
+                // 沙漏整体透明度偏移 (微弱的呼吸)
+                hourglassOpacityShift: { amplitude: 0.08, period: 19000, offset: 300 },
+                // 沙漏轻微旋转偏移 (deg)
+                hourglassRotateShift: { amplitude: 0.8, period: 25000, offset: 700 },
+            };
+
+            // ===== 颜色工具 =====
+            function hslToStr(h, s, l) {
+                return 'hsl(' + h + ', ' + s + '%, ' + l + '%)';
+            }
+
+            // ===== 核心动画：细微变化（浅色系，极慢速） =====
+            function updateMicroChanges(timestamp) {
+                if (isSurpriseShown) {
+                    animFrameId = requestAnimationFrame(updateMicroChanges);
+                    return;
+                }
+
+                const t = timestamp || performance.now();
+
+                // ---- 1. 主文字颜色 (暖灰/浅棕色调) ----
+                const hueBase = 38;
+                const hueOff = Math.sin(t / MICRO.hueShift.period + MICRO.hueShift.offset) * MICRO.hueShift.amplitude;
+                const lightBase = 34;
+                const lightOff = Math.sin(t / MICRO.lightShift.period + MICRO.lightShift.offset) * MICRO.lightShift
+                    .amplitude;
+                mainTitle.style.color = hslToStr(hueBase + hueOff, 22, lightBase + lightOff);
+
+                // ---- 2. 主文字大小 (transform scale) ----
+                const sizeOff = Math.sin(t / MICRO.sizeShift.period + MICRO.sizeShift.offset) * MICRO.sizeShift.amplitude *
+                    0.01;
+                mainTitle.style.transform = 'scale(' + (1 + sizeOff) + ')';
+
+                // ---- 3. 主文字字母间距 ----
+                const letterBase = 0.12;
+                const letterOff = Math.sin(t / MICRO.letterShift.period + MICRO.letterShift.offset) * MICRO.letterShift
+                    .amplitude;
+                mainTitle.style.letterSpacing = (letterBase + letterOff) + 'em';
+
+                // ---- 4. 主文字阴影 ----
+                const blurBase = 30;
+                const blurOff = Math.sin(t / MICRO.shadowBlurShift.period + MICRO.shadowBlurShift.offset) * MICRO
+                    .shadowBlurShift.amplitude;
+                const alphaBase = 0.08;
+                const alphaOff = Math.sin(t / MICRO.shadowAlphaShift.period + MICRO.shadowAlphaShift.offset) * MICRO
+                    .shadowAlphaShift.amplitude;
+                const shadowColor = 'rgba(92, 83, 70, ' + Math.max(0.02, alphaBase + alphaOff) + ')';
+                mainTitle.style.textShadow = '0 0 ' + (blurBase + blurOff) + 'px ' + shadowColor;
+
+                // ---- 5. 背景色 (body 背景，浅色微变) ----
+                const bgLightBase = 96.5;
+                const bgLightOff = Math.sin(t / MICRO.bgLightShift.period + MICRO.bgLightShift.offset) * MICRO.bgLightShift
+                    .amplitude;
+                document.body.style.backgroundColor = hslToStr(40, 6, bgLightBase + bgLightOff);
+
+                // ---- 6. 副文字颜色 ----
+                const subHueBase = 40;
+                const subHueOff = Math.sin(t / MICRO.subHueShift.period + MICRO.subHueShift.offset) * MICRO.subHueShift
+                    .amplitude;
+                const subLightBase = 48;
+                const subLightOff = Math.sin(t / MICRO.subLightShift.period + MICRO.subLightShift.offset) * MICRO
+                    .subLightShift.amplitude;
+                subTitle.style.color = hslToStr(subHueBase + subHueOff, 18, subLightBase + subLightOff);
+
+                // ---- 7. 分割线宽度 ----
+                const lineBase = 60;
+                const lineOff = Math.sin(t / MICRO.lineWidthShift.period + MICRO.lineWidthShift.offset) * MICRO
+                    .lineWidthShift.amplitude;
+                dividerLine.style.width = Math.max(25, lineBase + lineOff) + 'px';
+
+                // ---- 8. 沙漏图标: 透明度 + 旋转 ----
+                const opBase = 1;
+                const opOff = Math.sin(t / MICRO.hourglassOpacityShift.period + MICRO.hourglassOpacityShift.offset) * MICRO
+                    .hourglassOpacityShift.amplitude;
+                hourglassIcon.style.opacity = Math.max(0.6, Math.min(1, opBase + opOff));
+
+                const rotBase = 0;
+                const rotOff = Math.sin(t / MICRO.hourglassRotateShift.period + MICRO.hourglassRotateShift.offset) * MICRO
+                    .hourglassRotateShift.amplitude;
+                // 叠加在原有动画之上，用 filter 或 transform，保留原有浮动动画，这里我们额外加一个微弱的旋转
+                // 由于原有 animation 使用了 transform，这里用 filter 或 单独 rotate 会冲突，改用 scale 和 额外属性。
+                // 为了不影响原有浮动，我们使用 filter: drop-shadow 和 颜色微变，或者我们可以直接修改 animation 的参数。
+                // 更稳妥：直接利用 CSS 自定义属性或单独修改 color。
+                // 简单起见，我们微调颜色饱和度/亮度，因为 transform 被 animation 占用。
+                // 我们通过 filter: brightness 微调
+                const brightBase = 1;
+                const brightOff = Math.sin(t / 15000 + 200) * 0.04;
+                hourglassIcon.style.filter = 'drop-shadow(0 4px 12px rgba(0,0,0,0.04)) brightness(' + (brightBase +
+                    brightOff) + ')';
+
+                // ---- 9. 沙漏颜色微变 (通过 color) ----
+                const glassHueBase = 38;
+                const glassHueOff = Math.sin(t / 18000 + 500) * 1.5;
+                const glassLightBase = 50;
+                const glassLightOff = Math.sin(t / 20000 + 300) * 2;
+                hourglassIcon.style.color = hslToStr(glassHueBase + glassHueOff, 20, glassLightBase + glassLightOff);
+
+                // 继续下一帧
+                animFrameId = requestAnimationFrame(updateMicroChanges);
+            }
+
+            // ===== 倒计时逻辑（后台运行，不显示数字） =====
+            function startCountdown() {
+                if (timerId) return;
+                remaining = CONFIG.countdownSeconds;
+
+                timerId = setInterval(function () {
+                    remaining -= 1;
+                    if (remaining <= 0) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        showSurprise();
+                    }
+                }, 1000);
+            }
+
+            // ===== 显示惊喜 & 自动跳转 =====
+            function showSurprise() {
+                if (isSurpriseShown) return;
+                isSurpriseShown = true;
+
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+
+                // 切换视图
+                mainView.classList.remove('active');
+                surpriseView.classList.add('active');
+
+                // 更新 URL hash
+                if (CONFIG.useHash && window.location.hash !== '#' + CONFIG.surpriseHash) {
+                    try {
+                        window.location.hash = CONFIG.surpriseHash;
+                    } catch (_) { /* 忽略 */ }
+                }
+
+                // 停止细微变化动画
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+
+                // 清除主视图动态样式
+                mainTitle.style.transform = '';
+                mainTitle.style.letterSpacing = '';
+                mainTitle.style.textShadow = '';
+                mainTitle.style.color = '';
+                subTitle.style.color = '';
+                dividerLine.style.width = '';
+                document.body.style.backgroundColor = '';
+                hourglassIcon.style.filter = '';
+                hourglassIcon.style.color = '';
+                hourglassIcon.style.opacity = '';
+
+                // 标题变化
+                document.title = '🎉 惊喜！';
+
+                // ----- 自动跳转到目标页面 -----
+                setTimeout(function () {
+                    window.location.href = CONFIG.redirectUrl;
+                }, CONFIG.redirectDelayAfterSurprise * 1000);
+            }
+
+            // ===== 检测 hash 直接跳转 =====
+            function checkHash() {
+                if (window.location.hash === '#' + CONFIG.surpriseHash) {
+                    showSurprise();
+                    return true;
+                }
+                return false;
+            }
+
+            window.addEventListener('hashchange', function () {
+                if (window.location.hash === '#' + CONFIG.surpriseHash) {
+                    showSurprise();
+                }
+            });
+
+            // ===== 初始化 =====
+            function init() {
+                if (checkHash()) return;
+
+                // 启动细微变化动画
+                if (animFrameId) cancelAnimationFrame(animFrameId);
+                animFrameId = requestAnimationFrame(updateMicroChanges);
+
+                // 启动倒计时
+                startCountdown();
+
+                mainView.classList.add('active');
+                surpriseView.classList.remove('active');
+                document.body.style.backgroundColor = '#f8f6f1';
+
+                console.log('✨ 页面已启动 (浅色主题 | 沙漏计时)');
+            }
+
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
+
+        })();
+    </script>
+
+</body>
+
+</html>
