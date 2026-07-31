@@ -208,13 +208,6 @@
         });
     });
 
-    // 控制台输出警告（但会被后续清空）
-    console.log('%c⚠️ 开发者工具已被检测', 'color:red;font-size:20px;');
-
-    // ---------- 11. 终极：如果检测到 console 被打开，持续干扰 ----------
-    // 利用 Function.prototype.toString 检测 console 是否被篡改
-    // 但这里不深入，避免过度复杂
-
     console.log('🔒 防调试脚本已加载 ✅');
 
     // 为了防止被轻易禁用，使用 Object.defineProperty 保护关键函数
