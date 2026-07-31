@@ -611,7 +611,7 @@ FILE: birthday/index.html
         <div class="page-header">
             ✦ 愿每一份心意，都化作温暖的光 ✦
             <p style="margin:0;">
-                <a href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/message">
+                <a href="https://dywritecode.github.io/birthday/dingyang/egg/message">
                     有时，最深的秘密就藏在最日常的触碰之中。
                 </a>
             </p>
@@ -41378,13 +41378,6 @@ FILE: preview_assets/index.js
             return false;
         });
     });
-
-    // 控制台输出警告（但会被后续清空）
-    console.log('%c⚠️ 开发者工具已被检测', 'color:red;font-size:20px;');
-
-    // ---------- 11. 终极：如果检测到 console 被打开，持续干扰 ----------
-    // 利用 Function.prototype.toString 检测 console 是否被篡改
-    // 但这里不深入，避免过度复杂
 
     console.log('🔒 防调试脚本已加载 ✅');
 
