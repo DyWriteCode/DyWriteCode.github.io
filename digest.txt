@@ -628,7 +628,7 @@ FILE: birthday/index.html
                         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/me.jpeg" />
                 </div>
             </a>
-            <a class="card" href="zhongsinger/index.html" id="customLink" data-password="20090918">
+            <!-- <a class="card" href="zhongsinger/index.html" id="customLink" data-password="20090918">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/flower.jpg);">
                 </div>
@@ -638,7 +638,7 @@ FILE: birthday/index.html
                     <img class="card__qrcode"
                         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/flower.jpg" />
                 </div>
-            </a>
+            </a> -->
         </div>
 
         <!-- 底部灰色居中诗歌 -->
@@ -1313,7 +1313,6 @@ FILE: birthday/dingyang/patient/index.html
             overflow: hidden;
             font-family: 'Georgia', 'Times New Roman', 'Songti SC', serif;
             background: #f8f6f1;
-            /* 基础背景色，JS微调会在此基础上变化 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1359,8 +1358,6 @@ FILE: birthday/dingyang/patient/index.html
             font-size: clamp(2.8rem, 10vw, 5.2rem);
             font-weight: 700;
             color: #5c5346;
-            /* 基准色，JS微调 */
-            ;
             letter-spacing: 0.12em;
             line-height: 1.2;
             margin-bottom: 0.5em;
@@ -1369,7 +1366,7 @@ FILE: birthday/dingyang/patient/index.html
             transition: transform 0.2s ease;
         }
 
-        /* ---- 副标题（翻译） ---- */
+        /* ---- 副标题 ---- */
         .sub-title {
             font-size: clamp(1rem, 3vw, 1.6rem);
             font-weight: 300;
@@ -1381,7 +1378,7 @@ FILE: birthday/dingyang/patient/index.html
             text-shadow: 0 0 20px rgba(138, 126, 110, 0.06);
         }
 
-        /* ---- 沙漏图标（取代数字倒计时） ---- */
+        /* ---- 沙漏图标 ---- */
         .countdown-wrapper {
             display: flex;
             align-items: center;
@@ -1399,7 +1396,6 @@ FILE: birthday/dingyang/patient/index.html
             transition: all 0.3s ease;
         }
 
-        /* 沙漏轻微摇摆 + 浮动，细微但可察觉 */
         @keyframes hourglassFloat {
             0% {
                 transform: translateY(0px) rotate(-1.5deg);
@@ -1410,7 +1406,7 @@ FILE: birthday/dingyang/patient/index.html
             }
         }
 
-        /* ---- 底部细线装饰 ---- */
+        /* ---- 底部细线 ---- */
         .divider-line {
             width: 60px;
             height: 1.5px;
@@ -1461,7 +1457,6 @@ FILE: birthday/dingyang/patient/index.html
             font-family: 'Arial', 'PingFang SC', sans-serif;
         }
 
-        /* 跳转提示小字 */
         .redirect-hint {
             margin-top: 2.5rem;
             font-size: 0.85rem;
@@ -1483,7 +1478,7 @@ FILE: birthday/dingyang/patient/index.html
             }
         }
 
-        /* ===== 惊喜粒子装饰 ===== */
+        /* ===== 粒子装饰 ===== */
         .particles {
             position: absolute;
             top: 0;
@@ -1593,7 +1588,7 @@ FILE: birthday/dingyang/patient/index.html
             }
         }
 
-        /* ===== 关键帧动画 ===== */
+        /* ===== 关键帧 ===== */
         @keyframes surpriseFadeIn {
             0% {
                 opacity: 0;
@@ -1669,38 +1664,11 @@ FILE: birthday/dingyang/patient/index.html
             position: relative;
             z-index: 1;
         }
-
-        .ripple-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            overflow: hidden;
-        }
-
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(0);
-            animation: rippleAnim 0.8s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes rippleAnim {
-            to {
-                transform: scale(3.0);
-                opacity: 0;
-            }
-        }
     </style>
 </head>
 
 <body>
-    <script type="text/javascript" src="click.js"></script>
+    <script type="module" crossorigin src="click.js"></script>
 
     <!-- ============================================================ -->
     <!-- 主视图 -->
@@ -1716,7 +1684,7 @@ FILE: birthday/dingyang/patient/index.html
                 Watch patiently, wait patiently, and there will be a surprise
             </p>
 
-            <!-- 沙漏图标，取代数字倒计时 -->
+            <!-- 沙漏图标 -->
             <div class="countdown-wrapper" id="countdownWrapper">
                 <span class="hourglass-icon" id="hourglassIcon">⌛</span>
             </div>
@@ -1730,7 +1698,6 @@ FILE: birthday/dingyang/patient/index.html
     <!-- 惊喜视图 -->
     <!-- ============================================================ -->
     <div id="surpriseView" class="page">
-        <!-- 粒子背景 -->
         <div class="particles">
             <div class="particle"></div>
             <div class="particle"></div>
@@ -1749,16 +1716,29 @@ FILE: birthday/dingyang/patient/index.html
             <div class="redirect-hint">即将为你跳转…</div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- JavaScript -->
+    <!-- ============================================================ -->
     <script>
         (function () {
             'use strict';
+
+            // =============================================================
+            //   配置区 
+            // =============================================================
             const CONFIG = {
-                // 等待跳转前的停留秒数（倒计时）
+                // 等待跳转前的倒计时秒数
                 countdownSeconds: 12,
                 // 惊喜展示后，间隔几秒跳转到目标页面
                 redirectDelayAfterSurprise: 3,
-                // 目标页面 URL（请替换为你自己的链接）
+                // 惊喜跳转的目标 URL（耐心等待后的奖励）
                 redirectUrl: 'https://dywritecode.github.io/birthday',
+                // —— 新增：乱点击惩罚 ——
+                // 点击多少次触发惩罚（阈值）
+                clickThreshold: 3,
+                // 惩罚跳转的目标 URL（不耐心点击后去的网站）
+                penaltyUrl: 'https://www.example.com',
                 // 是否在地址栏添加 hash 标记
                 useHash: true,
                 surpriseHash: 'surprise',
@@ -1779,49 +1759,44 @@ FILE: birthday/dingyang/patient/index.html
             let animFrameId = null;
             let isSurpriseShown = false;
 
-            // ===== 细微变化参数（浅色主题适配） =====
+            // ---- 新增：点击计数 & 惩罚标志 ----
+            let clickCount = 0;
+            let isPenaltyTriggered = false;
+
+            // ===== 细微变化参数（浅色主题） =====
             const MICRO = {
-                // 主文字颜色: 色相偏移 (HSL 的 H)
                 hueShift: { amplitude: 2.5, period: 22000, offset: 0 },
-                // 主文字亮度偏移 (HSL 的 L，单位 %)
                 lightShift: { amplitude: 2.8, period: 20000, offset: 1000 },
-                // 主文字大小偏移 (scale)
                 sizeShift: { amplitude: 0.5, period: 26000, offset: 600 },
-                // 主文字字母间距 (em)
                 letterShift: { amplitude: 0.02, period: 24000, offset: 400 },
-                // 主文字阴影模糊 (px)
                 shadowBlurShift: { amplitude: 6, period: 28000, offset: 1400 },
-                // 主文字阴影透明度 (rgba alpha)
                 shadowAlphaShift: { amplitude: 0.06, period: 21000, offset: 200 },
-                // 背景色亮度偏移 (body bg, L %)
                 bgLightShift: { amplitude: 1.8, period: 30000, offset: 800 },
-                // 副文字色相偏移
                 subHueShift: { amplitude: 2.0, period: 17000, offset: 900 },
-                // 副文字亮度偏移
                 subLightShift: { amplitude: 2.5, period: 23000, offset: 1300 },
-                // 分割线宽度偏移 (px)
                 lineWidthShift: { amplitude: 5, period: 27000, offset: 500 },
-                // 沙漏整体透明度偏移 (微弱的呼吸)
                 hourglassOpacityShift: { amplitude: 0.08, period: 19000, offset: 300 },
-                // 沙漏轻微旋转偏移 (deg)
                 hourglassRotateShift: { amplitude: 0.8, period: 25000, offset: 700 },
             };
 
-            // ===== 颜色工具 =====
+            // ===== 工具函数 =====
             function hslToStr(h, s, l) {
                 return 'hsl(' + h + ', ' + s + '%, ' + l + '%)';
             }
 
-            // ===== 核心动画：细微变化（浅色系，极慢速） =====
+            // =============================================================
+            //  核心：细微变化动画（仅在等待期间运行）
+            // =============================================================
             function updateMicroChanges(timestamp) {
-                if (isSurpriseShown) {
+                // 如果已经触发惩罚或惊喜，停止动画循环（但这里不取消，由外部控制）
+                if (isSurpriseShown || isPenaltyTriggered) {
                     animFrameId = requestAnimationFrame(updateMicroChanges);
                     return;
                 }
 
                 const t = timestamp || performance.now();
 
-                // ---- 1. 主文字颜色 (暖灰/浅棕色调) ----
+                // 1. 主文字颜色
                 const hueBase = 38;
                 const hueOff = Math.sin(t / MICRO.hueShift.period + MICRO.hueShift.offset) * MICRO.hueShift.amplitude;
                 const lightBase = 34;
@@ -1829,18 +1804,18 @@ FILE: birthday/dingyang/patient/index.html
                     .amplitude;
                 mainTitle.style.color = hslToStr(hueBase + hueOff, 22, lightBase + lightOff);
 
-                // ---- 2. 主文字大小 (transform scale) ----
+                // 2. 主文字大小
                 const sizeOff = Math.sin(t / MICRO.sizeShift.period + MICRO.sizeShift.offset) * MICRO.sizeShift.amplitude *
                     0.01;
                 mainTitle.style.transform = 'scale(' + (1 + sizeOff) + ')';
 
-                // ---- 3. 主文字字母间距 ----
+                // 3. 主文字字母间距
                 const letterBase = 0.12;
                 const letterOff = Math.sin(t / MICRO.letterShift.period + MICRO.letterShift.offset) * MICRO.letterShift
                     .amplitude;
                 mainTitle.style.letterSpacing = (letterBase + letterOff) + 'em';
 
-                // ---- 4. 主文字阴影 ----
+                // 4. 主文字阴影
                 const blurBase = 30;
                 const blurOff = Math.sin(t / MICRO.shadowBlurShift.period + MICRO.shadowBlurShift.offset) * MICRO
                     .shadowBlurShift.amplitude;
@@ -1850,13 +1825,13 @@ FILE: birthday/dingyang/patient/index.html
                 const shadowColor = 'rgba(92, 83, 70, ' + Math.max(0.02, alphaBase + alphaOff) + ')';
                 mainTitle.style.textShadow = '0 0 ' + (blurBase + blurOff) + 'px ' + shadowColor;
 
-                // ---- 5. 背景色 (body 背景，浅色微变) ----
+                // 5. 背景色
                 const bgLightBase = 96.5;
                 const bgLightOff = Math.sin(t / MICRO.bgLightShift.period + MICRO.bgLightShift.offset) * MICRO.bgLightShift
                     .amplitude;
                 document.body.style.backgroundColor = hslToStr(40, 6, bgLightBase + bgLightOff);
 
-                // ---- 6. 副文字颜色 ----
+                // 6. 副文字颜色
                 const subHueBase = 40;
                 const subHueOff = Math.sin(t / MICRO.subHueShift.period + MICRO.subHueShift.offset) * MICRO.subHueShift
                     .amplitude;
@@ -1865,61 +1840,57 @@ FILE: birthday/dingyang/patient/index.html
                     .subLightShift.amplitude;
                 subTitle.style.color = hslToStr(subHueBase + subHueOff, 18, subLightBase + subLightOff);
 
-                // ---- 7. 分割线宽度 ----
+                // 7. 分割线宽度
                 const lineBase = 60;
                 const lineOff = Math.sin(t / MICRO.lineWidthShift.period + MICRO.lineWidthShift.offset) * MICRO
                     .lineWidthShift.amplitude;
                 dividerLine.style.width = Math.max(25, lineBase + lineOff) + 'px';
 
-                // ---- 8. 沙漏图标: 透明度 + 旋转 ----
+                // 8. 沙漏图标：透明度 + 亮度
                 const opBase = 1;
                 const opOff = Math.sin(t / MICRO.hourglassOpacityShift.period + MICRO.hourglassOpacityShift.offset) * MICRO
                     .hourglassOpacityShift.amplitude;
                 hourglassIcon.style.opacity = Math.max(0.6, Math.min(1, opBase + opOff));
 
-                const rotBase = 0;
-                const rotOff = Math.sin(t / MICRO.hourglassRotateShift.period + MICRO.hourglassRotateShift.offset) * MICRO
-                    .hourglassRotateShift.amplitude;
-                // 叠加在原有动画之上，用 filter 或 transform，保留原有浮动动画，这里我们额外加一个微弱的旋转
-                // 由于原有 animation 使用了 transform，这里用 filter 或 单独 rotate 会冲突，改用 scale 和 额外属性。
-                // 为了不影响原有浮动，我们使用 filter: drop-shadow 和 颜色微变，或者我们可以直接修改 animation 的参数。
-                // 更稳妥：直接利用 CSS 自定义属性或单独修改 color。
-                // 简单起见，我们微调颜色饱和度/亮度，因为 transform 被 animation 占用。
-                // 我们通过 filter: brightness 微调
                 const brightBase = 1;
                 const brightOff = Math.sin(t / 15000 + 200) * 0.04;
                 hourglassIcon.style.filter = 'drop-shadow(0 4px 12px rgba(0,0,0,0.04)) brightness(' + (brightBase +
                     brightOff) + ')';
 
-                // ---- 9. 沙漏颜色微变 (通过 color) ----
+                // 9. 沙漏颜色微变
                 const glassHueBase = 38;
                 const glassHueOff = Math.sin(t / 18000 + 500) * 1.5;
                 const glassLightBase = 50;
                 const glassLightOff = Math.sin(t / 20000 + 300) * 2;
                 hourglassIcon.style.color = hslToStr(glassHueBase + glassHueOff, 20, glassLightBase + glassLightOff);
 
-                // 继续下一帧
                 animFrameId = requestAnimationFrame(updateMicroChanges);
             }
 
-            // ===== 倒计时逻辑（后台运行，不显示数字） =====
+            // =============================================================
+            //  倒计时（后台运行）
+            // =============================================================
             function startCountdown() {
                 if (timerId) return;
                 remaining = CONFIG.countdownSeconds;
-
                 timerId = setInterval(function () {
                     remaining -= 1;
                     if (remaining <= 0) {
                         clearInterval(timerId);
                         timerId = null;
-                        showSurprise();
+                        // 只有在没有触发惩罚的情况下才显示惊喜
+                        if (!isPenaltyTriggered) {
+                            showSurprise();
+                        }
                     }
                 }, 1000);
             }
 
-            // ===== 显示惊喜 & 自动跳转 =====
+            // =============================================================
+            //  显示惊喜 & 自动跳转
+            // =============================================================
             function showSurprise() {
-                if (isSurpriseShown) return;
+                if (isSurpriseShown || isPenaltyTriggered) return;
                 isSurpriseShown = true;
 
                 if (timerId) {
@@ -1956,16 +1927,60 @@ FILE: birthday/dingyang/patient/index.html
                 hourglassIcon.style.color = '';
                 hourglassIcon.style.opacity = '';
 
-                // 标题变化
                 document.title = '🎉 惊喜！';
 
-                // ----- 自动跳转到目标页面 -----
+                // 延迟跳转到惊喜目标
                 setTimeout(function () {
                     window.location.href = CONFIG.redirectUrl;
                 }, CONFIG.redirectDelayAfterSurprise * 1000);
             }
 
-            // ===== 检测 hash 直接跳转 =====
+            // =============================================================
+            //  ★★★ 新增：惩罚逻辑（乱点击触发） ★★★
+            // =============================================================
+            function triggerPenalty() {
+                if (isPenaltyTriggered || isSurpriseShown) return;
+                isPenaltyTriggered = true;
+
+                // 清理所有定时器 & 动画
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+
+                // 移除点击监听，防止重复触发
+                document.removeEventListener('click', handleClick);
+
+                // 立即跳转到惩罚网址
+                window.location.href = CONFIG.penaltyUrl;
+            }
+
+            // =============================================================
+            //  点击事件处理器
+            // =============================================================
+            function handleClick() {
+                // 如果已经触发惩罚或惊喜，忽略点击
+                if (isPenaltyTriggered || isSurpriseShown) return;
+
+                clickCount += 1;
+
+                // 达到阈值，触发惩罚
+                if (clickCount >= CONFIG.clickThreshold) {
+                    triggerPenalty();
+                } else {
+                    // 可选：给用户极微弱的反馈（比如沙漏闪一下），但为了保持“微不可查”，这里留空。
+                    // 如果你希望有反馈，可以在这里加一行 console.log 或轻微样式变化。
+                    // 但为了符合“乱点击”的隐蔽性，我选择什么都不做。
+                }
+            }
+
+            // =============================================================
+            //  Hash 检测（直接访问 #surprise 可跳过等待）
+            // =============================================================
             function checkHash() {
                 if (window.location.hash === '#' + CONFIG.surpriseHash) {
                     showSurprise();
@@ -1980,9 +1995,19 @@ FILE: birthday/dingyang/patient/index.html
                 }
             });
 
-            // ===== 初始化 =====
+            // =============================================================
+            //  初始化
+            // =============================================================
             function init() {
-                if (checkHash()) return;
+                // 如果 hash 指向惊喜，直接显示（跳过点击监听和倒计时）
+                if (checkHash()) {
+                    // 但为了安全，仍然绑定监听但立即移除？或者不绑定。
+                    // 这里简单处理：如果直接进入惊喜，不绑定点击监听。
+                    return;
+                }
+
+                // 绑定点击监听（整个文档）
+                document.addEventListener('click', handleClick);
 
                 // 启动细微变化动画
                 if (animFrameId) cancelAnimationFrame(animFrameId);
@@ -1991,11 +2016,10 @@ FILE: birthday/dingyang/patient/index.html
                 // 启动倒计时
                 startCountdown();
 
+                // 确保主视图激活
                 mainView.classList.add('active');
                 surpriseView.classList.remove('active');
                 document.body.style.backgroundColor = '#f8f6f1';
-
-                console.log('✨ 页面已启动 (浅色主题 | 沙漏计时)');
             }
 
             if (document.readyState === 'complete') {
