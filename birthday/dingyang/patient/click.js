@@ -9,10 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 随机颜色生成
     function getRandomColor() {
-        const colors = ['radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 200, 255, 0.4) 60%, rgba(0, 100, 200, 0) 100%)',
-            'radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(64, 224, 208, 0.4) 50%, rgba(0, 128, 128, 0) 100%)',
-            'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(135, 206, 250, 0.4) 50%, rgba(70, 130, 180, 0) 100%)',
-            'radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(0, 191, 255, 0.5) 60%, rgba(0, 0, 139, 0) 100%)',];
+        const colors = ['radial-gradient(circle, #a08a70, #6a5a42, #a08a70 100%)',];
         return colors[Math.floor(Math.random() * colors.length)];
     }
 
