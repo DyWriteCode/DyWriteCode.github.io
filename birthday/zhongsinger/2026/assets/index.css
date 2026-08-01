@@ -262,14 +262,14 @@
 
 @font-face {
     font-family: Lato;
-    src: local("Lato"), url(/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.wof) format("woff")
 }
 
 @font-face {
     font-family: Lato;
     font-style: normal;
     font-weight: 900;
-    src: local("Lato Black"), local("Lato-Black"), url(/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato Black"), local("Lato-Black"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.wof) format("woff")
 }
 
 @keyframes msgBounceIn {
@@ -579,33 +579,70 @@ img {
 }
 
 .msg-row {
+    display: flex;
+    align-items: flex-start;
     margin-bottom: 10px
 }
 
-.msg-row:before,
-.msg-row:after {
-    content: " ";
-    display: table
+.msg-row.msg-author {
+    flex-direction: row;
+    justify-content: flex-start
 }
 
-.msg-row:after {
-    clear: both
+.msg-row.msg-me {
+    flex-direction: row;
+    justify-content: flex-end
 }
 
-.msg-author {
-    margin-bottom: 20px
+.msg-row .msg {
+    float: none !important
 }
 
-.msg-author+.msg-author {
-    margin-top: -15px
+.msg-row .msg-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-color: #e0e0e0;
+    object-fit: cover
 }
 
-.msg-me {
-    margin-bottom: 20px
+@media (max-width: 480px) {
+    .msg-row .msg-avatar {
+        width: 36px;
+        height: 36px
+    }
 }
 
+.msg-row.msg-author .msg-avatar {
+    margin-right: 8px;
+    margin-left: 0
+}
+
+.msg-row.msg-me .msg-avatar {
+    margin-left: 8px;
+    margin-right: 0
+}
+
+.msg-row.msg-author .msg-avatar {
+    order: 1
+}
+
+.msg-row.msg-author .msg {
+    order: 2
+}
+
+.msg-row.msg-me .msg {
+    order: 1
+}
+
+.msg-row.msg-me .msg-avatar {
+    order: 2
+}
+
+.msg-author+.msg-author,
 .msg-me+.msg-me {
-    margin-top: -15px
+    margin-top: -6px
 }
 
 .msg {
@@ -628,7 +665,6 @@ img {
 }
 
 .msg-me .msg {
-    float: right;
     color: #fff;
     border-radius: 20px 20px 0;
     box-shadow: 5px 5px 15px #66666626
@@ -3001,7 +3037,6 @@ img {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     overflow: hidden
 }
 
@@ -12057,5 +12092,5 @@ print {
 
 @font-face {
     font-family: 'Lato';
-    src: url("https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff");
+    src: url("https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.wof");
 }
