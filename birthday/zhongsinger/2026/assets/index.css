@@ -261,14 +261,14 @@
 
 @font-face {
     font-family: Lato;
-    src: local("Lato"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato"), url(/assets/lato400.65c76203.woff) format("woff")
 }
 
 @font-face {
     font-family: Lato;
     font-style: normal;
     font-weight: 900;
-    src: local("Lato Black"), local("Lato-Black"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato Black"), local("Lato-Black"), url(/assets/lato400.65c76203.woff) format("woff")
 }
 
 @keyframes msgBounceIn {
@@ -382,11 +382,82 @@ img {
     text-align: center
 }
 
+#mobile-body {
+    position: absolute;
+    top: 45px;
+    width: 100%;
+    background: #E8F9F6
+}
+
+#mobile-body a {
+    color: #22c3aa;
+    text-decoration: none
+}
+
+#mobile-body-bg {
+    width: 100%;
+    height: 100%
+}
+
+#mobile-body-bg:before,
+#mobile-body-bg:after {
+    content: "";
+    display: block;
+    z-index: 10
+}
+
+#mobile-body-bg:before {
+    position: relative;
+    width: 100%;
+    height: 25px;
+    background: linear-gradient(rgba(34, 195, 170, .1) 0, transparent)
+}
+
+#mobile-body-bg:after {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 15px;
+    background: linear-gradient(transparent 0, rgba(34, 195, 170, .05) 100%)
+}
+
+#mobile-body-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px 10px 16px 18px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    color: #666;
+    z-index: 1
+}
+
+#mobile-body-content::-webkit-scrollbar {
+    width: 8px
+}
+
+#mobile-body-content::-webkit-scrollbar-thumb {
+    background-color: #bdf4eb;
+    border-radius: 4px
+}
+
+#mock-msg-row {
+    position: absolute;
+    top: -1000px;
+    left: 18px;
+    right: 10px;
+    visibility: hidden
+}
+
 #mobile-foot {
     position: absolute;
     bottom: 0;
     width: 100%;
-    height: 54px;
+    min-height: 54px;
+    height: auto;
     background: #f7f8fa;
     border-top: 1px solid #f3f3f3
 }
@@ -800,14 +871,89 @@ img {
     }
 }
 
+#mobile-foot {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: auto !important;
+    min-height: auto !important;
+    background: #f7f8fa;
+    border-top: 1px solid #f3f3f3;
+    padding: 0 !important
+}
+
+#mobile-foot .foot-wrapper {
+    display: flex;
+    align-items: flex-end;
+    padding: 6px 10px;
+    gap: 8px
+}
+
+#mobile-foot .input-area {
+    flex: 1;
+    min-height: 36px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 5px 5px 15px #6666661a;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center
+}
+
+#mobile-foot .system-input-element {
+    display: inline-block;
+    width: 100%;
+    font-size: 14px;
+    line-height: 24px;
+    min-height: 24px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    color: #000
+}
+
+#mobile-foot .system-input-element .typed-cursor {
+    color: #000;
+    opacity: 1;
+    font-size: 14px;
+    line-height: 24px;
+    display: inline-block;
+    font-weight: 400
+}
+
+#mobile-foot .user-input-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 14px;
+    line-height: 24px;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    min-height: 24px;
+    font-family: inherit
+}
+
+#mobile-foot .send-btn {
+    flex-shrink: 0;
+    height: 36px;
+    align-self: flex-end
+}
+
 .animate_breathe {
     -webkit-animation-timing-function: ease-in-out;
+    animation-timing-function: ease-in-out;
     -webkit-animation-name: breathe;
+    animation-name: breathe;
     -webkit-animation-duration: 1.5s;
+    animation-duration: 1.5s;
     animation-delay: .5s;
     -webkit-animation-delay: .5s;
     -webkit-animation-iteration-count: infinite;
-    -webkit-animation-direction: alternate
+    animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+    animation-direction: alternate
 }
 
 @-webkit-keyframes breathe {
@@ -820,6 +966,49 @@ img {
         opacity: 1;
         box-shadow: 0 1px 15px #0093df, 0 1px 10px #0093df inset
     }
+}
+
+@keyframes breathe {
+    0% {
+        opacity: .4;
+        box-shadow: 0 1px 1px #0093df66, 0 1px 1px #0093df1a inset
+    }
+
+    to {
+        opacity: 1;
+        box-shadow: 0 1px 15px #0093df, 0 1px 10px #0093df inset
+    }
+}
+
+#mobile-foot .input-area {
+    display: block !important;
+    padding: 9px 14px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 5px 5px 15px #6666661a;
+    min-height: 36px
+}
+
+#mobile-foot .system-input-element {
+    display: inline !important;
+    width: auto !important;
+    min-width: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 14px;
+    line-height: 24px;
+    color: #000
+}
+
+#mobile-foot .system-input-element .typed-cursor {
+    display: inline !important;
+    position: relative !important;
+    vertical-align: baseline !important;
+    font-size: inherit;
+    line-height: inherit;
+    color: #000;
+    opacity: 1;
+    margin-left: 1px
 }
 
 .var--box,
