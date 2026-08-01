@@ -21,8 +21,6 @@ jobs:
       
       - name: Commit and push version.json
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
           git add version.json
           git diff --staged --quiet || git commit -m "chore: update version.json [skip ci]"
           git push
