@@ -3,7 +3,10 @@ name: Generate Version File
 on:
   push:
     branches:
-      - main          
+      - main
+
+permissions:
+  contents: write # 明确授予写入权限
 
 jobs:
   build:
@@ -11,17 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
 
-      - name: Generate version.json
+      - name: Create version.json
         run: |
           TIMESTAMP=$(date -u +"%Y%m%d%H%M%S")
           HASH=$(git rev-parse --short HEAD)
           echo "{\"version\":\"${TIMESTAMP}-${HASH}\"}" > version.json
-          echo "Generated version.json content:"
-          cat version.json  
 
-      - name: Commit and push version.json
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
