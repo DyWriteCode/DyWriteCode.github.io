@@ -17458,28 +17458,28 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
 [
     {
         "msgs": [
-            "<strong>事先说明，GitHub 直连有点慢，图片和视频加载会稍等片刻 ⏳</strong>"
+            "<span style='color:#888; font-size:0.9rem;'>⏳ 事先说明，GitHub 直连有点慢，图片和视频加载会稍等片刻</span>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "嘿，好久没聊啦 <span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span> 你在 <span style='color:#4A90D9; font-weight:bold;'>YY中</span> 过得还好吗？"
+            "嘿，好久没聊啦 <span style='color:#FFB347;'>✨</span> 你在 <span style='color:#4A90D9; font-weight:bold;'>YY中</span> 过得还好吗？<span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span>"
         ],
         "msgInputSpeed": 55,
         "author": "author"
     },
     {
         "msgs": [
-            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span>，高中节奏比初中快好多，每天晚自习下课抬头都是星星 ✨",
-            "不过没时间看，赶着回宿舍就是了 😂"
+            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span>，高中节奏比初中快好多 <span style='color:#FFB347;'>🚀</span>",
+            "每天晚自习下课抬头都是星星 <span style='color:#FFB347;'>✨</span>，可惜没时间看，赶着回宿舍就是了 <span style='color:#888;'>😅</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
     },
     {
         "msgs": [
-            "你呢？新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？"
+            "你呢？新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？<span style='color:#A8D8EA;'>☁️</span>"
         ],
         "msgInputSpeed": 45,
         "author": "author",
@@ -17487,28 +17487,42 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "有", "还行", "挺", "不错", "有趣", "开心", "好", "嗯", "是的", "对"
+                    "有",
+                    "还行",
+                    "挺",
+                    "不错",
+                    "有趣",
+                    "开心",
+                    "好",
+                    "嗯",
+                    "是的",
+                    "对"
                 ],
                 "rejectKeyTexts": [
-                    "没有", "无聊", "一般", "还好吧", "还行吧", "没什么"
+                    "没有",
+                    "无聊",
+                    "一般",
+                    "还好吧",
+                    "还行吧",
+                    "没什么"
                 ],
                 "rejectHitTexts": [
-                    "好吧，可能还需要一点时间适应 ⏳",
-                    "那就先记着，以后慢慢发现也不迟 ✨"
+                    "好吧…可能还需要一点时间适应 <span style='color:#A8D8EA;'>⏳</span>",
+                    "那就先记着，以后慢慢发现也不迟 <span style='color:#FFB347;'>✨</span>"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "我最近物理有点跟不上，尤其是 <span style='color:#E57373; font-weight:bold;'>电磁场</span> 那块，简直像在学天书 📖💀"
+            "我最近物理…<span style='color:#888;'>^200</span> 电磁场那块，简直像在学天书 <span style='color:#888;'>📖💀</span>"
         ],
         "msgInputSpeed": 45,
         "author": "author"
     },
     {
         "msgs": [
-            "你们学校物理讲到哪里了？有没有什么 <span style='color:#4ECDC4; font-weight:bold;'>好的学习方法</span> 推荐？"
+            "你们学校物理讲到哪里了？有没有什么 <span style='color:#4ECDC4; font-weight:bold;'>好的学习方法</span> 推荐？<span style='color:#FFB347;'>🤔</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author",
@@ -17516,29 +17530,40 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "多做题", "刷题", "问老师", "背公式", "理解", "看视频", "总结", "笔记"
+                    "多做题",
+                    "刷题",
+                    "问老师",
+                    "背公式",
+                    "理解",
+                    "看视频",
+                    "总结",
+                    "笔记"
                 ],
                 "rejectKeyTexts": [
-                    "忘了", "不记得", "不知道", "没学", "还没讲"
+                    "忘了",
+                    "不记得",
+                    "不知道",
+                    "没学",
+                    "还没讲"
                 ],
                 "rejectHitTexts": [
-                    "看来是我自己太菜了 😂",
-                    "我再硬啃啃吧，万一哪天开窍了呢 💪"
+                    "看来是我自己太菜了 <span style='color:#888;'>😅</span>",
+                    "我再硬啃啃吧，万一哪天开窍了呢 <span style='color:#FFB347;'>💪</span>"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "最近晚自习下课，走在路上，有时候会觉得时间过得特别安静 🌙",
-            "这种时候就会想一些有的没的，比如你最近在干嘛，心情怎么样"
+            "最近晚自习下课，走在路上…<span style='color:#888;'>^200</span> 有时候会觉得时间过得特别安静 <span style='color:#A8D8EA;'>🌙</span>",
+            "这种时候就会想一些有的没的…<span style='color:#888;'>^200</span> 比如你最近在干嘛，心情怎么样"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "你最近有没有什么开心的事？😊",
-            "或者烦心的事也行，就是想听听你最近过得怎么样"
+            "你最近…<span style='color:#888;'>^200</span> 有没有什么开心的事？<span style='color:#FFB347;'>😊</span>",
+            "或者烦心的事也行…就是想听听你过得怎么样"
         ],
         "msgInputSpeed": 60,
         "author": "author",
@@ -17546,30 +17571,41 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "有", "还好", "挺", "嗯", "忙", "还行", "不错", "开心", "充实"
+                    "有",
+                    "还好",
+                    "挺",
+                    "嗯",
+                    "忙",
+                    "还行",
+                    "不错",
+                    "开心",
+                    "充实"
                 ],
                 "rejectKeyTexts": [
-                    "没有", "没什么", "一般", "就那样", "老样子"
+                    "没有",
+                    "没什么",
+                    "一般",
+                    "就那样",
+                    "老样子"
                 ],
                 "rejectHitTexts": [
-                    "那就好，平平淡淡也是好事 ☁️",
-                    "如果你想说，我随时可以听 🎧"
+                    "那就好，平平淡淡也是好事 <span style='color:#A8D8EA;'>☁️</span>",
+                    "如果你想说，我随时可以听 <span style='color:#FFB347;'>🎧</span>"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "我偶尔会把这些零零碎碎的感受记下来，写成一些句子 ✍️",
-            "9月7日是你生日嘛，我就想着，干脆把那些句子整理了一下，写了一封信给你 📩",
-            "不是什么长篇大论，就是一些想说的话"
+            "9月7日是你生日嘛…<span style='color:#888;'>^200</span> 我就想着把一些零零碎碎的感受整理了一下 <span style='color:#FFB347;'>✍️</span>",
+            "写成了一封信给你 <span style='color:#E57373;'>📩</span> 不是什么长篇大论，就是一些想说的话"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "你要不要看一眼？👀",
-            "看嘛看嘛 <span style='color:#FFB347;'>ヽ(✿ﾟ▽ﾟ)ノ</span>"
+            "那个…你要不要看一眼？<span style='color:#FFB347;'>👀</span>",
+            "（我准备了好久才写出来的 <span style='color:#FFB347;'>🥺</span>）"
         ],
         "msgInputSpeed": 60,
         "author": "author",
@@ -17577,14 +17613,25 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好", "嗯", "可以", "看", "行", "来吧", "好的", "OK"
+                    "好",
+                    "嗯",
+                    "可以",
+                    "看",
+                    "行",
+                    "来吧",
+                    "好的",
+                    "OK",
+                    "愿意"
                 ],
                 "rejectKeyTexts": [
-                    "不", "算了", "没空", "下次"
+                    "不",
+                    "算了",
+                    "没空",
+                    "下次"
                 ],
                 "rejectHitTexts": [
-                    "没关系，放这儿又不会跑 📬",
-                    "什么时候想看了再打开就行 🕊️"
+                    "没关系…放这儿又不会跑 <span style='color:#A8D8EA;'>📬</span>",
+                    "什么时候想看了再打开就行 <span style='color:#FFB347;'>🕊️</span>"
                 ]
             }
         }
@@ -17597,8 +17644,8 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
     },
     {
         "msgs": [
-            "你读完感觉怎么样？<span style='color:#FF6B6B;'>(｡･ω･｡)</span>",
-            "有没有哪句比较戳你？"
+            "你读完…<span style='color:#888;'>^200</span> 感觉怎么样？<span style='color:#FFB347;'>(｡･ω･｡)</span>",
+            "有没有哪句比较戳你？<span style='color:#FF6B6B;'>💘</span>"
         ],
         "msgInputSpeed": 60,
         "author": "author",
@@ -17606,28 +17653,40 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "挺好", "喜欢", "嗯", "谢谢", "温暖", "感动", "不错", "很棒"
+                    "挺好",
+                    "喜欢",
+                    "嗯",
+                    "谢谢",
+                    "温暖",
+                    "感动",
+                    "不错",
+                    "很棒"
                 ],
                 "rejectKeyTexts": [
-                    "没什么", "一般", "还行吧", "没感觉", "还好"
+                    "没什么",
+                    "一般",
+                    "还行吧",
+                    "没感觉",
+                    "还好"
                 ],
                 "rejectHitTexts": [
-                    "那就好，没白写 😌",
-                    "反正想说的都在里面了 💌"
+                    "那就好…没白写 <span style='color:#FFB347;'>😌</span>",
+                    "反正想说的都在里面了 <span style='color:#E57373;'>💌</span>"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "其实我还有一份礼物 🎁 这次不是文字，是 <span style='color:#E57373; font-weight:bold;'>视频</span>"
+            "其实…<span style='color:#888;'>^200</span> 我还准备了一份礼物 <span style='color:#FFB347;'>🎁</span>",
+            "不是文字，是 <span style='color:#E57373; font-weight:bold;'>视频</span> <span style='color:#FFB347;'>🎬</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author"
     },
     {
         "msgs": [
-            "我录了一段生日祝福给你，拍得不算好，但是一份心意 ❤️"
+            "我录了一段生日祝福给你…<span style='color:#888;'>^200</span> 拍得不算好，但是一份心意 <span style='color:#FF6B6B;'>❤️</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author"
@@ -17640,36 +17699,36 @@ FILE: birthday/zhongsinger/2026/options/demo/chat.json
     },
     {
         "msgs": [
-            "好了，该说的都说了 <span style='color:#4ECDC4;'>(´▽`)ﾉ</span>",
-            "不耽误你时间了～"
+            "好了…<span style='color:#888;'>^200</span> 该说的都说了 <span style='color:#4ECDC4;'>(´▽`)ﾉ</span>",
+            "不耽误你时间了～ <span style='color:#FFB347;'>✨</span>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> ✨",
-            "按自己的节奏好好生活"
+            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> <span style='color:#FFB347;'>✨</span>",
+            "按自己的节奏…好好生活 <span style='color:#A8D8EA;'>🌱</span>"
         ],
         "msgInputSpeed": 60,
         "author": "author"
     },
     {
         "msgs": [
-            "<b><span style='color:#b5654b; font-size:18px;'>9月7日，生日快乐🎂</span></b> <span style='color:#FFB347;'>✧*。٩(ˊωˋ*)و✧*。</span>"
+            "<span style='color:#b5654b; font-size:20px; font-weight:bold;'>🎂 9月7日，生日快乐 🎂</span> <span style='color:#FFB347;'>✧*。٩(ˊωˋ*)و✧*。</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
     },
     {
         "msgs": [
-            "（塞一张猫猫图收尾 🐱👇)"
+            "（塞一张猫猫图收尾 <span style='color:#FFB347;'>🐱👇</span>）"
         ],
         "msgInputSpeed": 40,
         "author": "author"
     },
     {
         "msgs": [
-            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg' style='max-width:80%; border-radius:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);'/>"
+            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg' style='max-width:80%; border-radius:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #f0ede8;'/>"
         ],
         "author": "author"
     }
@@ -17923,8 +17982,94 @@ FILE: birthday/zhongsinger/2026/options/demo/chat_test.json
 ================================================
 FILE: birthday/zhongsinger/2026/options/demo/letters/letter_to_someone.json
 ================================================
-[Binary file]
-
+{
+  "openTip": "📩 打开这封信",
+  "title": "祝你生日快乐，生命明媚",
+  "speed": 40,
+  "paragraphs": [
+    "见信如面。^500",
+    
+    "<span style='color:#b5654b;font-size:17px;font-weight:bold;'>9月7日，生日快乐。</span>^500 愿你生命澄澈，不与细雨纠缠，在绵绵岁月里行至一段，眉宇之间是温煦的艳阳天。<span style='color:#FFB347;'>☀️</span>^1000",
+    
+    "愿你此后生命里，<span style='color:#b5654b;font-weight:bold;'>不是周而复始的苦楚与浅尝辄止，而是十五月亮的盈满</span> <span style='color:#FFB347;'>🌕</span>^800",
+    
+    "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/moon_full.jpg' style='max-width:100%;border-radius:12px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,0.08);'/>^600",
+    
+    "<i style='color:#888;'>命运在人的字里行间落下太多判词。</i>^600",
+    
+    "愿你不必是周而复始残缺的月亮，也不必是南方的雨季。^800",
+    
+    "<b style='color:#b5654b;'>愿你是你自己，拥有自己的灵魂，爱真理，也接受谬误。</b>^1000",
+    
+    "关于命运，人总想在时间里抢占先机，想要宣告——<span style='color:#4A90D9;font-weight:bold;'>关于我自己，我绝不缴械投降。</span>^800",
+    
+    "于是人们都在赶路，用千山万水的跋涉告诉时间：<i style='color:#555;'>我掌握着自己，完全而绝对地。</i>^1000",
+    
+    "所以我们原谅了生命的舟车劳顿，^600 原谅了缘分的浅尝辄止，^600 原谅了细水长流的眼泪，^600 也原谅了命运给予的苦楚。^1000",
+    
+    "关于命运的猜读，我们都还在路上。<span style='color:#b5654b;'>还在与时间计较，与生命讨价还价。</span>^800",
+    
+    "我虔诚地希望，无论你的命运被如何塑造——^600 是否与残缺的月亮碰面，是否与雨季擦肩——^800",
+    
+    "你都能够坚守自己，守澄明，爱真理，也接受谬误。^800",
+    
+    "<b style='color:#b5654b;'>爱自己的一切，胜过爱苍凉薄情的世间。</b>^1200",
+    
+    "月亮是我很喜欢的意象，所以落在字里行间时，它总是首当其冲。^600",
+    
+    "<span style='color:#b5654b;'>我爱月亮的步步圆满，所以你也要慢慢变好。</span>^600",
+    
+    "不必循着时序周而复始，圆满就好，不必听时间说的万物有序。^1000",
+    
+    "时间像在人的生命脉里探路，也像是在给人诊脉。^600",
+    
+    "寸寸时间就像在给漫长的生命写诊断书，我们要走到尽头才能看完整。^800",
+    
+    "无论时间给你写了怎样的诊断书，给出怎样的论断，<span style='color:#4A90D9;font-weight:bold;'>都不要着急。</span>^600",
+    
+    "不要扬鞭策马去追赶时间。^500",
+    
+    "我们慢慢地，像月亮不急着圆满那样。^600",
+    
+    "踩着自己的步伐，走向自己命运里的盈满。^600",
+    
+    "<i style='color:#888;'>人是很空的，我们要在时间里渐渐把自己填满，然后成为自己生命里十五的月亮。</i>^1200",
+    
+    "请相信，<span style='color:#b5654b;font-weight:bold;'>春天会在你的骨骼里落地生根。</span>^800",
+    
+    "此后流年，你生生不息。^600",
+    
+    "时间还在天地间继续，我们也是。^500",
+    
+    "你的骨骼里有着春天的种子，会发芽，会生长，会枝繁叶茂。^800",
+    
+    "我们在潺潺的时间里娓而谈，说着生命的细水长流。^800",
+    
+    "等着骨骼里春天的种子破壳、生长，等着春天蔓延到生命的脉络里。^1000",
+    
+    "此后在山水之间，你与春天同行。^600",
+    
+    "骨骼里生长的春天会长在你的眼眸中。^600",
+    
+    "此后你看世界，便多了一层春天的滤镜——<span style='color:#6BAF8D;font-weight:bold;'>山是柔软的青，水是荡漾的绿。</span>^800",
+    
+    "你再也无需在世间万物里等春天，<b style='color:#b5654b;'>你自成春天。</b>^800",
+    
+    "骨骼里的春天会把春意铺满你此后的路。^600",
+    
+    "往后你行的每一步，都是草长莺飞与人声鼎沸。^1000",
+    
+    "<b><span style='color:#b5654b;font-size:17px;'>再次祝福你，生日快乐。</span></b>^600",
+    
+    "愿你经年遇春，生命澄澈，不与悲戚同行。^800",
+    
+    "愿你在千山万水的跋涉中仍明媚，仍觉得生命值得。^1000",
+    
+    "这个世界没有救世主，我们都往前走走。^600",
+    
+    "哪怕明天有风有雨，我们也要往前走，<span style='color:#b5654b;font-weight:bold;'>成为自己的救世主，成为自己的春天。</span>"
+  ]
+}
 
 ================================================
 FILE: birthday/zhongsinger/2026/options/demo/letters/test.json
