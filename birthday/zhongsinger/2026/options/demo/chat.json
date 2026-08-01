@@ -1,20 +1,20 @@
 [
     {
         "msgs": [
-            "事先说明，github直连有一点慢，图片与视频加载较慢"
+            "<strong>事先说明，GitHub 直连有点慢，图片和视频加载会稍等片刻 ⏳</strong>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "嘿，好久没聊了 (｡•̀ᴗ-)✧ 你在 <span style='color:#4A90D9;'>YY中</span> 过得还好吗？"
+            "嘿，好久没聊啦 <span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span> 你在 <span style='color:#4A90D9; font-weight:bold;'>YY中</span> 过得还好吗？"
         ],
         "msgInputSpeed": 55,
         "author": "author"
     },
     {
         "msgs": [
-            "我在 <span style='color:#4A90D9;'>XX中</span>，高中节奏比初中快好多，每天晚自习下课抬头都是星星。",
+            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span>，高中节奏比初中快好多，每天晚自习下课抬头都是星星 ✨",
             "不过没时间看，赶着回宿舍就是了 😂"
         ],
         "msgInputSpeed": 50,
@@ -22,7 +22,7 @@
     },
     {
         "msgs": [
-            "你呢？新学校有没有什么让你觉得 <span style='color:#FF6B6B;'>开心的小事</span>？"
+            "你呢？新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？"
         ],
         "msgInputSpeed": 45,
         "author": "author",
@@ -30,19 +30,13 @@
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "有",
-                    "还行",
-                    "挺",
-                    "不错",
-                    "有趣"
+                    "有", "还行", "挺", "不错", "有趣", "开心", "好", "嗯", "是的", "对"
                 ],
                 "rejectKeyTexts": [
-                    "没有",
-                    "无聊",
-                    "一般"
+                    "没有", "无聊", "一般", "还好吧", "还行吧", "没什么"
                 ],
                 "rejectHitTexts": [
-                    "好吧，可能还需要一点时间适应。",
+                    "好吧，可能还需要一点时间适应 ⏳",
                     "那就先记着，以后慢慢发现也不迟 ✨"
                 ]
             }
@@ -50,14 +44,14 @@
     },
     {
         "msgs": [
-            "我最近物理有点跟不上，尤其是<span style='color:#E57373;'>电磁场</span>那块，简直像在学天书 📖💀"
+            "我最近物理有点跟不上，尤其是 <span style='color:#E57373; font-weight:bold;'>电磁场</span> 那块，简直像在学天书 📖💀"
         ],
         "msgInputSpeed": 45,
         "author": "author"
     },
     {
         "msgs": [
-            "你们学校物理讲到哪里了？有没有什么 <span style='color:#4ECDC4;'>好的学习方法</span> 推荐？"
+            "你们学校物理讲到哪里了？有没有什么 <span style='color:#4ECDC4; font-weight:bold;'>好的学习方法</span> 推荐？"
         ],
         "msgInputSpeed": 40,
         "author": "author",
@@ -65,20 +59,14 @@
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "多做题",
-                    "刷题",
-                    "问老师",
-                    "背公式",
-                    "理解"
+                    "多做题", "刷题", "问老师", "背公式", "理解", "看视频", "总结", "笔记"
                 ],
                 "rejectKeyTexts": [
-                    "忘了",
-                    "不记得",
-                    "不知道"
+                    "忘了", "不记得", "不知道", "没学", "还没讲"
                 ],
                 "rejectHitTexts": [
                     "看来是我自己太菜了 😂",
-                    "我再硬啃啃吧，万一哪天开窍了呢"
+                    "我再硬啃啃吧，万一哪天开窍了呢 💪"
                 ]
             }
         }
@@ -101,19 +89,13 @@
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "有",
-                    "还好",
-                    "挺",
-                    "嗯",
-                    "忙"
+                    "有", "还好", "挺", "嗯", "忙", "还行", "不错", "开心", "充实"
                 ],
                 "rejectKeyTexts": [
-                    "没有",
-                    "没什么",
-                    "一般"
+                    "没有", "没什么", "一般", "就那样", "老样子"
                 ],
                 "rejectHitTexts": [
-                    "那就好，平平淡淡也是好事。",
+                    "那就好，平平淡淡也是好事 ☁️",
                     "如果你想说，我随时可以听 🎧"
                 ]
             }
@@ -130,7 +112,7 @@
     {
         "msgs": [
             "你要不要看一眼？👀",
-            "看嘛看嘛 ヽ(✿ﾟ▽ﾟ)ノ"
+            "看嘛看嘛 <span style='color:#FFB347;'>ヽ(✿ﾟ▽ﾟ)ノ</span>"
         ],
         "msgInputSpeed": 60,
         "author": "author",
@@ -138,20 +120,14 @@
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好",
-                    "嗯",
-                    "可以",
-                    "看",
-                    "行"
+                    "好", "嗯", "可以", "看", "行", "来吧", "好的", "OK"
                 ],
                 "rejectKeyTexts": [
-                    "不",
-                    "算了",
-                    "没空"
+                    "不", "算了", "没空", "下次"
                 ],
                 "rejectHitTexts": [
-                    "没关系，放这儿又不会跑。",
-                    "什么时候想看了再打开就行"
+                    "没关系，放这儿又不会跑 📬",
+                    "什么时候想看了再打开就行 🕊️"
                 ]
             }
         }
@@ -164,7 +140,7 @@
     },
     {
         "msgs": [
-            "你读完感觉怎么样？(｡･ω･｡)",
+            "你读完感觉怎么样？<span style='color:#FF6B6B;'>(｡･ω･｡)</span>",
             "有没有哪句比较戳你？"
         ],
         "msgInputSpeed": 60,
@@ -173,27 +149,21 @@
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "挺好",
-                    "喜欢",
-                    "嗯",
-                    "谢谢",
-                    "温暖"
+                    "挺好", "喜欢", "嗯", "谢谢", "温暖", "感动", "不错", "很棒"
                 ],
                 "rejectKeyTexts": [
-                    "没什么",
-                    "一般",
-                    "还行吧"
+                    "没什么", "一般", "还行吧", "没感觉", "还好"
                 ],
                 "rejectHitTexts": [
                     "那就好，没白写 😌",
-                    "反正想说的都在里面了"
+                    "反正想说的都在里面了 💌"
                 ]
             }
         }
     },
     {
         "msgs": [
-            "其实我还有一份礼物 🎁 这次不是文字，是 <span style='color:#E57373;'>视频</span>"
+            "其实我还有一份礼物 🎁 这次不是文字，是 <span style='color:#E57373; font-weight:bold;'>视频</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author"
@@ -213,14 +183,14 @@
     },
     {
         "msgs": [
-            "好了，该说的都说了 (´▽`)ﾉ",
+            "好了，该说的都说了 <span style='color:#4ECDC4;'>(´▽`)ﾉ</span>",
             "不耽误你时间了～"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "新的一岁，希望 <span style='color:#FF6B6B;'>好事多一点</span>，<span style='color:#4A90D9;'>烦恼少一点</span> ✨",
+            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> ✨",
             "按自己的节奏好好生活"
         ],
         "msgInputSpeed": 60,
@@ -228,7 +198,7 @@
     },
     {
         "msgs": [
-            "<b><span style='color:#b5654b;font-size:18px;'>9月7日，生日快乐🎂</span></b> ✧*。٩(ˊωˋ*)و✧*。"
+            "<b><span style='color:#b5654b; font-size:18px;'>9月7日，生日快乐🎂</span></b> <span style='color:#FFB347;'>✧*。٩(ˊωˋ*)و✧*。</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
@@ -242,7 +212,7 @@
     },
     {
         "msgs": [
-            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg' style='max-width:80%;border-radius:16px;'/>"
+            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg' style='max-width:80%; border-radius:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);'/>"
         ],
         "author": "author"
     }
