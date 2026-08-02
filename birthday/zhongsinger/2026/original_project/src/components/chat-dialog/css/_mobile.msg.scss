@@ -5,11 +5,11 @@
     color: $clr-text-unimportant;
 }
 
-// ========== 消息行布局（flex 替代 float）==========
+// ========== 消息行布局（群聊样式） ==========
 .msg-row {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 
     &.msg-author {
         flex-direction: row;
@@ -17,23 +17,18 @@
     }
 
     &.msg-me {
-        flex-direction: row;
-        justify-content: flex-end;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
     }
 
-    // 清除原 float
-    .msg {
-        float: none !important;
-    }
-
-    // 头像样式：无全局外边距，由角色单独控制
     .msg-avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         flex-shrink: 0;
-        background-color: #e0e0e0; // 占位色
+        background-color: #e0e0e0;
         object-fit: cover;
+        margin: 0 8px;
 
         @media (max-width: 480px) {
             width: 36px;
@@ -41,36 +36,26 @@
         }
     }
 
-    // 对方头像：位于左侧，右边距 8px
-    &.msg-author .msg-avatar {
-        margin-right: 8px;
-        margin-left: 0;
-    }
+    .msg-content {
+        max-width: 70%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
 
-    // 自己头像：位于右侧，左边距 8px，右边距 0（贴边）
-    &.msg-me .msg-avatar {
-        margin-left: 8px;
-        margin-right: 0;
-    }
-
-    // 使用 order 控制视觉顺序，与模板顺序解耦
-    &.msg-author {
-        .msg-avatar {
-            order: 1;
-        }
-
-        .msg {
-            order: 2;
+        .msg-nickname {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 2px;
+            padding-left: 4px;
         }
     }
 
-    &.msg-me {
-        .msg {
-            order: 1;
-        }
+    // 自己的消息：昵称右对齐，气泡右对齐
+    &.msg-me .msg-content {
+        align-items: flex-end;
 
-        .msg-avatar {
-            order: 2;
+        .msg-nickname {
+            padding-right: 4px;
         }
     }
 }
@@ -81,12 +66,11 @@
     margin-top: -6px;
 }
 
-// ========== 气泡样式（保留原有，仅调整圆角）==========
+// ========== 气泡样式 ==========
 .msg {
     display: inline-block;
     padding: 9px 14px;
-    max-width: 65%;
-    overflow: hidden;
+    max-width: 100%;
     word-wrap: break-word;
     font-size: $font-size-basic;
     line-height: 24px;
@@ -153,4 +137,24 @@
     .msg {
         font-size: $font-size-lg;
     }
+}
+
+// 头像抖动动画（模仿微信拍一拍）
+@keyframes shake {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-6px) rotate(-2deg); }
+  20% { transform: translateX(6px) rotate(2deg); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  90% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+
+.msg-avatar.shake {
+  animation: shake 0.6s ease-in-out;
+  animation-iteration-count: 1;
 }

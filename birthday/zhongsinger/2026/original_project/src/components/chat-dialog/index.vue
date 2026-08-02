@@ -27,28 +27,39 @@
         <div id="mock-msg-row" class="msg-row">
           <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
         </div>
+
+        <!-- 消息列表 -->
         <div class="msg-row" v-for="(msg, index) in messages" :key="index"
-          :class="msg.author === 'author' ? 'msg-author' : 'msg-me'">
-          <img v-if="avatars && avatars[msg.author]" class="msg-avatar" :src="avatars[msg.author]" alt="avatar" />
-          <div class="msg"
-            :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }" :class="{
-              'msg-bounce-in-left': msg.author === 'author',
-              'msg-bounce-in-right': msg.author === 'me',
-              'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
-            }" @click="$emit('msg-click', msg)">
-            <span v-if="msg.type === 'text'" v-html="msg.content"></span>
-            <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
-              @close="handleComponentClose"></component>
-          </div>
+          :class="msg.author === 'me' ? 'msg-me' : 'msg-author'" :data-author="msg.author"
+          @dblclick="(e) => handleDoubleClick(msg, e)">
+          <!-- 拍一拍提示 -->
+          <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
+          <!-- 普通消息 -->
+          <template v-else>
+            <img v-if="getRoleInfo(msg.author).avatar" class="msg-avatar" :src="getRoleInfo(msg.author).avatar"
+              alt="avatar" />
+            <div class="msg-content">
+              <div class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
+              <div class="msg"
+                :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }"
+                :class="{
+                  'msg-bounce-in-left': msg.author !== 'me',
+                  'msg-bounce-in-right': msg.author === 'me',
+                  'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
+                }" @click="$emit('msg-click', msg)">
+                <span v-if="msg.type === 'text'" v-html="msg.content"></span>
+                <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
+                  @close="handleComponentClose" />
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
     <div id="mobile-foot">
       <div class="foot-wrapper">
         <div class="input-area" ref="inputArea">
-          <!-- 系统打字占位 -->
           <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
-          <!-- 用户输入框 -->
           <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
             v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
         </div>
@@ -87,7 +98,7 @@ export default {
   props: {
     title: String,
     options: Array,
-    avatars: Object
+    roles: Object   // 角色映射，包含 _default.avatar 和各个角色 { name, avatar, pat? }
   },
   computed: {
     sendBtnDisabled() {
@@ -106,9 +117,13 @@ export default {
       isTyping: false,
       latestMsgContent: null,
       footHeight: 55,
-      typedInstance: null,  // 保存 Typed 实例，便于销毁
+      typedInstance: null,
       currentTime: '',
-      headHeight: 70, // 新头部总高度
+      headHeight: 70,
+      lastPatTime: 0,
+      msgIdCounter: 0,
+      recallTimers: [],
+      timeInserted: false,
     }
   },
   watch: {
@@ -129,16 +144,155 @@ export default {
     }
   },
   methods: {
+    addTimeMessage() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const prefix = hours < 12 ? '上午' : '下午';
+      const displayHour = hours % 12 || 12;
+      const timeStr = `${prefix} ${displayHour}:${minutes}`;
+
+      this.messages.push({
+        type: 'tip',
+        text: timeStr
+      });
+
+      this.$nextTick(() => {
+        onMessageSending();   // 外部定义的滚动函数
+      });
+    },
+    // ---- 角色信息获取 ----
+    getRoleInfo(roleName) {
+      const defaultConfig = (this.roles && this.roles._default) || { avatar: '', pat: '拍了拍TA' };
+      const roleConfig = this.roles ? this.roles[roleName] : null;
+      if (roleConfig) {
+        return {
+          name: roleConfig.name || roleName,
+          avatar: roleConfig.avatar || defaultConfig.avatar || '',
+          pat: roleConfig.pat || defaultConfig.pat || '拍了拍TA'
+        };
+      }
+      return {
+        name: roleName || '未知',
+        avatar: defaultConfig.avatar || '',
+        pat: defaultConfig.pat || '拍了拍TA'
+      };
+    },
+
+    // ---- 拍一拍相关 ----
+    handleDoubleClick(msg) {
+      if (msg.type === 'tip') return;
+      const now = Date.now();
+      if (now - this.lastPatTime < 1000) return;
+      this.lastPatTime = now;
+
+      const rowEl = event.currentTarget;
+      const avatar = rowEl.querySelector('.msg-avatar');
+      if (avatar) {
+        avatar.classList.add('shake');
+        avatar.addEventListener('animationend', function onEnd() {
+          avatar.classList.remove('shake');
+          avatar.removeEventListener('animationend', onEnd);
+        });
+      }
+
+      const targetRole = msg.author;
+      const currentUser = 'me';
+      const meInfo = this.getRoleInfo(currentUser);
+      const targetInfo = this.getRoleInfo(targetRole);
+      let patText = targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
+      if (targetRole === currentUser && !targetInfo.pat) {
+        patText = '拍了拍自己';
+      }
+      const displayName = meInfo.name || '我';
+      const tip = `${displayName} ${patText}`;
+      this.addTipMessage(tip);
+    },
+
+    addTipMessage(text) {
+      this.messages.push({
+        type: 'tip',
+        text: text,
+      });
+      this.$nextTick(() => {
+        onMessageSending();
+      });
+    },
+
+    // ---- 消息链构建（支持 pat 和 recall） ----
     buildMsgChain(messages) {
-      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction }) => {
+      // 在开始处理消息链之前，插入时间（仅一次）
+      if (!this.timeInserted) {
+        this.addTimeMessage();
+        this.timeInserted = true;
+      }
+      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip }) => {
         this.msgChain = this.msgChain
-          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction));
+          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip));
       })
     },
 
-    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null) {
+    // ---------- 修改：增加 recall 参数，实现撤回 ----------
+    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null, pat = null, recall = null, tip = null) {
       return new Promise((resolve) => {
+        // 拍一拍
+        if (pat) {
+          let target = pat;
+          let customText = null;
+          if (typeof pat === 'object') {
+            target = pat.target || 'me';
+            customText = pat.text;
+          }
+          const targetInfo = this.getRoleInfo(target);
+          const authorInfo = this.getRoleInfo(author || 'author');
+          const patText = customText || targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
+          const displayName = authorInfo.name || '未知';
+          const tip = `${displayName} ${patText}`;
+          this.addTipMessage(tip);
+        }
+
+        if (!messages || messages.length === 0) {
+          resolve();
+          return;
+        }
+
+        // 记录本组消息在 messages 中的起始索引
+        const startIndex = this.messages.length;
+
         this.sendSysMsgInner(messages, inputSpeed, author).then(() => {
+          const endIndex = this.messages.length;
+
+          if (recall && recall > 0) {
+            const senderName = this.getRoleInfo(author || 'author').name || '未知';
+            const timer = setTimeout(() => {
+              // 检查这些消息是否还存在（避免重复撤回或已被删除）
+              if (this.messages.length >= endIndex) {
+                // 删除本组所有消息
+                this.messages.splice(startIndex, endIndex - startIndex);
+                // 插入撤回提示
+                this.messages.push({
+                  type: 'tip',
+                  text: `${senderName}撤回了一条消息`
+                });
+                // 刷新滚动
+                this.$nextTick(() => {
+                  onMessageSending();
+                });
+              }
+            }, recall);
+            // 保存计时器以便清理
+            this.recallTimers.push(timer);
+          }
+
+          if (tip) {
+            this.messages.push({
+              type: 'tip',
+              text: tip   // 可以是纯文本或 HTML
+            });
+            this.$nextTick(() => { onMessageSending(); });
+          }
+
+          // 触发下一步动作
           if (triggerNextAction) {
             const trigger = () => delay(500).then(() => resolve());
             this.nextActionTrigger = {
@@ -160,28 +314,25 @@ export default {
         const messageType = this.getMsgType(message);
         this.status = 'systemInput';
 
-        // 销毁之前的 Typed 实例（如果有）
         if (this.typedInstance) {
           this.typedInstance.destroy();
           this.typedInstance = null;
         }
 
         if (messageType === 'text') {
-          // 清空占位元素，避免残留
           const el = this.$refs.systemInputElement;
           if (el) el.innerHTML = '';
 
           let strings = [''];
           Array.isArray(messages) ? strings = strings.concat(messages) : strings.push(messages);
 
-          // 创建新的 Typed 实例
           this.typedInstance = new Typed(el, {
             strings: strings,
             typeSpeed: inputSpeed,
             backSpeed: inputSpeed,
-            cursorChar: '|',                // 显式光标字符
-            autoInsertCss: true,            // 自动插入光标样式
-            contentType: 'html',            // 支持 HTML 标签
+            cursorChar: '|',
+            autoInsertCss: true,
+            contentType: 'html',
             onComplete: () => {
               if (this.typedInstance) {
                 this.typedInstance.destroy();
@@ -191,7 +342,6 @@ export default {
               delay(500).then(() => resolve());
             },
             onStringTyped: () => {
-              // 每次打字后强制更新底部栏高度（虽然内容高度不变，但保证 scroll 正常）
               this.$nextTick(() => {
                 const foot = document.getElementById('mobile-foot');
                 if (foot) this.footHeight = foot.offsetHeight;
@@ -199,7 +349,7 @@ export default {
             }
           });
         } else {
-          this.pushMsg(message, AUTHOR.AUTHOR, messageType);
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
           delay(500).then(() => resolve());
         }
       });
@@ -346,12 +496,8 @@ export default {
       const m = String(now.getMinutes()).padStart(2, '0');
       this.currentTime = h + ':' + m;
     },
-    handleMenuClick() {
-
-    },
-    handleMoreClick() {
-
-    },
+    handleMenuClick() { /* 可扩展 */ },
+    handleMoreClick() { /* 可扩展 */ },
   },
   mounted() {
     this.updateTime();
@@ -364,6 +510,17 @@ export default {
       const foot = document.getElementById('mobile-foot');
       if (foot) this.footHeight = foot.offsetHeight;
     });
+  },
+  // ---------- 组件销毁前清理所有撤回计时器 ----------
+  beforeUnmount() {
+    if (this.typedInstance) {
+      this.typedInstance.destroy();
+      this.typedInstance = null;
+    }
+    if (this.recallTimers) {
+      this.recallTimers.forEach(timer => clearTimeout(timer));
+      this.recallTimers = [];
+    }
   }
 }
 
@@ -411,11 +568,11 @@ function onImageLoad($img) {
 </script>
 
 <style scoped>
-/* 使用 scoped 避免污染全局，但内部样式用 :deep 穿透 */
+/* 空 */
 </style>
 
 <style>
-/* 全局样式覆盖（非 scoped，确保优先级） */
+/* 全局样式覆盖（非 scoped） */
 #mobile-foot {
   position: absolute;
   bottom: 0;
@@ -441,30 +598,29 @@ function onImageLoad($img) {
   border-radius: 20px;
   box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
   padding: 9px 14px;
-  display: flex;
-  align-items: center;
-  /* 保证内容垂直居中，但 Typed 光标会正常显示 */
+  display: block !important;
 }
 
 #mobile-foot .system-input-element {
-  display: inline-block;
-  width: 100%;
+  display: inline !important;
+  width: auto !important;
+  min-width: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
   font-size: 14px;
   line-height: 24px;
-  min-height: 24px;
-  word-wrap: break-word;
-  white-space: pre-wrap;
   color: black;
 }
 
-/* 修正 Typed.js 光标样式 */
 #mobile-foot .system-input-element .typed-cursor {
+  display: inline !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  font-size: inherit;
+  line-height: inherit;
   color: black;
   opacity: 1;
-  font-size: 14px;
-  line-height: 24px;
-  display: inline-block;
-  font-weight: normal;
+  margin-left: 1px;
 }
 
 #mobile-foot .user-input-textarea {
@@ -529,53 +685,15 @@ function onImageLoad($img) {
   }
 }
 
-/* 重置输入区域布局，避免 flex 影响 */
-#mobile-foot .input-area {
-  display: block !important;
-  padding: 9px 14px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
-  min-height: 36px;
-}
-
-/* 打字容器使用 inline 布局，随内容自然撑宽 */
-#mobile-foot .system-input-element {
-  display: inline !important;
-  width: auto !important;
-  min-width: 10px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 14px;
-  line-height: 24px;
-  color: black;
-}
-
-/* 强制光标为内联元素，且使用相对定位随文本流 */
-#mobile-foot .system-input-element .typed-cursor {
-  display: inline !important;
-  position: relative !important;
-  vertical-align: baseline !important;
-  font-size: inherit;
-  line-height: inherit;
-  color: black;
-  opacity: 1;
-  margin-left: 1px;
-  /* 与文本保持微小间距，可调整 */
-}
-
-/* 新头部整体 */
+/* 新头部样式 */
 #mobile-head {
   height: auto !important;
-  /* 让高度由内容撑开 */
   background: white;
   display: flex !important;
-  /* 覆盖移动端可能隐藏 */
   flex-direction: column;
   border-bottom: 1px solid #e0e0e0;
 }
 
-/* 状态栏 */
 #status-bar {
   display: flex;
   justify-content: space-between;
@@ -596,15 +714,14 @@ function onImageLoad($img) {
   color: white;
 }
 
-/* 标题栏 */
 #title-bar {
   display: flex;
-  align-items: flex-start;          
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 12px 16px 6px 16px;      
-  height: 44px;                     
+  padding: 12px 16px 6px 16px;
+  height: 44px;
   background: white;
-  box-sizing: border-box;           
+  box-sizing: border-box;
 }
 
 #title-bar .left-menu,
@@ -651,7 +768,6 @@ function onImageLoad($img) {
   text-align: center;
 }
 
-/* 覆盖移动端（宽度<=480px）隐藏头部的样式 */
 @media (max-width: 480px) {
   #mobile-head {
     display: flex !important;
@@ -659,7 +775,16 @@ function onImageLoad($img) {
 
   #mobile-body {
     top: 70px !important;
-    /* 与 headHeight 保持一致 */
   }
+}
+
+.msg-tip {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 6px 0;
+  width: 100%;
+  user-select: none;
+  pointer-events: none;
 }
 </style>

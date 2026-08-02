@@ -11,6 +11,7 @@ Directory structure:
     │       ├── demo/
     │       │   ├── avatars.json
     │       │   ├── chat.json
+    │       │   ├── roles.json
     │       │   └── letters/
     │       │       └── test.json
     │       ├── preview/
@@ -116,6 +117,7 @@ VITE_APP_TITLE=与Dy聊天中...
 VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
+VITE_ROLES_PATH=options/demo/roles.json
 
 
 ================================================
@@ -125,6 +127,7 @@ VITE_APP_TITLE=与Dy聊天中...
 VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
+VITE_ROLES_PATH=options/demo/roles.json
 
 
 ================================================
@@ -134,6 +137,7 @@ VITE_APP_TITLE=与Dy聊天中...
 VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
+VITE_ROLES_PATH=options/demo/roles.json
 
 
 ================================================
@@ -149,25 +153,62 @@ FILE: public/options/demo/avatars.json
 FILE: public/options/demo/chat.json
 ================================================
 [
-    { "msgs": ["普通消息，有输入动画, 普通消息，有输入动画，普通消息，有输入，动画普通消息，有输入动画，普通消息，有输入动画"], "msgInputSpeed": 80},
-    { "msgs": ["普通消息，有输入动画"], "msgInputSpeed": 80 },
-    { "msgs": ["普通消息支持回退，比如下面这条"], "msgInputSpeed": 80 },
     {
-        "msgs": ["普通消息会回退", "普通消息回退后的结果，也能调整动画速度"],
+        "msgs": [
+            "这条消息会在1秒后自动撤回"
+        ],
+        "msgInputSpeed": 80,
+        "recall": 1000
+    },
+    {
+        "msgs": [
+            "普通消息，有输入动画"
+        ],
+        "msgInputSpeed": 80,
+        "author": "three",
+        "tip":"test"
+    },
+    {
+        "msgs": [
+            "普通消息支持回退，比如下面这条"
+        ],
+        "msgInputSpeed": 80,
+        "author": "four",
+        "pat": {
+            "target": "me",
+            "text": "拍了拍我的小脑袋"
+        }
+    },
+    {
+        "msgs": [
+            "普通消息会回退",
+            "普通消息回退后的结果，也能调整动画速度"
+        ],
         "msgInputSpeed": 80
     },
-    { "msgs": ["普通消息输入快速"], "msgInputSpeed": 40 },
     {
-        "msgs": ["支持切换输入角色"],
+        "msgs": [
+            "普通消息输入快速"
+        ],
+        "msgInputSpeed": 40
+    },
+    {
+        "msgs": [
+            "支持切换输入角色"
+        ],
         "msgInputSpeed": 80,
         "author": "me"
     },
     {
-        "msgs": ["消息支持html元素，比如下面这个带颜色的文本"],
+        "msgs": [
+            "消息支持html元素，比如下面这个带颜色的文本"
+        ],
         "msgInputSpeed": 80
     },
     {
-        "msgs": ["<span style=\"color: red;\">红色的span标签字体</span>"],
+        "msgs": [
+            "<span style=\"color: red;\">红色的span标签字体</span>"
+        ],
         "msgInputSpeed": 80
     },
     {
@@ -178,29 +219,78 @@ FILE: public/options/demo/chat.json
         "triggerNextAction": {
             "type": "userInput",
             "options": {
-                "resolveKeyTexts": ["好"],
+                "resolveKeyTexts": [
+                    "好"
+                ],
                 "rejectKeyTexts": [],
-                "rejectHitTexts": ["输入好，听不懂吗？？？", "触发强行跳过"]
+                "rejectHitTexts": [
+                    "输入好，听不懂吗？？？",
+                    "触发强行跳过"
+                ]
             }
         }
     },
-    { "msgs": ["消息支持输入图片"], "msgInputSpeed": 80 },
-    { "msgs": ["<img src='options/demo/imgs/test.png'/>"] },
-    { "msgs": ["消息支持输入VLog"], "msgInputSpeed": 80 },
-    { "msgs": ["看看我为你做的VLog"], "msgInputSpeed": 80 },
     {
-        "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
-        "triggerNextAction": { "type": "componentClose" }
+        "msgs": [
+            "消息支持输入图片"
+        ],
+        "msgInputSpeed": 80
     },
-    { "msgs": ["消息支持输入信件"], "msgInputSpeed": 80 },
-    { "msgs": ["看看我想对你说的话"], "msgInputSpeed": 80 },
     {
-        "msgs": ["<letter src='options/demo/letters/test.json'/>"],
-        "triggerNextAction": { "type": "componentClose" }
+        "msgs": [
+            "<img src='options/demo/imgs/test.png'/>"
+        ]
     },
-    { "msgs": ["接下来是一些通用测试"], "msgInputSpeed": 80 },
     {
-        "msgs": ["有些心里话，你想听吗？"],
+        "msgs": [
+            "消息支持输入VLog"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "看看我为你做的VLog"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "<vlog src='options/demo/vlogs/test.mp4'/>"
+        ],
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
+    },
+    {
+        "msgs": [
+            "消息支持输入信件"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "看看我想对你说的话"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "<letter src='options/demo/letters/test.json'/>"
+        ],
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
+    },
+    {
+        "msgs": [
+            "接下来是一些通用测试"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "有些心里话，你想听吗？"
+        ],
         "msgInputSpeed": 40,
         "triggerNextAction": {
             "type": "userInput",
@@ -214,7 +304,9 @@ FILE: public/options/demo/chat.json
                     "想听",
                     "是"
                 ],
-                "rejectKeyTexts": ["不想"],
+                "rejectKeyTexts": [
+                    "不想"
+                ],
                 "rejectHitTexts": [
                     "不听？信不信我分分钟出 bug 给你看？",
                     "好吧，既然你实在不想听，那我就讲给你听吧～"
@@ -222,40 +314,107 @@ FILE: public/options/demo/chat.json
             }
         }
     },
-    { "msgs": ["心里话都在这封信里"], "msgInputSpeed": 80 },
     {
-        "msgs": ["<letter src='options/demo/letters/test.json'/>"],
-        "triggerNextAction": { "type": "componentClose" }
+        "msgs": [
+            "心里话都在这封信里"
+        ],
+        "msgInputSpeed": 80
     },
     {
-        "msgs": ["你猜我在想什么？"],
+        "msgs": [
+            "<letter src='options/demo/letters/test.json'/>"
+        ],
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
+    },
+    {
+        "msgs": [
+            "你猜我在想什么？"
+        ],
         "msgInputSpeed": 80,
         "triggerNextAction": {
             "type": "userInput",
             "options": {
-                "resolveKeyTexts": ["想我"],
-                "rejectKeyTexts": ["不知道"],
+                "resolveKeyTexts": [
+                    "想我"
+                ],
+                "rejectKeyTexts": [
+                    "不知道"
+                ],
                 "rejectHitTexts": [
                     "你猜错了～",
-                    ["给你提示一下～", "是个人~"],
+                    [
+                        "给你提示一下～",
+                        "是个人~"
+                    ],
                     "这都猜不中？？？",
-                    ["好吧，看图吧。", "<img src='options/demo/imgs/test.png'>"]
+                    [
+                        "好吧，看图吧。",
+                        "<img src='options/demo/imgs/test.png'>"
+                    ]
                 ]
             }
         }
     },
-    { "msgs": ["我是在想打游戏", "我是在想你呢"], "msgInputSpeed": 80 },
-    { "msgs": ["看看这个视频"], "msgInputSpeed": 80 },
     {
-        "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
-        "triggerNextAction": { "type": "componentClose" }
+        "msgs": [
+            "我是在想打游戏",
+            "我是在想你呢"
+        ],
+        "msgInputSpeed": 80
     },
     {
-        "msgs": ["测试结束，广告位招租"],
+        "msgs": [
+            "看看这个视频"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "<vlog src='options/demo/vlogs/test.mp4'/>"
+        ],
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
+    },
+    {
+        "msgs": [
+            "测试结束，广告位招租"
+        ],
         "msgInputSpeed": 80
     }
 ]
 
+
+================================================
+FILE: public/options/demo/roles.json
+================================================
+{
+    "_default": {
+        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cry.png",
+        "pat": "拍了拍TA"
+    },
+    "author": {
+        "name": "小D",
+        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
+        "pat": "拍了拍我的脑袋"
+    },
+    "me": {
+        "name": "我",
+        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg",
+        "pat": "拍了拍自己"
+    },
+    "three": {
+        "name": "张三",
+        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg",
+        "pat": "拍了拍我的肩膀"
+    },
+    "four": {
+        "name": "李四",
+        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png"
+    }
+}
 
 
 ================================================
@@ -302,32 +461,58 @@ FILE: public/options/production/chat.json
 FILE: src/App.vue
 ================================================
 <template>
-  <MobileDialog :src="src" :title="title" :avatars="avatars" />
+  <MobileDialog :src="src" :title="title" :roles="roles" />
 </template>
 
 <script setup>
 import MobileDialog from './pages/mobile-dialog/index.vue'
 import { ref, onMounted } from 'vue'
+
 document.title = import.meta.env.VITE_APP_TITLE
 const src = import.meta.env.VITE_CHAT_OPTIONS_PATH
 const title = import.meta.env.VITE_APP_TITLE
-const avatars = ref(null)
+const roles = ref(null)
 
 onMounted(async () => {
-  // 优先使用环境变量指定的头像路径，否则自动推导
-  let avatarsSrc = import.meta.env.VITE_AVATARS_PATH
-  if (!avatarsSrc) {
-    avatarsSrc = src.replace(/chat\.json$/, 'avatars.json')
+  // 优先使用环境变量指定的角色文件
+  let rolesSrc = import.meta.env.VITE_ROLES_PATH
+  if (!rolesSrc) {
+    // 默认：与 chat.json 同目录下的 roles.json
+    rolesSrc = src.replace(/chat\.json$/, 'roles.json')
   }
+
   try {
-    const res = await fetch(avatarsSrc)
+    const res = await fetch(rolesSrc)
     if (res.ok) {
-      avatars.value = await res.json()
-    } else {
-      console.warn('avatars.json not found, avatars will be hidden.')
+      roles.value = await res.json()
+      console.log('角色配置加载成功', roles.value)
+      return
     }
   } catch (e) {
-    console.warn('Failed to load avatars:', e)
+    console.warn('加载 roles.json 失败，尝试回退到 avatars.json', e)
+  }
+
+  // 回退：加载 avatars.json（兼容旧版）
+  const avatarSrc = src.replace(/chat\.json$/, 'avatars.json')
+  try {
+    const res = await fetch(avatarSrc)
+    if (res.ok) {
+      const avatars = await res.json()
+      // 转换为 roles 格式（昵称使用 key）
+      roles.value = Object.fromEntries(
+        Object.entries(avatars).map(([key, url]) => [
+          key,
+          { name: key, avatar: url }
+        ])
+      )
+      console.log('从 avatars.json 转换角色配置', roles.value)
+    } else {
+      console.warn('未找到任何角色配置，将使用默认显示')
+      roles.value = {}
+    }
+  } catch (e) {
+    console.warn('加载 avatars.json 失败', e)
+    roles.value = {}
   }
 })
 </script>
@@ -378,28 +563,39 @@ FILE: src/components/chat-dialog/index.vue
         <div id="mock-msg-row" class="msg-row">
           <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
         </div>
+
+        <!-- 消息列表 -->
         <div class="msg-row" v-for="(msg, index) in messages" :key="index"
-          :class="msg.author === 'author' ? 'msg-author' : 'msg-me'">
-          <img v-if="avatars && avatars[msg.author]" class="msg-avatar" :src="avatars[msg.author]" alt="avatar" />
-          <div class="msg"
-            :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }" :class="{
-              'msg-bounce-in-left': msg.author === 'author',
-              'msg-bounce-in-right': msg.author === 'me',
-              'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
-            }" @click="$emit('msg-click', msg)">
-            <span v-if="msg.type === 'text'" v-html="msg.content"></span>
-            <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
-              @close="handleComponentClose"></component>
-          </div>
+          :class="msg.author === 'me' ? 'msg-me' : 'msg-author'" :data-author="msg.author"
+          @dblclick="(e) => handleDoubleClick(msg, e)">
+          <!-- 拍一拍提示 -->
+          <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
+          <!-- 普通消息 -->
+          <template v-else>
+            <img v-if="getRoleInfo(msg.author).avatar" class="msg-avatar" :src="getRoleInfo(msg.author).avatar"
+              alt="avatar" />
+            <div class="msg-content">
+              <div class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
+              <div class="msg"
+                :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }"
+                :class="{
+                  'msg-bounce-in-left': msg.author !== 'me',
+                  'msg-bounce-in-right': msg.author === 'me',
+                  'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
+                }" @click="$emit('msg-click', msg)">
+                <span v-if="msg.type === 'text'" v-html="msg.content"></span>
+                <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
+                  @close="handleComponentClose" />
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
     <div id="mobile-foot">
       <div class="foot-wrapper">
         <div class="input-area" ref="inputArea">
-          <!-- 系统打字占位 -->
           <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
-          <!-- 用户输入框 -->
           <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
             v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
         </div>
@@ -438,7 +634,7 @@ export default {
   props: {
     title: String,
     options: Array,
-    avatars: Object
+    roles: Object   // 角色映射，包含 _default.avatar 和各个角色 { name, avatar, pat? }
   },
   computed: {
     sendBtnDisabled() {
@@ -457,9 +653,13 @@ export default {
       isTyping: false,
       latestMsgContent: null,
       footHeight: 55,
-      typedInstance: null,  // 保存 Typed 实例，便于销毁
+      typedInstance: null,
       currentTime: '',
-      headHeight: 70, // 新头部总高度
+      headHeight: 70,
+      lastPatTime: 0,
+      msgIdCounter: 0,
+      recallTimers: [],
+      timeInserted: false,
     }
   },
   watch: {
@@ -480,16 +680,155 @@ export default {
     }
   },
   methods: {
+    addTimeMessage() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const prefix = hours < 12 ? '上午' : '下午';
+      const displayHour = hours % 12 || 12;
+      const timeStr = `${prefix} ${displayHour}:${minutes}`;
+
+      this.messages.push({
+        type: 'tip',
+        text: timeStr
+      });
+
+      this.$nextTick(() => {
+        onMessageSending();   // 外部定义的滚动函数
+      });
+    },
+    // ---- 角色信息获取 ----
+    getRoleInfo(roleName) {
+      const defaultConfig = (this.roles && this.roles._default) || { avatar: '', pat: '拍了拍TA' };
+      const roleConfig = this.roles ? this.roles[roleName] : null;
+      if (roleConfig) {
+        return {
+          name: roleConfig.name || roleName,
+          avatar: roleConfig.avatar || defaultConfig.avatar || '',
+          pat: roleConfig.pat || defaultConfig.pat || '拍了拍TA'
+        };
+      }
+      return {
+        name: roleName || '未知',
+        avatar: defaultConfig.avatar || '',
+        pat: defaultConfig.pat || '拍了拍TA'
+      };
+    },
+
+    // ---- 拍一拍相关 ----
+    handleDoubleClick(msg) {
+      if (msg.type === 'tip') return;
+      const now = Date.now();
+      if (now - this.lastPatTime < 1000) return;
+      this.lastPatTime = now;
+
+      const rowEl = event.currentTarget;
+      const avatar = rowEl.querySelector('.msg-avatar');
+      if (avatar) {
+        avatar.classList.add('shake');
+        avatar.addEventListener('animationend', function onEnd() {
+          avatar.classList.remove('shake');
+          avatar.removeEventListener('animationend', onEnd);
+        });
+      }
+
+      const targetRole = msg.author;
+      const currentUser = 'me';
+      const meInfo = this.getRoleInfo(currentUser);
+      const targetInfo = this.getRoleInfo(targetRole);
+      let patText = targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
+      if (targetRole === currentUser && !targetInfo.pat) {
+        patText = '拍了拍自己';
+      }
+      const displayName = meInfo.name || '我';
+      const tip = `${displayName} ${patText}`;
+      this.addTipMessage(tip);
+    },
+
+    addTipMessage(text) {
+      this.messages.push({
+        type: 'tip',
+        text: text,
+      });
+      this.$nextTick(() => {
+        onMessageSending();
+      });
+    },
+
+    // ---- 消息链构建（支持 pat 和 recall） ----
     buildMsgChain(messages) {
-      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction }) => {
+      // 在开始处理消息链之前，插入时间（仅一次）
+      if (!this.timeInserted) {
+        this.addTimeMessage();
+        this.timeInserted = true;
+      }
+      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip }) => {
         this.msgChain = this.msgChain
-          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction));
+          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip));
       })
     },
 
-    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null) {
+    // ---------- 修改：增加 recall 参数，实现撤回 ----------
+    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null, pat = null, recall = null, tip = null) {
       return new Promise((resolve) => {
+        // 拍一拍
+        if (pat) {
+          let target = pat;
+          let customText = null;
+          if (typeof pat === 'object') {
+            target = pat.target || 'me';
+            customText = pat.text;
+          }
+          const targetInfo = this.getRoleInfo(target);
+          const authorInfo = this.getRoleInfo(author || 'author');
+          const patText = customText || targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
+          const displayName = authorInfo.name || '未知';
+          const tip = `${displayName} ${patText}`;
+          this.addTipMessage(tip);
+        }
+
+        if (!messages || messages.length === 0) {
+          resolve();
+          return;
+        }
+
+        // 记录本组消息在 messages 中的起始索引
+        const startIndex = this.messages.length;
+
         this.sendSysMsgInner(messages, inputSpeed, author).then(() => {
+          const endIndex = this.messages.length;
+
+          if (recall && recall > 0) {
+            const senderName = this.getRoleInfo(author || 'author').name || '未知';
+            const timer = setTimeout(() => {
+              // 检查这些消息是否还存在（避免重复撤回或已被删除）
+              if (this.messages.length >= endIndex) {
+                // 删除本组所有消息
+                this.messages.splice(startIndex, endIndex - startIndex);
+                // 插入撤回提示
+                this.messages.push({
+                  type: 'tip',
+                  text: `${senderName}撤回了一条消息`
+                });
+                // 刷新滚动
+                this.$nextTick(() => {
+                  onMessageSending();
+                });
+              }
+            }, recall);
+            // 保存计时器以便清理
+            this.recallTimers.push(timer);
+          }
+
+          if (tip) {
+            this.messages.push({
+              type: 'tip',
+              text: tip   // 可以是纯文本或 HTML
+            });
+            this.$nextTick(() => { onMessageSending(); });
+          }
+
+          // 触发下一步动作
           if (triggerNextAction) {
             const trigger = () => delay(500).then(() => resolve());
             this.nextActionTrigger = {
@@ -511,28 +850,25 @@ export default {
         const messageType = this.getMsgType(message);
         this.status = 'systemInput';
 
-        // 销毁之前的 Typed 实例（如果有）
         if (this.typedInstance) {
           this.typedInstance.destroy();
           this.typedInstance = null;
         }
 
         if (messageType === 'text') {
-          // 清空占位元素，避免残留
           const el = this.$refs.systemInputElement;
           if (el) el.innerHTML = '';
 
           let strings = [''];
           Array.isArray(messages) ? strings = strings.concat(messages) : strings.push(messages);
 
-          // 创建新的 Typed 实例
           this.typedInstance = new Typed(el, {
             strings: strings,
             typeSpeed: inputSpeed,
             backSpeed: inputSpeed,
-            cursorChar: '|',                // 显式光标字符
-            autoInsertCss: true,            // 自动插入光标样式
-            contentType: 'html',            // 支持 HTML 标签
+            cursorChar: '|',
+            autoInsertCss: true,
+            contentType: 'html',
             onComplete: () => {
               if (this.typedInstance) {
                 this.typedInstance.destroy();
@@ -542,7 +878,6 @@ export default {
               delay(500).then(() => resolve());
             },
             onStringTyped: () => {
-              // 每次打字后强制更新底部栏高度（虽然内容高度不变，但保证 scroll 正常）
               this.$nextTick(() => {
                 const foot = document.getElementById('mobile-foot');
                 if (foot) this.footHeight = foot.offsetHeight;
@@ -550,7 +885,7 @@ export default {
             }
           });
         } else {
-          this.pushMsg(message, AUTHOR.AUTHOR, messageType);
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
           delay(500).then(() => resolve());
         }
       });
@@ -697,12 +1032,8 @@ export default {
       const m = String(now.getMinutes()).padStart(2, '0');
       this.currentTime = h + ':' + m;
     },
-    handleMenuClick() {
-
-    },
-    handleMoreClick() {
-
-    },
+    handleMenuClick() { /* 可扩展 */ },
+    handleMoreClick() { /* 可扩展 */ },
   },
   mounted() {
     this.updateTime();
@@ -715,6 +1046,17 @@ export default {
       const foot = document.getElementById('mobile-foot');
       if (foot) this.footHeight = foot.offsetHeight;
     });
+  },
+  // ---------- 组件销毁前清理所有撤回计时器 ----------
+  beforeUnmount() {
+    if (this.typedInstance) {
+      this.typedInstance.destroy();
+      this.typedInstance = null;
+    }
+    if (this.recallTimers) {
+      this.recallTimers.forEach(timer => clearTimeout(timer));
+      this.recallTimers = [];
+    }
   }
 }
 
@@ -762,11 +1104,11 @@ function onImageLoad($img) {
 </script>
 
 <style scoped>
-/* 使用 scoped 避免污染全局，但内部样式用 :deep 穿透 */
+/* 空 */
 </style>
 
 <style>
-/* 全局样式覆盖（非 scoped，确保优先级） */
+/* 全局样式覆盖（非 scoped） */
 #mobile-foot {
   position: absolute;
   bottom: 0;
@@ -792,30 +1134,29 @@ function onImageLoad($img) {
   border-radius: 20px;
   box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
   padding: 9px 14px;
-  display: flex;
-  align-items: center;
-  /* 保证内容垂直居中，但 Typed 光标会正常显示 */
+  display: block !important;
 }
 
 #mobile-foot .system-input-element {
-  display: inline-block;
-  width: 100%;
+  display: inline !important;
+  width: auto !important;
+  min-width: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
   font-size: 14px;
   line-height: 24px;
-  min-height: 24px;
-  word-wrap: break-word;
-  white-space: pre-wrap;
   color: black;
 }
 
-/* 修正 Typed.js 光标样式 */
 #mobile-foot .system-input-element .typed-cursor {
+  display: inline !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  font-size: inherit;
+  line-height: inherit;
   color: black;
   opacity: 1;
-  font-size: 14px;
-  line-height: 24px;
-  display: inline-block;
-  font-weight: normal;
+  margin-left: 1px;
 }
 
 #mobile-foot .user-input-textarea {
@@ -880,53 +1221,15 @@ function onImageLoad($img) {
   }
 }
 
-/* 重置输入区域布局，避免 flex 影响 */
-#mobile-foot .input-area {
-  display: block !important;
-  padding: 9px 14px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
-  min-height: 36px;
-}
-
-/* 打字容器使用 inline 布局，随内容自然撑宽 */
-#mobile-foot .system-input-element {
-  display: inline !important;
-  width: auto !important;
-  min-width: 10px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 14px;
-  line-height: 24px;
-  color: black;
-}
-
-/* 强制光标为内联元素，且使用相对定位随文本流 */
-#mobile-foot .system-input-element .typed-cursor {
-  display: inline !important;
-  position: relative !important;
-  vertical-align: baseline !important;
-  font-size: inherit;
-  line-height: inherit;
-  color: black;
-  opacity: 1;
-  margin-left: 1px;
-  /* 与文本保持微小间距，可调整 */
-}
-
-/* 新头部整体 */
+/* 新头部样式 */
 #mobile-head {
   height: auto !important;
-  /* 让高度由内容撑开 */
   background: white;
   display: flex !important;
-  /* 覆盖移动端可能隐藏 */
   flex-direction: column;
   border-bottom: 1px solid #e0e0e0;
 }
 
-/* 状态栏 */
 #status-bar {
   display: flex;
   justify-content: space-between;
@@ -947,15 +1250,14 @@ function onImageLoad($img) {
   color: white;
 }
 
-/* 标题栏 */
 #title-bar {
   display: flex;
-  align-items: flex-start;          
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 12px 16px 6px 16px;      
-  height: 44px;                     
+  padding: 12px 16px 6px 16px;
+  height: 44px;
   background: white;
-  box-sizing: border-box;           
+  box-sizing: border-box;
 }
 
 #title-bar .left-menu,
@@ -1002,7 +1304,6 @@ function onImageLoad($img) {
   text-align: center;
 }
 
-/* 覆盖移动端（宽度<=480px）隐藏头部的样式 */
 @media (max-width: 480px) {
   #mobile-head {
     display: flex !important;
@@ -1010,8 +1311,17 @@ function onImageLoad($img) {
 
   #mobile-body {
     top: 70px !important;
-    /* 与 headHeight 保持一致 */
   }
+}
+
+.msg-tip {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 6px 0;
+  width: 100%;
+  user-select: none;
+  pointer-events: none;
 }
 </style>
 
@@ -1320,11 +1630,11 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
     color: $clr-text-unimportant;
 }
 
-// ========== 消息行布局（flex 替代 float）==========
+// ========== 消息行布局（群聊样式） ==========
 .msg-row {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 
     &.msg-author {
         flex-direction: row;
@@ -1332,23 +1642,18 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
     }
 
     &.msg-me {
-        flex-direction: row;
-        justify-content: flex-end;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
     }
 
-    // 清除原 float
-    .msg {
-        float: none !important;
-    }
-
-    // 头像样式：无全局外边距，由角色单独控制
     .msg-avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         flex-shrink: 0;
-        background-color: #e0e0e0; // 占位色
+        background-color: #e0e0e0;
         object-fit: cover;
+        margin: 0 8px;
 
         @media (max-width: 480px) {
             width: 36px;
@@ -1356,36 +1661,26 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
         }
     }
 
-    // 对方头像：位于左侧，右边距 8px
-    &.msg-author .msg-avatar {
-        margin-right: 8px;
-        margin-left: 0;
-    }
+    .msg-content {
+        max-width: 70%;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
 
-    // 自己头像：位于右侧，左边距 8px，右边距 0（贴边）
-    &.msg-me .msg-avatar {
-        margin-left: 8px;
-        margin-right: 0;
-    }
-
-    // 使用 order 控制视觉顺序，与模板顺序解耦
-    &.msg-author {
-        .msg-avatar {
-            order: 1;
-        }
-
-        .msg {
-            order: 2;
+        .msg-nickname {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 2px;
+            padding-left: 4px;
         }
     }
 
-    &.msg-me {
-        .msg {
-            order: 1;
-        }
+    // 自己的消息：昵称右对齐，气泡右对齐
+    &.msg-me .msg-content {
+        align-items: flex-end;
 
-        .msg-avatar {
-            order: 2;
+        .msg-nickname {
+            padding-right: 4px;
         }
     }
 }
@@ -1396,12 +1691,11 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
     margin-top: -6px;
 }
 
-// ========== 气泡样式（保留原有，仅调整圆角）==========
+// ========== 气泡样式 ==========
 .msg {
     display: inline-block;
     padding: 9px 14px;
-    max-width: 65%;
-    overflow: hidden;
+    max-width: 100%;
     word-wrap: break-word;
     font-size: $font-size-basic;
     line-height: 24px;
@@ -1468,6 +1762,26 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
     .msg {
         font-size: $font-size-lg;
     }
+}
+
+// 头像抖动动画（模仿微信拍一拍）
+@keyframes shake {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-6px) rotate(-2deg); }
+  20% { transform: translateX(6px) rotate(2deg); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  90% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+
+.msg-avatar.shake {
+  animation: shake 0.6s ease-in-out;
+  animation-iteration-count: 1;
 }
 
 
@@ -2456,7 +2770,7 @@ export default {
 FILE: src/pages/mobile-dialog/index.vue
 ================================================
 <template>
-  <ChatDialog :options="chatOptions" :title="props.title" :avatars="props.avatars" @msg-click="handleMsgClick" />
+  <ChatDialog :options="chatOptions" :title="props.title" :roles="props.roles" @msg-click="handleMsgClick" />
 </template>
 
 <script setup>
@@ -2466,7 +2780,7 @@ import ChatDialog from '../../components/chat-dialog/index.vue'
 const props = defineProps({
   src: String,
   title: String,
-  avatars: Object
+  roles: Object   // 角色配置
 })
 
 const chatOptions = ref()
