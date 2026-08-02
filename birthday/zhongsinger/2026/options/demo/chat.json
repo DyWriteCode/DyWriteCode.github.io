@@ -7,6 +7,8 @@
     },
     {
         "msgs": [
+            "嘿，好久没聊啦",
+            "嘿，好久没聊啦 <span style='color:#FFB347;'>✨</span>",
             "嘿，好久没聊啦 <span style='color:#FFB347;'>✨</span> 你在 <span style='color:#4A90D9; font-weight:bold;'>YY中</span> 过得还好吗？<span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span>"
         ],
         "msgInputSpeed": 55,
@@ -14,15 +16,55 @@
     },
     {
         "msgs": [
-            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span>，高中节奏比初中快好多 <span style='color:#FFB347;'>🚀</span>",
-            "每天晚自习下课抬头都是星星 <span style='color:#FFB347;'>✨</span>，可惜没时间看，赶着回宿舍就是了 <span style='color:#888;'>😅</span>"
+            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
     },
     {
         "msgs": [
-            "你呢？新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？<span style='color:#A8D8EA;'>☁️</span>"
+            "高中节奏比初中快好多 <span style='color:#FFB347;'>🚀</span>"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "每天晚自习下课抬头都是星星 <span style='color:#FFB347;'>✨</span>"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "可惜没时间看，赶着回宿舍就是了 <span style='color:#888;'>😅</span>"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "宿舍晚上熄灯后大家会聊天",
+            "然后听到一堆…^200 怎么说呢",
+            "听到一堆舍友的离谱情史，真的一个比一个难崩 <span style='color:#FFB347;'>😂</span>"
+        ],
+        "msgInputSpeed": 55,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "前两天还因为一道数学题和室友争了一个晚自习",
+            "其实也不是什么难题…^200 就是谁都不肯认输",
+            "前两天还因为一道数学题和室友争了一个晚自习，最后发现两个人都算错了 <span style='color:#888;'>😂</span>"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "你呢？",
+            "新学校有没有…",
+            "新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？<span style='color:#A8D8EA;'>☁️</span>"
         ],
         "msgInputSpeed": 45,
         "author": "author",
@@ -50,7 +92,7 @@
                     "没什么"
                 ],
                 "rejectHitTexts": [
-                    "好吧…可能还需要一点时间适应 <span style='color:#A8D8EA;'>⏳</span>",
+                    "好吧…^200 可能还需要一点时间适应 <span style='color:#A8D8EA;'>⏳</span>",
                     "那就先记着，以后慢慢发现也不迟 <span style='color:#FFB347;'>✨</span>"
                 ]
             }
@@ -58,14 +100,24 @@
     },
     {
         "msgs": [
-            "我最近物理…<span style='color:#888;'>^200</span> 电磁场那块，简直像在学天书 <span style='color:#888;'>📖💀</span>"
+            "我最近物理…",
+            "电磁场那块…",
+            "我最近物理…^200 电磁场那块，简直像在学天书 <span style='color:#888;'>📖💀</span>"
         ],
         "msgInputSpeed": 45,
         "author": "author"
     },
     {
         "msgs": [
-            "你们学校物理讲到哪里了？有没有什么 <span style='color:#4ECDC4; font-weight:bold;'>好的学习方法</span> 推荐？<span style='color:#FFB347;'>🤔</span>"
+            "你们学校物理讲到哪里了？"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "有没有什么…",
+            "有没有什么 <span style='color:#4ECDC4; font-weight:bold;'>好的学习方法</span> 推荐？<span style='color:#FFB347;'>🤔</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author",
@@ -98,14 +150,38 @@
     },
     {
         "msgs": [
-            "最近晚自习下课，走在路上…<span style='color:#888;'>^200</span> 有时候会觉得时间过得特别安静 <span style='color:#A8D8EA;'>🌙</span>",
-            "这种时候就会想一些有的没的…<span style='color:#888;'>^200</span> 比如你最近在干嘛，心情怎么样"
+            "对了，下学期我闲着没事翻了翻政治书",
+            "然后整个人就…^200 裂开了",
+            "下学期闲着没事翻了翻政治书，真的好难懂啊 <span style='color:#888;'>😭</span> 那些概念绕来绕去的，你是怎么背下来的？"
+        ],
+        "msgInputSpeed": 55,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "最近晚自习下课，走在路上…^200 有时候会觉得时间过得特别安静 <span style='color:#A8D8EA;'>🌙</span>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "你最近…<span style='color:#888;'>^200</span> 有没有什么开心的事？<span style='color:#FFB347;'>😊</span>",
+            "这种时候就会想一些有的没的…^200 比如你最近在干嘛，心情怎么样"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "你最近…",
+            "有没有什么开心的事？<span style='color:#FFB347;'>😊</span>",
+            "你最近…^200 有没有什么开心的事？<span style='color:#FFB347;'>😊</span>"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "或者烦心的事也行…",
             "或者烦心的事也行…就是想听听你过得怎么样"
         ],
         "msgInputSpeed": 60,
@@ -140,14 +216,34 @@
     },
     {
         "msgs": [
-            "9月7日是你生日嘛…<span style='color:#888;'>^200</span> 我就想着把一些零零碎碎的感受整理了一下 <span style='color:#FFB347;'>✍️</span>",
-            "写成了一封信给你 <span style='color:#E57373;'>📩</span> 不是什么长篇大论，就是一些想说的话"
+            "9月7日是你生日嘛…",
+            "我就想着把一些零零碎碎的感受整理了一下 <span style='color:#FFB347;'>✍️</span>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "那个…你要不要看一眼？<span style='color:#FFB347;'>👀</span>",
+            "写成了一封信给你 <span style='color:#E57373;'>📩</span>"
+        ],
+        "msgInputSpeed": 60
+    },
+    {
+        "msgs": [
+            "不是什么长篇大论，就是一些想说的话"
+        ],
+        "msgInputSpeed": 60
+    },
+    {
+        "msgs": [
+            "那个…",
+            "你要不要看一眼？<span style='color:#FFB347;'>👀</span>",
+            "那个…^200 你要不要看一眼？<span style='color:#FFB347;'>👀</span>"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
             "（我准备了好久才写出来的 <span style='color:#FFB347;'>🥺</span>）"
         ],
         "msgInputSpeed": 60,
@@ -173,7 +269,7 @@
                     "下次"
                 ],
                 "rejectHitTexts": [
-                    "没关系…放这儿又不会跑 <span style='color:#A8D8EA;'>📬</span>",
+                    "没关系…^200 放这儿又不会跑 <span style='color:#A8D8EA;'>📬</span>",
                     "什么时候想看了再打开就行 <span style='color:#FFB347;'>🕊️</span>"
                 ]
             }
@@ -187,7 +283,15 @@
     },
     {
         "msgs": [
-            "你读完…<span style='color:#888;'>^200</span> 感觉怎么样？<span style='color:#FFB347;'>(｡･ω･｡)</span>",
+            "你读完…",
+            "感觉怎么样？<span style='color:#FFB347;'>(｡･ω･｡)</span>",
+            "你读完…^200 感觉怎么样？<span style='color:#FFB347;'>(｡･ω･｡)</span>"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
             "有没有哪句比较戳你？<span style='color:#FF6B6B;'>💘</span>"
         ],
         "msgInputSpeed": 60,
@@ -213,7 +317,7 @@
                     "还好"
                 ],
                 "rejectHitTexts": [
-                    "那就好…没白写 <span style='color:#FFB347;'>😌</span>",
+                    "那就好…^200 没白写 <span style='color:#FFB347;'>😌</span>",
                     "反正想说的都在里面了 <span style='color:#E57373;'>💌</span>"
                 ]
             }
@@ -221,7 +325,14 @@
     },
     {
         "msgs": [
-            "其实…<span style='color:#888;'>^200</span> 我还准备了一份礼物 <span style='color:#FFB347;'>🎁</span>",
+            "其实…",
+            "我还准备了一份礼物 <span style='color:#FFB347;'>🎁</span>"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
             "不是文字，是 <span style='color:#E57373; font-weight:bold;'>视频</span> <span style='color:#FFB347;'>🎬</span>"
         ],
         "msgInputSpeed": 40,
@@ -229,7 +340,9 @@
     },
     {
         "msgs": [
-            "我录了一段生日祝福给你…<span style='color:#888;'>^200</span> 拍得不算好，但是一份心意 <span style='color:#FF6B6B;'>❤️</span>"
+            "我录了一段生日祝福给你…",
+            "拍得不算好…",
+            "但是一份心意 <span style='color:#FF6B6B;'>❤️</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author"
@@ -242,15 +355,30 @@
     },
     {
         "msgs": [
-            "好了…<span style='color:#888;'>^200</span> 该说的都说了 <span style='color:#4ECDC4;'>(´▽`)ﾉ</span>",
-            "不耽误你时间了～ <span style='color:#FFB347;'>✨</span>"
+            "好了…",
+            "该说的都说了 <span style='color:#4ECDC4;'>(´▽`)ﾉ</span>"
         ],
         "msgInputSpeed": 60
     },
     {
         "msgs": [
-            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> <span style='color:#FFB347;'>✨</span>",
-            "按自己的节奏…好好生活 <span style='color:#A8D8EA;'>🌱</span>"
+            "不耽误你时间了～ <span style='color:#FFB347;'>✨</span>"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> <span style='color:#FFB347;'>✨</span>"
+        ],
+        "msgInputSpeed": 60,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "然后…",
+            "按自己的节奏慢慢走～<span style='color:#FFB347;'>🌱</span>",
+            "然后按自己的节奏慢慢走，每一步都会有好风景等着你的 <span style='color:#FFB347;'>🌻✨</span>"
         ],
         "msgInputSpeed": 60,
         "author": "author"

@@ -1,5 +1,5 @@
 Directory structure:
-└── chat-want-to-say/
+└── original_project/
     ├── index.html
     ├── package.json
     ├── vite.config.js
