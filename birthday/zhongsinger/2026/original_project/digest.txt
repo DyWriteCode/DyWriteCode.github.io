@@ -1,0 +1,2483 @@
+Directory structure:
+└── chat-want-to-say/
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    ├── .env.development
+    ├── .env.preview
+    ├── .env.production
+    ├── public/
+    │   └── options/
+    │       ├── demo/
+    │       │   ├── avatars.json
+    │       │   ├── chat.json
+    │       │   └── letters/
+    │       │       └── test.json
+    │       ├── preview/
+    │       │   ├── chat.json
+    │       │   └── letter.json
+    │       └── production/
+    │           └── chat.json
+    └── src/
+        ├── App.vue
+        ├── main.js
+        ├── components/
+        │   └── chat-dialog/
+        │       ├── index.vue
+        │       ├── MessageDetail.vue
+        │       ├── css/
+        │       │   ├── _extra.scss
+        │       │   ├── _global.scss
+        │       │   ├── _mobile.body.scss
+        │       │   ├── _mobile.msg.scss
+        │       │   ├── _mobile.prompt.scss
+        │       │   ├── _mobile.scss
+        │       │   ├── _variables.scss
+        │       │   ├── main.scss
+        │       │   └── font/
+        │       │       └── lato400.woff
+        │       ├── letter/
+        │       │   ├── content.vue
+        │       │   ├── cover.vue
+        │       │   └── detail.vue
+        │       └── vlog/
+        │           ├── cover.vue
+        │           └── detail.vue
+        └── pages/
+            └── mobile-dialog/
+                └── index.vue
+
+================================================
+FILE: index.html
+================================================
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+    <script src="js/zepto.min.js"></script>
+  </body>
+</html>
+
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "chat-want-to-say",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@varlet/ui": "^1.24.1",
+    "animate.css": "^4.1.1",
+    "typed.js": "^2.0.12",
+    "vue": "^3.2.25"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^2.0.0",
+    "sass": "~1.32.12",
+    "scss": "^0.2.4",
+    "vite": "^2.7.2"
+  }
+}
+
+
+
+================================================
+FILE: vite.config.js
+================================================
+import { defineConfig, loadEnv } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+// https://vitejs.dev/config/
+export default ({ mode }) => {
+  return defineConfig({
+    base: loadEnv(mode, process.cwd()).VITE_BASE_URL,
+    plugins: [vue()]
+  })
+}
+
+
+
+================================================
+FILE: .env.development
+================================================
+VITE_APP_TITLE=与Dy聊天中...
+VITE_BASE_URL=/
+VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
+VITE_AVATARS_PATH=options/demo/avatars.json
+
+
+================================================
+FILE: .env.preview
+================================================
+VITE_APP_TITLE=与Dy聊天中...
+VITE_BASE_URL=/
+VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
+VITE_AVATARS_PATH=options/demo/avatars.json
+
+
+================================================
+FILE: .env.production
+================================================
+VITE_APP_TITLE=与Dy聊天中...
+VITE_BASE_URL=/
+VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
+VITE_AVATARS_PATH=options/demo/avatars.json
+
+
+================================================
+FILE: public/options/demo/avatars.json
+================================================
+{
+  "author": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
+  "me": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg"
+}
+
+
+================================================
+FILE: public/options/demo/chat.json
+================================================
+[
+    { "msgs": ["普通消息，有输入动画, 普通消息，有输入动画，普通消息，有输入，动画普通消息，有输入动画，普通消息，有输入动画"], "msgInputSpeed": 80},
+    { "msgs": ["普通消息，有输入动画"], "msgInputSpeed": 80 },
+    { "msgs": ["普通消息支持回退，比如下面这条"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["普通消息会回退", "普通消息回退后的结果，也能调整动画速度"],
+        "msgInputSpeed": 80
+    },
+    { "msgs": ["普通消息输入快速"], "msgInputSpeed": 40 },
+    {
+        "msgs": ["支持切换输入角色"],
+        "msgInputSpeed": 80,
+        "author": "me"
+    },
+    {
+        "msgs": ["消息支持html元素，比如下面这个带颜色的文本"],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": ["<span style=\"color: red;\">红色的span标签字体</span>"],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+        ],
+        "msgInputSpeed": 80,
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": ["好"],
+                "rejectKeyTexts": [],
+                "rejectHitTexts": ["输入好，听不懂吗？？？", "触发强行跳过"]
+            }
+        }
+    },
+    { "msgs": ["消息支持输入图片"], "msgInputSpeed": 80 },
+    { "msgs": ["<img src='options/demo/imgs/test.png'/>"] },
+    { "msgs": ["消息支持输入VLog"], "msgInputSpeed": 80 },
+    { "msgs": ["看看我为你做的VLog"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
+        "triggerNextAction": { "type": "componentClose" }
+    },
+    { "msgs": ["消息支持输入信件"], "msgInputSpeed": 80 },
+    { "msgs": ["看看我想对你说的话"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["<letter src='options/demo/letters/test.json'/>"],
+        "triggerNextAction": { "type": "componentClose" }
+    },
+    { "msgs": ["接下来是一些通用测试"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["有些心里话，你想听吗？"],
+        "msgInputSpeed": 40,
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "好的",
+                    "可以",
+                    "同意",
+                    "愿意",
+                    "想",
+                    "想听",
+                    "是"
+                ],
+                "rejectKeyTexts": ["不想"],
+                "rejectHitTexts": [
+                    "不听？信不信我分分钟出 bug 给你看？",
+                    "好吧，既然你实在不想听，那我就讲给你听吧～"
+                ]
+            }
+        }
+    },
+    { "msgs": ["心里话都在这封信里"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["<letter src='options/demo/letters/test.json'/>"],
+        "triggerNextAction": { "type": "componentClose" }
+    },
+    {
+        "msgs": ["你猜我在想什么？"],
+        "msgInputSpeed": 80,
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": ["想我"],
+                "rejectKeyTexts": ["不知道"],
+                "rejectHitTexts": [
+                    "你猜错了～",
+                    ["给你提示一下～", "是个人~"],
+                    "这都猜不中？？？",
+                    ["好吧，看图吧。", "<img src='options/demo/imgs/test.png'>"]
+                ]
+            }
+        }
+    },
+    { "msgs": ["我是在想打游戏", "我是在想你呢"], "msgInputSpeed": 80 },
+    { "msgs": ["看看这个视频"], "msgInputSpeed": 80 },
+    {
+        "msgs": ["<vlog src='options/demo/vlogs/test.mp4'/>"],
+        "triggerNextAction": { "type": "componentClose" }
+    },
+    {
+        "msgs": ["测试结束，广告位招租"],
+        "msgInputSpeed": 80
+    }
+]
+
+
+
+================================================
+FILE: public/options/demo/letters/test.json
+================================================
+{
+    "openTip": "xxx",
+    "title": "给xxx的一封信",
+    "speed": 30,
+    "paragraphs": [
+        "<img src='options/demo/imgs/test.png'/>",
+        "几场梅雨^1000，几卷荷风^1000，江南已是烟水迷离。^2000小院里湿润的青苔在雨中纯净生长。^2000这个季节^1000，许多人都在打听关于莲荷的消息^1000，以及茉莉在黄昏浮动的神秘幽香。^2000不知多少人会记得有个女子^1000，曾经走过人间四月天^1000，又与莲开的夏季有过相濡以沫的约定。",
+        "<img src='options/demo/imgs/test.png'/>",
+        "一个人，一本书，一杯茶，一帘梦。有时候，寂寞是这样叫人心动，也只有此刻，世事才会如此波澜不惊。凉风吹起书页，这烟雨让尘封在书卷里的词章和故事弥漫着潮湿的气息。独倚幽窗，看转角处的青石小巷，一柄久违的油纸伞，遮住了低过屋檐的光阴。",
+        "<img src='options/demo/imgs/test.png'/>",
+        "几场梅雨，几卷荷风，江南已是烟水迷离。小院里湿润的青苔在雨中纯净生长。这个季节，许多人都在打听关于莲荷的消息，以及茉莉在黄昏浮动的神秘幽香。不知多少人会记得有个女子，曾经走过人间四月天，又与莲开的夏季有过相濡以沫的约定。",
+        "<img src='options/demo/imgs/test.png'/>",
+        "一个人，一本书，一杯茶，一帘梦。有时候，寂寞是这样叫人心动，也只有此刻，世事才会如此波澜不惊。凉风吹起书页，这烟雨让尘封在书卷里的词章和故事弥漫着潮湿的气息。独倚幽窗，看转角处的青石小巷，一柄久违的油纸伞，遮住了低过屋檐的光阴。"
+    ]
+}
+
+
+
+================================================
+FILE: public/options/preview/chat.json
+================================================
+[]
+
+
+================================================
+FILE: public/options/preview/letter.json
+================================================
+{}
+
+
+================================================
+FILE: public/options/production/chat.json
+================================================
+[]
+
+
+
+================================================
+FILE: src/App.vue
+================================================
+<template>
+  <MobileDialog :src="src" :title="title" :avatars="avatars" />
+</template>
+
+<script setup>
+import MobileDialog from './pages/mobile-dialog/index.vue'
+import { ref, onMounted } from 'vue'
+document.title = import.meta.env.VITE_APP_TITLE
+const src = import.meta.env.VITE_CHAT_OPTIONS_PATH
+const title = import.meta.env.VITE_APP_TITLE
+const avatars = ref(null)
+
+onMounted(async () => {
+  // 优先使用环境变量指定的头像路径，否则自动推导
+  let avatarsSrc = import.meta.env.VITE_AVATARS_PATH
+  if (!avatarsSrc) {
+    avatarsSrc = src.replace(/chat\.json$/, 'avatars.json')
+  }
+  try {
+    const res = await fetch(avatarsSrc)
+    if (res.ok) {
+      avatars.value = await res.json()
+    } else {
+      console.warn('avatars.json not found, avatars will be hidden.')
+    }
+  } catch (e) {
+    console.warn('Failed to load avatars:', e)
+  }
+})
+</script>
+
+
+
+================================================
+FILE: src/main.js
+================================================
+import App from './App.vue'
+import Varlet from '@varlet/ui'
+import { createApp } from 'vue'
+import '@varlet/ui/es/style.js'
+import 'animate.css/animate.min.css'
+
+createApp(App).use(Varlet).mount('#app')
+
+
+================================================
+FILE: src/components/chat-dialog/index.vue
+================================================
+<template>
+  <div id="mobile">
+    <div id="mobile-head">
+      <div id="status-bar">
+        <span class="status-time">{{ currentTime }}</span>
+        <span class="status-icons">
+          <var-icon name="wifi" size="16" />
+          <var-icon name="battery_std" size="16" style="margin-left:4px;" />
+        </span>
+      </div>
+      <div id="title-bar">
+        <div class="left-menu" @click="handleMenuClick">
+          <span class="line long"></span>
+          <span class="line short"></span>
+        </div>
+        <div class="title">{{ title }}</div>
+        <div class="right-menu" @click="handleMoreClick">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-body" :style="{ bottom: footHeight + 'px' }">
+      <div id="mobile-body-bg"></div>
+      <div id="mobile-body-content">
+        <div id="mock-msg-row" class="msg-row">
+          <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
+        </div>
+        <div class="msg-row" v-for="(msg, index) in messages" :key="index"
+          :class="msg.author === 'author' ? 'msg-author' : 'msg-me'">
+          <img v-if="avatars && avatars[msg.author]" class="msg-avatar" :src="avatars[msg.author]" alt="avatar" />
+          <div class="msg"
+            :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }" :class="{
+              'msg-bounce-in-left': msg.author === 'author',
+              'msg-bounce-in-right': msg.author === 'me',
+              'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
+            }" @click="$emit('msg-click', msg)">
+            <span v-if="msg.type === 'text'" v-html="msg.content"></span>
+            <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
+              @close="handleComponentClose"></component>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-foot">
+      <div class="foot-wrapper">
+        <div class="input-area" ref="inputArea">
+          <!-- 系统打字占位 -->
+          <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
+          <!-- 用户输入框 -->
+          <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
+            v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
+        </div>
+        <var-button ref="sendMsgBtnRef" type="success" size="small" :disabled="sendBtnDisabled" @click="sendUserMsg"
+          class="send-btn">发送</var-button>
+      </div>
+    </div>
+  </div>
+  <MessageDetail v-if="currentOpenComponent" :type="currentOpenComponent.type" :options="currentOpenComponent.props"
+    @close="handleComponentClose">
+  </MessageDetail>
+</template>
+
+<script>
+import letter from './letter/cover.vue'
+import vlog from './vlog/cover.vue'
+import MessageDetail from './MessageDetail.vue'
+import Typed from 'typed.js'
+import './css/main.scss'
+
+const AUTHOR = {
+  AUTHOR: 'author',
+  ME: 'me'
+};
+const TRIGGER_NEXT_ACTION_TYPE = {
+  USER_INPUT: 'userInput',
+  COMPONENT_CLOSE: 'componentClose'
+};
+
+export default {
+  components: {
+    letter,
+    vlog,
+    MessageDetail
+  },
+  props: {
+    title: String,
+    options: Array,
+    avatars: Object
+  },
+  computed: {
+    sendBtnDisabled() {
+      if (this.status === 'systemInput') return true;
+      return !(this.inputMessage && this.inputMessage.trim().length > 0);
+    }
+  },
+  data() {
+    return {
+      messages: [],
+      msgChain: Promise.resolve(),
+      inputMessage: '',
+      nextActionTrigger: null,
+      status: 'systemInput',
+      currentOpenComponent: null,
+      isTyping: false,
+      latestMsgContent: null,
+      footHeight: 55,
+      typedInstance: null,  // 保存 Typed 实例，便于销毁
+      currentTime: '',
+      headHeight: 70, // 新头部总高度
+    }
+  },
+  watch: {
+    options() {
+      this.buildMsgChain(this.options);
+    },
+    status(newVal) {
+      if (newVal === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
+        this.setUserInputFoucus();
+      }
+    },
+    inputMessage() {
+      this.$nextTick(() => {
+        if (this.$refs.userMsgInputRef) {
+          this.autoResizeTextarea({ target: this.$refs.userMsgInputRef });
+        }
+      });
+    }
+  },
+  methods: {
+    buildMsgChain(messages) {
+      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction }) => {
+        this.msgChain = this.msgChain
+          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction));
+      })
+    },
+
+    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null) {
+      return new Promise((resolve) => {
+        this.sendSysMsgInner(messages, inputSpeed, author).then(() => {
+          if (triggerNextAction) {
+            const trigger = () => delay(500).then(() => resolve());
+            this.nextActionTrigger = {
+              inputSpeed,
+              triggerNextAction,
+              trigger
+            };
+            this.status = triggerNextAction.type;
+          } else {
+            resolve();
+          }
+        });
+      });
+    },
+
+    sendSysMsgInner(messages, inputSpeed, author) {
+      return new Promise((resolve) => {
+        const message = Array.isArray(messages) ? messages[messages.length - 1] : messages;
+        const messageType = this.getMsgType(message);
+        this.status = 'systemInput';
+
+        // 销毁之前的 Typed 实例（如果有）
+        if (this.typedInstance) {
+          this.typedInstance.destroy();
+          this.typedInstance = null;
+        }
+
+        if (messageType === 'text') {
+          // 清空占位元素，避免残留
+          const el = this.$refs.systemInputElement;
+          if (el) el.innerHTML = '';
+
+          let strings = [''];
+          Array.isArray(messages) ? strings = strings.concat(messages) : strings.push(messages);
+
+          // 创建新的 Typed 实例
+          this.typedInstance = new Typed(el, {
+            strings: strings,
+            typeSpeed: inputSpeed,
+            backSpeed: inputSpeed,
+            cursorChar: '|',                // 显式光标字符
+            autoInsertCss: true,            // 自动插入光标样式
+            contentType: 'html',            // 支持 HTML 标签
+            onComplete: () => {
+              if (this.typedInstance) {
+                this.typedInstance.destroy();
+                this.typedInstance = null;
+              }
+              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+              delay(500).then(() => resolve());
+            },
+            onStringTyped: () => {
+              // 每次打字后强制更新底部栏高度（虽然内容高度不变，但保证 scroll 正常）
+              this.$nextTick(() => {
+                const foot = document.getElementById('mobile-foot');
+                if (foot) this.footHeight = foot.offsetHeight;
+              });
+            }
+          });
+        } else {
+          this.pushMsg(message, AUTHOR.AUTHOR, messageType);
+          delay(500).then(() => resolve());
+        }
+      });
+    },
+
+    sendUserMsg() {
+      const message = this.inputMessage;
+      this.inputMessage = '';
+      this.pushMsg(message, AUTHOR.ME, 'text');
+
+      if (!this.nextActionTrigger) return;
+
+      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger;
+      const { type, options } = triggerNextAction;
+      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options;
+
+      if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
+        if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
+          const rejectDisabled = tryCnt >= rejectHitTexts.length - 1;
+          const rejectText = rejectHitTexts[Math.min(tryCnt, rejectHitTexts.length - 1)];
+          let rejectSysMsgChain = Promise.resolve();
+          if (Array.isArray(rejectText)) {
+            rejectText.forEach(text => {
+              rejectSysMsgChain = rejectSysMsgChain
+                .then(() => this.sendSysMsg(text, inputSpeed));
+            })
+          } else {
+            rejectSysMsgChain = this.sendSysMsg(rejectText, inputSpeed);
+          }
+          rejectSysMsgChain.then(() => {
+            if (rejectDisabled) {
+              this.handleTriggerNextAction();
+            } else {
+              this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+            }
+          });
+          this.nextActionTrigger.tryCnt = tryCnt + 1;
+        } else {
+          this.handleTriggerNextAction();
+        }
+      }
+    },
+
+    handleComponentOpen({ type, props }) {
+      this.currentOpenComponent = { type, props };
+    },
+
+    handleComponentClose() {
+      this.currentOpenComponent = null;
+      if (!this.nextActionTrigger) return;
+      const { triggerNextAction } = this.nextActionTrigger;
+      if (triggerNextAction.type === TRIGGER_NEXT_ACTION_TYPE.COMPONENT_CLOSE) {
+        this.handleTriggerNextAction();
+      }
+    },
+
+    handleTriggerNextAction() {
+      if (!this.nextActionTrigger) return;
+      const { trigger } = this.nextActionTrigger;
+      trigger();
+      this.nextActionTrigger = null;
+    },
+
+    setUserInputFoucus() {
+      const iosSpecialProcess = () => {
+        try {
+          const isiOS = !!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+          if (isiOS) {
+            this.$refs['userMsgInputRef'].scrollIntoView(true);
+          }
+        } catch (ignore) { }
+      }
+      setTimeout(() => {
+        this.$nextTick(() => {
+          iosSpecialProcess();
+          this.$refs['userMsgInputRef'].focus();
+        });
+      }, 1000);
+    },
+
+    rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
+      if (rejectKeyTexts.some(rejectText => message.indexOf(rejectText) > -1)) return true;
+      if (resolveKeyTexts.some(resolveKey => message.indexOf(resolveKey) > -1)) return false;
+      return true;
+    },
+
+    pushMsg(message, author, type = 'text') {
+      this.messages.push({
+        author: author,
+        content: message,
+        type,
+        props: this.getProps(message, type),
+      });
+      onMessageSending();
+    },
+
+    getProps(message, type) {
+      const props = {};
+      if (type === 'text') return props;
+      const domParse = new DOMParser();
+      const messageDoc = domParse.parseFromString(message, 'text/html');
+      const messageDoms = messageDoc.getElementsByTagName(type);
+      if (messageDoms.length === 1) {
+        const messageDom = messageDoms[0];
+        const attrs = messageDom.getAttributeNames();
+        attrs.forEach(attrName => props[attrName] = messageDom.getAttribute(attrName));
+      }
+      return props;
+    },
+
+    getMsgType(message) {
+      const isImg = /<img[^>]+>/.test(message);
+      const isLetter = /<letter[^>]+>/.test(message);
+      const isVlog = /<vlog[^>]+>/.test(message);
+      if (isImg) return 'img';
+      if (isLetter) return 'letter';
+      if (isVlog) return 'vlog';
+      return 'text';
+    },
+
+    markMsgSize(msg, content = null) {
+      this.latestMsgContent = content || msg.content;
+      return delay(0)
+        .then(() => msg.type === 'img' && onImageLoad($('#mock-msg img')))
+        .then(() => {
+          Object.assign(msg, getMockMsgSize());
+          this.messages = [...this.messages];
+        });
+    },
+
+    autoResizeTextarea(e) {
+      const el = e.target;
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+      this.$nextTick(() => {
+        const foot = document.getElementById('mobile-foot');
+        if (foot) this.footHeight = foot.offsetHeight;
+      });
+    },
+
+    updateTime() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      this.currentTime = h + ':' + m;
+    },
+    handleMenuClick() {
+
+    },
+    handleMoreClick() {
+
+    },
+  },
+  mounted() {
+    this.updateTime();
+    setInterval(this.updateTime, 60000);
+    this.$nextTick(() => {
+      const body = document.getElementById('mobile-body');
+      if (body) body.style.top = this.headHeight + 'px';
+    });
+    this.$nextTick(() => {
+      const foot = document.getElementById('mobile-foot');
+      if (foot) this.footHeight = foot.offsetHeight;
+    });
+  }
+}
+
+// ------------------ 辅助函数 ------------------
+function onMessageSending() {
+  setTimeout(() => {
+    updateScroll();
+    const $latestMsg = $('#mobile-body-content .msg-row:last-child .msg');
+    $latestMsg.find('a').attr('target', '_blank');
+    onImageLoad($latestMsg).then(updateScroll);
+  });
+}
+
+function updateScroll() {
+  const $chatbox = $('#mobile-body-content');
+  const distance = $chatbox[0].scrollHeight - $chatbox.height() - $chatbox.scrollTop();
+  const duration = 250;
+  const startTime = Date.now();
+  requestAnimationFrame(function step() {
+    const p = Math.min(1, (Date.now() - startTime) / duration);
+    $chatbox.scrollTop($chatbox.scrollTop() + distance * p);
+    p < 1 && requestAnimationFrame(step);
+  });
+}
+
+function delay(amount = 0) {
+  return new Promise(resolve => setTimeout(resolve, amount));
+}
+
+function getMockMsgSize() {
+  const $mockMsg = $('#mock-msg');
+  return {
+    width: $mockMsg.width(),
+    height: $mockMsg.height()
+  };
+}
+
+function onImageLoad($img) {
+  return new Promise(resolve => {
+    $img.one('load', resolve).each((index, target) => {
+      target.complete && $(target).trigger('load');
+    });
+  });
+}
+</script>
+
+<style scoped>
+/* 使用 scoped 避免污染全局，但内部样式用 :deep 穿透 */
+</style>
+
+<style>
+/* 全局样式覆盖（非 scoped，确保优先级） */
+#mobile-foot {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: auto !important;
+  min-height: auto !important;
+  background: #f7f8fa;
+  border-top: 1px solid #f3f3f3;
+  padding: 0 !important;
+}
+
+#mobile-foot .foot-wrapper {
+  display: flex;
+  align-items: flex-end;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+#mobile-foot .input-area {
+  flex: 1;
+  min-height: 36px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  /* 保证内容垂直居中，但 Typed 光标会正常显示 */
+}
+
+#mobile-foot .system-input-element {
+  display: inline-block;
+  width: 100%;
+  font-size: 14px;
+  line-height: 24px;
+  min-height: 24px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  color: black;
+}
+
+/* 修正 Typed.js 光标样式 */
+#mobile-foot .system-input-element .typed-cursor {
+  color: black;
+  opacity: 1;
+  font-size: 14px;
+  line-height: 24px;
+  display: inline-block;
+  font-weight: normal;
+}
+
+#mobile-foot .user-input-textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 24px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  min-height: 24px;
+  font-family: inherit;
+}
+
+#mobile-foot .send-btn {
+  flex-shrink: 0;
+  height: 36px;
+  align-self: flex-end;
+}
+
+.animate_breathe {
+  -webkit-animation-timing-function: ease-in-out;
+  animation-timing-function: ease-in-out;
+  -webkit-animation-name: breathe;
+  animation-name: breathe;
+  -webkit-animation-duration: 1500ms;
+  animation-duration: 1500ms;
+  animation-delay: 500ms;
+  -webkit-animation-delay: 500ms;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-direction: alternate;
+  animation-direction: alternate;
+}
+
+@-webkit-keyframes breathe {
+  0% {
+    opacity: 0.4;
+    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4),
+      0 1px 1px rgba(0, 147, 223, 0.1) inset;
+  }
+
+  100% {
+    opacity: 1;
+    box-shadow: 0 1px 15px #0093df, 0 1px 10px #0093df inset;
+  }
+}
+
+@keyframes breathe {
+  0% {
+    opacity: 0.4;
+    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4),
+      0 1px 1px rgba(0, 147, 223, 0.1) inset;
+  }
+
+  100% {
+    opacity: 1;
+    box-shadow: 0 1px 15px #0093df, 0 1px 10px #0093df inset;
+  }
+}
+
+/* 重置输入区域布局，避免 flex 影响 */
+#mobile-foot .input-area {
+  display: block !important;
+  padding: 9px 14px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
+  min-height: 36px;
+}
+
+/* 打字容器使用 inline 布局，随内容自然撑宽 */
+#mobile-foot .system-input-element {
+  display: inline !important;
+  width: auto !important;
+  min-width: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 24px;
+  color: black;
+}
+
+/* 强制光标为内联元素，且使用相对定位随文本流 */
+#mobile-foot .system-input-element .typed-cursor {
+  display: inline !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  font-size: inherit;
+  line-height: inherit;
+  color: black;
+  opacity: 1;
+  margin-left: 1px;
+  /* 与文本保持微小间距，可调整 */
+}
+
+/* 新头部整体 */
+#mobile-head {
+  height: auto !important;
+  /* 让高度由内容撑开 */
+  background: white;
+  display: flex !important;
+  /* 覆盖移动端可能隐藏 */
+  flex-direction: column;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* 状态栏 */
+#status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 16px 2px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 12px;
+  height: 24px;
+}
+
+#status-bar .status-icons {
+  display: flex;
+  align-items: center;
+}
+
+#status-bar .status-icons .var-icon {
+  color: white;
+}
+
+/* 标题栏 */
+#title-bar {
+  display: flex;
+  align-items: flex-start;          
+  justify-content: space-between;
+  padding: 12px 16px 6px 16px;      
+  height: 44px;                     
+  background: white;
+  box-sizing: border-box;           
+}
+
+#title-bar .left-menu,
+#title-bar .right-menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  cursor: pointer;
+}
+
+#title-bar .left-menu .line {
+  display: block;
+  height: 2px;
+  background: #333;
+  margin: 3px 0;
+  border-radius: 1px;
+}
+
+#title-bar .left-menu .line.long {
+  width: 22px;
+  align-self: flex-start;
+}
+
+#title-bar .left-menu .line.short {
+  width: 14px;
+  align-self: flex-start;
+}
+
+#title-bar .right-menu .dot {
+  width: 4px;
+  height: 4px;
+  background: #333;
+  border-radius: 50%;
+  margin: 2px 0;
+}
+
+#title-bar .title {
+  font-size: 17px;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  text-align: center;
+}
+
+/* 覆盖移动端（宽度<=480px）隐藏头部的样式 */
+@media (max-width: 480px) {
+  #mobile-head {
+    display: flex !important;
+  }
+
+  #mobile-body {
+    top: 70px !important;
+    /* 与 headHeight 保持一致 */
+  }
+}
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/MessageDetail.vue
+================================================
+<template>
+  <LetterDetail v-if="type === 'letter'"
+                v-bind="options"
+                @close="$emit('close')"></LetterDetail>
+  <VlogDetail v-if="type === 'vlog'"
+              v-bind="options"
+              @close="$emit('close')"></VlogDetail>
+</template>
+
+<script>
+import LetterDetail from './letter/detail.vue'
+import VlogDetail from './vlog/detail.vue'
+export default {
+  props: {
+    type: String,
+    options: Object
+  },
+  components: {
+    LetterDetail,
+    VlogDetail
+  }
+}
+</script>
+
+<style>
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/css/_extra.scss
+================================================
+.extra-link {
+    position: absolute;
+    bottom: $distance-lg;
+
+    max-width: 20%;
+
+    a {
+        display: inline-block;
+        margin: 0 6px;
+
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: none;
+            text-shadow: 0 0 5px $clr-primary;
+
+            svg {
+                filter: drop-shadow(0 0 5px $clr-primary);
+            }
+        }
+
+        &.letters {
+            position: relative;
+            top: -4px;
+
+            font-size: 16px;
+            color: white;
+            text-decoration: none;
+        }
+
+        &#en-link {
+            font-size: 17px;
+        }
+
+        svg {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+}
+
+#meta-link {
+    left: $distance-lg;
+}
+
+#social-link {
+    right: $distance-lg;
+}
+
+
+@media (max-width: 720px) {
+    .extra-link {
+        display: none;
+    }
+}
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/_global.scss
+================================================
+@mixin clearfix {
+    &::before,
+    &::after {
+        content: " ";
+        display: table;
+    }
+
+    &::after {
+        clear: both;
+    }
+}
+
+
+@font-face {
+    font-family: 'Lato';
+    src: local('Lato'), url(./font/lato400.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 900;
+    src: local('Lato Black'), local('Lato-Black'), url(./font/lato400.woff) format('woff');
+}
+
+
+@keyframes msgBounceIn {
+    from, to {
+        animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1);
+    }
+
+    from {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1.03);
+    }
+
+    75% {
+        transform: scale(0.98);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes dotZoomIn {
+    from, 40%, 80%, 100% {
+        animation-timing-function: ease-in-out;
+    }
+
+    from {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+
+    80% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(0);
+    }
+}
+
+
+html, body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    position: relative;
+
+    font-family: Lato;
+    font-size: $font-size-basic;
+
+    background-color: lighten($clr-primary, 50%);
+    background-image: radial-gradient(ellipse farthest-corner at 50% 0,
+        #DBF5F1 0%, #9BE4D8 100%);
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+
+.primary-bg {
+    background: linear-gradient(20deg, #3FD1E1 0%, #44D7CD 100%);
+}
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/_mobile.body.scss
+================================================
+$scroll-bar-width: 8px;
+
+
+#mobile-body {
+    position: absolute;
+    top: $mobile-head-height;
+    bottom: $mobile-foot-height;
+
+    width: 100%;
+
+    background: #E8F9F6;
+
+    a {
+        color: $clr-primary;
+        text-decoration: none;
+    }
+}
+
+    #mobile-body-bg {
+        width: 100%;
+        height: 100%;
+
+        &:before, &:after {
+            content: '';
+
+            display: block;
+            z-index: 10;
+        }
+
+        &:before {
+            position: relative;
+
+            width: 100%;
+            height: 25px;
+
+            background: linear-gradient(rgba(34, 195, 170, 0.1) 0,
+                transparent);
+        }
+
+        &:after {
+            position: absolute;
+            bottom: 0;
+
+            width: 100%;
+            height: 15px;
+
+            background: linear-gradient(transparent 0,
+                rgba(34, 195, 170, 0.05) 100%);
+        }
+    }
+
+    #mobile-body-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        padding: 16px $distance-h - $scroll-bar-width 16px $distance-h;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+
+        color: $clr-text;
+
+        // fix touch bug
+        z-index: 1;
+
+        &::-webkit-scrollbar {
+            width: $scroll-bar-width;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: $clr-primary-lighter;
+            border-radius: $scroll-bar-width / 2;
+        }
+    }
+
+    #mock-msg-row {
+        position: absolute;
+        top: -1000px;
+        left: 18px;
+        right: 10px;
+        visibility: hidden;
+    }
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/_mobile.msg.scss
+================================================
+.msg-time {
+    margin: 10px 5px;
+    font-size: $font-size-sm;
+    text-align: center;
+    color: $clr-text-unimportant;
+}
+
+// ========== 消息行布局（flex 替代 float）==========
+.msg-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+
+    &.msg-author {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    &.msg-me {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    // 清除原 float
+    .msg {
+        float: none !important;
+    }
+
+    // 头像样式：无全局外边距，由角色单独控制
+    .msg-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background-color: #e0e0e0; // 占位色
+        object-fit: cover;
+
+        @media (max-width: 480px) {
+            width: 36px;
+            height: 36px;
+        }
+    }
+
+    // 对方头像：位于左侧，右边距 8px
+    &.msg-author .msg-avatar {
+        margin-right: 8px;
+        margin-left: 0;
+    }
+
+    // 自己头像：位于右侧，左边距 8px，右边距 0（贴边）
+    &.msg-me .msg-avatar {
+        margin-left: 8px;
+        margin-right: 0;
+    }
+
+    // 使用 order 控制视觉顺序，与模板顺序解耦
+    &.msg-author {
+        .msg-avatar {
+            order: 1;
+        }
+
+        .msg {
+            order: 2;
+        }
+    }
+
+    &.msg-me {
+        .msg {
+            order: 1;
+        }
+
+        .msg-avatar {
+            order: 2;
+        }
+    }
+}
+
+// 连续消息紧凑（模仿微信）
+.msg-author+.msg-author,
+.msg-me+.msg-me {
+    margin-top: -6px;
+}
+
+// ========== 气泡样式（保留原有，仅调整圆角）==========
+.msg {
+    display: inline-block;
+    padding: 9px 14px;
+    max-width: 65%;
+    overflow: hidden;
+    word-wrap: break-word;
+    font-size: $font-size-basic;
+    line-height: 24px;
+    background: white;
+    border-radius: $msg-radius;
+    box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
+    transition: width .12s ease-out, height .12s ease-out;
+    transform: translate3d(0, 0, 0);
+
+    // 对方气泡：左上直角，其余圆角
+    .msg-author & {
+        border-radius: 0 $msg-radius $msg-radius $msg-radius;
+    }
+
+    // 自己气泡：右上直角，其余圆角 + 渐变背景
+    .msg-me & {
+        @extend .primary-bg;
+        color: white;
+        border-radius: $msg-radius $msg-radius 0 $msg-radius;
+        box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.15);
+    }
+
+    img {
+        margin: 8px 0;
+    }
+
+    .dot {
+        position: relative;
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #b0e9e0;
+        border-radius: 50%;
+        transform-origin: 50% 50%;
+        animation: dotZoomIn 1.4s infinite;
+
+        &:first-child {
+            animation-delay: -0.32s;
+        }
+
+        &:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        &+.dot {
+            margin-left: 5px;
+        }
+    }
+}
+
+// 入场动画
+.msg-bounce-in-left {
+    transform-origin: 0 0;
+    animation: msgBounceIn $msg-animation-duration;
+}
+
+.msg-bounce-in-right {
+    transform-origin: 100% 100%;
+    animation: msgBounceIn $msg-animation-duration;
+}
+
+// 移动端字体微调
+@media (max-width: 480px) {
+    .msg {
+        font-size: $font-size-lg;
+    }
+}
+
+
+================================================
+FILE: src/components/chat-dialog/css/_mobile.prompt.scss
+================================================
+#prompt-bg {
+    opacity: 0;
+
+    #mobile.has-prompt & {
+        position: absolute;
+        top: 0;
+        z-index: 50;
+
+        display: block;
+        width: 100%;
+        height: 100%;
+
+        background-color: $clr-mask;
+        border-radius: $radius-lg;
+        
+        opacity: 1;
+        transition: opacity .3s;
+    }
+}
+
+
+#prompt {
+    position: absolute;
+    bottom: 0;
+    transform: translateY(100%);
+    z-index: 100;
+
+    width: 100%;
+
+    box-shadow: 0 0 30px 0 rgba(0, 0, 0, 0.2);
+    transition-duration: $prompt-animation-duration;
+    transition-property: transform;
+
+    #mobile.has-prompt & {
+        transform: translateY(0);
+    }
+}
+
+    #prompt-head {
+        position: relative;
+
+        border-bottom: 1px solid $clr-border-light;
+        background-color: white;
+
+        .say-something {
+            padding-top: $distance-sm;
+            padding-bottom: $distance-sm;
+        }
+    }
+
+        .close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+
+            height: 20px;
+            padding: $distance-sm $distance-h;
+
+            &:before, &:after {
+                content: '';
+
+                display: block;
+
+                width: 16px;
+                height: 2px;
+                position: relative;
+                top: 8px;
+
+                background-color: $clr-border;
+            }
+
+            &:before {
+                top: 10px;
+
+                transform: rotateZ(45deg);
+            }
+
+            &:after {
+                transform: rotateZ(-45deg);
+            }
+        }
+
+    #prompt-body {
+        background-color: white;
+        overflow: hidden;
+
+        .responses {
+            li {
+                border-bottom: 1px solid $clr-border-light;
+
+                &:last-child {
+                    border-bottom: none;
+                }
+
+                a {
+                    display: block;
+
+                    height: 100%;
+                    padding: $distance-sm $distance-h;
+
+                    color: $clr-text;
+                    text-decoration: none;
+
+                    &:hover {
+                        text-decoration: none;
+                    }
+                }
+            }
+        }
+
+        .next-topic {
+            padding: $distance-sm $distance-h;
+
+            h3 {
+                margin: 0 0 $distance-sm 0;
+
+                font-size: $font-size-basic;
+                font-weight: normal;
+
+                color: $clr-text-unimportant;
+            }
+
+            .topics {
+                text-align: center;
+
+                li {
+                    display: inline-block;
+                    margin: 5px 3px;
+
+                    a {
+                        @extend .primary-bg;
+
+                        display: block;
+
+                        padding: $distance-inline $distance-sm;
+                        margin-right: $distance-inline;
+
+                        border-radius: $radius-lg;
+
+                        text-decoration: none;
+                        color: white;
+
+                        &:hover {
+                            text-decoration: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+@media (max-width: 480px) {
+    #prompt-bg {
+        border-radius: 0 !important;
+    }
+
+    #prompt-head .say-something {
+        padding-top: $distance-sm + 3px;
+        padding-bottom: $distance-sm + 3px;
+    }
+
+    #prompt-body .responses li a {
+        padding: $distance-sm + 3px $distance-h + 3px;
+    }
+}
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/_mobile.scss
+================================================
+$scroll-bar-width: 8px;
+
+#mobile {
+    position: absolute;
+    left: 50%;
+    top: 30px;
+    bottom: 30px;
+    overflow: hidden;
+    width: $mobile-width;
+    margin-left: -$mobile-width / 2;
+    background-color: white;
+    border-radius: $radius-lg;
+    box-shadow: 0 0 30px 0 rgba(34, 195, 170, 0.5);
+    transform: translate3d(0, 0, 0);
+}
+
+#mobile-head {
+    width: 100%;
+    height: $mobile-head-height - 1;
+    background: white;
+}
+
+#mobile-head-title {
+    padding: 12px;
+    color: $clr-text-light;
+    text-align: center;
+}
+
+#mobile-body {
+    position: absolute;
+    top: $mobile-head-height;
+    /* bottom 由 JS 动态控制，删除固定值 */
+    width: 100%;
+    background: #E8F9F6;
+
+    a {
+        color: $clr-primary;
+        text-decoration: none;
+    }
+}
+
+#mobile-body-bg {
+    width: 100%;
+    height: 100%;
+
+    &:before,
+    &:after {
+        content: '';
+        display: block;
+        z-index: 10;
+    }
+
+    &:before {
+        position: relative;
+        width: 100%;
+        height: 25px;
+        background: linear-gradient(rgba(34, 195, 170, 0.1) 0, transparent);
+    }
+
+    &:after {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 15px;
+        background: linear-gradient(transparent 0, rgba(34, 195, 170, 0.05) 100%);
+    }
+}
+
+#mobile-body-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px $distance-h - $scroll-bar-width 16px $distance-h;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    color: $clr-text;
+    z-index: 1;
+
+    &::-webkit-scrollbar {
+        width: $scroll-bar-width;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: $clr-primary-lighter;
+        border-radius: $scroll-bar-width / 2;
+    }
+}
+
+#mock-msg-row {
+    position: absolute;
+    top: -1000px;
+    left: 18px;
+    right: 10px;
+    visibility: hidden;
+}
+
+#mobile-foot {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    min-height: $mobile-foot-height - 1;
+    height: auto;
+    background: #f7f8fa;
+    border-top: 1px solid $clr-border-light;
+}
+
+.say-something {
+    padding: 0px 25px;
+    color: $clr-text-unimportant;
+}
+
+#input-hint.clickable {
+    cursor: pointer;
+}
+
+
+@media (max-width: 480px) {
+    #mobile {
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        margin-left: 0;
+        width: auto;
+        border-radius: 0;
+
+        &.has-prompt:after {
+            border-radius: 0 !important;
+        }
+    }
+
+    #mobile-head {
+        display: none;
+    }
+
+    #mobile-body {
+        top: 0 !important;
+    }
+
+    #prompt-body {
+        border-radius: 0 !important;
+    }
+}
+
+
+================================================
+FILE: src/components/chat-dialog/css/_variables.scss
+================================================
+$clr-primary:          #22c3aa;
+$clr-primary-light:    lighten($clr-primary, 10%);
+$clr-primary-lighter:  lighten($clr-primary, 40%);
+
+$clr-gray:             #666;
+$clr-light:            #bbb;
+$clr-lighter:          #ddd;
+$clr-lightest:         #f3f3f3;
+
+$clr-text:             $clr-gray;
+$clr-text-light:       #888;
+$clr-text-unimportant: #888;
+
+$clr-border:           $clr-lighter;
+$clr-border-light:     $clr-lightest;
+
+$clr-mask:             rgba(0, 0, 0, 0.5);
+
+$mobile-width: 360px;
+$mobile-head-height: 45px;
+$mobile-foot-height: 55px;
+
+$msg-radius: 20px;
+$msg-animation-duration: .4s;
+
+$prompt-animation-duration: 0.3s;
+
+$distance-basic: 15px;
+$distance-lg: 20px;
+$distance-sm: 12px;
+$distance-h: 18px;
+$distance-inline: 5px;
+
+$radius-lg: $distance-lg;
+
+$font-size-basic: 14px;
+$font-size-sm: 13px;
+$font-size-lg: 15px;
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/main.scss
+================================================
+@import 'variables';
+@import 'global';
+
+@import 'mobile'; // including mobile head and foot
+@import 'mobile.body';
+@import 'mobile.msg';
+@import 'mobile.prompt';
+
+@import 'extra';
+
+
+
+================================================
+FILE: src/components/chat-dialog/css/font/lato400.woff
+================================================
+[Binary file]
+
+
+================================================
+FILE: src/components/chat-dialog/letter/content.vue
+================================================
+<template>
+  <div class="letter-content animate__animated animate__fadeInUp">
+    <div class="letter-title" ref="letter-title">
+    </div>
+    <div class="letter-detail">
+      <div v-for="({ type, content, loading, ref }, i) in contents" :key="i" :ref="`letter-detail-item-${i}`">
+        <var-loading v-if="loading" color="#f44336" type="cube" />
+        <div v-show="!loading">
+          <p v-if="type === 'text'" :ref="ref"></p>
+          <div v-else style="text-align: center;">
+            <span :ref="ref" v-html="content"></span>
+          </div>
+        </div>
+      </div>
+      <div class="finish-action" v-show="finish" @click="$emit('close')">
+        <var-icon name="chevron-left" />
+        <text>回到聊天页</text>
+      </div>
+    </div>
+    <div class="letter-action">
+      <var-icon name="window-close" style="font-size: 25px;" @click="$emit('close')" />
+    </div>
+    <var-back-top style="z-index: 2000;" :duration="300">
+    </var-back-top>
+  </div>
+</template>
+
+<script>
+import Typed from 'typed.js'
+export default {
+  props: {
+    title: String,
+    paragraphs: Array,
+    speed: Number
+  },
+  data() {
+    return {
+      contents: [],
+      finish: false
+    }
+  },
+  methods: {
+    append(ele, content) {
+      return new Promise((resolve) => {
+        const typed = new Typed(ele, {
+          strings: ['', content],
+          typeSpeed: this.speed,
+          backSpeed: this.speed,
+          showCursor: false,
+          onComplete: () => {
+            typed.stop();
+            setTimeout(() => resolve(), 500);
+          }
+        });
+      })
+    },
+    initContent() {
+      let paragraphChain = Promise.resolve();
+      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title, 120));
+      this.paragraphs.forEach((paragraph, i) => {
+        paragraphChain = paragraphChain.then(() => {
+          return new Promise((resolve) => {
+            const isImg = /<img[^>]+>/.test(paragraph);
+            if (isImg) {
+              const imgContent = {
+                type: 'img',
+                loading: true,
+                content: paragraph,
+                ref: `paragraph-img-${i}`
+              }
+              this.contents.push(imgContent);
+
+              setTimeout(() => {
+                imgContent.loading = false;
+                this.$nextTick(() => {
+                  imgContent.dom = this.$refs[imgContent.ref][0];
+                  resolve();
+                  this.alignImageHeight(imgContent.dom);
+                  this.autoScroll();
+                });
+              }, 1200);
+            } else {
+              const textContent = {
+                type: 'text',
+                content: paragraph,
+                ref: `paragraph-text-${i}`
+              }
+              this.contents.push(textContent);
+              this.$nextTick(() => {
+                textContent.dom = this.$refs[textContent.ref][0];
+                this.append(textContent.dom, paragraph)
+                  .then(() => {
+                    this.autoScroll();
+                    resolve();
+                  });
+              })
+            }
+          })
+        });
+      });
+      paragraphChain.then(() => this.finish = true);
+    },
+    autoScroll() {
+      this.$nextTick(() => {
+        this.computeDistance().then(distance => {
+          const duration = 250;
+          const startTime = Date.now();
+          console.log('auto scroll', distance)
+          const curScrollTop = document.body.scrollTop + document.documentElement.scrollTop;
+          requestAnimationFrame(function step() {
+            const p = Math.min(1, (Date.now() - startTime) / duration);
+            document.body.scrollTop = curScrollTop + distance * p;
+            document.documentElement.scrollTop = curScrollTop + distance * p;
+            p < 1 && requestAnimationFrame(step);
+          });
+        })
+      });
+    },
+    computeDistance() {
+      return new Promise((resolve) => {
+        const lastContentIndex = this.contents.length - 1;
+        if (lastContentIndex === this.paragraphs.length - 1) {
+          // 最后一行不滚动
+          resolve(0);
+          return;
+        }
+        const content = this.contents[lastContentIndex];
+        if (content.type === 'img') {
+          const imgDom = content.dom.children[0];
+          this.onImageLoad(imgDom)
+            .then(() => {
+              setTimeout(() => {
+                resolve(content.dom.offsetHeight);
+              }, 100);
+            });
+        } else {
+          resolve(content.dom.offsetHeight);
+        }
+      })
+    },
+    onImageLoad(dom) {
+      const $img = $(dom);
+      return new Promise(resolve => {
+        $img.one('load', resolve)
+          .each((index, target) => {
+            // trigger load when the image is cached
+            target.complete && $(target).trigger('load');
+          });
+      });
+    },
+    alignImageHeight(container) {
+      const img = container.querySelector('img');
+      if (!img) return;
+      const fix = () => {
+        // 等待图片完全渲染
+        requestAnimationFrame(() => {
+          const height = container.getBoundingClientRect().height;
+          const remainder = height % 32;
+          if (remainder !== 0) {
+            const pad = document.createElement('div');
+            pad.style.height = (32 - remainder) + 'px';
+            pad.style.display = 'block';
+            pad.style.background = 'transparent';
+            container.appendChild(pad);
+          }
+        });
+      };
+      if (img.complete) {
+        fix();
+      } else {
+        img.onload = fix;
+      }
+    }
+  },
+  mounted() {
+    this.initContent();
+  }
+}
+</script>
+
+<style>
+.letter-title {
+  font-size: 1.25rem;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.letter-content {
+  width: 100%;
+  line-height: 30px;
+  margin: 0 auto;
+  color: black;
+  padding: 15px 32px 29px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.26);
+  -moz-border-radius-bottomleft: 20px 500px;
+  -moz-border-radius-bottomright: 500px 30px;
+  -moz-border-radius-topright: 5px 100px;
+  -webkit-border-bottom-left-radius: 20px 500px;
+  -webkit-border-bottom-right-radius: 64px 10px;
+  -webkit-border-top-right-radius: 5px 100px;
+  border-bottom-left-radius: 20px 500px;
+  border-bottom-right-radius: 64px 10px;
+  border-top-right-radius: 5px 100px;
+  -webkit-background-size: 100% 30px;
+  background-size: 100% 30px;
+  -moz-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 0 #f6ef97;
+  position: relative;
+  font-family: "Architects Daughter", cursive !important;
+}
+
+.letter-detail {
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  min-height: 1500vh;
+  background: repeating-linear-gradient(to bottom,
+      #f9f9f9,
+      #f9f9f9 31px,
+      #d46466 2px,
+      #f9f9f9);
+  background-size: 100% 32px;
+}
+
+.letter-detail p {
+  letter-spacing: 0.4rem;
+}
+
+.letter-ititle {
+  font-size: 1.25rem !important;
+}
+
+.letter-detail p {
+  position: relative;
+  line-height: 2rem !important;
+  text-indent: 2em;
+  font-size: 1rem !important;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+}
+
+.letter-detail span {
+  display: block;
+  margin-block-start: 2rem;
+  margin-block-end: 2rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .letter-content:after {
+    left: 24px;
+  }
+
+  .letter-content::before {
+    right: 24px;
+  }
+}
+
+.letter-action {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: red;
+}
+
+.finish-action {
+  float: right;
+  margin-top: 30px;
+  color: red;
+}
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/letter/cover.vue
+================================================
+<template>
+  <div :class="{ flap: flap }" class="animate__animated animate__zoomIn" @click="$emit('open')">
+    <div class="envelope">
+      <div class="card">
+        <span class="fa fa-close close-icon"></span>
+        <div class="text">{{ openTip || 'opening....' }}</div>
+      </div>
+      <div class="heart"></div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    openTip: String,
+    flap: Boolean
+  }
+}
+</script>
+
+<style>
+.envelope {
+  position: relative;
+  width: 150px;
+  height: 100px;
+  background: #b4d2ee;
+}
+.envelope:before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  z-index: 2;
+  border-top: 55px solid #d3eafd;
+  border-right: 75px solid transparent;
+  border-left: 75px solid transparent;
+  transform-origin: top;
+  transition: all 0.5s ease-in-out 0.7s;
+}
+.envelope:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  width: 0px;
+  height: 0px;
+  border-top: 50px solid transparent;
+  border-right: 75px solid #b4d2ee;
+  border-bottom: 50px solid #b4d2ee;
+  border-left: 75px solid #b4d2ee;
+}
+.envelope .card {
+  position: absolute;
+  right: 20%;
+  bottom: 0;
+  width: 60%;
+  height: 90%;
+  background: #fff;
+  text-align: center;
+  transition: all 1s ease-in-out;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+.envelope .card .close-icon {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  font-size: 10px;
+  color: rgba(68, 68, 68, 0.7);
+  cursor: pointer;
+}
+.envelope .card .text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-family: "Great Vibes", cursive;
+  color: #c51803;
+  transform: translate(-50%, -50%);
+}
+.heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  background: #c51803;
+  z-index: 4;
+  transform: translate(-50%, -20%) rotate(45deg);
+  transition: transform 0.5s ease-in-out 1s;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.heart:before,
+.heart:after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: #c51803;
+  border-radius: 50%;
+}
+.heart:before {
+  top: -7.5px;
+}
+.heart:after {
+  right: 7.5px;
+}
+.flap .envelope:before {
+  transform: rotateX(180deg);
+  z-index: 0;
+}
+.flap .envelope .card {
+  bottom: 100px;
+  transform: scale(1.5);
+  transition-delay: 1s;
+}
+.flap .heart {
+  transform: rotate(90deg);
+  transition-delay: 0.4s;
+}
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/letter/detail.vue
+================================================
+<template>
+  <div class="letter-cover-wapper">
+    <LetterCover :flap="status === 'opening'"
+                 :openTip="openTip"></LetterCover>
+  </div>
+  <div class="letter-cover-wapper"
+       style="position: relative;z-index: 2200;"
+       v-if="status === 'opened'">
+    <LetterContent @close="$emit('close')"
+                   :title="title"
+                   :paragraphs="paragraphs"
+                   :speed="speed"></LetterContent>
+  </div>
+
+</template>
+
+<script>
+import LetterCover from './cover.vue'
+import LetterContent from './content.vue'
+export default {
+  props: {
+    type: String,
+    src: String
+  },
+  components: {
+    LetterContent,
+    LetterCover
+  },
+  data () {
+    return {
+      openTip: '',
+      title: '',
+      paragraphs: [],
+      speed: 120,
+      // cover opening opened
+      status: 'cover'
+    }
+  },
+  mounted () {
+    setTimeout(() => {
+      this.status = 'opening';
+      setTimeout(() => {
+        this.status = 'opened';
+      }, 2500);
+    }, 1000);
+  },
+  created () {
+    $.getJSON(this.src, ({ openTip, title, paragraphs, speed }) => {
+      this.openTip = openTip;
+      this.paragraphs = paragraphs;
+      this.title = title;
+      this.speed = speed;
+    });
+  }
+}
+</script>
+
+<style>
+.letter-cover-wapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #d46466;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  inset: 0px;
+  z-index: 2000;
+}
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/vlog/cover.vue
+================================================
+<template>
+  <div class="vlog-cover">
+    <div class="vlog-cover-action">
+      <var-icon name="play-circle-outline"
+                @click="$emit('open')"
+                style="font-size: 55px;color: aliceblue;" />
+    </div>
+    <img :src="`${src}.jpg`"
+         class="vlog-cover-img" />
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    src: String
+  }
+}
+</script>
+
+<style>
+.vlog-cover {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  inset: 0px;
+}
+.vlog-cover-action {
+  position: absolute;
+  text-align: center;
+  width: 100%;
+}
+.vlog-cover-img {
+}
+</style>
+
+
+================================================
+FILE: src/components/chat-dialog/vlog/detail.vue
+================================================
+<template>
+  <div class="vlog-cover-wapper">
+    <div class="vlog-action">
+      <var-icon name="window-close"
+                style="font-size: 25px;"
+                @click="$emit('close')" />
+    </div>
+    <video id="vlogPlayer"
+           ref="vlogPlayer"
+           class="vlog-player"
+           autoplay="autoplay"
+           playsinline="true"
+           webkit-playsinline="true"
+           x-webkit-airplay="allow"
+           airplay="allow"
+           loop="loop"
+           x5-video-player-type="h5"
+           x5-video-player-fullscreen="true"
+           x5-video-orientation="portrait"
+           :src="src"></video>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    src: String
+  },
+  mounted () {
+    this.$refs['vlogPlayer'].play();
+  }
+}
+</script>
+
+<style>
+.vlog-cover-wapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #d46466;
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  inset: 0px;
+  z-index: 2000;
+}
+.vlog-player {
+  object-fit: fill;
+  width: 100%;
+  z-index: 0;
+  position: fixed;
+}
+.vlog-action {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  color: white;
+  z-index: 9999;
+}
+</style>
+
+
+================================================
+FILE: src/pages/mobile-dialog/index.vue
+================================================
+<template>
+  <ChatDialog :options="chatOptions" :title="props.title" :avatars="props.avatars" @msg-click="handleMsgClick" />
+</template>
+
+<script setup>
+import { ref, defineProps, onMounted } from 'vue'
+import ChatDialog from '../../components/chat-dialog/index.vue'
+
+const props = defineProps({
+  src: String,
+  title: String,
+  avatars: Object
+})
+
+const chatOptions = ref()
+onMounted(() => {
+  $.getJSON(props.src, (options) => {
+    chatOptions.value = options
+  })
+})
+
+function handleMsgClick({ author, content, type }) {
+  console.log(author, content, type)
+}
+</script>
+
