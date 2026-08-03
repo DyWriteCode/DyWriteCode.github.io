@@ -1,5 +1,5 @@
 // 极致早期反调试脚本 + 自身调试跳过（增强版 + 跳转空白页）
-(function () {
+(function() {
     'use strict';
 
     // ============================================================
@@ -20,7 +20,7 @@
     // ============================================================
     // 1. 劫持 console（让控制台失效）【增强：不可恢复】
     // ============================================================
-    const noop = () => { };
+    const noop = () => {};
     const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd'];
     consoleMethods.forEach(m => {
         if (console[m]) {
@@ -93,11 +93,11 @@
     function detectBreakpoint() {
         let isBreak = false;
         try {
-            (function () {
+            (function() {
                 debugger;
                 isBreak = true;
             })();
-        } catch (e) { }
+        } catch(e) {}
         return !isBreak;
     }
 
@@ -189,7 +189,7 @@
 
         // ---- 原有防御 ----
         setInterval(() => {
-            try { (function () { debugger; })(); } catch (e) { }
+            try { (function(){ debugger; })(); } catch (e) {}
         }, 80);
 
         setInterval(() => {
@@ -210,17 +210,17 @@
         }, 400);
 
         const originalEval = window.eval;
-        window.eval = function (str) {
+        window.eval = function(str) {
             if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
                 return undefined;
             }
             return originalEval(str);
         };
         const originalFunction = window.Function;
-        window.Function = function (...args) {
+        window.Function = function(...args) {
             const body = args[args.length - 1] || '';
             if (typeof body === 'string' && (body.includes('console') || body.includes('debugger'))) {
-                return function () { };
+                return function() {};
             }
             return originalFunction.apply(this, args);
         };
