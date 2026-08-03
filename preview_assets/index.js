@@ -3,13 +3,18 @@
     'use strict';
 
     // ============================================================
-    // 0. 检查是否处于调试模式（URL 参数）
+    // 0. 检查是否处于调试模式（URL 参数）—— 增强：同时检查 search 和 hash
     // ============================================================
-    const urlParams = new URLSearchParams(window.location.search);
-    const isDebugMode = urlParams.has('debug') || urlParams.has('dev') || urlParams.has('bypass');
-    if (isDebugMode) {
-        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
-        return;
+    const url = window.location.href.toLowerCase();
+    // 匹配 ?debug、&debug、#debug、?debug=1 等形式，不区分大小写
+    const hasDebugParam = /[?&]debug(?:[= &]|$)/.test(url) || /[?&]dev(?:[= &]|$)/.test(url) || /[?&]bypass(?:[= &]|$)/.test(url) || /#debug/.test(url);
+
+    if (hasDebugParam) {
+        // 确保控制台可用（如果被其他脚本劫持，尝试恢复）
+        if (window.console) {
+            console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
+        }
+        return; // 直接退出，不执行任何反调试逻辑
     }
 
     // ============================================================
@@ -71,7 +76,6 @@
     let lastHtmlWidth = document.documentElement.offsetWidth;
     let lastCheckTime = 0;
 
-    // ★ 新增：检测 DevTools 全局钩子
     function detectDevToolsHooks() {
         const hooks = [
             window.__REACT_DEVTOOLS_GLOBAL_HOOK__,
@@ -86,7 +90,6 @@
         return false;
     }
 
-    // ★ 新增：断点检测
     function detectBreakpoint() {
         let isBreak = false;
         try {
@@ -98,15 +101,11 @@
         return !isBreak;
     }
 
-    // ★ 新增：检测 navigator.webdriver
     function detectWebDriver() {
         return navigator.webdriver === true;
     }
 
-    // 原有的 detectDevTools 函数增强
     function detectDevTools() {
-        // ---- 原有检测 ----
-        // 方法1：debugger 性能检测
         const start = performance.now();
         debugger;
         const elapsed = performance.now() - start;
@@ -116,7 +115,6 @@
             return;
         }
 
-        // 方法2：窗口尺寸差异（侧边栏）
         const outerW = window.outerWidth;
         const innerW = window.innerWidth;
         if (outerW - innerW > 80) {
@@ -125,7 +123,6 @@
             return;
         }
 
-        // 方法3：底部Dock（外高 - 内高）
         const outerH = window.outerHeight;
         const innerH = window.innerHeight;
         if (outerH - innerH > 80) {
@@ -134,7 +131,6 @@
             return;
         }
 
-        // 方法4：documentElement 尺寸变化（二次确认）
         const now = performance.now();
         if (now - lastCheckTime > 1000) {
             const currentWidth = document.documentElement.offsetWidth;
@@ -151,14 +147,12 @@
             lastCheckTime = now;
         }
 
-        // 方法5：检测 Firebug（旧版）
         if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
             debugDetected = true;
             triggerDefense();
             return;
         }
 
-        // ---- ★ 新增检测 ----
         if (detectDevToolsHooks()) {
             debugDetected = true;
             triggerDefense();
@@ -185,27 +179,19 @@
         if (defenseStarted) return;
         defenseStarted = true;
 
-        // ★★★ 新增：跳转到空白页（仅在第一次触发时执行）
-        // 使用 sessionStorage 标记防止无限跳转
+        // ★★★ 跳转到空白页
         if (!sessionStorage.getItem('_debug_redirect_done')) {
             sessionStorage.setItem('_debug_redirect_done', '1');
-            // 延迟一小段时间再跳转，让当前脚本执行完毕
             setTimeout(() => {
-                // 使用 location.replace 防止留下历史记录
                 location.replace('about:blank');
             }, 50);
-            // 注意：跳转后页面会卸载，后续代码可能不会执行，但为了保险，仍然继续执行原有防御
-            // 但跳转后页面销毁，以下代码可能没机会执行，但无所谓了。
-            // 如果不想跳转后还执行，可以在这里 return，但跳转是异步的，所以这里继续。
         }
 
         // ---- 原有防御 ----
-        // 1) 高频 debugger（每 80ms）
         setInterval(() => {
             try { (function () { debugger; })(); } catch (e) { }
         }, 80);
 
-        // 2) 持续输出垃圾信息
         setInterval(() => {
             for (let i = 0; i < 50; i++) {
                 console.log('%c'.repeat(500), 'color: transparent;');
@@ -213,19 +199,16 @@
             }
         }, 150);
 
-        // 3) 闪烁标题
         setInterval(() => {
             document.title = document.title === '🔒 调试被阻止' ? '正常页面' : '🔒 调试被阻止';
         }, 300);
 
-        // 4) 干扰 location.hash
         let c = 0;
         setInterval(() => {
             window.location.hash = 'dbg_' + (c++);
             if (c > 1000) c = 0;
         }, 400);
 
-        // 5) 阻止 eval 和 Function 恢复 console
         const originalEval = window.eval;
         window.eval = function (str) {
             if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
@@ -242,7 +225,6 @@
             return originalFunction.apply(this, args);
         };
 
-        // 6) 定期重新劫持 console（双重保险）
         setInterval(() => {
             consoleMethods.forEach(m => {
                 if (console[m]) console[m] = noop;
@@ -251,12 +233,10 @@
         }, 500);
 
         // ---- ★ 新增防御 ----
-        // 7) 更密集的 debugger 注入
         setInterval(() => {
             eval('(function(){debugger;})();');
         }, 50);
 
-        // 8) 阻止 console 对象被删除
         Object.defineProperty(window, 'console', {
             value: console,
             writable: false,
