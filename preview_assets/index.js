@@ -6,9 +6,10 @@
     // 0. 检查是否处于调试模式（URL 参数）—— 增强：同时检查 search 和 hash
     // ============================================================
     const url = window.location.href.toLowerCase();
+    console.error(url);
     // 匹配 ?debug、&debug、#debug、?debug=1 等形式，不区分大小写
     const hasDebugParam = /[?&]debug(?:[= &]|$)/.test(url) || /[?&]dev(?:[= &]|$)/.test(url) || /[?&]bypass(?:[= &]|$)/.test(url) || /#debug/.test(url);
-
+    console.error(hasDebugParam);
     if (hasDebugParam) {
         // 确保控制台可用（如果被其他脚本劫持，尝试恢复）
         if (window.console) {
