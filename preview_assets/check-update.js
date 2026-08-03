@@ -3,9 +3,8 @@
     'use strict';
 
     const CHECK_INTERVAL = 30000;
-    const VERSION_URL = 'https://dywritecode.github.io/version.json'; // 如果是项目站点，可能需要加仓库名前缀，如 '/仓库名/version.json'
+    const VERSION_URL = 'https://dywritecode.github.io/version.json';
 
-    // ---------- 工具：获取当前版本（存在 localStorage） ----------
     function getLocalVersion() {
         return localStorage.getItem('app_version') || null;
     }
@@ -14,9 +13,16 @@
         localStorage.setItem('app_version', ver);
     }
 
-    // ---------- 检测更新 ----------
+    // ---- 强制刷新页面（绕过缓存） ----
+    function forceReload(remoteVer) {
+        // 方法1：添加随机参数到 URL，强制浏览器重新请求
+        const url = window.location.href.split('?')[0] + '?v=' + remoteVer + '&t=' + Date.now();
+        window.location.href = url;
+        // 方法2（备用）：如果上述方法不生效，可尝试 location.reload(true)
+        // window.location.reload(true);
+    }
+
     function checkUpdate() {
-        // 加随机参数破除缓存
         const url = VERSION_URL + '?t=' + Date.now();
 
         fetch(url)
@@ -30,26 +36,21 @@
 
                 if (!remoteVer) return;
 
-                // 首次访问：存下当前版本，不提示
                 if (!localVer) {
                     setLocalVersion(remoteVer);
                     return;
                 }
 
-                // 如果远程版本与本地不同，说明有新部署
                 if (remoteVer !== localVer) {
                     showUpdateNotification(remoteVer);
                 }
             })
             .catch(err => {
-                // 静默失败，不影响网站主逻辑
-                // console.warn('Version check failed:', err);
+                // 静默失败
             });
     }
 
-    // ---------- 显示更新通知（定制样式，与你的网站风格一致） ----------
     function showUpdateNotification(remoteVer) {
-        // 防止重复弹窗
         if (document.querySelector('.update-toast')) return;
 
         const toast = document.createElement('div');
@@ -61,7 +62,7 @@
             </div>
         `;
 
-        // 样式设计（适配你网站暖色调）
+        // 样式略（与之前相同，或可复用）
         const style = document.createElement('style');
         style.textContent = `
             .update-toast {
@@ -125,27 +126,19 @@
                 }
             }
         `;
-
         document.head.appendChild(style);
 
-        // 点击刷新按钮：更新本地存储并刷新页面
         const btn = toast.querySelector('.update-toast-btn');
         btn.addEventListener('click', function () {
+            // 更新本地版本号
             setLocalVersion(remoteVer);
-            window.location.reload();
+            // 强制刷新并添加缓存破坏参数
+            forceReload(remoteVer);
         });
-
-        // 也可以点击整个 Toast 刷新（可选）
-        // toast.addEventListener('click', function(e) {
-        //     if (e.target.tagName !== 'BUTTON') {
-        //         setLocalVersion(remoteVer);
-        //         window.location.reload();
-        //     }
-        // });
 
         document.body.appendChild(toast);
 
-        // 5分钟后自动关闭（可选）
+        // 5分钟后自动关闭
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.style.opacity = '0';
@@ -155,24 +148,19 @@
         }, 300000);
     }
 
-    // ---------- 启动轮询 ----------
-    // 1. 首次加载立即检测
+    // ---- 启动轮询 ----
     if (document.readyState === 'complete') {
         checkUpdate();
     } else {
         window.addEventListener('load', checkUpdate);
     }
 
-    // 2. 定时轮询
     setInterval(checkUpdate, CHECK_INTERVAL);
 
-    // 3. 用户切回页面时（从后台恢复）主动检测一次
     document.addEventListener('visibilitychange', function () {
         if (!document.hidden) {
-            // 切回页面时，延迟2秒检测（避免频繁请求）
             clearTimeout(window._visibilityTimer);
             window._visibilityTimer = setTimeout(checkUpdate, 2000);
         }
     });
-
 })();
