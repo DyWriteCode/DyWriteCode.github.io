@@ -136,12 +136,12 @@
         });
 
         // 也可以点击整个 Toast 刷新（可选）
-        // toast.addEventListener('click', function(e) {
-        //     if (e.target.tagName !== 'BUTTON') {
-        //         setLocalVersion(remoteVer);
-        //         window.location.reload();
-        //     }
-        // });
+        toast.addEventListener('click', function (e) {
+            if (e.target.tagName !== 'BUTTON') {
+                setLocalVersion(remoteVer);
+                window.location.reload();
+            }
+        });
 
         document.body.appendChild(toast);
 
