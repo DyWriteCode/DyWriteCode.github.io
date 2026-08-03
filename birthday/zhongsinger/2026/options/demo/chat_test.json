@@ -13,7 +13,7 @@
     },
     {
         "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
+            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"
@@ -90,7 +90,7 @@
     },
     {
         "msgs": [
-            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'/>"
+            "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/imgs/test.png'/>"
         ]
     },
     {
@@ -107,7 +107,7 @@
     },
     {
         "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
+            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"
@@ -127,7 +127,7 @@
     },
     {
         "msgs": [
-            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
+            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"
@@ -174,7 +174,7 @@
     },
     {
         "msgs": [
-            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
+            "<letter src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/letters/test.json'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"
@@ -203,7 +203,7 @@
                     "这都猜不中？？？",
                     [
                         "好吧，看图吧。",
-                        "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png'>"
+                        "<img src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/imgs/test.png'>"
                     ]
                 ]
             }
@@ -224,7 +224,7 @@
     },
     {
         "msgs": [
-            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
+            "<vlog src='https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/options/demo/vlogs/test.mp4'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"
