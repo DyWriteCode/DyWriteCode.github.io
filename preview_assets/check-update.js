@@ -2,7 +2,7 @@
 (function () {
     'use strict';
 
-    const CHECK_INTERVAL = 120000; // 60秒检测一次
+    const CHECK_INTERVAL = 30000;
     const VERSION_URL = 'https://dywritecode.github.io/version.json'; // 如果是项目站点，可能需要加仓库名前缀，如 '/仓库名/version.json'
 
     // ---------- 工具：获取当前版本（存在 localStorage） ----------
