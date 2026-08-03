@@ -1,221 +1,221 @@
-// 本段脚本与整个网站有直接关联
-// 若禁用将无法访问网站
-(function antiDebug() {
+// 极致早期反调试脚本 + 自身调试跳过
+(function() {
     'use strict';
 
-    // ---------- 1. 禁止右键菜单 ----------
-    document.addEventListener('contextmenu', function (e) {
-        e.preventDefault();
-        // 可选：给用户一个友好提示（静默处理更隐蔽，这里演示）
-        // console.log('右键已禁用');
-        return false;
-    });
+    // ============================================================
+    // 0. 检查是否处于调试模式（URL 参数）
+    // ============================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDebugMode = urlParams.has('debug') || urlParams.has('dev') || urlParams.has('bypass');
+    if (isDebugMode) {
+        // 恢复 console（如果之前被劫持）
+        // 但这里因为还未劫持，所以无需恢复，直接返回
+        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
+        return; // 直接退出，不执行任何反调试逻辑
+    }
 
-    // ---------- 2. 禁止文本选择 / 复制 (辅助) ----------
-    document.addEventListener('selectstart', function (e) {
-        e.preventDefault();
-    });
-    document.addEventListener('copy', function (e) {
-        e.preventDefault();
-        // 可选：提示或静默
-    });
+    // ============================================================
+    // 1. 保存原始 console 方法（以便在需要时恢复，但此处不恢复）
+    // ============================================================
+    // 但我们直接劫持，所以无需保存
 
-    // ---------- 3. 拦截键盘快捷键 ----------
-    const forbiddenKeys = {
-        // F12
+    // ============================================================
+    // 2. 劫持 console（让控制台失效）
+    // ============================================================
+    const noop = () => {};
+    const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd'];
+    consoleMethods.forEach(m => {
+        if (console[m]) console[m] = noop;
+    });
+    console.clear = noop;
+
+    // ============================================================
+    // 3. 阻止常见键盘快捷键和右键
+    // ============================================================
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+
+    const keyBlock = {
         123: true,
-        // Ctrl+Shift+I (73 = I)
         '73_shift_ctrl': true,
-        // Ctrl+Shift+J (74 = J)
         '74_shift_ctrl': true,
-        // Ctrl+U (85 = U)
-        '85_ctrl': true,
-        // Ctrl+Shift+C (67 = C) 元素选择
         '67_shift_ctrl': true,
-        // Ctrl+S (83) 保存页面 —— 虽然不是开调试工具，但阻止保存源代码
-        '83_ctrl': true,
+        '85_ctrl': true,
+        '83_ctrl': true
     };
-
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', e => {
         const key = e.keyCode || e.which;
         const ctrl = e.ctrlKey || e.metaKey;
         const shift = e.shiftKey;
-
-        // 构建组合键标识
         let combo = '';
         if (ctrl) combo += 'ctrl';
         if (shift) combo += (combo ? '_shift' : 'shift');
-        if (combo) {
-            combo = key + '_' + combo;
-        } else {
-            combo = String(key);
-        }
-
-        // 检查是否在禁止列表中
-        if (forbiddenKeys[combo] || forbiddenKeys[key]) {
+        if (combo) combo = key + '_' + combo;
+        else combo = String(key);
+        if (keyBlock[combo] || keyBlock[key]) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
-
-        // 额外：单独拦截 F12 (keyCode 123)
-        if (key === 123) {
-            e.preventDefault();
-            return false;
-        }
     });
 
-    // ---------- 4. 检测开发者工具是否打开 (基于 debugger) ----------
-    // 方法：使用 setInterval 不断触发 debugger，如果开发者工具打开则会中断
-    // 但为了避免干扰正常用户，使用 try/catch 静默处理
-    // 并且当 debugger 被触发时，执行一些操作（如清空控制台、跳转等）
+    // ============================================================
+    // 4. 早期检测（立即执行一次）
+    // ============================================================
+    let debugDetected = false;
+    let defenseStarted = false;
+    let lastHtmlWidth = document.documentElement.offsetWidth;
+    let lastCheckTime = 0;
 
     function detectDevTools() {
+        // 方法1：debugger 性能检测
         const start = performance.now();
-        // 使用 debugger 语句，如果 DevTools 打开，执行时间会显著变长
         debugger;
-        const end = performance.now();
-        const elapsed = end - start;
-        // 如果执行时间超过 100ms，认为 DevTools 可能打开
-        // 但为了更准确，结合其他检测
-        if (elapsed > 100) {
-            // 开发者工具可能打开，执行反制
-            handleDevToolsOpen();
-        }
-    }
-
-    function handleDevToolsOpen() {
-        // 反制策略：清空控制台、使页面跳转、或不断触发 debugger 干扰
-        // 这里使用组合策略：清空控制台 + 不断触发 debugger
-
-        // 1. 清空控制台（如果可用）
-        if (window.console && console.clear) {
-            console.clear();
+        const elapsed = performance.now() - start;
+        if (elapsed > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
         }
 
-        // 2. 不断触发 debugger 让调试者难以操作
-        // 但注意：这会阻塞主线程，所以使用间隔触发
-        if (!window._debuggerInterval) {
-            window._debuggerInterval = setInterval(function () {
-                // 使用 Function 构造器避免被某些工具拦截
-                (function () {
-                    debugger;
-                })();
-                // 再次清空控制台
-                if (window.console && console.clear) {
-                    console.clear();
+        // 方法2：窗口尺寸差异（侧边栏）
+        const outerW = window.outerWidth;
+        const innerW = window.innerWidth;
+        if (outerW - innerW > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+
+        // 方法3：底部Dock（外高 - 内高）
+        const outerH = window.outerHeight;
+        const innerH = window.innerHeight;
+        if (outerH - innerH > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+
+        // 方法4：documentElement 尺寸变化（需要结合时间，避免误报）
+        const now = performance.now();
+        if (now - lastCheckTime > 1000) { // 每秒检测一次尺寸变化
+            const currentWidth = document.documentElement.offsetWidth;
+            if (Math.abs(currentWidth - lastHtmlWidth) > 50) {
+                // 尺寸变化可能由窗口调整引起，进行二次确认
+                const start2 = performance.now();
+                debugger;
+                const elapsed2 = performance.now() - start2;
+                if (elapsed2 > 80) {
+                    debugDetected = true;
+                    triggerDefense();
                 }
-            }, 500);
+                lastHtmlWidth = currentWidth;
+            }
+            lastCheckTime = now;
         }
 
-        // 3. 可选：跳转到其他页面（慎用，会影响用户体验）
-        // window.location.href = 'about:blank';
+        // 方法5：检测 Firebug（旧版）
+        if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+
+        // 方法6：检测是否重写了 console（如果恢复，说明在调试）
+        // 但由于我们不断重写，这个检测意义不大，跳过
     }
 
-    // ---------- 5. 使用 Element 尺寸检测法 (更隐蔽) ----------
-    // 原理：当 DevTools 打开时，某些元素的尺寸会变化（如 <html> 或 <body>）
-    // 利用 getBoundingClientRect 检测
+    // ============================================================
+    // 5. 防御措施（温和但有效）
+    // ============================================================
+    function triggerDefense() {
+        if (defenseStarted) return;
+        defenseStarted = true;
 
-    function detectByElementSize() {
-        const threshold = 150; // 毫秒
-        const start = performance.now();
+        // 1) 高频 debugger（每 80ms）
+        setInterval(() => {
+            try { (function(){ debugger; })(); } catch (e) {}
+        }, 80);
 
-        // 创建一个不可见元素，检测其尺寸变化
-        const div = document.createElement('div');
-        div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:100px;height:100px;z-index:-9999;';
-        document.body.appendChild(div);
-
-        // 不断检测
-        let lastWidth = div.offsetWidth;
-        let lastHeight = div.offsetHeight;
-
-        setInterval(function () {
-            const w = div.offsetWidth;
-            const h = div.offsetHeight;
-            // 如果尺寸发生变化，可能 DevTools 正在调整
-            if (w !== lastWidth || h !== lastHeight) {
-                // 触发反制
-                handleDevToolsOpen();
-                // 更新记录
-                lastWidth = w;
-                lastHeight = h;
+        // 2) 持续输出垃圾信息（但 console 已被劫持）
+        setInterval(() => {
+            for (let i = 0; i < 50; i++) {
+                console.log('%c'.repeat(500), 'color: transparent;');
+                console.warn('Debugging blocked');
             }
-        }, 1000);
+        }, 150);
 
-        // 稍后移除元素（但为了持续检测，保留）
-        // 实际上我们保留它，但为了不影响页面，放在角落
+        // 3) 闪烁标题（提示）
+        setInterval(() => {
+            document.title = document.title === '🔒 调试被阻止' ? '正常页面' : '🔒 调试被阻止';
+        }, 300);
+
+        // 4) 干扰 location.hash
+        let c = 0;
+        setInterval(() => {
+            window.location.hash = 'dbg_' + (c++);
+            if (c > 1000) c = 0;
+        }, 400);
+
+        // 5) 阻止 eval 和 Function 恢复 console
+        const originalEval = window.eval;
+        window.eval = function(str) {
+            if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
+                return undefined;
+            }
+            return originalEval(str);
+        };
+        const originalFunction = window.Function;
+        window.Function = function(...args) {
+            const body = args[args.length - 1] || '';
+            if (typeof body === 'string' && (body.includes('console') || body.includes('debugger'))) {
+                return function() {};
+            }
+            return originalFunction.apply(this, args);
+        };
+
+        // 6) 定期重新劫持 console（防止被恢复）
+        setInterval(() => {
+            consoleMethods.forEach(m => {
+                if (console[m]) console[m] = noop;
+            });
+            console.clear = noop;
+        }, 500);
+
+        // 7) 额外：阻止页面被关闭（但不要太过分，我们只阻止简单的关闭尝试）
+        // 可以通过 onbeforeunload 但会打扰用户，所以不采用
     }
 
-    // ---------- 6. 监听控制台输出 (console.log 重写) ----------
-    // 如果控制台被打开，某些浏览器会触发 console.log 的调用
-    // 这里不重点使用，因为容易被绕过
+    // ============================================================
+    // 6. 启动检测（立即、高频、持续）
+    // ============================================================
+    // 立即执行一次
+    detectDevTools();
 
-    // ---------- 7. 结合多种检测，定期执行 ----------
-    function startDetection() {
-        // 每 2 秒检测一次 debugger 方法
-        setInterval(function () {
+    // 高频检测（每 200ms）
+    setInterval(detectDevTools, 200);
+
+    // 窗口 resize 时也触发检测（但会频繁触发，小心）
+    // 改为防抖
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
             detectDevTools();
-        }, 2000);
+        }, 300);
+    });
 
-        // 启动尺寸检测
-        detectByElementSize();
-
-        // 额外：检测窗口尺寸变化 (F12 侧边栏会改变窗口大小)
-        let lastWindowWidth = window.outerWidth;
-        let lastWindowHeight = window.outerHeight;
-
-        setInterval(function () {
-            const w = window.outerWidth;
-            const h = window.outerHeight;
-            // 如果窗口尺寸显著变化，可能 DevTools 打开/关闭
-            // 但用户正常调整窗口也会触发，所以结合其他检测
-            if (Math.abs(w - lastWindowWidth) > 100 || Math.abs(h - lastWindowHeight) > 100) {
-                // 不立即触发，而是用 debugger 检测确认
-                detectDevTools();
-            }
-            lastWindowWidth = w;
-            lastWindowHeight = h;
-        }, 3000);
-    }
-
-    // ---------- 8. 防挂起：如果页面被挂起，重新激活检测 ----------
-    // 当页面可见性变化时，重新初始化
-    document.addEventListener('visibilitychange', function () {
+    // 页面可见性变化时检测
+    document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
-            // 页面重新可见，确保检测运行
-            if (!window._antiDebugStarted) {
-                startDetection();
-                window._antiDebugStarted = true;
-            }
+            detectDevTools();
         }
     });
 
-    // ---------- 9. 针对 iframe 内嵌的防护 ----------
-    // 如果页面在 iframe 中，部分检测可能失效，但这里不做特殊处理
+    // 加载完成后检测一次
+    window.addEventListener('load', detectDevTools);
 
-    // ---------- 10. 启动 ----------
-    // 标记已启动
-    window._antiDebugStarted = true;
-    startDetection();
-
-    // 额外：页面加载完成后再次强化
-    window.addEventListener('load', function () {
-        // 再次确保所有监听生效
-        // 重新注册一些关键事件
-        document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-            return false;
-        });
-    });
-
-    console.log('🔒 防调试脚本已加载 ✅');
-
-    // 为了防止被轻易禁用，使用 Object.defineProperty 保护关键函数
-    // （但这在浏览器中有限制，仅做示意）
-    try {
-        Object.defineProperty(window, '_antiDebugStarted', {
-            writable: false,
-            configurable: false,
-        });
-    } catch (_) { /* 忽略 */ }
+    // 标记启动
+    console.log('%c✅ 安全保护已激活（早期检测 + 补充检测）', 'color: green; font-size: 16px;');
 })();
