@@ -1,25 +1,27 @@
-// 极致早期反调试脚本 + 自身调试跳过（增强版 + 跳转空白页）
+// 极致反调试脚本 - 优化版（降低误报）
 (function() {
     'use strict';
 
     // ============================================================
-    // 0. 检查是否处于调试模式（URL 参数）—— 增强：同时检查 search 和 hash
+    // 0. 检查调试模式（URL 或 localStorage）
     // ============================================================
     const url = window.location.href.toLowerCase();
-    console.error(url);
-    // 匹配 ?debug、&debug、#debug、?debug=1 等形式，不区分大小写
-    const hasDebugParam = /[?&]debug(?:[= &]|$)/.test(url) || /[?&]dev(?:[= &]|$)/.test(url) || /[?&]bypass(?:[= &]|$)/.test(url) || /#debug/.test(url);
-    console.error(hasDebugParam);
-    if (hasDebugParam) {
-        // 确保控制台可用（如果被其他脚本劫持，尝试恢复）
-        if (window.console) {
-            console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
-        }
-        return; // 直接退出，不执行任何反调试逻辑
+    const isDebugByUrl = url.includes('debug') || url.includes('dev') || url.includes('bypass');
+    const isDebugByStorage = localStorage.getItem('debug_mode') === '1';
+    if (isDebugByUrl || isDebugByStorage) {
+        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
+        return;
+    }
+
+    // 移动端或小屏幕设备直接跳过反调试（避免误报）
+    const isMobile = ('ontouchstart' in window) || window.innerWidth < 768;
+    if (isMobile) {
+        console.log('%c📱 移动端已跳过反调试', 'color: gray; font-size: 14px;');
+        return;
     }
 
     // ============================================================
-    // 1. 劫持 console（让控制台失效）【增强：不可恢复】
+    // 1. 劫持 console（不可恢复）
     // ============================================================
     const noop = () => {};
     const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd'];
@@ -39,7 +41,7 @@
     });
 
     // ============================================================
-    // 2. 阻止常见键盘快捷键、右键和选择
+    // 2. 阻止键盘快捷键、右键、复制
     // ============================================================
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
@@ -70,10 +72,12 @@
     });
 
     // ============================================================
-    // 3. 增强的 DevTools 检测（保留原有 + 新增）
+    // 3. 检测 DevTools（优化阈值 + 连续确认）
     // ============================================================
     let debugDetected = false;
     let defenseStarted = false;
+    let anomalyCount = 0; // 连续异常计数
+    const MAX_ANOMALIES = 3; // 连续 3 次才触发
     let lastHtmlWidth = document.documentElement.offsetWidth;
     let lastCheckTime = 0;
 
@@ -107,80 +111,80 @@
     }
 
     function detectDevTools() {
+        // 如果已经检测到，不再重复检测
+        if (debugDetected) return;
+
+        let anomaly = false;
+
+        // 1. 性能检测（阈值 120ms）
         const start = performance.now();
         debugger;
         const elapsed = performance.now() - start;
-        if (elapsed > 80) {
-            debugDetected = true;
-            triggerDefense();
-            return;
+        if (elapsed > 120) {
+            anomaly = true;
         }
 
+        // 2. 窗口尺寸差异（阈值 150px）
         const outerW = window.outerWidth;
         const innerW = window.innerWidth;
-        if (outerW - innerW > 80) {
-            debugDetected = true;
-            triggerDefense();
-            return;
-        }
-
         const outerH = window.outerHeight;
         const innerH = window.innerHeight;
-        if (outerH - innerH > 80) {
-            debugDetected = true;
-            triggerDefense();
-            return;
+        if (outerW - innerW > 150 || outerH - innerH > 150) {
+            anomaly = true;
         }
 
+        // 3. 尺寸变化（阈值 80px）
         const now = performance.now();
         if (now - lastCheckTime > 1000) {
             const currentWidth = document.documentElement.offsetWidth;
-            if (Math.abs(currentWidth - lastHtmlWidth) > 50) {
+            if (Math.abs(currentWidth - lastHtmlWidth) > 80) {
                 const start2 = performance.now();
                 debugger;
                 const elapsed2 = performance.now() - start2;
-                if (elapsed2 > 80) {
-                    debugDetected = true;
-                    triggerDefense();
+                if (elapsed2 > 120) {
+                    anomaly = true;
                 }
                 lastHtmlWidth = currentWidth;
             }
             lastCheckTime = now;
         }
 
+        // 4. 其他检测
         if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
-            debugDetected = true;
-            triggerDefense();
-            return;
+            anomaly = true;
         }
-
         if (detectDevToolsHooks()) {
-            debugDetected = true;
-            triggerDefense();
-            return;
+            anomaly = true;
         }
-
         if (detectBreakpoint()) {
-            debugDetected = true;
-            triggerDefense();
-            return;
+            anomaly = true;
+        }
+        if (detectWebDriver()) {
+            anomaly = true;
         }
 
-        if (detectWebDriver()) {
+        // 如果当前检测到异常，增加计数；否则重置计数
+        if (anomaly) {
+            anomalyCount++;
+        } else {
+            anomalyCount = 0;
+        }
+
+        // 连续异常达到阈值，触发防御
+        if (anomalyCount >= MAX_ANOMALIES) {
             debugDetected = true;
             triggerDefense();
-            return;
         }
     }
 
     // ============================================================
-    // 4. 防御措施（保留原有 + 新增 + 跳转空白页）
+    // 4. 防御措施（跳转空白页 + 干扰）
     // ============================================================
     function triggerDefense() {
         if (defenseStarted) return;
         defenseStarted = true;
 
-        // ★★★ 跳转到空白页
+        // 跳转空白页（仅一次）
         if (!sessionStorage.getItem('_debug_redirect_done')) {
             sessionStorage.setItem('_debug_redirect_done', '1');
             setTimeout(() => {
@@ -188,7 +192,7 @@
             }, 50);
         }
 
-        // ---- 原有防御 ----
+        // 原有防御措施（debugger 循环、垃圾信息、标题闪烁、hash 干扰等）
         setInterval(() => {
             try { (function(){ debugger; })(); } catch (e) {}
         }, 80);
@@ -233,7 +237,6 @@
             console.clear = noop;
         }, 500);
 
-        // ---- ★ 新增防御 ----
         setInterval(() => {
             eval('(function(){debugger;})();');
         }, 50);
@@ -268,5 +271,5 @@
 
     window.addEventListener('load', detectDevTools);
 
-    console.log('%c✅ 安全保护已激活（增强版：多维度检测 + 不可恢复劫持 + 跳转空白页）', 'color: green; font-size: 16px;');
+    console.log('%c✅ 反调试已启动（低误报模式）', 'color: green; font-size: 16px;');
 })();
