@@ -82,7 +82,8 @@ FILE: package.json
     "@varlet/ui": "^1.24.1",
     "animate.css": "^4.1.1",
     "typed.js": "^2.0.12",
-    "vue": "^3.2.25"
+    "vue": "^3.2.25",
+    "wechat-emojis": "^1.0.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.0.0",
@@ -614,6 +615,7 @@ import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import MessageDetail from './MessageDetail.vue'
 import Typed from 'typed.js'
+import emojis from 'wechat-emojis'; 
 import './css/main.scss'
 
 const AUTHOR = {

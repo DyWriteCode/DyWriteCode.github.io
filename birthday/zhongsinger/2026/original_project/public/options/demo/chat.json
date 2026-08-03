@@ -1,6 +1,25 @@
 [
     {
         "msgs": [
+            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+        ],
+        "msgInputSpeed": 80,
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "好"
+                ],
+                "rejectKeyTexts": [],
+                "rejectHitTexts": [
+                    "输入好，听不懂吗？？？",
+                    "触发强行跳过"
+                ]
+            }
+        }
+    },
+    {
+        "msgs": [
             "这条消息会在1秒后自动撤回"
         ],
         "msgInputSpeed": 80,

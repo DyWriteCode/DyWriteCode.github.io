@@ -78,6 +78,7 @@ import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import MessageDetail from './MessageDetail.vue'
 import Typed from 'typed.js'
+import emojis from 'wechat-emojis'; 
 import './css/main.scss'
 
 const AUTHOR = {
