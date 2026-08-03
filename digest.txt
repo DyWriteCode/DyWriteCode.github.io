@@ -40,10 +40,10 @@ Directory structure:
     │       │   │   └── music.js
     │       │   ├── options/
     │       │   │   └── demo/
-    │       │   │       ├── avatars.json
     │       │   │       ├── chat.json
     │       │   │       ├── chat_test.json
     │       │   │       ├── roles.json
+    │       │   │       ├── unuse_avatars.json
     │       │   │       └── letters/
     │       │   │           ├── letter_to_someone.json
     │       │   │           └── test.json
@@ -219,8 +219,6 @@ FILE: index.html
     <link rel="stylesheet" href="preview_assets/style.css" />
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/home.ico">
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <style>
@@ -404,6 +402,8 @@ FILE: index.html
 
 <body>
     <script type="text/javascript" src="preview_assets/click.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <section class="hero-section background_color">
         <div class="card-grid"">
                 <a class=" card" href="birthday/index.html">
@@ -465,7 +465,7 @@ SOFTWARE.
 ================================================
 FILE: version.json
 ================================================
-{"version":"20260803030601-b02f07c"}
+{"version":"20260803114553-ffe6746"}
 
 
 
@@ -487,8 +487,6 @@ FILE: birthday/index.html
     <link rel="stylesheet" href="../preview_assets/style.css" />
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/preview_assets/happy.ico">
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <style>
@@ -672,6 +670,8 @@ FILE: birthday/index.html
 
 <body>
     <script type="text/javascript" src="preview_assets/click.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <section class="hero-section background_color">
 
         <!-- 顶部灰色居中文字 -->
@@ -821,8 +821,6 @@ FILE: birthday/dingyang/egg/index.html
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3"
         as="audio" type="audio/mpeg" crossorigin="anonymous">
     <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
-    <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <title>光影之间 · 随记</title>
     <style>
@@ -860,6 +858,8 @@ FILE: birthday/dingyang/egg/index.html
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js"></script>
     <script type="module" crossorigin
         src="click.n.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <div class="container" id="app">
 
         <div id="page-science" class="page active">
@@ -1325,8 +1325,10 @@ FILE: birthday/dingyang/egg/message/index.html
     <link rel="preload"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3"
         as="audio" type="audio/mpeg" crossorigin="anonymous">
-    <script type="module" crossorigin
+    <script crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
+    <script type="module" crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <title>秘密消息 · 解码器</title>
     <style>
         /* ===== 全局重置 & 字体 ===== */
@@ -2235,8 +2237,6 @@ FILE: birthday/dingyang/patient/index.html
     <link rel="preconnect" href="https://cdn.jsdmirror.com">
     <link rel="dns-prefetch" href="https://cdn.jsdmirror.com">
     <link rel="stylesheet" href="index.encryption.css" />
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico">
     <script type="module" crossorigin
@@ -2640,6 +2640,8 @@ FILE: birthday/dingyang/patient/index.html
 
 <body>
     <script type="module" crossorigin src="click.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
 
     <!-- ============================================================ -->
     <!-- 主视图 -->
@@ -3112,13 +3114,13 @@ FILE: birthday/zhongsinger/index.html
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/happy.ico">
     <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
-    <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
 </head>
 
 <body>
     <script type="text/javascript" src="assets/click.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <section class="hero-section background_color">
         <div class="card-grid">
             <a class="card" href="2025/index.html">
@@ -3202,13 +3204,12 @@ FILE: birthday/zhongsinger/2025/index.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <link rel="preload" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3" as="audio"
-        type="audio/mpeg" crossorigin="anonymous">
+    <link rel="preload"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3"
+        as="audio" type="audio/mpeg" crossorigin="anonymous">
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
     <link rel="stylesheet" href="style.css" />
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <title>钟芯尔的生日空间</title>
@@ -3408,6 +3409,8 @@ FILE: birthday/zhongsinger/2025/index.html
 
 <body>
     <script type="text/javascript" src="click.js"></script>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <!--背景音乐-->
     <audio id="music"
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3"
@@ -3486,13 +3489,12 @@ FILE: birthday/zhongsinger/2025/memory.html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <link rel="preload" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3" as="audio"
-        type="audio/mpeg" crossorigin="anonymous">
+    <link rel="preload"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/music/bir.mp3"
+        as="audio" type="audio/mpeg" crossorigin="anonymous">
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
     <link rel="stylesheet" href="style.css" />
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <title>我们的时光走廊</title>
@@ -3761,6 +3763,8 @@ FILE: birthday/zhongsinger/2025/memory.html
 </head>
 
 <body>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
     <audio id="music"
@@ -4003,8 +4007,6 @@ FILE: birthday/zhongsinger/2025/secret.html
     <link rel="icon" type="image/png"
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2025/images/happy.ico">
     <link rel="stylesheet" href="style.css" />
-    <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="module" crossorigin
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
     <style>
@@ -4600,6 +4602,8 @@ FILE: birthday/zhongsinger/2025/secret.html
 </head>
 
 <body>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="text/javascript" src="click.js"></script>
     <!--背景音乐-->
     <audio id="music"
@@ -5141,26 +5145,32 @@ FILE: birthday/zhongsinger/2026/index.html
   <link rel="dns-prefetch" href="https://cdn.jsdmirror.com">
   <link rel="icon"
     href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/favicon.ico" />
-  <link rel="preload" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3" as="audio"
-        type="audio/mpeg" crossorigin="anonymous">
+  <link rel="preload"
+    href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3"
+    as="audio" type="audio/mpeg" crossorigin="anonymous">
   <link rel="preload"
     href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff"
     as="font" type="font/woff2" crossorigin="anonymous">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title></title>
-  <script type="module" crossorigin src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/index.dy.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/index.dy.css">
   <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/index.dy.js"></script>
+  <link rel="stylesheet"
+    href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/index.dy.css">
   <script type="module" crossorigin
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js"></script>
 </head>
 
 <body>
+  <script crossorigin
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
   <div id="app"></div>
-  <script type="module" crossorigin src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/click.js"></script>
-  <script type="module" crossorigin src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js"></script>
-  <script src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/zepto.min.js"></script>
+  <script type="module" crossorigin
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/click.js"></script>
+  <script type="module" crossorigin
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js"></script>
+  <script
+    src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/zepto.min.js"></script>
 </body>
 
 </html>
@@ -17535,15 +17545,6 @@ FILE: birthday/zhongsinger/2026/js/music.js
 
 
 ================================================
-FILE: birthday/zhongsinger/2026/options/demo/avatars.json
-================================================
-{
-  "author": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
-  "me": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg"
-}
-
-
-================================================
 FILE: birthday/zhongsinger/2026/options/demo/chat.json
 ================================================
 [
@@ -18245,6 +18246,15 @@ FILE: birthday/zhongsinger/2026/options/demo/roles.json
         "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg",
         "pat": "拍了拍自己"
     }
+}
+
+
+================================================
+FILE: birthday/zhongsinger/2026/options/demo/unuse_avatars.json
+================================================
+{
+  "author": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
+  "me": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg"
 }
 
 
@@ -21165,6 +21175,8 @@ FILE: MiddleSchoolYearBook/index.html
 </head>
 
 <body>
+    <script crossorigin
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js"></script>
     <script type="text/javascript" src="js/click.js"></script>
     <!--Container-->
     <div class="swiper-container">
@@ -44890,12 +44902,12 @@ FILE: preview_assets/check-update.js
         });
 
         // 也可以点击整个 Toast 刷新（可选）
-        // toast.addEventListener('click', function(e) {
-        //     if (e.target.tagName !== 'BUTTON') {
-        //         setLocalVersion(remoteVer);
-        //         window.location.reload();
-        //     }
-        // });
+        toast.addEventListener('click', function (e) {
+            if (e.target.tagName !== 'BUTTON') {
+                setLocalVersion(remoteVer);
+                window.location.reload();
+            }
+        });
 
         document.body.appendChild(toast);
 
@@ -44980,235 +44992,296 @@ document.addEventListener('DOMContentLoaded', function () {
 ================================================
 FILE: preview_assets/index.js
 ================================================
-// 本段脚本与整个网站有直接关联
-// 若禁用将无法访问网站
-(function antiDebug() {
+// 极致早期反调试脚本 + 自身调试跳过（增强版 + 跳转空白页）
+(function () {
     'use strict';
 
-    // ---------- 1. 禁止右键菜单 ----------
-    document.addEventListener('contextmenu', function (e) {
-        e.preventDefault();
-        // 可选：给用户一个友好提示（静默处理更隐蔽，这里演示）
-        // console.log('右键已禁用');
-        return false;
+    // ============================================================
+    // 0. 检查是否处于调试模式（URL 参数）
+    // ============================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDebugMode = urlParams.has('debug') || urlParams.has('dev') || urlParams.has('bypass');
+    if (isDebugMode) {
+        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
+        return;
+    }
+
+    // ============================================================
+    // 1. 劫持 console（让控制台失效）【增强：不可恢复】
+    // ============================================================
+    const noop = () => { };
+    const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd'];
+    consoleMethods.forEach(m => {
+        if (console[m]) {
+            Object.defineProperty(console, m, {
+                value: noop,
+                writable: false,
+                configurable: false
+            });
+        }
+    });
+    Object.defineProperty(console, 'clear', {
+        value: noop,
+        writable: false,
+        configurable: false
     });
 
-    // ---------- 2. 禁止文本选择 / 复制 (辅助) ----------
-    document.addEventListener('selectstart', function (e) {
-        e.preventDefault();
-    });
-    document.addEventListener('copy', function (e) {
-        e.preventDefault();
-        // 可选：提示或静默
-    });
+    // ============================================================
+    // 2. 阻止常见键盘快捷键、右键和选择
+    // ============================================================
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
 
-    // ---------- 3. 拦截键盘快捷键 ----------
-    const forbiddenKeys = {
-        // F12
+    const keyBlock = {
         123: true,
-        // Ctrl+Shift+I (73 = I)
         '73_shift_ctrl': true,
-        // Ctrl+Shift+J (74 = J)
         '74_shift_ctrl': true,
-        // Ctrl+U (85 = U)
-        '85_ctrl': true,
-        // Ctrl+Shift+C (67 = C) 元素选择
         '67_shift_ctrl': true,
-        // Ctrl+S (83) 保存页面 —— 虽然不是开调试工具，但阻止保存源代码
-        '83_ctrl': true,
+        '85_ctrl': true,
+        '83_ctrl': true
     };
-
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', e => {
         const key = e.keyCode || e.which;
         const ctrl = e.ctrlKey || e.metaKey;
         const shift = e.shiftKey;
-
-        // 构建组合键标识
         let combo = '';
         if (ctrl) combo += 'ctrl';
         if (shift) combo += (combo ? '_shift' : 'shift');
-        if (combo) {
-            combo = key + '_' + combo;
-        } else {
-            combo = String(key);
-        }
-
-        // 检查是否在禁止列表中
-        if (forbiddenKeys[combo] || forbiddenKeys[key]) {
+        if (combo) combo = key + '_' + combo;
+        else combo = String(key);
+        if (keyBlock[combo] || keyBlock[key]) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
-
-        // 额外：单独拦截 F12 (keyCode 123)
-        if (key === 123) {
-            e.preventDefault();
-            return false;
-        }
     });
 
-    // ---------- 4. 检测开发者工具是否打开 (基于 debugger) ----------
-    // 方法：使用 setInterval 不断触发 debugger，如果开发者工具打开则会中断
-    // 但为了避免干扰正常用户，使用 try/catch 静默处理
-    // 并且当 debugger 被触发时，执行一些操作（如清空控制台、跳转等）
+    // ============================================================
+    // 3. 增强的 DevTools 检测（保留原有 + 新增）
+    // ============================================================
+    let debugDetected = false;
+    let defenseStarted = false;
+    let lastHtmlWidth = document.documentElement.offsetWidth;
+    let lastCheckTime = 0;
 
+    // ★ 新增：检测 DevTools 全局钩子
+    function detectDevToolsHooks() {
+        const hooks = [
+            window.__REACT_DEVTOOLS_GLOBAL_HOOK__,
+            window.__VUE_DEVTOOLS_GLOBAL_HOOK__,
+            window.__REDUX_DEVTOOLS_EXTENSION__,
+            window.devtools,
+            window.chrome?.devtools
+        ];
+        for (let hook of hooks) {
+            if (hook) return true;
+        }
+        return false;
+    }
+
+    // ★ 新增：断点检测
+    function detectBreakpoint() {
+        let isBreak = false;
+        try {
+            (function () {
+                debugger;
+                isBreak = true;
+            })();
+        } catch (e) { }
+        return !isBreak;
+    }
+
+    // ★ 新增：检测 navigator.webdriver
+    function detectWebDriver() {
+        return navigator.webdriver === true;
+    }
+
+    // 原有的 detectDevTools 函数增强
     function detectDevTools() {
+        // ---- 原有检测 ----
+        // 方法1：debugger 性能检测
         const start = performance.now();
-        // 使用 debugger 语句，如果 DevTools 打开，执行时间会显著变长
         debugger;
-        const end = performance.now();
-        const elapsed = end - start;
-        // 如果执行时间超过 100ms，认为 DevTools 可能打开
-        // 但为了更准确，结合其他检测
-        if (elapsed > 100) {
-            // 开发者工具可能打开，执行反制
-            handleDevToolsOpen();
-        }
-    }
-
-    function handleDevToolsOpen() {
-        // 反制策略：清空控制台、使页面跳转、或不断触发 debugger 干扰
-        // 这里使用组合策略：清空控制台 + 不断触发 debugger
-
-        // 1. 清空控制台（如果可用）
-        if (window.console && console.clear) {
-            console.clear();
+        const elapsed = performance.now() - start;
+        if (elapsed > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
         }
 
-        // 2. 不断触发 debugger 让调试者难以操作
-        // 但注意：这会阻塞主线程，所以使用间隔触发
-        if (!window._debuggerInterval) {
-            window._debuggerInterval = setInterval(function () {
-                // 使用 Function 构造器避免被某些工具拦截
-                (function () {
-                    debugger;
-                })();
-                // 再次清空控制台
-                if (window.console && console.clear) {
-                    console.clear();
+        // 方法2：窗口尺寸差异（侧边栏）
+        const outerW = window.outerWidth;
+        const innerW = window.innerWidth;
+        if (outerW - innerW > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+
+        // 方法3：底部Dock（外高 - 内高）
+        const outerH = window.outerHeight;
+        const innerH = window.innerHeight;
+        if (outerH - innerH > 80) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+
+        // 方法4：documentElement 尺寸变化（二次确认）
+        const now = performance.now();
+        if (now - lastCheckTime > 1000) {
+            const currentWidth = document.documentElement.offsetWidth;
+            if (Math.abs(currentWidth - lastHtmlWidth) > 50) {
+                const start2 = performance.now();
+                debugger;
+                const elapsed2 = performance.now() - start2;
+                if (elapsed2 > 80) {
+                    debugDetected = true;
+                    triggerDefense();
                 }
-            }, 500);
+                lastHtmlWidth = currentWidth;
+            }
+            lastCheckTime = now;
         }
 
-        // 3. 可选：跳转到其他页面（慎用，会影响用户体验）
-        // window.location.href = 'about:blank';
-    }
-
-    // ---------- 5. 使用 Element 尺寸检测法 (更隐蔽) ----------
-    // 原理：当 DevTools 打开时，某些元素的尺寸会变化（如 <html> 或 <body>）
-    // 利用 getBoundingClientRect 检测
-
-    function detectByElementSize() {
-        const threshold = 150; // 毫秒
-        const start = performance.now();
-
-        // 创建一个不可见元素，检测其尺寸变化
-        const div = document.createElement('div');
-        div.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:100px;height:100px;z-index:-9999;';
-        document.body.appendChild(div);
-
-        // 不断检测
-        let lastWidth = div.offsetWidth;
-        let lastHeight = div.offsetHeight;
-
-        setInterval(function () {
-            const w = div.offsetWidth;
-            const h = div.offsetHeight;
-            // 如果尺寸发生变化，可能 DevTools 正在调整
-            if (w !== lastWidth || h !== lastHeight) {
-                // 触发反制
-                handleDevToolsOpen();
-                // 更新记录
-                lastWidth = w;
-                lastHeight = h;
-            }
-        }, 1000);
-
-        // 稍后移除元素（但为了持续检测，保留）
-        // 实际上我们保留它，但为了不影响页面，放在角落
-    }
-
-    // ---------- 6. 监听控制台输出 (console.log 重写) ----------
-    // 如果控制台被打开，某些浏览器会触发 console.log 的调用
-    // 这里不重点使用，因为容易被绕过
-
-    // ---------- 7. 结合多种检测，定期执行 ----------
-    function startDetection() {
-        // 每 2 秒检测一次 debugger 方法
-        setInterval(function () {
-            detectDevTools();
-        }, 2000);
-
-        // 启动尺寸检测
-        detectByElementSize();
-
-        // 额外：检测窗口尺寸变化 (F12 侧边栏会改变窗口大小)
-        let lastWindowWidth = window.outerWidth;
-        let lastWindowHeight = window.outerHeight;
-
-        setInterval(function () {
-            const w = window.outerWidth;
-            const h = window.outerHeight;
-            // 如果窗口尺寸显著变化，可能 DevTools 打开/关闭
-            // 但用户正常调整窗口也会触发，所以结合其他检测
-            if (Math.abs(w - lastWindowWidth) > 100 || Math.abs(h - lastWindowHeight) > 100) {
-                // 不立即触发，而是用 debugger 检测确认
-                detectDevTools();
-            }
-            lastWindowWidth = w;
-            lastWindowHeight = h;
-        }, 3000);
-    }
-
-    // ---------- 8. 防挂起：如果页面被挂起，重新激活检测 ----------
-    // 当页面可见性变化时，重新初始化
-    document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) {
-            // 页面重新可见，确保检测运行
-            if (!window._antiDebugStarted) {
-                startDetection();
-                window._antiDebugStarted = true;
-            }
+        // 方法5：检测 Firebug（旧版）
+        if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
+            debugDetected = true;
+            triggerDefense();
+            return;
         }
-    });
 
-    // ---------- 9. 针对 iframe 内嵌的防护 ----------
-    // 如果页面在 iframe 中，部分检测可能失效，但这里不做特殊处理
+        // ---- ★ 新增检测 ----
+        if (detectDevToolsHooks()) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
 
-    // ---------- 10. 启动 ----------
-    // 标记已启动
-    window._antiDebugStarted = true;
-    startDetection();
+        if (detectBreakpoint()) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
 
-    // 额外：页面加载完成后再次强化
-    window.addEventListener('load', function () {
-        // 再次确保所有监听生效
-        // 重新注册一些关键事件
-        document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
-            return false;
-        });
-    });
+        if (detectWebDriver()) {
+            debugDetected = true;
+            triggerDefense();
+            return;
+        }
+    }
 
-    console.log('🔒 防调试脚本已加载 ✅');
+    // ============================================================
+    // 4. 防御措施（保留原有 + 新增 + 跳转空白页）
+    // ============================================================
+    function triggerDefense() {
+        if (defenseStarted) return;
+        defenseStarted = true;
 
-    // 为了防止被轻易禁用，使用 Object.defineProperty 保护关键函数
-    // （但这在浏览器中有限制，仅做示意）
-    try {
-        Object.defineProperty(window, '_antiDebugStarted', {
+        // ★★★ 新增：跳转到空白页（仅在第一次触发时执行）
+        // 使用 sessionStorage 标记防止无限跳转
+        if (!sessionStorage.getItem('_debug_redirect_done')) {
+            sessionStorage.setItem('_debug_redirect_done', '1');
+            // 延迟一小段时间再跳转，让当前脚本执行完毕
+            setTimeout(() => {
+                // 使用 location.replace 防止留下历史记录
+                location.replace('about:blank');
+            }, 50);
+            // 注意：跳转后页面会卸载，后续代码可能不会执行，但为了保险，仍然继续执行原有防御
+            // 但跳转后页面销毁，以下代码可能没机会执行，但无所谓了。
+            // 如果不想跳转后还执行，可以在这里 return，但跳转是异步的，所以这里继续。
+        }
+
+        // ---- 原有防御 ----
+        // 1) 高频 debugger（每 80ms）
+        setInterval(() => {
+            try { (function () { debugger; })(); } catch (e) { }
+        }, 80);
+
+        // 2) 持续输出垃圾信息
+        setInterval(() => {
+            for (let i = 0; i < 50; i++) {
+                console.log('%c'.repeat(500), 'color: transparent;');
+                console.warn('Debugging blocked');
+            }
+        }, 150);
+
+        // 3) 闪烁标题
+        setInterval(() => {
+            document.title = document.title === '🔒 调试被阻止' ? '正常页面' : '🔒 调试被阻止';
+        }, 300);
+
+        // 4) 干扰 location.hash
+        let c = 0;
+        setInterval(() => {
+            window.location.hash = 'dbg_' + (c++);
+            if (c > 1000) c = 0;
+        }, 400);
+
+        // 5) 阻止 eval 和 Function 恢复 console
+        const originalEval = window.eval;
+        window.eval = function (str) {
+            if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
+                return undefined;
+            }
+            return originalEval(str);
+        };
+        const originalFunction = window.Function;
+        window.Function = function (...args) {
+            const body = args[args.length - 1] || '';
+            if (typeof body === 'string' && (body.includes('console') || body.includes('debugger'))) {
+                return function () { };
+            }
+            return originalFunction.apply(this, args);
+        };
+
+        // 6) 定期重新劫持 console（双重保险）
+        setInterval(() => {
+            consoleMethods.forEach(m => {
+                if (console[m]) console[m] = noop;
+            });
+            console.clear = noop;
+        }, 500);
+
+        // ---- ★ 新增防御 ----
+        // 7) 更密集的 debugger 注入
+        setInterval(() => {
+            eval('(function(){debugger;})();');
+        }, 50);
+
+        // 8) 阻止 console 对象被删除
+        Object.defineProperty(window, 'console', {
+            value: console,
             writable: false,
-            configurable: false,
+            configurable: false
         });
-    } catch (_) { /* 忽略 */ }
+    }
 
-    let h = window.innerHeight
-    let w = window.innerWidth;
-    window.onresize = function () {
-        if (h !== window.innerHeight || w !== window.innerWidth) {
-            window.close(); // 尝试关闭
+    // ============================================================
+    // 5. 启动检测
+    // ============================================================
+    detectDevTools();
+
+    setInterval(detectDevTools, 200);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            detectDevTools();
+        }, 300);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            detectDevTools();
         }
-    };
+    });
 
+    window.addEventListener('load', detectDevTools);
+
+    console.log('%c✅ 安全保护已激活（增强版：多维度检测 + 不可恢复劫持 + 跳转空白页）', 'color: green; font-size: 16px;');
 })();
 
 
