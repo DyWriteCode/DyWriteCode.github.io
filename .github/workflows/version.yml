@@ -25,7 +25,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4
+          pip install 'beautifulsoup4>=4.9.0'
 
       - name: Update resource links with version identifiers
         run: python .github/update_resources.py
