@@ -1,80 +1,51 @@
-// 极致反调试脚本 - 仅使用可靠检测，保留跳转
+/**
+ * ============================================================
+ * 反调试脚本 - 终极优化版
+ * 功能：console劫持、键盘阻止、多维检测、自保护、跳转空白页
+ * ============================================================
+ */
 (function() {
     'use strict';
 
-    // ============================================================
-    // 自保护：检测自身是否被篡改或移除
-    // ============================================================
-    function selfProtect() {
-        Object.defineProperty(window, '__ANTI_DEBUG_LOADED__', {
-            value: true,
-            writable: false,
-            configurable: false
-        });
-
-        setInterval(() => {
-            const scripts = document.querySelectorAll('script[src*="preview_assets/index.js"]');
-            if (scripts.length === 0) {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js';
-                script.crossOrigin = 'anonymous';
-                document.head.appendChild(script);
-                console.warn('⚠️ 检测到反调试脚本被移除，已重新注入');
-            }
-        }, 1000);
-    }
-
-    // ============================================================
-    // 0. 检查调试模式（URL 或 localStorage）
-    // ============================================================
-    const url = window.location.href.toLowerCase();
-    const isDebugByUrl = url.includes('debug') || url.includes('dev') || url.includes('bypass');
-    const isDebugByStorage = localStorage.getItem('debug_mode') === '1';
-    if (isDebugByUrl || isDebugByStorage) {
-        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color: blue; font-size: 16px;');
+    // ========== 0. 调试模式放行（URL 或 localStorage） ==========
+    const url = location.href.toLowerCase();
+    if (url.includes('debug') || url.includes('dev') || url.includes('bypass') || localStorage.getItem('debug_mode') === '1') {
+        console.log('%c🔓 调试模式已启用，反调试已禁用', 'color:blue;font-size:16px;');
         return;
     }
 
-    // 移动端跳过（无法打开 DevTools）
+    // 移动端（触屏）跳过，因无法打开 DevTools
     if ('ontouchstart' in window) {
-        console.log('%c📱 移动端已跳过反调试', 'color: gray; font-size: 14px;');
+        console.log('%c📱 移动端已跳过反调试', 'color:gray;font-size:14px;');
         return;
     }
 
-    // ============================================================
-    // 1. 劫持 console（不可恢复）
-    // ============================================================
+    // ========== 1. console 劫持（不可恢复） ==========
     const noop = () => {};
-    const consoleMethods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd'];
-    consoleMethods.forEach(m => {
-        if (console[m]) {
-            Object.defineProperty(console, m, {
+    const consoleProps = ['log','warn','error','info','debug','trace','dir','dirxml','group','groupEnd','time','timeEnd','table','count','assert','profile','profileEnd','clear'];
+    consoleProps.forEach(prop => {
+        if (console[prop]) {
+            Object.defineProperty(console, prop, {
                 value: noop,
                 writable: false,
                 configurable: false
             });
         }
     });
-    Object.defineProperty(console, 'clear', {
-        value: noop,
-        writable: false,
-        configurable: false
-    });
 
-    // ============================================================
-    // 2. 阻止键盘快捷键、右键、复制
-    // ============================================================
+    // ========== 2. 阻止右键、复制、选择 ==========
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
 
-    const keyBlock = {
-        123: true,
-        '73_shift_ctrl': true,
-        '74_shift_ctrl': true,
-        '67_shift_ctrl': true,
-        '85_ctrl': true,
-        '83_ctrl': true
+    // ========== 3. 阻止开发者工具快捷键 ==========
+    const keyMap = {
+        123: true,                         // F12
+        '73_shift_ctrl': true,             // Ctrl+Shift+I
+        '74_shift_ctrl': true,             // Ctrl+Shift+J
+        '67_shift_ctrl': true,             // Ctrl+Shift+C
+        '85_ctrl': true,                   // Ctrl+U
+        '83_ctrl': true                    // Ctrl+S
     };
     document.addEventListener('keydown', e => {
         const key = e.keyCode || e.which;
@@ -85,23 +56,46 @@
         if (shift) combo += (combo ? '_shift' : 'shift');
         if (combo) combo = key + '_' + combo;
         else combo = String(key);
-        if (keyBlock[combo] || keyBlock[key]) {
+        if (keyMap[combo] || keyMap[key]) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
     });
 
-    // ============================================================
-    // 3. 可靠检测（移除窗口尺寸检测，仅保留性能+钩子+断点+webdriver）
-    // ============================================================
-    let debugDetected = false;
-    let defenseStarted = false;
+    // ========== 4. 检测引擎（多维度，低误报） ==========
     let anomalyCount = 0;
-    const MAX_ANOMALIES = 5;
+    const MAX_ANOMALIES = 5;          // 连续5次异常才触发
+    let isDebugDetected = false;
+    let isDefenseTriggered = false;
     let detectionStarted = false;
 
-    function detectDevToolsHooks() {
+    // --- 帧率检测 ---
+    let fpsCheckCount = 0;
+    let fpsAnomalyCount = 0;
+    const FPS_THRESHOLD = 20;          // 低于20fps视为异常
+    const FPS_CHECK_INTERVAL = 2000;   // 2秒检测周期
+    let lastFpsCheck = performance.now();
+
+    function detectFPS() {
+        const now = performance.now();
+        const delta = now - lastFpsCheck;
+        if (delta < FPS_CHECK_INTERVAL) {
+            const frameInterval = delta / (++fpsCheckCount);
+            if (frameInterval > (1000 / FPS_THRESHOLD)) {
+                fpsAnomalyCount++;
+            } else {
+                fpsAnomalyCount = Math.max(0, fpsAnomalyCount - 0.5);
+            }
+        } else {
+            fpsCheckCount = 0;
+            lastFpsCheck = now;
+        }
+        return fpsAnomalyCount >= 3;   // 连续3次帧率异常
+    }
+
+    // --- DevTools 全局钩子检测 ---
+    function hasDevToolsHooks() {
         const hooks = [
             window.__REACT_DEVTOOLS_GLOBAL_HOOK__,
             window.__VUE_DEVTOOLS_GLOBAL_HOOK__,
@@ -109,60 +103,72 @@
             window.devtools,
             window.chrome?.devtools
         ];
-        for (let hook of hooks) {
-            if (hook) return true;
-        }
-        return false;
+        return hooks.some(hook => !!hook);
     }
 
+    // --- 断点检测（debugger 后变量是否被赋值） ---
     function detectBreakpoint() {
-        let isBreak = false;
+        let flag = false;
         try {
             (function() {
                 debugger;
-                isBreak = true;
+                flag = true;
             })();
-        } catch(e) {}
-        return !isBreak;
+        } catch (_) {}
+        return !flag;   // 如果 flag 为 false，说明 debugger 被跳过（调试器附着）
     }
 
+    // --- webdriver 检测 ---
     function detectWebDriver() {
         return navigator.webdriver === true;
     }
 
+    // --- 元素面板检测（某些调试器会注入属性） ---
+    function detectElementInspect() {
+        const html = document.documentElement;
+        if (html.getAttribute('inspect') !== null) return true;
+        if (html.style['-webkit-device-pixel-ratio']) return true;
+        return false;
+    }
+
+    // --- Firebug（旧版）检测 ---
+    function detectFirebug() {
+        return !!(window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized);
+    }
+
+    // --- 综合检测 ---
     function detectDevTools() {
-        if (debugDetected || !detectionStarted) return;
+        if (isDebugDetected || !detectionStarted) return;
 
         let anomaly = false;
 
-        // 1. 性能检测（阈值 150ms）
+        // 1. 性能检测（debugger 执行耗时 > 150ms 判定异常）
         const start = performance.now();
         debugger;
-        const elapsed = performance.now() - start;
-        if (elapsed > 150) {
+        if (performance.now() - start > 150) {
             anomaly = true;
         }
 
-        // 2. DevTools 钩子
-        if (detectDevToolsHooks()) {
+        // 2. 窗口尺寸差异（侧边栏/底部面板 > 250px）
+        const outerW = window.outerWidth;
+        const innerW = window.innerWidth;
+        const outerH = window.outerHeight;
+        const innerH = window.innerHeight;
+        if ((outerW - innerW > 250) || (outerH - innerH > 250)) {
             anomaly = true;
         }
 
-        // 3. 断点检测
-        if (detectBreakpoint()) {
-            anomaly = true;
-        }
+        // 3. 其他检测
+        if (hasDevToolsHooks()) anomaly = true;
+        if (detectBreakpoint()) anomaly = true;
+        if (detectWebDriver()) anomaly = true;
+        if (detectFirebug()) anomaly = true;
+        if (detectElementInspect()) anomaly = true;
 
-        // 4. webdriver
-        if (detectWebDriver()) {
-            anomaly = true;
-        }
+        // 4. 帧率检测（单独判断，避免与其他检测耦合）
+        if (detectFPS()) anomaly = true;
 
-        // 5. Firebug（旧版）
-        if (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) {
-            anomaly = true;
-        }
-
+        // 更新连续异常计数
         if (anomaly) {
             anomalyCount++;
         } else {
@@ -170,19 +176,17 @@
         }
 
         if (anomalyCount >= MAX_ANOMALIES) {
-            debugDetected = true;
+            isDebugDetected = true;
             triggerDefense();
         }
     }
 
-    // ============================================================
-    // 4. 防御措施（保留全部，含跳转空白页）
-    // ============================================================
+    // ========== 5. 防御触发（保留跳转空白页） ==========
     function triggerDefense() {
-        if (defenseStarted) return;
-        defenseStarted = true;
+        if (isDefenseTriggered) return;
+        isDefenseTriggered = true;
 
-        // ★ 跳转空白页（仅一次）
+        // ---- 跳转空白页（仅一次） ----
         if (!sessionStorage.getItem('_debug_redirect_done')) {
             sessionStorage.setItem('_debug_redirect_done', '1');
             setTimeout(() => {
@@ -190,65 +194,116 @@
             }, 50);
         }
 
-        // ---- 原有全部防御 ----
+        // ---- 高频 debugger 干扰 ----
         setInterval(() => {
-            try { (function(){ debugger; })(); } catch (e) {}
+            try { (function(){ debugger; })(); } catch (_) {}
         }, 80);
 
+        // ---- 控制台刷屏 ----
         setInterval(() => {
             for (let i = 0; i < 50; i++) {
-                console.log('%c'.repeat(500), 'color: transparent;');
+                console.log('%c'.repeat(500), 'color:transparent;');
                 console.warn('Debugging blocked');
             }
         }, 150);
 
+        // ---- 标题闪烁 ----
+        let titleState = 0;
         setInterval(() => {
-            document.title = document.title === '🔒 调试被阻止' ? '正常页面' : '🔒 调试被阻止';
+            document.title = titleState++ % 2 === 0 ? '🔒 调试被阻止' : '正常页面';
         }, 300);
 
-        let c = 0;
+        // ---- 哈希干扰 ----
+        let hashCounter = 0;
         setInterval(() => {
-            window.location.hash = 'dbg_' + (c++);
-            if (c > 1000) c = 0;
+            location.hash = 'dbg_' + (hashCounter++);
+            if (hashCounter > 1000) hashCounter = 0;
         }, 400);
 
-        const originalEval = window.eval;
+        // ---- 阻止 eval/Function 恢复 console ----
+        const origEval = window.eval;
         window.eval = function(str) {
             if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
                 return undefined;
             }
-            return originalEval(str);
+            return origEval(str);
         };
-        const originalFunction = window.Function;
+        const origFunction = window.Function;
         window.Function = function(...args) {
             const body = args[args.length - 1] || '';
             if (typeof body === 'string' && (body.includes('console') || body.includes('debugger'))) {
                 return function() {};
             }
-            return originalFunction.apply(this, args);
+            return origFunction.apply(this, args);
         };
 
+        // ---- 定期重劫持 console ----
         setInterval(() => {
-            consoleMethods.forEach(m => {
-                if (console[m]) console[m] = noop;
+            consoleProps.forEach(prop => {
+                if (console[prop]) {
+                    try {
+                        Object.defineProperty(console, prop, {
+                            value: noop,
+                            writable: false,
+                            configurable: false
+                        });
+                    } catch (_) {}
+                }
             });
-            console.clear = noop;
         }, 500);
 
+        // ---- 额外 debugger 注入（eval 动态） ----
         setInterval(() => {
             eval('(function(){debugger;})();');
         }, 50);
 
-        Object.defineProperty(window, 'console', {
-            value: console,
+        // ---- 锁定 console 对象 ----
+        try {
+            Object.defineProperty(window, 'console', {
+                value: console,
+                writable: false,
+                configurable: false
+            });
+        } catch (_) {}
+    }
+
+    // ========== 6. 自保护机制 ==========
+    function selfProtect() {
+        // 标记自身存在
+        Object.defineProperty(window, '__ANTI_DEBUG_LOADED__', {
+            value: true,
             writable: false,
             configurable: false
         });
+
+        // 监控 script 标签是否被删除
+        setInterval(() => {
+            const scripts = document.querySelectorAll('script[src*="preview_assets/index.js"]');
+            if (scripts.length === 0) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js';
+                script.crossOrigin = 'anonymous';
+                document.head.appendChild(script);
+            }
+        }, 1000);
+
+        // 保护 console 方法不被覆盖（双重保险）
+        setInterval(() => {
+            consoleProps.forEach(prop => {
+                if (console[prop] !== noop) {
+                    try {
+                        Object.defineProperty(console, prop, {
+                            value: noop,
+                            writable: false,
+                            configurable: false
+                        });
+                    } catch (_) {}
+                }
+            });
+        }, 300);
     }
 
-    // ============================================================
-    // 5. 延迟启动检测（2 秒后，且页面完全加载）
-    // ============================================================
+    // ========== 7. 启动检测（延迟 2 秒） ==========
     function startDetection() {
         detectionStarted = true;
         detectDevTools();
@@ -278,10 +333,8 @@
         });
     }
 
-    // ============================================================
-    // 6. 自保护
-    // ============================================================
+    // ========== 8. 启动自保护 ==========
     selfProtect();
 
-    console.log('%c✅ 反调试已启动（仅可靠检测，保留跳转，自保护已启用）', 'color: green; font-size: 16px;');
+    console.log('%c✅ 反调试终极版已启动（含跳转空白页、自保护）', 'color:green;font-size:16px;');
 })();
