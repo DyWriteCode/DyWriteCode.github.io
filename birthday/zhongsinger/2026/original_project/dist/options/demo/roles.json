@@ -4,22 +4,13 @@
         "pat": "拍了拍TA"
     },
     "author": {
-        "name": "小D",
+        "name": "Dy",
         "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
         "pat": "拍了拍我的脑袋"
     },
     "me": {
-        "name": "我",
+        "name": "K&I",
         "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg",
         "pat": "拍了拍自己"
-    },
-    "three": {
-        "name": "张三",
-        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg",
-        "pat": "拍了拍我的肩膀"
-    },
-    "four": {
-        "name": "李四",
-        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png"
     }
 }

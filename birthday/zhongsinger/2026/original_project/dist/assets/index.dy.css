@@ -262,14 +262,14 @@
 
 @font-face {
     font-family: Lato;
-    src: local("Lato"), url(/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/lato400.65c76203.woff) format("woff")
 }
 
 @font-face {
     font-family: Lato;
     font-style: normal;
     font-weight: 900;
-    src: local("Lato Black"), local("Lato-Black"), url(/assets/lato400.65c76203.woff) format("woff")
+    src: local("Lato Black"), local("Lato-Black"), url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/lato400.65c76203.woff) format("woff")
 }
 
 @keyframes msgBounceIn {
