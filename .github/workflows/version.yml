@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -23,19 +23,24 @@ jobs:
           HASH=$(git rev-parse --short HEAD)
           echo "{\"version\":\"${TIMESTAMP}-${HASH}\"}" > version.json
 
-      - name: Install Python and dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4
+          pip install beautifulsoup4 djlint
 
       - name: Replace resource links with version identifiers
         run: python .github/update_resources.py
 
-      - name: Install djlint for HTML formatting
-        run: pip install djlint
-
-      - name: Format all HTML files with djlint
-        run: djlint . --reformat --indent 4
+      - name: Format all HTML files with djlint (4 spaces)
+        run: |
+          djlint . --reformat --indent 4 || true
+          # 检查是否有实际改动
+          if git diff --quiet; then
+            echo "No formatting changes."
+          else
+            echo "Formatting changes applied, will commit."
+            git add .
+          fi
 
       - name: Commit and push changes
         run: |
