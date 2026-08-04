@@ -8,12 +8,12 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from bs4 import BeautifulSoup
 
 def add_version_to_url(url, version_param):
-    """为 URL 添加 ?v=version_param 参数，若已有则替换"""
+    """为 URL 添加 ?v=version_param，若已有 v 参数则替换其值"""
     if not url:
         return url
     parsed = urlparse(url)
     query_dict = parse_qs(parsed.query)
-    query_dict['v'] = [version_param]  # 直接覆盖或新增
+    query_dict['v'] = [version_param]   # 直接覆盖或新增
     new_query = urlencode(query_dict, doseq=True)
     return urlunparse((
         parsed.scheme,
@@ -28,7 +28,7 @@ def update_html(file_path, short_hash, timestamp):
     with open(file_path, 'r', encoding='utf-8') as f:
         soup = BeautifulSoup(f.read(), 'html.parser')
 
-    # ---- 处理 src/href ----
+    # ---- 处理 src / href ----
     for tag in soup.find_all(['script', 'link', 'img', 'video', 'audio', 'source']):
         for attr in ['src', 'href']:
             if not tag.has_attr(attr):
@@ -70,14 +70,14 @@ def update_html(file_path, short_hash, timestamp):
                     new_parts.append(url)
             tag['srcset'] = ', '.join(new_parts)
 
-    # ---- 格式化输出（美化缩进） ----
+    # ---- 格式化输出：4 空格缩进 ----
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(soup.prettify())
+        f.write(soup.prettify(indent=4))
 
 def main():
     with open('version.json', 'r') as f:
         data = json.load(f)
-    full_version = data['version']          # "20260803114553-a1b2c3d"
+    full_version = data['version']
     timestamp = full_version.split('-')[0]
     short_hash = full_version.split('-')[1]
 

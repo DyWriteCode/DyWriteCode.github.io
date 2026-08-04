@@ -1,25 +1,53 @@
 /**
- * 反调试脚本
+ * 反调试
+ * 白名单：localhost、127.0.0.1、/test、/admin 自动跳过
+ * 检测参数极度宽松，几乎不会误触
  */
-(function () {
+(function() {
     'use strict';
 
-    // ========== 调试模式放行 ==========
+    // ============================================================
+    // 0. 白名单（直接放行，不执行任何反调试）
+    // ============================================================
+    const host = location.hostname;
+    const path = location.pathname;
+    const WHITELIST = [
+        /^localhost$/i,
+        /^127\.0\.0\.1$/,
+        /\/test\//,
+        /\/admin\//
+    ];
+    const isWhitelisted = WHITELIST.some(pattern => {
+        if (pattern instanceof RegExp) {
+            return pattern.test(host) || pattern.test(path);
+        }
+        return false;
+    });
+    if (isWhitelisted) {
+        console.log('%c📋 白名单页面，反调试已禁用', 'color:gray;font-size:14px;');
+        return;
+    }
+
+    // ============================================================
+    // 1. 调试模式放行（URL 或 localStorage）
+    // ============================================================
     const url = location.href.toLowerCase();
     if (url.includes('debug') || url.includes('dev') || url.includes('bypass') || localStorage.getItem('debug_mode') === '1') {
         console.log('%c🔓 调试模式已启用，反调试已禁用', 'color:blue;font-size:16px;');
         return;
     }
 
-    // 移动端跳过（无法打开 DevTools）
+    // 移动端跳过
     if ('ontouchstart' in window) {
         console.log('%c📱 移动端已跳过反调试', 'color:gray;font-size:14px;');
         return;
     }
 
-    // ========== console 劫持（不可恢复） ==========
-    const noop = () => { };
-    const consoleProps = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd', 'clear'];
+    // ============================================================
+    // 2. console 劫持（不可恢复）
+    // ============================================================
+    const noop = () => {};
+    const consoleProps = ['log','warn','error','info','debug','trace','dir','dirxml','group','groupEnd','time','timeEnd','table','count','assert','profile','profileEnd','clear'];
     consoleProps.forEach(prop => {
         if (console[prop]) {
             Object.defineProperty(console, prop, {
@@ -30,7 +58,9 @@
         }
     });
 
-    // ========== 键盘/右键阻止 ==========
+    // ============================================================
+    // 3. 键盘/右键阻止
+    // ============================================================
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
@@ -59,17 +89,19 @@
         }
     });
 
-    // ========== 检测逻辑（极宽松） ==========
+    // ============================================================
+    // 4. 检测引擎（极宽松参数）
+    // ============================================================
     let anomalyCount = 0;
-    const MAX_ANOMALIES = 15;          // 连续15次异常才触发
+    const MAX_ANOMALIES = 30;          // 连续30次异常才触发
     let isDebugDetected = false;
     let isDefenseTriggered = false;
     let detectionStarted = false;
 
-    // 帧率检测（阈值 5fps）
+    // 帧率检测（阈值 3fps）
     let fpsCheckCount = 0;
     let fpsAnomalyCount = 0;
-    const FPS_THRESHOLD = 5;
+    const FPS_THRESHOLD = 3;
     const FPS_CHECK_INTERVAL = 3000;
     let lastFpsCheck = performance.now();
 
@@ -104,11 +136,11 @@
     function detectBreakpoint() {
         let flag = false;
         try {
-            (function () {
+            (function() {
                 debugger;
                 flag = true;
             })();
-        } catch (_) { }
+        } catch (_) {}
         return !flag;
     }
 
@@ -132,19 +164,19 @@
 
         let anomaly = false;
 
-        // 性能检测（阈值 500ms）
+        // 性能检测（阈值 800ms）
         const start = performance.now();
         debugger;
-        if (performance.now() - start > 500) {
+        if (performance.now() - start > 800) {
             anomaly = true;
         }
 
-        // 窗口尺寸差异（阈值 500px）
+        // 窗口尺寸差异（阈值 600px）
         const outerW = window.outerWidth;
         const innerW = window.innerWidth;
         const outerH = window.outerHeight;
         const innerH = window.innerHeight;
-        if ((outerW - innerW > 500) || (outerH - innerH > 500)) {
+        if ((outerW - innerW > 600) || (outerH - innerH > 600)) {
             anomaly = true;
         }
 
@@ -168,12 +200,14 @@
         }
     }
 
-    // ========== 防御（保留跳转） ==========
+    // ============================================================
+    // 5. 防御触发（保留跳转空白页）
+    // ============================================================
     function triggerDefense() {
         if (isDefenseTriggered) return;
         isDefenseTriggered = true;
 
-        // ★ 跳转空白页（仅一次）
+        // ★ 跳转空白页
         if (!sessionStorage.getItem('_debug_redirect_done')) {
             sessionStorage.setItem('_debug_redirect_done', '1');
             setTimeout(() => {
@@ -181,11 +215,12 @@
             }, 50);
         }
 
-        // 其他干扰措施...
+        // 高频 debugger 干扰
         setInterval(() => {
-            try { (function () { debugger; })(); } catch (_) { }
+            try { (function(){ debugger; })(); } catch (_) {}
         }, 80);
 
+        // 控制台刷屏
         setInterval(() => {
             for (let i = 0; i < 50; i++) {
                 console.log('%c'.repeat(500), 'color:transparent;');
@@ -193,34 +228,37 @@
             }
         }, 150);
 
+        // 标题闪烁
         let titleState = 0;
         setInterval(() => {
             document.title = titleState++ % 2 === 0 ? '🔒 调试被阻止' : '正常页面';
         }, 300);
 
+        // 哈希干扰
         let hashCounter = 0;
         setInterval(() => {
             location.hash = 'dbg_' + (hashCounter++);
             if (hashCounter > 1000) hashCounter = 0;
         }, 400);
 
+        // 阻止 eval/Function 恢复 console
         const origEval = window.eval;
-        window.eval = function (str) {
+        window.eval = function(str) {
             if (typeof str === 'string' && (str.includes('console') || str.includes('debugger'))) {
                 return undefined;
             }
             return origEval(str);
         };
-
         const origFunction = window.Function;
-        window.Function = function (...args) {
+        window.Function = function(...args) {
             const body = args[args.length - 1] || '';
             if (typeof body === 'string' && (body.includes('console') || body.includes('debugger'))) {
-                return function () { };
+                return function() {};
             }
             return origFunction.apply(this, args);
         };
 
+        // 定期重劫持 console
         setInterval(() => {
             consoleProps.forEach(prop => {
                 if (console[prop]) {
@@ -230,25 +268,29 @@
                             writable: false,
                             configurable: false
                         });
-                    } catch (_) { }
+                    } catch (_) {}
                 }
             });
         }, 500);
 
+        // 额外 debugger 注入
         setInterval(() => {
             eval('(function(){debugger;})();');
         }, 50);
 
+        // 锁定 console
         try {
             Object.defineProperty(window, 'console', {
                 value: console,
                 writable: false,
                 configurable: false
             });
-        } catch (_) { }
+        } catch (_) {}
     }
 
-    // ========== 自保护 ==========
+    // ============================================================
+    // 6. 自保护
+    // ============================================================
     function selfProtect() {
         Object.defineProperty(window, '__ANTI_DEBUG_LOADED__', {
             value: true,
@@ -275,17 +317,19 @@
                             writable: false,
                             configurable: false
                         });
-                    } catch (_) { }
+                    } catch (_) {}
                 }
             });
         }, 300);
     }
 
-    // ========== 启动（延迟5秒，检测间隔1秒） ==========
+    // ============================================================
+    // 7. 启动（延迟 8 秒，检测间隔 1.5 秒）
+    // ============================================================
     function startDetection() {
         detectionStarted = true;
         detectDevTools();
-        setInterval(detectDevTools, 1000);
+        setInterval(detectDevTools, 1500);
 
         let resizeTimer;
         window.addEventListener('resize', () => {
@@ -303,10 +347,10 @@
     }
 
     if (document.readyState === 'complete') {
-        setTimeout(startDetection, 5000);
+        setTimeout(startDetection, 8000);
     } else {
         window.addEventListener('load', () => {
-            setTimeout(startDetection, 5000);
+            setTimeout(startDetection, 8000);
         });
     }
 
