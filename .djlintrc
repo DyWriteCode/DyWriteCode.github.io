@@ -1,6 +1,7 @@
 {
   "indent": 4,
-  "max_attributes": 3,
+  "ignore": "H030,H031,H032,H033,H034,H036,H037,H038,H039,H040,H041,H042,H043,H044,H045",
+  "max_attributes": 10,
   "attribute_separator": " >\n",
   "format_attributes": true,
   "format_css": true,
@@ -8,5 +9,6 @@
   "blank_lines": { "before": 1, "after": 1 },
   "sort_attributes": ["class", "id", "style", "href", "src", "type"],
   "block_padding": false,
-  "tag_style": "as-is"
+  "tag_style": "as-is",
+  "exclude": "original_project"
 }

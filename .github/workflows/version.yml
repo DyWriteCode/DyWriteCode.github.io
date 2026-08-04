@@ -12,8 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -23,7 +22,7 @@ jobs:
           HASH=$(git rev-parse --short HEAD)
           echo "{\"version\":\"${TIMESTAMP}-${HASH}\"}" > version.json
 
-      - name: Install Python dependencies
+      - name: Install Python and dependencies
         run: |
           python -m pip install --upgrade pip
           pip install beautifulsoup4 djlint
@@ -31,18 +30,10 @@ jobs:
       - name: Replace resource links with version identifiers
         run: python .github/update_resources.py
 
-      - name: Format all HTML files with djlint (4 spaces)
-        run: |
-          djlint . --reformat --indent 4 || true
-          # 检查是否有实际改动
-          if git diff --quiet; then
-            echo "No formatting changes."
-          else
-            echo "Formatting changes applied, will commit."
-            git add .
-          fi
+      - name: Format HTML with djlint (excluding original_project)
+        run: djlint . --reformat --indent 4 --exclude=original_project --ignore=H030,H031,H032,H033,H034,H036,H037,H038,H039,H040,H041,H042,H043,H044,H045
 
-      - name: Commit and push changes
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
