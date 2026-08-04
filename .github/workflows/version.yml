@@ -12,7 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3  # 临时改回 v3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -22,19 +23,25 @@ jobs:
           HASH=$(git rev-parse --short HEAD)
           echo "{\"version\":\"${TIMESTAMP}-${HASH}\"}" > version.json
 
-      - name: Install Python dependencies
+      - name: Install Python and dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install 'beautifulsoup4>=4.9.0'
+          pip install beautifulsoup4
 
-      - name: Update resource links with version identifiers
+      - name: Replace resource links with version identifiers
         run: python .github/update_resources.py
 
-      - name: Commit and push
+      - name: Install djlint for HTML formatting
+        run: pip install djlint
+
+      - name: Format all HTML files with djlint
+        run: djlint . --reformat --indent 4
+
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.json
           git add .
-          git diff --staged --quiet || git commit -m "chore: update version.json and resource links [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: update version.json and resource links, formatted HTML [skip ci]"
           git push

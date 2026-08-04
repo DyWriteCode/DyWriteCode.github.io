@@ -1,24 +1,33 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" name="viewport"/>
-  <meta content="no-referrer" name="referrer"/>
-  <meta content="no-referrer" name="referrer"/>
-  <link href="https://cdn.jsdmirror.com?v=20260804050804" rel="preconnect"/>
-  <link href="https://cdn.jsdmirror.com?v=20260804050804" rel="dns-prefetch"/>
-  <link href="index.encryption.css?v=20260804050804" rel="stylesheet"/>
-  <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260804050804" rel="icon" type="image/png"/>
-  <link as="audio" crossorigin="anonymous" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260804050804" rel="preload" type="audio/mpeg"/>
-  <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260804050804">
-  </script>
-  <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260804050804" type="module">
-  </script>
-  <title>
-   秘密消息 · 解码器
-  </title>
-  <style>
-   /* ===== 全局重置 & 字体 ===== */
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" name="viewport" />
+    <meta content="no-referrer" name="referrer" />
+    <meta content="no-referrer" name="referrer" />
+    <link href="https://cdn.jsdmirror.com?v=20260804040641" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260804040641" rel="dns-prefetch" />
+    <link href="index.encryption.css?v=20260804040641" rel="stylesheet" />
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260804040641"
+        rel="icon" type="image/png" />
+    <link as="audio" crossorigin="anonymous"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260804040641"
+        rel="preload" type="audio/mpeg" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260804040641">
+        </script>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260804040641"
+        type="module">
+        </script>
+    <title>
+        秘密消息 · 解码器
+    </title>
+    <style>
+        /* ===== 全局重置 & 字体 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -342,6 +351,7 @@
                 opacity: 0;
                 transform: translateY(12px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -467,116 +477,120 @@
             margin-top: 6px;
             font-style: italic;
         }
-  </style>
- </head>
- <body>
-  <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260804050804" type="module">
-  </script>
-  <script crossorigin="" src="click.n.js?v=20260804050804" type="module">
-  </script>
-  <!-- ===== 涟漪容器（点击特效） ===== -->
-  <div class="ripple-container" id="rippleContainer">
-  </div>
-  <!-- ===== 主容器 ===== -->
-  <div class="container" id="app">
-   <!-- 头部 -->
-   <header class="header">
-    <div class="avatar">
-     ✦
+    </style>
+</head>
+
+<body>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260804040641"
+        type="module">
+        </script>
+    <script crossorigin="" src="click.n.js?v=20260804040641" type="module">
+    </script>
+    <!-- ===== 涟漪容器（点击特效） ===== -->
+    <div class="ripple-container" id="rippleContainer">
     </div>
-    <h1 class="site-title">
-     秘密消息
-     <span>
-      · 解码器
-     </span>
-    </h1>
-   </header>
-   <!-- 内容 -->
-   <div class="content">
-    <!-- 原始消息展示 -->
-    <p>
-     <span class="highlight">
-      message.txt
-     </span>
-     中藏着一行提示和一段密文：
-    </p>
-    <div class="code-block">
-     download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
+    <!-- ===== 主容器 ===== -->
+    <div class="container" id="app">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="avatar">
+                ✦
+            </div>
+            <h1 class="site-title">
+                秘密消息
+                <span>
+                    · 解码器
+                </span>
+            </h1>
+        </header>
+        <!-- 内容 -->
+        <div class="content">
+            <!-- 原始消息展示 -->
+            <p>
+                <span class="highlight">
+                    message.txt
+                </span>
+                中藏着一行提示和一段密文：
+            </p>
+            <div class="code-block">
+                download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
 
                 Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=
+            </div>
+            <div class="divider">
+                · · ·
+            </div>
+            <!-- 解码器 -->
+            <div class="decoder-section">
+                <div class="decoder-title">
+                    🔐 Base64 解码器
+                    <small>
+                        — 点击「解码」逐层揭开
+                    </small>
+                    <span class="counter-badge" id="stepBadge">
+                        第 0 层
+                    </span>
+                </div>
+                <div class="input-group">
+                    <textarea id="codeInput"
+                        spellcheck="false">Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=</textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="decodeBtn">
+                        🔓 解码
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        ↻ 重置
+                    </button>
+                    <button class="btn btn-outline" id="autoBtn">
+                        ⚡ 自动解码
+                    </button>
+                </div>
+                <div class="status-msg" id="statusMsg">
+                </div>
+                <!-- 结果 -->
+                <div class="result-area" id="resultArea">
+                    <div class="label">
+                        📄 解码结果
+                    </div>
+                    <div class="result-text empty" id="resultText">
+                        点击「解码」开始
+                    </div>
+                    <div class="result-meta">
+                        <span id="resultMeta">
+                            等待操作…
+                        </span>
+                        <span class="badge" id="isBase64Badge">
+                            Base64
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 页脚 -->
+        <footer class="footer">
+            <span>
+                © 2026 · 光影之间
+            </span>
+            <div>
+                <a href="javascript:void(0)" onclick="resetAll()">
+                    重置
+                </a>
+                <span style="margin:0 8px;opacity:0.3;">
+                    ·
+                </span>
+                <a href="javascript:void(0)" onclick="copyResult()">
+                    复制结果
+                </a>
+            </div>
+        </footer>
     </div>
-    <div class="divider">
-     · · ·
-    </div>
-    <!-- 解码器 -->
-    <div class="decoder-section">
-     <div class="decoder-title">
-      🔐 Base64 解码器
-      <small>
-       — 点击「解码」逐层揭开
-      </small>
-      <span class="counter-badge" id="stepBadge">
-       第 0 层
-      </span>
-     </div>
-     <div class="input-group">
-      <textarea id="codeInput" spellcheck="false">Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=</textarea>
-     </div>
-     <div class="btn-group">
-      <button class="btn btn-primary" id="decodeBtn">
-       🔓 解码
-      </button>
-      <button class="btn btn-secondary" id="resetBtn">
-       ↻ 重置
-      </button>
-      <button class="btn btn-outline" id="autoBtn">
-       ⚡ 自动解码
-      </button>
-     </div>
-     <div class="status-msg" id="statusMsg">
-     </div>
-     <!-- 结果 -->
-     <div class="result-area" id="resultArea">
-      <div class="label">
-       📄 解码结果
-      </div>
-      <div class="result-text empty" id="resultText">
-       点击「解码」开始
-      </div>
-      <div class="result-meta">
-       <span id="resultMeta">
-        等待操作…
-       </span>
-       <span class="badge" id="isBase64Badge">
-        Base64
-       </span>
-      </div>
-     </div>
-    </div>
-   </div>
-   <!-- 页脚 -->
-   <footer class="footer">
-    <span>
-     © 2026 · 光影之间
-    </span>
-    <div>
-     <a href="javascript:void(0)" onclick="resetAll()">
-      重置
-     </a>
-     <span style="margin:0 8px;opacity:0.3;">
-      ·
-     </span>
-     <a href="javascript:void(0)" onclick="copyResult()">
-      复制结果
-     </a>
-    </div>
-   </footer>
-  </div>
-  <!-- ============================================================ -->
-  <!-- JavaScript -->
-  <!-- ============================================================ -->
-  <script>
-   (function() {
+    <!-- ============================================================ -->
+    <!-- JavaScript -->
+    <!-- ============================================================ -->
+    <script>
+        (function () {
             'use strict';
 
             // ===== DOM 引用 =====
@@ -813,7 +827,7 @@
                     'radial-gradient(circle, #a08a70, #6a5a42, #a08a70 100%)',
                 ];
 
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     const ripple = document.createElement('div');
                     ripple.className = 'ripple';
                     const x = e.clientX;
@@ -825,7 +839,7 @@
                     ripple.style.top = (y - size / 2) + 'px';
                     ripple.style.background = colors[0];
                     container.appendChild(ripple);
-                    ripple.addEventListener('animationend', function() {
+                    ripple.addEventListener('animationend', function () {
                         ripple.remove();
                     });
                 });
@@ -846,7 +860,7 @@
                 statusMsg.textContent = '';
 
                 // 绑定事件
-                decodeBtn.addEventListener('click', function() {
+                decodeBtn.addEventListener('click', function () {
                     if (isAutoRunning) {
                         // 如果自动解码正在运行，先停止
                         if (autoTimer) {
@@ -864,7 +878,7 @@
                 autoBtn.addEventListener('click', autoDecode);
 
                 // 回车键快捷解码（在 textarea 中按 Ctrl+Enter 或 Cmd+Enter）
-                codeInput.addEventListener('keydown', function(e) {
+                codeInput.addEventListener('keydown', function (e) {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                         e.preventDefault();
                         decodeBtn.click();
@@ -887,6 +901,7 @@
             }
 
         })();
-  </script>
- </body>
+    </script>
+</body>
+
 </html>

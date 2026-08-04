@@ -1,0 +1,12 @@
+{
+  "indent": 4,
+  "max_attributes": 3,
+  "attribute_separator": " >\n",
+  "format_attributes": true,
+  "format_css": true,
+  "format_js": true,
+  "blank_lines": { "before": 1, "after": 1 },
+  "sort_attributes": ["class", "id", "style", "href", "src", "type"],
+  "block_padding": false,
+  "tag_style": "as-is"
+}

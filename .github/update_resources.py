@@ -8,12 +8,12 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from bs4 import BeautifulSoup
 
 def add_version_to_url(url, version_param):
-    """为 URL 添加 ?v=version_param，若已有 v 参数则替换其值"""
+    """为 URL 添加 ?v=version_param，若已有则替换"""
     if not url:
         return url
     parsed = urlparse(url)
     query_dict = parse_qs(parsed.query)
-    query_dict['v'] = [version_param]   # 直接覆盖或新增
+    query_dict['v'] = [version_param]
     new_query = urlencode(query_dict, doseq=True)
     return urlunparse((
         parsed.scheme,
@@ -28,7 +28,7 @@ def update_html(file_path, short_hash, timestamp):
     with open(file_path, 'r', encoding='utf-8') as f:
         soup = BeautifulSoup(f.read(), 'html.parser')
 
-    # ---- 处理 src / href ----
+    # 处理 src / href
     for tag in soup.find_all(['script', 'link', 'img', 'video', 'audio', 'source']):
         for attr in ['src', 'href']:
             if not tag.has_attr(attr):
@@ -36,17 +36,17 @@ def update_html(file_path, short_hash, timestamp):
             value = tag[attr]
             if not value:
                 continue
-            # CDN 链接：替换 @latest -> @短哈希，并添加 ?v
+            # CDN 链接替换 @latest -> @short_hash，并加 ?v
             if 'cdn.jsdmirror.com' in value:
                 if '@latest' in value:
                     value = value.replace('@latest', f'@{short_hash}')
                 tag[attr] = add_version_to_url(value, timestamp)
             else:
-                # 非 CDN：仅对相对路径添加 ?v
+                # 非 CDN 相对路径加 ?v
                 if not re.match(r'^(https?:)?//', value) and not value.startswith('data:'):
                     tag[attr] = add_version_to_url(value, timestamp)
 
-        # ---- 处理 srcset ----
+        # 处理 srcset
         if tag.has_attr('srcset'):
             srcset_value = tag['srcset']
             parts = srcset_value.split(',')
@@ -70,9 +70,9 @@ def update_html(file_path, short_hash, timestamp):
                     new_parts.append(url)
             tag['srcset'] = ', '.join(new_parts)
 
-    # ---- 格式化输出：4 空格缩进 ----
+    # 不格式化，直接写入修改后的内容
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(soup.prettify(indent=4))
+        f.write(str(soup))
 
 def main():
     with open('version.json', 'r') as f:

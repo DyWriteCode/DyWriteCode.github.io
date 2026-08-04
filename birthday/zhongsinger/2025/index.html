@@ -1,19 +1,27 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-  <meta content="no-referrer" name="referrer"/>
-  <link as="audio" crossorigin="anonymous" href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/music/bir.mp3?v=20260804050804" rel="preload" type="audio/mpeg"/>
-  <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/images/happy.ico?v=20260804050804" rel="icon" type="image/png"/>
-  <link href="style.css?v=20260804050804" rel="stylesheet"/>
-  <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/preview_assets/check-update.js?v=20260804050804" type="module">
-  </script>
-  <title>
-   钟芯尔的生日空间
-  </title>
-  <style>
-   * {
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <meta content="no-referrer" name="referrer" />
+    <link as="audio" crossorigin="anonymous"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/music/bir.mp3?v=20260804040641"
+        rel="preload" type="audio/mpeg" />
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/images/happy.ico?v=20260804040641"
+        rel="icon" type="image/png" />
+    <link href="style.css?v=20260804040641" rel="stylesheet" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/preview_assets/check-update.js?v=20260804040641"
+        type="module">
+        </script>
+    <title>
+        钟芯尔的生日空间
+    </title>
+    <style>
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -203,44 +211,47 @@
                 transform: translateY(-10px) scale(1.05);
             }
         }
-  </style>
- </head>
- <body>
-  <script src="click.js?v=20260804050804" type="text/javascript">
-  </script>
-  <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/preview_assets/index.js?v=20260804050804">
-  </script>
-  <!--背景音乐-->
-  <audio autoplay="" id="music" loop="" preload="auto" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/music/bir.mp3?v=20260804050804">
-  </audio>
-  <div class="container">
-   <div class="stars" id="stars">
-   </div>
-   <div class="heart-gate">
-    <div class="heart">
+    </style>
+</head>
+
+<body>
+    <script src="click.js?v=20260804040641" type="text/javascript">
+    </script>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/preview_assets/index.js?v=20260804040641">
+        </script>
+    <!--背景音乐-->
+    <audio autoplay="" id="music" loop="" preload="auto"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@977e3a9/birthday/zhongsinger/2025/music/bir.mp3?v=20260804040641">
+    </audio>
+    <div class="container">
+        <div class="stars" id="stars">
+        </div>
+        <div class="heart-gate">
+            <div class="heart">
+            </div>
+            <div class="gate-knob" onclick="openHeartGate()">
+            </div>
+        </div>
+        <div class="welcome-text">
+            <h1>
+                钟芯尔的
+                <br />
+                生日空间
+            </h1>
+            <p>
+                点击心形门环，进入专属你的生日世界
+            </p>
+            <button class="enter-btn" onclick="openHeartGate()">
+                开启神秘之旅
+            </button>
+        </div>
+        <div class="message-bubble">
+            当你进入空间，将收到一个特别的惊喜
+        </div>
     </div>
-    <div class="gate-knob" onclick="openHeartGate()">
-    </div>
-   </div>
-   <div class="welcome-text">
-    <h1>
-     钟芯尔的
-     <br/>
-     生日空间
-    </h1>
-    <p>
-     点击心形门环，进入专属你的生日世界
-    </p>
-    <button class="enter-btn" onclick="openHeartGate()">
-     开启神秘之旅
-    </button>
-   </div>
-   <div class="message-bubble">
-    当你进入空间，将收到一个特别的惊喜
-   </div>
-  </div>
-  <script>
-   function createStars() {
+    <script>
+        function createStars() {
             const stars = document.getElementById('stars');
             const starCount = 50;
 
@@ -278,6 +289,7 @@
             createStars();
             setInterval("toggleSound()", 10);
         };
-  </script>
- </body>
+    </script>
+</body>
+
 </html>
