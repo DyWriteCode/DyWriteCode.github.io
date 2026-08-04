@@ -76,7 +76,7 @@ def update_html(file_path, short_hash, timestamp):
 
     # ---- 格式化输出：4 空格缩进 ----
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(soup.prettify(formatter=custom_indent))
+        f.write(soup.prettify())
 
 def main():
     with open('version.json', 'r') as f:
