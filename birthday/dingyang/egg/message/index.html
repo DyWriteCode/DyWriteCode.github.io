@@ -1,32 +1,28 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
-
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" name="viewport" />
-    <meta content="no-referrer" name="referrer" />
-    <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260804040641" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260804040641" rel="dns-prefetch" />
-    <link href="index.encryption.css?v=20260804040641" rel="stylesheet" />
-    <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260804040641"
-        rel="icon" type="image/png" />
-    <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260804040641"
-        rel="preload" type="audio/mpeg" />
-    <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260804040641">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+              name="viewport" />
+        <meta content="no-referrer" name="referrer" />
+        <meta content="no-referrer" name="referrer" />
+        <link href="https://cdn.jsdmirror.com?v=20260804114220" rel="preconnect" />
+        <link href="https://cdn.jsdmirror.com?v=20260804114220" rel="dns-prefetch" />
+        <link href="index.encryption.css?v=20260804114220" rel="stylesheet" />
+        <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260804114220"
+              rel="icon"
+              type="image/png" />
+        <link as="audio"
+              crossorigin="anonymous"
+              href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260804114220"
+              rel="preload"
+              type="audio/mpeg" />
+        <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260804114220">
         </script>
-    <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260804040641"
-        type="module">
+        <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260804114220" type="module">
         </script>
-    <title>
-        秘密消息 · 解码器
-    </title>
-    <style>
+        <title>秘密消息 · 解码器</title>
+        <style>
         /* ===== 全局重置 & 字体 ===== */
         * {
             margin: 0;
@@ -477,119 +473,77 @@
             margin-top: 6px;
             font-style: italic;
         }
-    </style>
-</head>
-
-<body>
-    <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260804040641"
-        type="module">
+        </style>
+    </head>
+    <body>
+        <script crossorigin="" src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260804114220" type="module">
         </script>
-    <script crossorigin="" src="click.n.js?v=20260804040641" type="module">
-    </script>
-    <!-- ===== 涟漪容器（点击特效） ===== -->
-    <div class="ripple-container" id="rippleContainer">
-    </div>
-    <!-- ===== 主容器 ===== -->
-    <div class="container" id="app">
-        <!-- 头部 -->
-        <header class="header">
-            <div class="avatar">
-                ✦
-            </div>
-            <h1 class="site-title">
-                秘密消息
-                <span>
-                    · 解码器
-                </span>
-            </h1>
-        </header>
-        <!-- 内容 -->
-        <div class="content">
-            <!-- 原始消息展示 -->
-            <p>
-                <span class="highlight">
-                    message.txt
-                </span>
-                中藏着一行提示和一段密文：
-            </p>
-            <div class="code-block">
-                download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
-
-                Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=
-            </div>
-            <div class="divider">
-                · · ·
-            </div>
-            <!-- 解码器 -->
-            <div class="decoder-section">
-                <div class="decoder-title">
-                    🔐 Base64 解码器
-                    <small>
-                        — 点击「解码」逐层揭开
-                    </small>
-                    <span class="counter-badge" id="stepBadge">
-                        第 0 层
-                    </span>
+        <script crossorigin="" src="click.n.js?v=20260804114220" type="module"></script>
+        <!-- ===== 涟漪容器（点击特效） ===== -->
+        <div class="ripple-container" id="rippleContainer"></div>
+        <!-- ===== 主容器 ===== -->
+        <div class="container" id="app">
+            <!-- 头部 -->
+            <header class="header">
+                <div class="avatar">✦</div>
+                <h1 class="site-title">
+                    秘密消息
+                    <span>· 解码器</span>
+                </h1>
+            </header>
+            <!-- 内容 -->
+            <div class="content">
+                <!-- 原始消息展示 -->
+                <p>
+                    <span class="highlight">message.txt</span>
+                    中藏着一行提示和一段密文：
+                </p>
+                <div class="code-block">
+                    download https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/base54_loop.py
+                    Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=
                 </div>
-                <div class="input-group">
-                    <textarea id="codeInput"
-                        spellcheck="false">Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=</textarea>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" id="decodeBtn">
-                        🔓 解码
-                    </button>
-                    <button class="btn btn-secondary" id="resetBtn">
-                        ↻ 重置
-                    </button>
-                    <button class="btn btn-outline" id="autoBtn">
-                        ⚡ 自动解码
-                    </button>
-                </div>
-                <div class="status-msg" id="statusMsg">
-                </div>
-                <!-- 结果 -->
-                <div class="result-area" id="resultArea">
-                    <div class="label">
-                        📄 解码结果
+                <div class="divider">· · ·</div>
+                <!-- 解码器 -->
+                <div class="decoder-section">
+                    <div class="decoder-title">
+                        🔐 Base64 解码器
+                        <small>— 点击「解码」逐层揭开</small>
+                        <span class="counter-badge" id="stepBadge">第 0 层</span>
                     </div>
-                    <div class="result-text empty" id="resultText">
-                        点击「解码」开始
+                    <div class="input-group">
+                        <textarea id="codeInput" spellcheck="false">Vm10YWEyUXhSblJWV0dSUVZteGFVMVpyV21GVU1WWnlXa1UxVUZWVU1Eaz0=</textarea>
                     </div>
-                    <div class="result-meta">
-                        <span id="resultMeta">
-                            等待操作…
-                        </span>
-                        <span class="badge" id="isBase64Badge">
-                            Base64
-                        </span>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="decodeBtn">🔓 解码</button>
+                        <button class="btn btn-secondary" id="resetBtn">↻ 重置</button>
+                        <button class="btn btn-outline" id="autoBtn">⚡ 自动解码</button>
+                    </div>
+                    <div class="status-msg" id="statusMsg"></div>
+                    <!-- 结果 -->
+                    <div class="result-area" id="resultArea">
+                        <div class="label">📄 解码结果</div>
+                        <div class="result-text empty" id="resultText">点击「解码」开始</div>
+                        <div class="result-meta">
+                            <span id="resultMeta">等待操作…</span>
+                            <span class="badge" id="isBase64Badge">Base64</span>
+                        </div>
                     </div>
                 </div>
             </div>
+            <!-- 页脚 -->
+            <footer class="footer">
+                <span>© 2026 · 光影之间</span>
+                <div>
+                    <a href="javascript:void(0)" onclick="resetAll()">重置</a>
+                    <span style="margin:0 8px;opacity:0.3;">·</span>
+                    <a href="javascript:void(0)" onclick="copyResult()">复制结果</a>
+                </div>
+            </footer>
         </div>
-        <!-- 页脚 -->
-        <footer class="footer">
-            <span>
-                © 2026 · 光影之间
-            </span>
-            <div>
-                <a href="javascript:void(0)" onclick="resetAll()">
-                    重置
-                </a>
-                <span style="margin:0 8px;opacity:0.3;">
-                    ·
-                </span>
-                <a href="javascript:void(0)" onclick="copyResult()">
-                    复制结果
-                </a>
-            </div>
-        </footer>
-    </div>
-    <!-- ============================================================ -->
-    <!-- JavaScript -->
-    <!-- ============================================================ -->
-    <script>
+        <!-- ============================================================ -->
+        <!-- JavaScript -->
+        <!-- ============================================================ -->
+        <script>
         (function () {
             'use strict';
 
@@ -901,7 +855,6 @@
             }
 
         })();
-    </script>
-</body>
-
+        </script>
+    </body>
 </html>
