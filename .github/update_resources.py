@@ -7,6 +7,10 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from bs4 import BeautifulSoup
 
+def custom_indent(tag):
+    # 缩进4个空格
+    return "    "
+
 def add_version_to_url(url, version_param):
     """为 URL 添加 ?v=version_param，若已有 v 参数则替换其值"""
     if not url:
@@ -72,7 +76,7 @@ def update_html(file_path, short_hash, timestamp):
 
     # ---- 格式化输出：4 空格缩进 ----
     with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(soup.prettify(indent=4))
+        f.write(soup.prettify(formatter=custom_indent))
 
 def main():
     with open('version.json', 'r') as f:
