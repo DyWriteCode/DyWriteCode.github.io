@@ -4,113 +4,121 @@
 import json
 import re
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
-from bs4 import BeautifulSoup
 
 def add_version_to_url(url, version_param):
     """为 URL 添加 ?v=version_param，若已有 v 参数则替换其值"""
     if not url:
         return url
-    parsed = urlparse(url)
-    query_dict = parse_qs(parsed.query)
-    query_dict['v'] = [version_param]
-    new_query = urlencode(query_dict, doseq=True)
-    return urlunparse((
-        parsed.scheme,
-        parsed.netloc,
-        parsed.path,
-        parsed.params,
-        new_query,
-        parsed.fragment
-    ))
+    # 如果已经有 v 参数，替换它；否则追加
+    if '?v=' in url:
+        return re.sub(r'([?&])v=[^&]*', r'\1v=' + version_param, url)
+    else:
+        separator = '&' if '?' in url else '?'
+        return url + separator + 'v=' + version_param
 
-def process_style_value(style_value, short_hash, timestamp):
-    """
-    处理 style 属性值或 <style> 标签文本中的 url(...) 和 @import url(...)
-    """
-    if not style_value or not isinstance(style_value, str):
-        return style_value
-
-    # 匹配 url(...) 和 @import url(...)
-    # 支持单双引号或无引号，支持带查询参数
-    pattern = r'(@import\s+)?url\((["\']?)([^"\'()]*)\2\)'
-
-    def replace_url(match):
-        prefix = match.group(1) or ''
-        quote = match.group(2)
-        url = match.group(3).strip()
+def process_style_value(style_text, short_hash, timestamp):
+    """替换 style 文本中的 url(...)"""
+    def replace_url(m):
+        quote = m.group(1) or ''
+        url = m.group(2).strip()
         if not url:
-            return match.group(0)
-        # 处理 CDN 链接
+            return m.group(0)
+        # 处理 CDN 链接中的 @latest
         if 'cdn.jsdmirror.com' in url:
             if '@latest' in url:
                 url = url.replace('@latest', f'@{short_hash}')
             url = add_version_to_url(url, timestamp)
         else:
-            # 非 CDN：仅对相对路径添加 ?v
+            # 非 CDN 的相对路径
             if not re.match(r'^(https?:)?//', url) and not url.startswith('data:'):
                 url = add_version_to_url(url, timestamp)
-        return f'{prefix}url({quote}{url}{quote})'
+        return f'url({quote}{url}{quote})'
+    
+    # 匹配 url(...) 和 @import url(...)
+    return re.sub(r'(@import\s+)?url\((["\']?)([^"\'()]*)\2\)', replace_url, style_text)
 
-    return re.sub(pattern, replace_url, style_value)
+def process_file_content(content, short_hash, timestamp):
+    """
+    使用正则替换所有资源链接，不修改其他内容
+    """
+
+    # 1. 全局替换 CDN 链接中的 @latest -> @hash
+    # 使用 lookbehind 确保只匹配 cdn.jsdmirror.com 的路径部分
+    content = re.sub(
+        r'(cdn\.jsdmirror\.com[^"\'/\s]*?)/@latest',
+        r'\1/@' + short_hash,
+        content
+    )
+
+    # 2. 处理 src / href / poster / data 等属性
+    attrs = ['src', 'href', 'poster', 'data', 'action', 'manifest']
+    for attr in attrs:
+        pattern = r'(' + attr + r')\s*=\s*(["\'])([^"\']*?)\2'
+        def replace_attr(m):
+            key = m.group(1)
+            quote = m.group(2)
+            url = m.group(3)
+            if url and not url.startswith('data:') and not url.startswith('#'):
+                new_url = add_version_to_url(url, timestamp)
+                return f'{key}={quote}{new_url}{quote}'
+            return m.group(0)
+        content = re.sub(pattern, replace_attr, content)
+
+    # 3. 处理 srcset（可能包含多个 URL）
+    pattern = r'srcset\s*=\s*(["\'])([^"\']*?)\1'
+    def replace_srcset(m):
+        quote = m.group(1)
+        srcset_value = m.group(2)
+        parts = srcset_value.split(',')
+        new_parts = []
+        for part in parts:
+            part = part.strip()
+            tokens = part.split()
+            if not tokens:
+                continue
+            url = tokens[0]
+            rest = ' '.join(tokens[1:])
+            if url and not url.startswith('data:') and not url.startswith('#'):
+                url = add_version_to_url(url, timestamp)
+            new_parts.append((url + (' ' + rest if rest else '')).strip())
+        return f'srcset={quote}{", ".join(new_parts)}{quote}'
+    content = re.sub(pattern, replace_srcset, content)
+
+    # 4. 处理 style 属性
+    pattern = r'style\s*=\s*(["\'])([^"\']*?)\1'
+    def replace_style_attr(m):
+        quote = m.group(1)
+        style_value = m.group(2)
+        new_style = process_style_value(style_value, short_hash, timestamp)
+        return f'style={quote}{new_style}{quote}'
+    content = re.sub(pattern, replace_style_attr, content)
+
+    # 5. 处理 <style> 标签内的内容
+    def replace_style_tag(m):
+        opening = m.group(1)
+        inner = m.group(2)
+        closing = m.group(3)
+        new_inner = process_style_value(inner, short_hash, timestamp)
+        return opening + new_inner + closing
+    content = re.sub(
+        r'(<style\b[^>]*>)(.*?)(</style>)',
+        replace_style_tag,
+        content,
+        flags=re.DOTALL
+    )
+
+    return content
 
 def update_html(file_path, short_hash, timestamp):
     with open(file_path, 'r', encoding='utf-8') as f:
-        soup = BeautifulSoup(f.read(), 'html.parser')
-
-    # 处理标签属性
-    for tag in soup.find_all(['script', 'link', 'img', 'video', 'audio', 'source', 'style']):
-        # 1. src / href
-        for attr in ['src', 'href']:
-            if not tag.has_attr(attr):
-                continue
-            value = tag[attr]
-            if not value:
-                continue
-            if 'cdn.jsdmirror.com' in value:
-                if '@latest' in value:
-                    value = value.replace('@latest', f'@{short_hash}')
-                tag[attr] = add_version_to_url(value, timestamp)
-            else:
-                if not re.match(r'^(https?:)?//', value) and not value.startswith('data:'):
-                    tag[attr] = add_version_to_url(value, timestamp)
-
-        # 2. style 属性
-        if tag.has_attr('style'):
-            tag['style'] = process_style_value(tag['style'], short_hash, timestamp)
-
-        # 3. srcset
-        if tag.has_attr('srcset'):
-            srcset_value = tag['srcset']
-            parts = srcset_value.split(',')
-            new_parts = []
-            for part in parts:
-                part = part.strip()
-                url_parts = part.split(' ')
-                url = url_parts[0]
-                if not url:
-                    continue
-                if 'cdn.jsdmirror.com' in url:
-                    if '@latest' in url:
-                        url = url.replace('@latest', f'@{short_hash}')
-                    url = add_version_to_url(url, timestamp)
-                else:
-                    if not re.match(r'^(https?:)?//', url) and not url.startswith('data:'):
-                        url = add_version_to_url(url, timestamp)
-                if len(url_parts) > 1:
-                    new_parts.append(url + ' ' + ' '.join(url_parts[1:]))
-                else:
-                    new_parts.append(url)
-            tag['srcset'] = ', '.join(new_parts)
-
-    # 处理 <style> 标签内的文本
-    for style_tag in soup.find_all('style'):
-        if style_tag.string:
-            style_tag.string.replace_with(process_style_value(style_tag.string, short_hash, timestamp))
-
-    # 不进行格式化，直接写入
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(str(soup))
+        content = f.read()
+    new_content = process_file_content(content, short_hash, timestamp)
+    if new_content != content:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        print(f"Updated {file_path}")
+    else:
+        print(f"No changes in {file_path}")
 
 def main():
     with open('version.json', 'r') as f:
@@ -120,7 +128,6 @@ def main():
     short_hash = full_version.split('-')[1]
 
     for html_file in Path('.').rglob('*.html'):
-        # 排除 original_project 目录
         if 'original_project' in str(html_file):
             continue
         print(f"Processing {html_file}")
