@@ -1,36 +1,10 @@
 /**
- * 反调试
- * 白名单：localhost、127.0.0.1、/test、/admin 自动跳过
- * 检测参数极度宽松，几乎不会误触
+ * 反调试脚本
  */
 (function() {
     'use strict';
 
-    // ============================================================
-    // 0. 白名单（直接放行，不执行任何反调试）
-    // ============================================================
-    const host = location.hostname;
-    const path = location.pathname;
-    const WHITELIST = [
-        /^localhost$/i,
-        /^127\.0\.0\.1$/,
-        /\/test\//,
-        /\/admin\//
-    ];
-    const isWhitelisted = WHITELIST.some(pattern => {
-        if (pattern instanceof RegExp) {
-            return pattern.test(host) || pattern.test(path);
-        }
-        return false;
-    });
-    if (isWhitelisted) {
-        console.log('%c📋 白名单页面，反调试已禁用', 'color:gray;font-size:14px;');
-        return;
-    }
-
-    // ============================================================
-    // 1. 调试模式放行（URL 或 localStorage）
-    // ============================================================
+    // ========== 调试模式放行 ==========
     const url = location.href.toLowerCase();
     if (url.includes('debug') || url.includes('dev') || url.includes('bypass') || localStorage.getItem('debug_mode') === '1') {
         console.log('%c🔓 调试模式已启用，反调试已禁用', 'color:blue;font-size:16px;');
@@ -43,9 +17,7 @@
         return;
     }
 
-    // ============================================================
-    // 2. console 劫持（不可恢复）
-    // ============================================================
+    // ========== console 劫持（不可恢复） ==========
     const noop = () => {};
     const consoleProps = ['log','warn','error','info','debug','trace','dir','dirxml','group','groupEnd','time','timeEnd','table','count','assert','profile','profileEnd','clear'];
     consoleProps.forEach(prop => {
@@ -58,9 +30,7 @@
         }
     });
 
-    // ============================================================
-    // 3. 键盘/右键阻止
-    // ============================================================
+    // ========== 键盘/右键阻止 ==========
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
@@ -89,19 +59,17 @@
         }
     });
 
-    // ============================================================
-    // 4. 检测引擎（极宽松参数）
-    // ============================================================
+    // ========== 检测逻辑（无窗口尺寸检测） ==========
     let anomalyCount = 0;
-    const MAX_ANOMALIES = 30;          // 连续30次异常才触发
+    const MAX_ANOMALIES = 10;          // 连续10次异常才触发
     let isDebugDetected = false;
     let isDefenseTriggered = false;
     let detectionStarted = false;
 
-    // 帧率检测（阈值 3fps）
+    // 帧率检测（阈值 10fps）
     let fpsCheckCount = 0;
     let fpsAnomalyCount = 0;
-    const FPS_THRESHOLD = 3;
+    const FPS_THRESHOLD = 10;
     const FPS_CHECK_INTERVAL = 3000;
     let lastFpsCheck = performance.now();
 
@@ -119,7 +87,7 @@
             fpsCheckCount = 0;
             lastFpsCheck = now;
         }
-        return fpsAnomalyCount >= 5;
+        return fpsAnomalyCount >= 3;
     }
 
     function hasDevToolsHooks() {
@@ -164,28 +132,29 @@
 
         let anomaly = false;
 
-        // 性能检测（阈值 800ms）
+        // 1. 性能检测（阈值 300ms）
         const start = performance.now();
         debugger;
-        if (performance.now() - start > 800) {
+        if (performance.now() - start > 300) {
             anomaly = true;
         }
 
-        // 窗口尺寸差异（阈值 600px）
-        const outerW = window.outerWidth;
-        const innerW = window.innerWidth;
-        const outerH = window.outerHeight;
-        const innerH = window.innerHeight;
-        if ((outerW - innerW > 600) || (outerH - innerH > 600)) {
-            anomaly = true;
-        }
-
-        // 其他检测
+        // 2. DevTools 钩子
         if (hasDevToolsHooks()) anomaly = true;
+
+        // 3. 断点检测
         if (detectBreakpoint()) anomaly = true;
+
+        // 4. webdriver
         if (detectWebDriver()) anomaly = true;
+
+        // 5. Firebug
         if (detectFirebug()) anomaly = true;
+
+        // 6. 元素面板检测
         if (detectElementInspect()) anomaly = true;
+
+        // 7. 帧率检测
         if (detectFPS()) anomaly = true;
 
         if (anomaly) {
@@ -200,9 +169,7 @@
         }
     }
 
-    // ============================================================
-    // 5. 防御触发（保留跳转空白页）
-    // ============================================================
+    // ========== 防御触发（保留跳转空白页） ==========
     function triggerDefense() {
         if (isDefenseTriggered) return;
         isDefenseTriggered = true;
@@ -288,9 +255,7 @@
         } catch (_) {}
     }
 
-    // ============================================================
-    // 6. 自保护
-    // ============================================================
+    // ========== 自保护 ==========
     function selfProtect() {
         Object.defineProperty(window, '__ANTI_DEBUG_LOADED__', {
             value: true,
@@ -323,13 +288,11 @@
         }, 300);
     }
 
-    // ============================================================
-    // 7. 启动（延迟 8 秒，检测间隔 1.5 秒）
-    // ============================================================
+    // ========== 启动（延迟 3 秒） ==========
     function startDetection() {
         detectionStarted = true;
         detectDevTools();
-        setInterval(detectDevTools, 1500);
+        setInterval(detectDevTools, 1000);
 
         let resizeTimer;
         window.addEventListener('resize', () => {
@@ -347,10 +310,10 @@
     }
 
     if (document.readyState === 'complete') {
-        setTimeout(startDetection, 8000);
+        setTimeout(startDetection, 3000);
     } else {
         window.addEventListener('load', () => {
-            setTimeout(startDetection, 8000);
+            setTimeout(startDetection, 3000);
         });
     }
 

@@ -6,10 +6,8 @@ import re
 from pathlib import Path
 
 def add_version_to_url(url, version_param):
-    """为 URL 添加 ?v=version_param，若已有 v 参数则替换其值"""
     if not url:
         return url
-    # 如果已经有 v 参数，替换它；否则追加
     if '?v=' in url:
         return re.sub(r'([?&])v=[^&]*', r'\1v=' + version_param, url)
     else:
@@ -17,40 +15,31 @@ def add_version_to_url(url, version_param):
         return url + separator + 'v=' + version_param
 
 def process_style_value(style_text, short_hash, timestamp):
-    """替换 style 文本中的 url(...)"""
     def replace_url(m):
         quote = m.group(1) or ''
         url = m.group(2).strip()
         if not url:
             return m.group(0)
-        # 处理 CDN 链接中的 @latest
         if 'cdn.jsdmirror.com' in url:
-            if '@latest' in url:
-                url = url.replace('@latest', f'@{short_hash}')
+            # 替换 @latest 或旧哈希（十六进制）为 @新哈希
+            url = re.sub(r'@(latest|[a-f0-9]+)', f'@{short_hash}', url)
             url = add_version_to_url(url, timestamp)
         else:
-            # 非 CDN 的相对路径
             if not re.match(r'^(https?:)?//', url) and not url.startswith('data:'):
                 url = add_version_to_url(url, timestamp)
         return f'url({quote}{url}{quote})'
-    
-    # 匹配 url(...) 和 @import url(...)
     return re.sub(r'(@import\s+)?url\((["\']?)([^"\'()]*)\2\)', replace_url, style_text)
 
 def process_file_content(content, short_hash, timestamp):
-    """
-    使用正则替换所有资源链接，不修改其他内容
-    """
-
-    # 1. 全局替换 CDN 链接中的 @latest -> @hash
-    # 使用 lookbehind 确保只匹配 cdn.jsdmirror.com 的路径部分
+    # 1. 替换 CDN 链接中的 @latest 或旧哈希 -> @新哈希
+    # 匹配 cdn.jsdmirror.com 后面直到 @ 之前的所有内容（允许 /）
     content = re.sub(
-        r'(cdn\.jsdmirror\.com[^"\'/\s]*?)/@latest',
-        r'\1/@' + short_hash,
+        r'(cdn\.jsdmirror\.com[^"\'\s]*?)@(latest|[a-f0-9]+)',
+        r'\1@' + short_hash,
         content
     )
 
-    # 2. 处理 src / href / poster / data 等属性
+    # 2. 处理 src / href / poster / data 等属性（添加 ?v=timestamp）
     attrs = ['src', 'href', 'poster', 'data', 'action', 'manifest']
     for attr in attrs:
         pattern = r'(' + attr + r')\s*=\s*(["\'])([^"\']*?)\2'
@@ -59,12 +48,12 @@ def process_file_content(content, short_hash, timestamp):
             quote = m.group(2)
             url = m.group(3)
             if url and not url.startswith('data:') and not url.startswith('#'):
-                new_url = add_version_to_url(url, timestamp)
-                return f'{key}={quote}{new_url}{quote}'
+                url = add_version_to_url(url, timestamp)
+                return f'{key}={quote}{url}{quote}'
             return m.group(0)
         content = re.sub(pattern, replace_attr, content)
 
-    # 3. 处理 srcset（可能包含多个 URL）
+    # 3. 处理 srcset
     pattern = r'srcset\s*=\s*(["\'])([^"\']*?)\1'
     def replace_srcset(m):
         quote = m.group(1)
@@ -93,7 +82,7 @@ def process_file_content(content, short_hash, timestamp):
         return f'style={quote}{new_style}{quote}'
     content = re.sub(pattern, replace_style_attr, content)
 
-    # 5. 处理 <style> 标签内的内容
+    # 5. 处理 <style> 标签
     def replace_style_tag(m):
         opening = m.group(1)
         inner = m.group(2)
@@ -123,9 +112,9 @@ def update_html(file_path, short_hash, timestamp):
 def main():
     with open('version.json', 'r') as f:
         data = json.load(f)
-    full_version = data['version']
-    timestamp = full_version.split('-')[0]
-    short_hash = full_version.split('-')[1]
+    full_version = data['version']          # 例如 "20260805123456-a1b2c3d"
+    timestamp = full_version.split('-')[0]  # 时间戳
+    short_hash = full_version.split('-')[1] # 短哈希
 
     for html_file in Path('.').rglob('*.html'):
         if 'original_project' in str(html_file):
