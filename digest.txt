@@ -212,19 +212,19 @@ FILE: index.html
     <meta charset="utf-8" />
     <title>MyHome</title>
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
     <link as="font" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806054331"
         rel="preload" type="font/woff2" />
-    <link href="preview_assets/style.css?v=20260806052818" rel="stylesheet" />
+    <link href="preview_assets/style.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/home.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/home.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <style>
         /* 修复整体布局：页头页尾居中 */
         .hero-section {
@@ -405,32 +405,32 @@ FILE: index.html
 </head>
 
 <body>
-    <script src="preview_assets/click.js?v=20260806052818" type="text/javascript"></script>
+    <script src="preview_assets/click.js?v=20260806054331" type="text/javascript"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
+        </script>
     <section class="hero-section background_color">
-        <div class="card-grid" href="birthday/index.html?v=20260806052818">
-            <a class="card" href="birthday/index.html?v=20260806052818">
+        <div class="card-grid" href="birthday/index.html?v=20260806054331">
+            <a class="card" href="birthday/index.html?v=20260806054331">
                 <div class="card__background"
-                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/birthday.jpg)">
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/birthday.jpg)">
                 </div>
                 <div class="card__content">
                     <p class="card__category">Birthday-Gift</p>
                     <h3 class="card__heading">谨以此表达对友人生日的由衷祝福</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/birthday.jpg?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/birthday.jpg?v=20260806054331" />
                 </div>
             </a>
-            <a class="card" href="MiddleSchoolYearBook/index.html?v=20260806052818">
+            <a class="card" href="MiddleSchoolYearBook/index.html?v=20260806054331">
                 <div class="card__background"
-                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/sunshine.jpeg)">
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/sunshine.jpeg)">
                 </div>
                 <div class="card__content">
                     <p class="card__category">Middle-School-YearBook</p>
                     <h3 class="card__heading">谨以此纪念三年的初中时光</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/sunshine.jpeg?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/sunshine.jpeg?v=20260806054331" />
                 </div>
             </a>
         </div>
@@ -470,7 +470,7 @@ SOFTWARE.
 ================================================
 FILE: version.json
 ================================================
-{"version":"20260806052818-cdd536c"}
+{"version":"20260806054331-3f11647"}
 
 
 
@@ -484,17 +484,17 @@ FILE: birthday/index.html
     <meta charset="utf-8" />
     <title>BirthdayGift</title>
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
     <link as="font" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806054331"
         rel="preload" type="font/woff2" />
-    <link href="../preview_assets/style.css?v=20260806052818" rel="stylesheet" />
+    <link href="../preview_assets/style.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/preview_assets/happy.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/preview_assets/happy.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
         </script>
     <style>
@@ -677,9 +677,9 @@ FILE: birthday/index.html
 </head>
 
 <body>
-    <script src="preview_assets/click.js?v=20260806052818" type="text/javascript"></script>
+    <script src="preview_assets/click.js?v=20260806054331" type="text/javascript"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
         </script>
     <section class="hero-section background_color">
         <!-- 顶部灰色居中文字 -->
@@ -687,30 +687,30 @@ FILE: birthday/index.html
             ✦ 愿每一份心意，都化作温暖的光 ✦
             <p style="margin:0;">
                 <a
-                    href="https://dywritecode.github.io/birthday/dingyang/egg/message?v=20260806052818">有时，最深的秘密就藏在最日常的触碰之中。</a>
+                    href="https://dywritecode.github.io/birthday/dingyang/egg/message?v=20260806054331">有时，最深的秘密就藏在最日常的触碰之中。</a>
             </p>
         </div>
         <div class="card-grid">
-            <a class="card" data-password="20090907" href="dingyang/egg/index.html?v=20260806052818" id="customLink">
+            <a class="card" data-password="20090907" href="dingyang/egg/index.html?v=20260806054331" id="customLink">
                 <div class="card__background"
-                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/preview_assets/me.jpeg)">
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/preview_assets/me.jpeg)">
                 </div>
                 <div class="card__content">
                     <p class="card__category">To 自己</p>
                     <h3 class="card__heading">爱你老己</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/preview_assets/me.jpeg?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/preview_assets/me.jpeg?v=20260806054331" />
                 </div>
             </a>
-            <!-- <a class="card" href="zhongsinger/index.html?v=20260806052818" id="customLink" data-password="20090918">
+            <!-- <a class="card" href="zhongsinger/index.html?v=20260806054331" id="customLink" data-password="20090918">
                 <div class="card__background"
-                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/preview_assets/flower.jpg);">
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/preview_assets/flower.jpg);">
                 </div>
                 <div class="card__content">
                     <p class="card__category">To 钟芯尔</p>
                     <h3 class="card__heading">我的好朋友</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/preview_assets/flower.jpg?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/preview_assets/flower.jpg?v=20260806054331" />
                 </div>
             </a> -->
         </div>
@@ -755,7 +755,7 @@ FILE: birthday/index.html
             </div>
         </div>
     </div>
-    <script src="preview_assets/popup.js?v=20260806052818" type="text/javascript"></script>
+    <script src="preview_assets/popup.js?v=20260806054331" type="text/javascript"></script>
 </body>
 
 </html>
@@ -825,19 +825,19 @@ FILE: birthday/dingyang/egg/index.html
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" name="viewport" />
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
-    <link href="index.encryption.css?v=20260806052818" rel="stylesheet" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
+    <link href="index.encryption.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <title>光影之间 · 随记</title>
     <style>
         .ripple-container {
@@ -871,13 +871,13 @@ FILE: birthday/dingyang/egg/index.html
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260806054331"
         type="module">
-    </script>
-    <script crossorigin="" src="click.n.js?v=20260806052818" type="module"></script>
+        </script>
+    <script crossorigin="" src="click.n.js?v=20260806054331" type="module"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806054331">
+        </script>
     <div class="container" id="app">
         <div class="page active" id="page-science">
             <header class="header">
@@ -1048,9 +1048,9 @@ FILE: birthday/dingyang/egg/index.html
             <footer class="footer">
                 <span>© 2026 · 光影之间</span>
                 <div class="meta">
-                    <a href="javascript:void(0)?v=20260806052818" id="aboutLink">关于</a>
-                    <a href="javascript:void(0)?v=20260806052818">笔记</a>
-                    <a href="javascript:void(0)?v=20260806052818">联系</a>
+                    <a href="javascript:void(0)?v=20260806054331" id="aboutLink">关于</a>
+                    <a href="javascript:void(0)?v=20260806054331">笔记</a>
+                    <a href="javascript:void(0)?v=20260806054331">联系</a>
                 </div>
             </footer>
             <div class="egg-step" id="step-init">
@@ -1133,9 +1133,9 @@ FILE: birthday/dingyang/egg/index.html
             <footer class="footer">
                 <span>© 2026 · 文思之间</span>
                 <div class="meta">
-                    <a href="javascript:void(0)?v=20260806052818" id="aboutTrigger">关于</a>
-                    <a href="javascript:void(0)?v=20260806052818">笔记</a>
-                    <a href="javascript:void(0)?v=20260806052818">联系</a>
+                    <a href="javascript:void(0)?v=20260806054331" id="aboutTrigger">关于</a>
+                    <a href="javascript:void(0)?v=20260806054331">笔记</a>
+                    <a href="javascript:void(0)?v=20260806054331">联系</a>
                 </div>
             </footer>
             <div class="egg-step" id="step-key-summary">
@@ -1281,9 +1281,9 @@ FILE: birthday/dingyang/egg/index.html
     </div>
     <!-- end container -->
     <script
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/index.encryption.n.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/index.encryption.n.js?v=20260806054331"
         type="text/javascript">
-    </script>
+        </script>
 </body>
 
 </html>
@@ -1349,20 +1349,20 @@ FILE: birthday/dingyang/egg/message/index.html
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" name="viewport" />
     <meta content="no-referrer" name="referrer" />
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
-    <link href="index.encryption.css?v=20260806052818" rel="stylesheet" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
+    <link href="index.encryption.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806054331">
         </script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806054331"
         type="module">
         </script>
     <title>秘密消息 · 解码器</title>
@@ -1822,10 +1822,10 @@ FILE: birthday/dingyang/egg/message/index.html
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/js/music.js?v=20260806054331"
         type="module">
         </script>
-    <script crossorigin="" src="click.n.js?v=20260806052818" type="module"></script>
+    <script crossorigin="" src="click.n.js?v=20260806054331" type="module"></script>
     <!-- ===== 涟漪容器（点击特效） ===== -->
     <div class="ripple-container" id="rippleContainer"></div>
     <!-- ===== 主容器 ===== -->
@@ -1882,9 +1882,9 @@ FILE: birthday/dingyang/egg/message/index.html
         <footer class="footer">
             <span>© 2026 · 光影之间</span>
             <div>
-                <a href="javascript:void(0)?v=20260806052818" onclick="resetAll()">重置</a>
+                <a href="javascript:void(0)?v=20260806054331" onclick="resetAll()">重置</a>
                 <span style="margin:0 8px;opacity:0.3;">·</span>
-                <a href="javascript:void(0)?v=20260806052818" onclick="copyResult()">复制结果</a>
+                <a href="javascript:void(0)?v=20260806054331" onclick="copyResult()">复制结果</a>
             </div>
         </footer>
     </div>
@@ -2261,16 +2261,16 @@ FILE: birthday/dingyang/patient/index.html
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
-    <link href="index.encryption.css?v=20260806052818" rel="stylesheet" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
+    <link href="index.encryption.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/dingyang/egg/Egg.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <title>Patient is the key of the life</title>
     <style>
         /* ===== 全局重置 & 浅色主题 ===== */
@@ -2669,10 +2669,10 @@ FILE: birthday/dingyang/patient/index.html
 </head>
 
 <body>
-    <script crossorigin="" src="click.js?v=20260806052818" type="module"></script>
+    <script crossorigin="" src="click.js?v=20260806054331" type="module"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806054331">
+        </script>
     <!-- ============================================================ -->
     <!-- 主视图 -->
     <!-- ============================================================ -->
@@ -3122,17 +3122,17 @@ FILE: birthday/zhongsinger/index.html
     <meta charset="utf-8" />
     <title>BirthdayGift</title>
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
     <link as="font" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806054331"
         rel="preload" type="font/woff2" />
-    <link href="../../preview_assets/style.css?v=20260806052818" rel="stylesheet" />
+    <link href="../../preview_assets/style.css?v=20260806054331" rel="stylesheet" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/happy.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/happy.ico?v=20260806054331"
         rel="icon" type="image/png" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/check-update.js?v=20260806054331"
         type="module">
         </script>
     <style>
@@ -3315,13 +3315,13 @@ FILE: birthday/zhongsinger/index.html
 </head>
 
 <body>
-    <script src="assets/click.js?v=20260806052818" type="text/javascript"></script>
+    <script src="assets/click.js?v=20260806054331" type="text/javascript"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/preview_assets/index.js?v=20260806054331">
         </script>
     <section class="hero-section background_color">
         <div class="card-grid">
-            <a class="card" href="2025/index.html?v=20260806052818">
+            <a class="card" href="2025/index.html?v=20260806054331">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/moon.webp)">
                 </div>
@@ -3329,10 +3329,10 @@ FILE: birthday/zhongsinger/index.html
                     <p class="card__category">To 钟芯尔</p>
                     <h3 class="card__heading">2025</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/moon.webp?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/moon.webp?v=20260806054331" />
                 </div>
             </a>
-            <a class="card" href="2026/index.html?v=20260806052818">
+            <a class="card" href="2026/index.html?v=20260806054331">
                 <div class="card__background"
                     style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/sun.webp)">
                 </div>
@@ -3340,7 +3340,7 @@ FILE: birthday/zhongsinger/index.html
                     <p class="card__category">To 钟芯尔</p>
                     <h3 class="card__heading">2026</h3>
                     <img class="card__qrcode"
-                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/sun.webp?v=20260806052818" />
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/assets/sun.webp?v=20260806054331" />
                 </div>
             </a>
         </div>
@@ -3403,16 +3403,16 @@ FILE: birthday/zhongsinger/2025/index.html
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <meta content="no-referrer" name="referrer" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/happy.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/happy.ico?v=20260806054331"
         rel="icon" type="image/png" />
-    <link href="style.css?v=20260806052818" rel="stylesheet" />
+    <link href="style.css?v=20260806054331" rel="stylesheet" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <title>钟芯尔的生日空间</title>
     <style>
         * {
@@ -3609,13 +3609,13 @@ FILE: birthday/zhongsinger/2025/index.html
 </head>
 
 <body>
-    <script src="click.js?v=20260806052818" type="text/javascript"></script>
+    <script src="click.js?v=20260806054331" type="text/javascript"></script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
+        </script>
     <!--背景音乐-->
     <audio autoplay="" id="music" loop="" preload="auto"
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331">
     </audio>
     <div class="container">
         <div class="stars" id="stars"></div>
@@ -3658,7 +3658,7 @@ FILE: birthday/zhongsinger/2025/index.html
         }
 
         function openHeartGate() {
-            window.location.href='memory.html?v=20260806052818';
+            window.location.href = 'memory.html?v=20260806054331';
         }
 
         function toggleSound() {
@@ -3690,16 +3690,16 @@ FILE: birthday/zhongsinger/2025/memory.html
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <meta content="no-referrer" name="referrer" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/happy.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/happy.ico?v=20260806054331"
         rel="icon" type="image/png" />
-    <link href="style.css?v=20260806052818" rel="stylesheet" />
+    <link href="style.css?v=20260806054331" rel="stylesheet" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <title>我们的时光走廊</title>
     <style>
         body {
@@ -3967,12 +3967,12 @@ FILE: birthday/zhongsinger/2025/memory.html
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
-    </script>
-    <script src="click.js?v=20260806052818" type="text/javascript"></script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
+        </script>
+    <script src="click.js?v=20260806054331" type="text/javascript"></script>
     <!--背景音乐-->
     <audio autoplay="" id="music" loop="" preload="auto"
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331">
     </audio>
     <div class="timeline-container">
         <div class="back-button" onclick="goToIndex()">←</div>
@@ -3987,9 +3987,9 @@ FILE: birthday/zhongsinger/2025/memory.html
                     <div class="memory-content">
                         <div class="memory-date">2022年9月</div>
                         <div class="memory-photo"
-                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/sunshine.jpeg', '第一次相遇')">
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/sunshine.jpeg', '第一次相遇')">
                             <img alt="我们的第一次偶遇"
-                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/sunshine.jpeg?v=20260806052818" />
+                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/sunshine.jpeg?v=20260806054331" />
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">迎着初中的第一抹阳光，认识了你这样一位好朋友</div>
@@ -4002,9 +4002,9 @@ FILE: birthday/zhongsinger/2025/memory.html
                     <div class="memory-content">
                         <div class="memory-date">2024年3月</div>
                         <div class="memory-photo"
-                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history1.png', '试图教会我')">
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history1.png', '试图教会我')">
                             <img controls=""
-                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history1.png?v=20260806052818"
+                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history1.png?v=20260806054331"
                                 style="width:100%;
                                             height:100%;
                                             object-fit:cover" />
@@ -4020,9 +4020,9 @@ FILE: birthday/zhongsinger/2025/memory.html
                     <div class="memory-content">
                         <div class="memory-date">2024年3月</div>
                         <div class="memory-photo"
-                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history2.png', '试图教会你')">
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history2.png', '试图教会你')">
                             <img controls=""
-                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history2.png?v=20260806052818"
+                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history2.png?v=20260806054331"
                                 style="width:100%;
                                             height:100%;
                                             object-fit:cover" />
@@ -4038,9 +4038,9 @@ FILE: birthday/zhongsinger/2025/memory.html
                     <div class="memory-content">
                         <div class="memory-date">2025年9月</div>
                         <div class="memory-photo"
-                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history3.jpg', '深刻的印象')">
+                            onclick="openLightbox('https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history3.jpg', '深刻的印象')">
                             <img alt="深刻的印象"
-                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/history3.jpg?v=20260806052818" />
+                                src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/history3.jpg?v=20260806054331" />
                             <div class="photo-caption">轻触查看大图</div>
                         </div>
                         <div class="memory-desc">要不是看到朋友圈我都不知道，正常对朋友关心一点，会对人造成如此深刻的印象</div>
@@ -4124,6 +4124,7 @@ FILE: birthday/zhongsinger/2025/memory.html
                 video.src = src;
                 video.controls = true;
                 video.autoplay = true;
+                video.muted = true
                 video.style.maxWidth = '90vw';
                 video.style.maxHeight = '80vh';
                 video.style.borderRadius = '8px';
@@ -4159,12 +4160,12 @@ FILE: birthday/zhongsinger/2025/memory.html
 
         // 跳转到秘密页面
         function goToSecret() {
-            window.location.href='secret.html?v=20260806052818';
+            window.location.href = 'secret.html?v=20260806054331';
         }
 
         // 返回首页
         function goToIndex() {
-            window.location.href='index.html?v=20260806052818';
+            window.location.href = 'index.html?v=20260806054331';
         }
 
         function toggleSound() {
@@ -4199,16 +4200,16 @@ FILE: birthday/zhongsinger/2025/secret.html
     <meta content="no-referrer" name="referrer" />
     <title>专属生日祝福</title>
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/images/happy.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/images/happy.ico?v=20260806054331"
         rel="icon" type="image/png" />
-    <link href="style.css?v=20260806052818" rel="stylesheet" />
+    <link href="style.css?v=20260806054331" rel="stylesheet" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <style>
         * {
             margin: 0;
@@ -4803,12 +4804,12 @@ FILE: birthday/zhongsinger/2025/secret.html
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
-    </script>
-    <script src="click.js?v=20260806052818" type="text/javascript"></script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
+        </script>
+    <script src="click.js?v=20260806054331" type="text/javascript"></script>
     <!--背景音乐-->
     <audio autoplay="" id="music" loop="" preload="auto"
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/music/bir.mp3?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/music/bir.mp3?v=20260806054331">
     </audio>
     <!-- 背景动画 -->
     <div class="bg-animation" id="bgAnimation"></div>
@@ -4848,7 +4849,7 @@ FILE: birthday/zhongsinger/2025/secret.html
                             margin-top:18px">音频播放失败，请再点击一次或检查音频文件</div>
         </div>
         <audio id="wishAudio" preload="auto"
-            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2025/audio/HappyBirthday.mp3?v=20260806052818">
+            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2025/audio/HappyBirthday.mp3?v=20260806054331">
         </audio>
     </div>
     <!-- 指向蜡烛的提示 -->
@@ -5020,7 +5021,7 @@ FILE: birthday/zhongsinger/2025/secret.html
         // 返回上一页
         function goBack() {
             // 直接跳转到memory.html，避免history.back()的问题
-            window.location.href='memory.html?v=20260806052818';
+            window.location.href = 'memory.html?v=20260806054331';
         }
 
         // 键盘控制
@@ -5359,48 +5360,48 @@ FILE: birthday/zhongsinger/2026/index.html
 <head>
     <meta charset="utf-8" />
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/favicon.ico?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/favicon.ico?v=20260806054331"
         rel="icon" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/music/LudovicoEinaudi.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <link as="font" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260806054331"
         rel="preload" type="font/woff2" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title></title>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/index.dy.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/index.dy.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/assets/index.dy.css?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/assets/index.dy.css?v=20260806054331"
         rel="stylesheet" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
 </head>
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
+        </script>
     <div id="app"></div>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/js/click.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/js/click.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/js/music.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/js/music.js?v=20260806054331"
         type="module">
-    </script>
+        </script>
     <script
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/birthday/zhongsinger/2026/js/zepto.min.js?v=20260806052818">
-    </script>
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/birthday/zhongsinger/2026/js/zepto.min.js?v=20260806054331">
+        </script>
 </body>
 
 </html>
@@ -21639,33 +21640,33 @@ FILE: MiddleSchoolYearBook/index.html
 
 <head>
     <meta charset="utf-8" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260806052818" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260806054331" rel="dns-prefetch" />
     <link as="audio" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/music/Music.mp3?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/music/Music.mp3?v=20260806054331"
         rel="preload" type="audio/mpeg" />
     <link as="font" crossorigin="anonymous"
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/font/HandWrittenFont.ttf?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/font/HandWrittenFont.ttf?v=20260806054331"
         rel="preload" type="font/woff2" />
     <title>毕业纪念</title>
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/hat.png?v=20260806052818"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/hat.png?v=20260806054331"
         rel="icon" type="image/png" />
-    <link href="css/swiper.min.css?v=20260806052818" rel="stylesheet" />
-    <link href="css/animate.min.css?v=20260806052818" rel="stylesheet" />
-    <link href="css/index.css?v=20260806052818" rel="stylesheet" />
-    <link href="css/style.css?v=20260806052818" rel="stylesheet" />
+    <link href="css/swiper.min.css?v=20260806054331" rel="stylesheet" />
+    <link href="css/animate.min.css?v=20260806054331" rel="stylesheet" />
+    <link href="css/index.css?v=20260806054331" rel="stylesheet" />
+    <link href="css/style.css?v=20260806054331" rel="stylesheet" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/check-update.js?v=20260806052818"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/check-update.js?v=20260806054331"
         type="module">
     </script>
 </head>
 
 <body>
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/preview_assets/index.js?v=20260806052818">
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/preview_assets/index.js?v=20260806054331">
     </script>
-    <script src="js/click.js?v=20260806052818" type="text/javascript"></script>
+    <script src="js/click.js?v=20260806054331" type="text/javascript"></script>
     <!--Container-->
     <div class="swiper-container">
         <div class="swiper-wrapper">
@@ -21685,56 +21686,56 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/1.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/1.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_3">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="1.6s"
                         swiper-animate-effect="fadeInLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/zuoshangjiao.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/zuoshangjiao.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_4">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="1.6s"
                         swiper-animate-effect="fadeInLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/zuoshangjiao.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/zuoshangjiao.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_5">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1.2s"
                         swiper-animate-effect="fadeInRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/sbsy.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/sbsy.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_6">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1.2s"
                         swiper-animate-effect="fadeInLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/nbsg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/nbsg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_7">
                     <div class="amious ani" swiper-animate-delay="1.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="flipInY">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/book.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/book.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_8">
                     <div class="amious ani" swiper-animate-delay="1.55s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/68bcebe1bfa42cdcc12549d3013f013b.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/68bcebe1bfa42cdcc12549d3013f013b.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_9">
                     <div class="amious ani" swiper-animate-delay="1.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/xiajiantou.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/xiajiantou.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page1_10">
@@ -21786,56 +21787,56 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="2.2s"
                         swiper-animate-effect="rotateIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/paper_plane.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/paper_plane.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_2">
                     <div class="amious ani" swiper-animate-delay="0.8s" swiper-animate-duration="1s"
                         swiper-animate-effect="zoomIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_3">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/1.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/1.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_4">
                     <div class="amious ani" swiper-animate-delay="0.9s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_5">
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_6">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/4.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/4.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_7">
                     <div class="amious ani" swiper-animate-delay="0.7s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_8">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/5.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/5.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_9">
@@ -21864,77 +21865,77 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/10.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/10.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_12">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/camara.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/camara.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_13">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/H.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/H.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_14">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/A.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/A.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_15">
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/P.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/P.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_16">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/P.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/P.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_17">
                     <div class="amious ani" swiper-animate-delay="1.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/Y.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/Y.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_18">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/T.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/T.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_19">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/I.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/I.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_20">
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/M.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/M.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_21">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/E.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/E.png?v=20260806054331" />
                     </div>
                 </div>
             </section>
@@ -21944,56 +21945,56 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="2.2s"
                         swiper-animate-effect="rotateIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/paper_plane.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/paper_plane.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_2">
                     <div class="amious ani" swiper-animate-delay="0.8s" swiper-animate-duration="1s"
                         swiper-animate-effect="zoomIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_3">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/7.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/7.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_4">
                     <div class="amious ani" swiper-animate-delay="0.9s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_5">
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_6">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/8.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/8.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_7">
                     <div class="amious ani" swiper-animate-delay="0.7s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/border_bg.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/border_bg.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_8">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/9.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/9.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_9">
@@ -22022,77 +22023,77 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/11.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/11.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_12">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/camara.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/camara.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_13">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/H.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/H.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_14">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/A.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/A.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_15">
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/P.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/P.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_16">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/P.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/P.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_17">
                     <div class="amious ani" swiper-animate-delay="1.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/Y.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/Y.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_18">
                     <div class="amious ani" swiper-animate-delay="1.1s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/T.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/T.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_19">
                     <div class="amious ani" swiper-animate-delay="1.2s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/I.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/I.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_20">
                     <div class="amious ani" swiper-animate-delay="1.3s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInUp">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/M.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/M.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page2_21">
                     <div class="amious ani" swiper-animate-delay="1.4s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInDown">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/E.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/E.png?v=20260806054331" />
                     </div>
                 </div>
             </section>
@@ -22102,14 +22103,14 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="0.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/15.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/15.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_2">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeInRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/7.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/7.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_3">
@@ -22146,35 +22147,35 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="3s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/8.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/8.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_8">
                     <div class="amious ani" swiper-animate-delay="3s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/17.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/17.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_9">
                     <div class="amious ani" swiper-animate-delay="4s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/yezi.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/yezi.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_10">
                     <div class="amious ani" swiper-animate-delay="4s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/yezi.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/yezi.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page3_11">
                     <div class="amious ani" swiper-animate-delay="3s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/9.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/9.jpg?v=20260806054331" />
                     </div>
                 </div>
             </section>
@@ -22184,35 +22185,35 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/11.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/11.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page4_2">
                     <div class="amious ani" swiper-animate-delay="2s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/16.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/16.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page4_3">
                     <div class="amious ani" swiper-animate-delay="1.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/18.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/18.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page4_4">
                     <div class="amious ani" swiper-animate-delay="0.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownLeft">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/14.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/14.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page4_5">
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateInDownRight">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/6.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/6.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page4_6 ling_right">
@@ -22456,7 +22457,7 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/head_sky.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/head_sky.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page5_2">
@@ -22511,7 +22512,7 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="3s" swiper-animate-duration="1s"
                         swiper-animate-effect="rotateIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/boshimao.png?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/boshimao.png?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page5_11">
@@ -22524,7 +22525,7 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="3.5s" swiper-animate-duration="1s"
                         swiper-animate-effect="bounceIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/12.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/12.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page5_13">
@@ -22559,14 +22560,14 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/19.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/19.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page6_2">
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/3.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/3.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page6_3">
@@ -22670,14 +22671,14 @@ FILE: MiddleSchoolYearBook/index.html
                     <div class="amious ani" swiper-animate-delay="1s" swiper-animate-duration="2s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/10.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/10.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page6_2">
                     <div class="amious ani" swiper-animate-delay="0.6s" swiper-animate-duration="1s"
                         swiper-animate-effect="fadeIn">
                         <img alt="" class="el-bgimg"
-                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/8.jpg?v=20260806052818" />
+                            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/8.jpg?v=20260806054331" />
                     </div>
                 </div>
                 <div class="item showpage page6_3">
@@ -22766,17 +22767,17 @@ FILE: MiddleSchoolYearBook/index.html
     <!-- Background Music-->
     <div id="music">
         <img class="musicIg"
-            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/music_off.png?v=20260806052818" />
+            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/music_off.png?v=20260806054331" />
         <img alt="" class="musicImg"
-            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/img/music.gif?v=20260806052818" />
+            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/img/music.gif?v=20260806054331" />
         <audio autoplay="" loop="" preload="auto"
-            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cdd536c/MiddleSchoolYearBook/music/Music.mp3?v=20260806052818">
+            src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@3f11647/MiddleSchoolYearBook/music/Music.mp3?v=20260806054331">
         </audio>
     </div>
 </body>
-<script src="js/swiper.min.js?v=20260806052818"></script>
-<script src="js/swiper.animate1.0.3.min.js?v=20260806052818"></script>
-<script src="js/index.js?v=20260806052818"></script>
+<script src="js/swiper.min.js?v=20260806054331"></script>
+<script src="js/swiper.animate1.0.3.min.js?v=20260806054331"></script>
+<script src="js/index.js?v=20260806054331"></script>
 
 </html>
 
