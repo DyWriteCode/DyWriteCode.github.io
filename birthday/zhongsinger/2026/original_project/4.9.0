@@ -1,4 +1,0 @@
-Defaulting to user installation because normal site-packages is not writeable
-Requirement already satisfied: beautifulsoup4 in C:\Users\Administrator\AppData\Roaming\Python\Python314\site-packages (4.15.0)
-Requirement already satisfied: soupsieve>=1.6.1 in C:\Users\Administrator\AppData\Roaming\Python\Python314\site-packages (from beautifulsoup4) (2.9.1)
-Requirement already satisfied: typing-extensions>=4.0.0 in C:\Users\Administrator\AppData\Roaming\Python\Python314\site-packages (from beautifulsoup4) (4.16.0)

@@ -959,7 +959,8 @@ img {
     min-height: auto !important;
     background: #f7f8fa;
     border-top: 1px solid #f3f3f3;
-    padding: 0 !important
+    padding: 0 !important;
+    overflow: visible !important
 }
 
 #mobile-foot .foot-wrapper {
@@ -976,7 +977,9 @@ img {
     border-radius: 20px;
     box-shadow: 5px 5px 15px #6666661a;
     padding: 9px 14px;
-    display: block !important
+    display: block !important;
+    position: relative;
+    overflow: visible !important
 }
 
 #mobile-foot .system-input-element {
@@ -1001,6 +1004,13 @@ img {
     margin-left: 1px
 }
 
+#mobile-foot .user-input-wrapper {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    position: relative
+}
+
 #mobile-foot .user-input-textarea {
     width: 100%;
     border: none;
@@ -1013,7 +1023,58 @@ img {
     margin: 0;
     overflow: hidden;
     min-height: 24px;
-    font-family: inherit
+    font-family: inherit;
+    flex: 1
+}
+
+#mobile-foot .emoji-toggle {
+    flex: 0 0 36px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    color: #666
+}
+
+#mobile-foot .emoji-toggle:hover {
+    color: #333
+}
+
+#mobile-foot .emoji-picker {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #f7f8fa;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    z-index: 9999;
+    box-shadow: 0 4px 12px #00000026
+}
+
+#mobile-foot .emoji-item {
+    width: 34px;
+    height: 34px;
+    text-align: center;
+    line-height: 34px;
+    cursor: pointer;
+    font-size: 22px;
+    border-radius: 6px;
+    transition: background .15s
+}
+
+#mobile-foot .emoji-item:hover {
+    background: #e0e0e0
 }
 
 #mobile-foot .send-btn {
@@ -1150,6 +1211,10 @@ img {
 
     #mobile-body {
         top: 70px !important
+    }
+
+    #mobile-foot .emoji-picker {
+        max-height: 150px
     }
 }
 

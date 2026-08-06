@@ -53,18 +53,19 @@ FILE: index.html
 ================================================
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-    <script src="js/zepto.min.js"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title></title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module" src="/src/main.js"></script>
+        <script src="js/zepto.min.js"></script>
+    </body>
 </html>
+
 
 
 ================================================
@@ -105,7 +106,10 @@ import vue from '@vitejs/plugin-vue'
 export default ({ mode }) => {
   return defineConfig({
     base: loadEnv(mode, process.cwd()).VITE_BASE_URL,
-    plugins: [vue()]
+    plugins: [vue()],
+    resolve: {
+      extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.vue'],
+    },
   })
 }
 
@@ -154,6 +158,25 @@ FILE: public/options/demo/avatars.json
 FILE: public/options/demo/chat.json
 ================================================
 [
+    {
+        "msgs": [
+            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+        ],
+        "msgInputSpeed": 80,
+        "triggerNextAction": {
+            "type": "userInput",
+            "options": {
+                "resolveKeyTexts": [
+                    "好"
+                ],
+                "rejectKeyTexts": [],
+                "rejectHitTexts": [
+                    "输入好，听不懂吗？？？",
+                    "触发强行跳过"
+                ]
+            }
+        }
+    },
     {
         "msgs": [
             "这条消息会在1秒后自动撤回"
@@ -397,23 +420,14 @@ FILE: public/options/demo/roles.json
         "pat": "拍了拍TA"
     },
     "author": {
-        "name": "小D",
+        "name": "Dy",
         "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/bot.jpg",
         "pat": "拍了拍我的脑袋"
     },
     "me": {
-        "name": "我",
+        "name": "K&I",
         "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/user.jpg",
         "pat": "拍了拍自己"
-    },
-    "three": {
-        "name": "张三",
-        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/cat.jpg",
-        "pat": "拍了拍我的肩膀"
-    },
-    "four": {
-        "name": "李四",
-        "avatar": "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@main/birthday/zhongsinger/2026/options/demo/imgs/test.png"
     }
 }
 
@@ -593,15 +607,43 @@ FILE: src/components/chat-dialog/index.vue
         </div>
       </div>
     </div>
+
+    <!-- ========== 底部输入（含表情） ========== -->
     <div id="mobile-foot">
       <div class="foot-wrapper">
         <div class="input-area" ref="inputArea">
+          <!-- 系统输入 -->
           <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
-          <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
-            v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
+          <!-- 用户输入 + 表情按钮 -->
+          <div v-show="status === 'userInput'" class="user-input-wrapper">
+            <textarea
+              ref="userMsgInputRef"
+              class="user-input-textarea animate_breathe"
+              v-model="inputMessage"
+              rows="1"
+              @input="autoResizeTextarea"
+              placeholder="输入消息..."
+            ></textarea>
+            <button class="emoji-toggle" @click.stop="toggleEmojiPicker">😊</button>
+            <!-- 表情面板，使用 v-click-outside 指令 -->
+            <div
+              v-show="showEmojiPicker"
+              class="emoji-picker"
+              ref="emojiPicker"
+              v-click-outside="closeEmojiPicker"
+            >
+              <div
+                v-for="(emoji, idx) in emojiList"
+                :key="idx"
+                class="emoji-item"
+                @click="insertEmoji(emoji)"
+              >
+                {{ emoji }}
+              </div>
+            </div>
+          </div>
         </div>
-        <var-button ref="sendMsgBtnRef" type="success" size="small" :disabled="sendBtnDisabled" @click="sendUserMsg"
-          class="send-btn">发送</var-button>
+        <var-button ref="sendMsgBtnRef" type="success" size="small" :disabled="sendBtnDisabled" @click="sendUserMsg" class="send-btn">发送</var-button>
       </div>
     </div>
   </div>
@@ -615,8 +657,13 @@ import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import MessageDetail from './MessageDetail.vue'
 import Typed from 'typed.js'
-import emojis from 'wechat-emojis'; 
+import emojis from 'wechat-emojis'
 import './css/main.scss'
+
+// ========== 硬编码备用表情（当库加载失败时使用） ==========
+const FALLBACK_EMOJIS = [
+  '😊','😂','🤣','❤️','💔','✨','🔥','😍','🤔','😭','😘','🥰','😅','😆','😋','😎','🤩','😤','😡','🤬','🥶','🥵','😱','😨','😰','😥','😓','🤗','🤭','🤫','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','😴','🤤','😪','😵','🤐','😷','🤒','🤕','🤢','🤮','😈','👿','👹','👺','💀','☠️','👻','👽','👾','🤖','💩','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙌','👏','👍','👎','👊','✊','🤛','🤜','🙏','🤲','🤝','💪','🦾','🦵','🦶','👀','👁️','🧠','🫀','🫁','🦷','👅','👄'
+];
 
 const AUTHOR = {
   AUTHOR: 'author',
@@ -632,6 +679,23 @@ export default {
     letter,
     vlog,
     MessageDetail
+  },
+  // ========== 注册 v-click-outside 指令 ==========
+  directives: {
+    clickOutside: {
+      beforeMount(el, binding) {
+        el._clickOutsideHandler = function(event) {
+          if (!(el === event.target || el.contains(event.target))) {
+            binding.value(event);
+          }
+        };
+        document.addEventListener('click', el._clickOutsideHandler);
+      },
+      unmounted(el) {
+        document.removeEventListener('click', el._clickOutsideHandler);
+        delete el._clickOutsideHandler;
+      }
+    }
   },
   props: {
     title: String,
@@ -662,6 +726,9 @@ export default {
       msgIdCounter: 0,
       recallTimers: [],
       timeInserted: false,
+      // --- 新增表情相关 ---
+      showEmojiPicker: false,
+      emojiList: []
     }
   },
   watch: {
@@ -682,6 +749,7 @@ export default {
     }
   },
   methods: {
+    // ---- 原有方法（全部保留，一字不改） ----
     addTimeMessage() {
       const now = new Date();
       const hours = now.getHours();
@@ -1036,6 +1104,60 @@ export default {
     },
     handleMenuClick() { /* 可扩展 */ },
     handleMoreClick() { /* 可扩展 */ },
+
+    // ========== 新增表情相关方法 ==========
+    toggleEmojiPicker() {
+      this.showEmojiPicker = !this.showEmojiPicker;
+    },
+    closeEmojiPicker() {
+      this.showEmojiPicker = false;
+    },
+    insertEmoji(emoji) {
+      const textarea = this.$refs.userMsgInputRef;
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = this.inputMessage;
+      this.inputMessage = val.substring(0, start) + emoji + val.substring(end);
+      this.$nextTick(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+        this.autoResizeTextarea({ target: textarea });
+      });
+      this.showEmojiPicker = false;
+    },
+
+    // 初始化表情列表
+    initEmojiList() {
+      let rawEmojis = [];
+      try {
+        // wechat-emojis 可能导出为数组或对象
+        if (Array.isArray(emojis)) {
+          rawEmojis = emojis;
+        } else if (typeof emojis === 'object' && emojis !== null) {
+          rawEmojis = Object.values(emojis);
+        }
+      } catch (e) {
+        rawEmojis = [];
+      }
+
+      // 提取字符（兼容多种字段）
+      let chars = rawEmojis
+        .map(item => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item === 'object') {
+            return item.char || item.unicode || item.code || item.emoji || null;
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      // 如果提取为空，使用 fallback
+      if (chars.length === 0) {
+        chars = FALLBACK_EMOJIS;
+      }
+      this.emojiList = chars;
+    }
   },
   mounted() {
     this.updateTime();
@@ -1048,6 +1170,9 @@ export default {
       const foot = document.getElementById('mobile-foot');
       if (foot) this.footHeight = foot.offsetHeight;
     });
+
+    // 初始化表情列表
+    this.initEmojiList();
   },
   // ---------- 组件销毁前清理所有撤回计时器 ----------
   beforeUnmount() {
@@ -1120,6 +1245,7 @@ function onImageLoad($img) {
   background: #f7f8fa;
   border-top: 1px solid #f3f3f3;
   padding: 0 !important;
+  overflow: visible !important; /* 新增：防止裁剪表情面板 */
 }
 
 #mobile-foot .foot-wrapper {
@@ -1137,6 +1263,8 @@ function onImageLoad($img) {
   box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
   padding: 9px 14px;
   display: block !important;
+  position: relative; /* 为表情面板定位 */
+  overflow: visible !important; /* 允许面板溢出 */
 }
 
 #mobile-foot .system-input-element {
@@ -1161,6 +1289,14 @@ function onImageLoad($img) {
   margin-left: 1px;
 }
 
+/* 新增用户输入区域 */
+#mobile-foot .user-input-wrapper {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  position: relative;
+}
+
 #mobile-foot .user-input-textarea {
   width: 100%;
   border: none;
@@ -1174,6 +1310,59 @@ function onImageLoad($img) {
   overflow: hidden;
   min-height: 24px;
   font-family: inherit;
+  flex: 1; /* 占据剩余空间 */
+}
+
+/* 笑脸按钮 */
+#mobile-foot .emoji-toggle {
+  flex: 0 0 36px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  color: #666;
+}
+
+#mobile-foot .emoji-toggle:hover {
+  color: #333;
+}
+
+/* 表情面板 */
+#mobile-foot .emoji-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f7f8fa;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#mobile-foot .emoji-item {
+  width: 34px;
+  height: 34px;
+  text-align: center;
+  line-height: 34px;
+  cursor: pointer;
+  font-size: 22px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+#mobile-foot .emoji-item:hover {
+  background: #e0e0e0;
 }
 
 #mobile-foot .send-btn {
@@ -1313,6 +1502,11 @@ function onImageLoad($img) {
 
   #mobile-body {
     top: 70px !important;
+  }
+
+  /* 移动端表情面板高度适配 */
+  #mobile-foot .emoji-picker {
+    max-height: 150px;
   }
 }
 
