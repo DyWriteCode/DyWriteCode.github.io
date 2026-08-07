@@ -338,7 +338,7 @@ export default {
         const hasHtml = /<[^>]+>/.test(message);
 
         if (messageType === 'text') {
-          // 准备 strings 数组（和原逻辑一致）
+          // 准备 strings 数组
           let strings = [''];
           if (Array.isArray(messages)) {
             strings = strings.concat(messages);
@@ -370,23 +370,32 @@ export default {
       });
     },
     /**
-     * 自实现打字机（支持 HTML 内容）
-     * @param {HTMLElement} element - 用于显示打字内容的容器
-     * @param {string[]} strings - 要依次显示的字符串数组
-     * @param {number} typeSpeed - 正向打字速度（毫秒/字符）
-     * @param {number} backSpeed - 退格速度（毫秒/字符）
-     * @param {boolean} isHtml - 是否按 HTML 方式渲染
-     * @param {Function} onComplete - 全部完成后的回调
-     * @returns {Object} { stop: Function } 用于停止打字
-     */
+ * 自实现打字机（标签整体快速输出，内部文本逐字）
+ * @param {HTMLElement} element - 显示容器（systemInputElement）
+ * @param {string[]} strings - 要依次显示的字符串数组（第一个为空）
+ * @param {number} typeSpeed - 普通文本打字速度（毫秒/字符）
+ * @param {number} backSpeed - 退格速度（毫秒/字符）
+ * @param {boolean} isHtml - 是否包含HTML标签
+ * @param {Function} onComplete - 完成回调
+ * @returns {Object} { stop: Function }
+ */
     startTyping(element, strings, typeSpeed, backSpeed, isHtml, onComplete) {
       let canceled = false;
       let timeoutId = null;
-
-      // 用于存储当前所有字符串拼接后的完整内容（纯文本或 HTML）
-      let fullContent = '';
-      // 用于存储当前已输出的内容（纯文本或 HTML）
       let output = '';
+      let currentStringIndex = 0;
+      let currentCharIndex = 0;
+      let buffer = '';
+
+      // 构建内容容器和光标
+      element.innerHTML = '';
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'typing-content';
+      element.appendChild(contentSpan);
+      const cursorSpan = document.createElement('span');
+      cursorSpan.className = 'typed-cursor';
+      cursorSpan.textContent = '|';
+      element.appendChild(cursorSpan);
 
       const instance = {
         stop: () => {
@@ -399,59 +408,47 @@ export default {
         isRunning: true
       };
 
-      // 将 strings 合并为一个完整字符串（typed.js 行为：依次显示并退格）
-      // 但为了简化，这里我们只使用最后一个字符串作为内容
-      // 因为原逻辑中，messages 数组的最后一个元素是最终显示的消息
-      // 但 typed.js 原有行为是依次显示所有字符串，退格删除再显示下一个
-      // 这里我们保持这个行为
-      // 构建一个包含所有字符串的数组，用于逐步显示
       const allStrings = strings.slice(1); // 去掉第一个空字符串
+      const getCurrentString = () => allStrings[currentStringIndex] || '';
 
-      // 如果只有一个字符串，直接使用
-      // 如果多个，需要依次显示并退格
-      let currentStringIndex = 0;
-      let currentCharIndex = 0;
-      let isDeleting = false;
+      // 检查末尾是否为完整标签
+      const endsWithCompleteTag = (str) => {
+        const lastOpen = str.lastIndexOf('<');
+        if (lastOpen === -1) return false;
+        const tagPart = str.slice(lastOpen);
+        return tagPart.includes('>');
+      };
 
-      // 获取当前字符串
-      const getCurrentString = () => {
-        if (currentStringIndex < allStrings.length) {
-          return allStrings[currentStringIndex] || '';
+      // 获取末尾的完整标签
+      const getLastCompleteTag = (str) => {
+        const lastOpen = str.lastIndexOf('<');
+        if (lastOpen === -1) return '';
+        const tagPart = str.slice(lastOpen);
+        const closeIdx = tagPart.indexOf('>');
+        if (closeIdx !== -1) {
+          return tagPart.slice(0, closeIdx + 1);
         }
         return '';
       };
 
-      // 检查 HTML 标签是否完整
-      const isTagComplete = (html) => {
-        const openTags = (html.match(/</g) || []).length;
-        const closeTags = (html.match(/>/g) || []).length;
-        return openTags === closeTags;
-      };
-
-      // 更新元素内容
-      const updateElement = (content) => {
+      // 更新显示
+      const updateDisplay = () => {
         if (isHtml) {
-          // 只有当标签完整时才更新
-          if (isTagComplete(content)) {
-            element.innerHTML = content;
-          }
-          // 如果标签不完整，不更新显示，但内容继续累积
+          contentSpan.innerHTML = output;
         } else {
-          element.textContent = content;
+          contentSpan.textContent = output;
         }
-        // 滚动到底部
         this.$nextTick(() => {
-          const container = document.getElementById('mobile-body-content');
-          if (container) {
-            container.scrollTop = container.scrollHeight;
-          }
-          if (element) {
+          requestAnimationFrame(() => {
+            const container = document.getElementById('mobile-body-content');
+            if (container) {
+              container.scrollTop = container.scrollHeight;
+            }
             element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          }
+          });
         });
       };
 
-      // 延迟函数
       const delayMs = (ms) => new Promise(resolve => {
         if (canceled) return resolve();
         timeoutId = setTimeout(() => {
@@ -460,132 +457,111 @@ export default {
         }, ms);
       });
 
-      // 主循环
       const run = async () => {
-        // 如果没有字符串需要显示，直接完成
         if (allStrings.length === 0) {
           if (!canceled) {
+            contentSpan.innerHTML = output;
+            cursorSpan.remove();
             onComplete();
           }
           instance.isRunning = false;
           return;
         }
 
-        // 正打：逐个字符输出
+        // 正向打字
         const typeForward = async () => {
           const str = getCurrentString();
-          if (currentCharIndex < str.length) {
-            const char = str[currentCharIndex];
-            output += char;
+          if (currentCharIndex >= str.length) return false;
+
+          const char = str[currentCharIndex];
+          let charsToAdd = '';
+          let isTag = false;
+          let delayTime = typeSpeed; // 默认
+
+          if (isHtml && char === '<') {
+            // 收集完整标签
+            buffer = '<';
             currentCharIndex++;
-            updateElement(output);
-            await delayMs(typeSpeed);
-            return true; // 继续
-          } else {
-            // 当前字符串输出完毕
-            return false; // 需要切换到退格或下一个字符串
-          }
-        };
-
-        // 退格：逐个字符删除
-        const typeBackward = async () => {
-          if (output.length > 0) {
-            // 如果按 HTML 模式，退格时需要确保标签完整
-            if (isHtml) {
-              let removed = 0;
-              let tempOutput = output;
-              while (tempOutput.length > 0) {
-                tempOutput = tempOutput.slice(0, -1);
-                removed++;
-                if (isTagComplete(tempOutput) || tempOutput.length === 0) {
-                  break;
-                }
-                // 如果标签不完整，继续删除
-              }
-              // 一次性删除多个字符（直到标签完整）
-              output = tempOutput;
-              updateElement(output);
-              // 退格速度按字符数计算
-              await delayMs(backSpeed * removed);
-            } else {
-              // 纯文本：逐个删除
-              output = output.slice(0, -1);
-              updateElement(output);
-              await delayMs(backSpeed);
+            while (currentCharIndex < str.length) {
+              const nextChar = str[currentCharIndex];
+              buffer += nextChar;
+              currentCharIndex++;
+              if (nextChar === '>') break;
             }
-            return true; // 继续退格
+            charsToAdd = buffer;
+            isTag = true;
+            buffer = '';
+            // 标签整体延迟固定为 20ms（可调整）
+            delayTime = 20;
           } else {
-            return false; // 已经删完
+            charsToAdd = char;
+            currentCharIndex++;
+            delayTime = typeSpeed;
           }
+
+          output += charsToAdd;
+          updateDisplay();
+          await delayMs(delayTime);
+          return true;
         };
 
-        // 处理所有字符串
+        // 退格
+        const typeBackward = async () => {
+          if (output.length === 0) return false;
+
+          let removed = '';
+          let delayTime = backSpeed;
+          if (isHtml && endsWithCompleteTag(output)) {
+            const tag = getLastCompleteTag(output);
+            if (tag) {
+              removed = tag;
+              output = output.slice(0, -tag.length);
+              delayTime = 20; // 标签删除也快速
+            } else {
+              removed = output.slice(-1);
+              output = output.slice(0, -1);
+            }
+          } else {
+            removed = output.slice(-1);
+            output = output.slice(0, -1);
+          }
+          updateDisplay();
+          await delayMs(delayTime);
+          return true;
+        };
+
         while (currentStringIndex < allStrings.length && !canceled) {
-          // 正打当前字符串
           while (currentCharIndex < allStrings[currentStringIndex].length && !canceled) {
             const result = await typeForward();
             if (!result) break;
           }
           if (canceled) break;
 
-          // 如果当前字符串不是最后一个，需要退格删除
           if (currentStringIndex < allStrings.length - 1) {
-            // 退格删除所有字符
             while (output.length > 0 && !canceled) {
               const result = await typeBackward();
               if (!result) break;
             }
             if (canceled) break;
-            // 移动到下一个字符串
             currentStringIndex++;
             currentCharIndex = 0;
           } else {
-            // 最后一个字符串，不需要退格
             break;
           }
         }
 
         // 完成
         if (!canceled) {
-          // 确保最终内容正确显示
           if (isHtml) {
-            // 如果最终内容包含不完整的标签，补充完整
-            let finalContent = output;
-            // 检查是否有未闭合的标签
-            const openTags = (finalContent.match(/</g) || []).length;
-            const closeTags = (finalContent.match(/>/g) || []).length;
-            if (openTags > closeTags) {
-              // 补全未闭合的标签（简单处理：添加 > 使标签闭合）
-              // 更复杂的补全需要解析 HTML 结构，这里简单处理
-              // 但这种情况很少发生，因为内容通常是完整的 HTML
-            }
-            element.innerHTML = finalContent;
+            contentSpan.innerHTML = output;
           } else {
-            element.textContent = output;
+            contentSpan.textContent = output;
           }
-          // 移除光标
-          const cursorSpan = element.querySelector('.typed-cursor');
-          if (cursorSpan) {
-            cursorSpan.remove();
-          }
+          cursorSpan.remove();
           onComplete();
         }
         instance.isRunning = false;
       };
-
-      // 创建光标元素（仅在纯文本模式下使用，HTML 模式使用光标动画）
-      if (!isHtml) {
-        const cursorSpan = document.createElement('span');
-        cursorSpan.className = 'typed-cursor';
-        cursorSpan.textContent = '|';
-        element.appendChild(cursorSpan);
-      } else {
-        // HTML 模式，使用 CSS 光标（在全局样式中已定义）
-        const cursorSpan = document.createElement('span');
-        cursorSpan.className = 'typed-cursor';
-        cursorSpan.textContent = '|';
-        element.appendChild(cursorSpan);
-      }
 
       run();
       return instance;
@@ -918,8 +894,15 @@ function onImageLoad($img) {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 #mobile-foot .user-input-textarea {

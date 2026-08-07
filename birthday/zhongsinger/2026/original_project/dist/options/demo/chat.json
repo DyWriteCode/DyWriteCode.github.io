@@ -3,6 +3,12 @@
         "msgs": [
             "<span style=\"color: red;\">红色的span标签字体</span>"
         ],
+        "msgInputSpeed": 100
+    },
+    {
+        "msgs": [
+            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+        ],
         "msgInputSpeed": 80,
         "triggerNextAction": {
             "type": "userInput",
