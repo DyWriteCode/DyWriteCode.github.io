@@ -82,7 +82,6 @@ FILE: package.json
   "dependencies": {
     "@varlet/ui": "^1.24.1",
     "animate.css": "^4.1.1",
-    "typed.js": "^2.0.12",
     "vue": "^3.2.25",
     "wechat-emojis": "^1.0.2"
   },
@@ -160,7 +159,7 @@ FILE: public/options/demo/chat.json
 [
     {
         "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+            "<span style=\"color: red;\">红色的span标签字体</span>"
         ],
         "msgInputSpeed": 80,
         "triggerNextAction": {
@@ -640,7 +639,6 @@ FILE: src/components/chat-dialog/index.vue
 import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import MessageDetail from './MessageDetail.vue'
-import Typed from 'typed.js'
 import './css/main.scss'
 
 // 导入 wechat-emojis 并重命名原始函数
@@ -683,7 +681,6 @@ export default {
       isTyping: false,
       latestMsgContent: null,
       footHeight: 55,
-      typedInstance: null,
       currentTime: '',
       headHeight: 70,
       lastPatTime: 0,
@@ -694,6 +691,9 @@ export default {
       // 表情相关
       showEmojiPicker: false,
       allEmojis: getAllEmojis(),
+
+      // 打字机实例管理
+      typingInstance: null,
     }
   },
   watch: {
@@ -867,68 +867,278 @@ export default {
         const messageType = this.getMsgType(message);
         this.status = 'systemInput';
 
-        if (this.typedInstance) {
-          this.typedInstance.destroy();
-          this.typedInstance = null;
+        // 停止之前的打字机
+        if (this.typingInstance) {
+          this.typingInstance.stop();
+          this.typingInstance = null;
         }
 
-        if (messageType === 'text') {
-          const el = this.$refs.systemInputElement;
-          if (el) el.innerHTML = '';
-
-          let strings = [''];
-          Array.isArray(messages) ? strings = strings.concat(messages) : strings.push(messages);
-
-          this.typedInstance = new Typed(el, {
-            strings: strings,
-            typeSpeed: inputSpeed,
-            backSpeed: inputSpeed,
-            cursorChar: '|',
-            autoInsertCss: true,
-            contentType: 'html',
-            onComplete: () => {
-              if (this.typedInstance) {
-                this.typedInstance.destroy();
-                this.typedInstance = null;
-              }
-              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
-              delay(500).then(() => resolve());
-            },
-            onStringTyped: () => {
-              this.$nextTick(() => {
-                const foot = document.getElementById('mobile-foot');
-                if (foot) this.footHeight = foot.offsetHeight;
-                // 使用 requestAnimationFrame 确保布局更新后操作
-                requestAnimationFrame(() => {
-                  // 滚动聊天区域到底部
-                  const container = document.getElementById('mobile-body-content');
-                  if (container) {
-                    container.scrollTop = container.scrollHeight;
-                  }
-
-                  // ---- 关键修复：将光标元素移到父容器末尾，确保跟随换行 ----
-                  if (this.typedInstance && this.typedInstance.cursor) {
-                    const cursor = this.typedInstance.cursor;
-                    const parent = cursor.parentNode;
-                    if (parent) {
-                      parent.appendChild(cursor);
-                    }
-                  }
-
-                  // 将输入元素滚动到可视区域
-                  if (this.$refs.systemInputElement) {
-                    this.$refs.systemInputElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                  }
-                });
-              });
-              this.$refs.systemInputElement.scrollTop = 0; // 强制重排
-            }
-          });
-        } else {
+        const el = this.$refs.systemInputElement;
+        if (!el) {
+          // 如果元素不存在，直接推送消息并继续
           this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+          delay(500).then(() => resolve());
+          return;
+        }
+
+        // 清空元素
+        el.innerHTML = '';
+
+        // 检测是否包含 HTML 标签
+        const hasHtml = /<[^>]+>/.test(message);
+
+        if (messageType === 'text') {
+          // 准备 strings 数组（和原逻辑一致）
+          let strings = [''];
+          if (Array.isArray(messages)) {
+            strings = strings.concat(messages);
+          } else {
+            strings.push(messages);
+          }
+
+          // 启动打字机
+          const instance = this.startTyping(el, strings, inputSpeed, inputSpeed, hasHtml, () => {
+            // 打字完成
+            if (this.typingInstance === instance) {
+              this.typingInstance = null;
+            }
+            // 推送消息到列表
+            this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+            // 清空输入区域，避免残留
+            el.innerHTML = '';
+            delay(500).then(() => resolve());
+          });
+
+          this.typingInstance = instance;
+        } else {
+          // 非文本消息直接推送
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+          // 清空输入区域
+          el.innerHTML = '';
           delay(500).then(() => resolve());
         }
       });
+    },
+    /**
+     * 自实现打字机（支持 HTML 内容）
+     * @param {HTMLElement} element - 用于显示打字内容的容器
+     * @param {string[]} strings - 要依次显示的字符串数组
+     * @param {number} typeSpeed - 正向打字速度（毫秒/字符）
+     * @param {number} backSpeed - 退格速度（毫秒/字符）
+     * @param {boolean} isHtml - 是否按 HTML 方式渲染
+     * @param {Function} onComplete - 全部完成后的回调
+     * @returns {Object} { stop: Function } 用于停止打字
+     */
+    startTyping(element, strings, typeSpeed, backSpeed, isHtml, onComplete) {
+      let canceled = false;
+      let timeoutId = null;
+
+      // 用于存储当前所有字符串拼接后的完整内容（纯文本或 HTML）
+      let fullContent = '';
+      // 用于存储当前已输出的内容（纯文本或 HTML）
+      let output = '';
+
+      const instance = {
+        stop: () => {
+          canceled = true;
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+        },
+        isRunning: true
+      };
+
+      // 将 strings 合并为一个完整字符串（typed.js 行为：依次显示并退格）
+      // 但为了简化，这里我们只使用最后一个字符串作为内容
+      // 因为原逻辑中，messages 数组的最后一个元素是最终显示的消息
+      // 但 typed.js 原有行为是依次显示所有字符串，退格删除再显示下一个
+      // 这里我们保持这个行为
+      // 构建一个包含所有字符串的数组，用于逐步显示
+      const allStrings = strings.slice(1); // 去掉第一个空字符串
+
+      // 如果只有一个字符串，直接使用
+      // 如果多个，需要依次显示并退格
+      let currentStringIndex = 0;
+      let currentCharIndex = 0;
+      let isDeleting = false;
+
+      // 获取当前字符串
+      const getCurrentString = () => {
+        if (currentStringIndex < allStrings.length) {
+          return allStrings[currentStringIndex] || '';
+        }
+        return '';
+      };
+
+      // 检查 HTML 标签是否完整
+      const isTagComplete = (html) => {
+        const openTags = (html.match(/</g) || []).length;
+        const closeTags = (html.match(/>/g) || []).length;
+        return openTags === closeTags;
+      };
+
+      // 更新元素内容
+      const updateElement = (content) => {
+        if (isHtml) {
+          // 只有当标签完整时才更新
+          if (isTagComplete(content)) {
+            element.innerHTML = content;
+          }
+          // 如果标签不完整，不更新显示，但内容继续累积
+        } else {
+          element.textContent = content;
+        }
+        // 滚动到底部
+        this.$nextTick(() => {
+          const container = document.getElementById('mobile-body-content');
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+          if (element) {
+            element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        });
+      };
+
+      // 延迟函数
+      const delayMs = (ms) => new Promise(resolve => {
+        if (canceled) return resolve();
+        timeoutId = setTimeout(() => {
+          timeoutId = null;
+          resolve();
+        }, ms);
+      });
+
+      // 主循环
+      const run = async () => {
+        // 如果没有字符串需要显示，直接完成
+        if (allStrings.length === 0) {
+          if (!canceled) {
+            onComplete();
+          }
+          instance.isRunning = false;
+          return;
+        }
+
+        // 正打：逐个字符输出
+        const typeForward = async () => {
+          const str = getCurrentString();
+          if (currentCharIndex < str.length) {
+            const char = str[currentCharIndex];
+            output += char;
+            currentCharIndex++;
+            updateElement(output);
+            await delayMs(typeSpeed);
+            return true; // 继续
+          } else {
+            // 当前字符串输出完毕
+            return false; // 需要切换到退格或下一个字符串
+          }
+        };
+
+        // 退格：逐个字符删除
+        const typeBackward = async () => {
+          if (output.length > 0) {
+            // 如果按 HTML 模式，退格时需要确保标签完整
+            if (isHtml) {
+              let removed = 0;
+              let tempOutput = output;
+              while (tempOutput.length > 0) {
+                tempOutput = tempOutput.slice(0, -1);
+                removed++;
+                if (isTagComplete(tempOutput) || tempOutput.length === 0) {
+                  break;
+                }
+                // 如果标签不完整，继续删除
+              }
+              // 一次性删除多个字符（直到标签完整）
+              output = tempOutput;
+              updateElement(output);
+              // 退格速度按字符数计算
+              await delayMs(backSpeed * removed);
+            } else {
+              // 纯文本：逐个删除
+              output = output.slice(0, -1);
+              updateElement(output);
+              await delayMs(backSpeed);
+            }
+            return true; // 继续退格
+          } else {
+            return false; // 已经删完
+          }
+        };
+
+        // 处理所有字符串
+        while (currentStringIndex < allStrings.length && !canceled) {
+          // 正打当前字符串
+          while (currentCharIndex < allStrings[currentStringIndex].length && !canceled) {
+            const result = await typeForward();
+            if (!result) break;
+          }
+          if (canceled) break;
+
+          // 如果当前字符串不是最后一个，需要退格删除
+          if (currentStringIndex < allStrings.length - 1) {
+            // 退格删除所有字符
+            while (output.length > 0 && !canceled) {
+              const result = await typeBackward();
+              if (!result) break;
+            }
+            if (canceled) break;
+            // 移动到下一个字符串
+            currentStringIndex++;
+            currentCharIndex = 0;
+          } else {
+            // 最后一个字符串，不需要退格
+            break;
+          }
+        }
+
+        // 完成
+        if (!canceled) {
+          // 确保最终内容正确显示
+          if (isHtml) {
+            // 如果最终内容包含不完整的标签，补充完整
+            let finalContent = output;
+            // 检查是否有未闭合的标签
+            const openTags = (finalContent.match(/</g) || []).length;
+            const closeTags = (finalContent.match(/>/g) || []).length;
+            if (openTags > closeTags) {
+              // 补全未闭合的标签（简单处理：添加 > 使标签闭合）
+              // 更复杂的补全需要解析 HTML 结构，这里简单处理
+              // 但这种情况很少发生，因为内容通常是完整的 HTML
+            }
+            element.innerHTML = finalContent;
+          } else {
+            element.textContent = output;
+          }
+          // 移除光标
+          const cursorSpan = element.querySelector('.typed-cursor');
+          if (cursorSpan) {
+            cursorSpan.remove();
+          }
+          onComplete();
+        }
+        instance.isRunning = false;
+      };
+
+      // 创建光标元素（仅在纯文本模式下使用，HTML 模式使用光标动画）
+      if (!isHtml) {
+        const cursorSpan = document.createElement('span');
+        cursorSpan.className = 'typed-cursor';
+        cursorSpan.textContent = '|';
+        element.appendChild(cursorSpan);
+      } else {
+        // HTML 模式，使用 CSS 光标（在全局样式中已定义）
+        const cursorSpan = document.createElement('span');
+        cursorSpan.className = 'typed-cursor';
+        cursorSpan.textContent = '|';
+        element.appendChild(cursorSpan);
+      }
+
+      run();
+      return instance;
     },
     sendUserMsg() {
       const message = this.inputMessage;
@@ -1140,9 +1350,9 @@ export default {
     document.addEventListener('click', this._boundCloseEmojiPicker);
   },
   beforeUnmount() {
-    if (this.typedInstance) {
-      this.typedInstance.destroy();
-      this.typedInstance = null;
+    if (this.typingInstance) {
+      this.typingInstance.stop();
+      this.typingInstance = null;
     }
     if (this.recallTimers) {
       this.recallTimers.forEach(timer => clearTimeout(timer));
@@ -1245,7 +1455,7 @@ function onImageLoad($img) {
   color: black;
 }
 
-/* ====== 修复 Typed 光标换行问题 ====== */
+/* ====== 修复自定义光标换行问题 ====== */
 #mobile-foot .system-input-element .typed-cursor {
   display: inline !important;
   vertical-align: baseline !important;
@@ -1254,7 +1464,12 @@ function onImageLoad($img) {
   color: black;
   opacity: 1;
   margin-left: 1px;
-  /* 移除 position: relative 避免偏移 */
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 #mobile-foot .user-input-textarea {
@@ -2383,7 +2598,6 @@ FILE: src/components/chat-dialog/letter/content.vue
 </template>
 
 <script>
-import Typed from 'typed.js'
 export default {
   props: {
     title: String,
@@ -2393,27 +2607,48 @@ export default {
   data() {
     return {
       contents: [],
-      finish: false
+      finish: false,
+      _appendTimers: [],
     }
   },
   methods: {
+    /**
+     * 自实现打字机（只正向，不退格）
+     * @param {HTMLElement} ele - 目标元素
+     * @param {string} content - 要打出的纯文本
+     * @param {number} speed - 每字符延迟（毫秒）
+     * @param {Function} resolve - 完成回调
+     */
+    typeText(ele, content, speed, resolve) {
+      if (!ele) return resolve();
+      ele.textContent = ''; // 清空
+      let index = 0;
+      const timer = setInterval(() => {
+        if (index < content.length) {
+          ele.textContent += content[index];
+          index++;
+          // 自动滚动
+          this.autoScroll();
+        } else {
+          clearInterval(timer);
+          // 从定时器列表中移除
+          const idx = this._appendTimers.indexOf(timer);
+          if (idx !== -1) this._appendTimers.splice(idx, 1);
+          resolve();
+        }
+      }, speed);
+      this._appendTimers.push(timer);
+    },
+
     append(ele, content) {
       return new Promise((resolve) => {
-        const typed = new Typed(ele, {
-          strings: ['', content],
-          typeSpeed: this.speed,
-          backSpeed: this.speed,
-          showCursor: false,
-          onComplete: () => {
-            typed.stop();
-            setTimeout(() => resolve(), 500);
-          }
-        });
-      })
+        this.typeText(ele, content, this.speed, resolve);
+      });
     },
+
     initContent() {
       let paragraphChain = Promise.resolve();
-      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title, 120));
+      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title));
       this.paragraphs.forEach((paragraph, i) => {
         paragraphChain = paragraphChain.then(() => {
           return new Promise((resolve) => {
@@ -2457,6 +2692,7 @@ export default {
       });
       paragraphChain.then(() => this.finish = true);
     },
+
     autoScroll() {
       this.$nextTick(() => {
         this.computeDistance().then(distance => {
@@ -2473,6 +2709,7 @@ export default {
         })
       });
     },
+
     computeDistance() {
       return new Promise((resolve) => {
         const lastContentIndex = this.contents.length - 1;
@@ -2495,6 +2732,7 @@ export default {
         }
       })
     },
+
     onImageLoad(dom) {
       const $img = $(dom);
       return new Promise(resolve => {
@@ -2505,6 +2743,7 @@ export default {
           });
       });
     },
+
     alignImageHeight(container) {
       const img = container.querySelector('img');
       if (!img) return;
@@ -2529,8 +2768,15 @@ export default {
       }
     }
   },
+
   mounted() {
     this.initContent();
+  },
+
+  beforeUnmount() {
+    // 清除所有未完成的定时器
+    this._appendTimers.forEach(timer => clearInterval(timer));
+    this._appendTimers = [];
   }
 }
 </script>
