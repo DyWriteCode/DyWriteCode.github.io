@@ -1,5 +1,5 @@
 <template>
-  <ChatDialog :options="chatOptions" :title="props.title" :roles="props.roles" @msg-click="handleMsgClick" />
+  <ChatDialog :options="chatOptions" :title="props.title" :avatars="props.avatars" @msg-click="handleMsgClick" />
 </template>
 
 <script setup>
@@ -9,7 +9,7 @@ import ChatDialog from '../../components/chat-dialog/index.vue'
 const props = defineProps({
   src: String,
   title: String,
-  roles: Object   // 角色配置
+  avatars: Object
 })
 
 const chatOptions = ref()

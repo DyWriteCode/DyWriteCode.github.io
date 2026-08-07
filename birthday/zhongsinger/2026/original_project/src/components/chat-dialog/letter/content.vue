@@ -26,7 +26,6 @@
 </template>
 
 <script>
-import Typed from 'typed.js'
 export default {
   props: {
     title: String,
@@ -36,27 +35,48 @@ export default {
   data() {
     return {
       contents: [],
-      finish: false
+      finish: false,
+      _appendTimers: [],
     }
   },
   methods: {
+    /**
+     * 自实现打字机（只正向，不退格）
+     * @param {HTMLElement} ele - 目标元素
+     * @param {string} content - 要打出的纯文本
+     * @param {number} speed - 每字符延迟（毫秒）
+     * @param {Function} resolve - 完成回调
+     */
+    typeText(ele, content, speed, resolve) {
+      if (!ele) return resolve();
+      ele.textContent = ''; // 清空
+      let index = 0;
+      const timer = setInterval(() => {
+        if (index < content.length) {
+          ele.textContent += content[index];
+          index++;
+          // 自动滚动
+          this.autoScroll();
+        } else {
+          clearInterval(timer);
+          // 从定时器列表中移除
+          const idx = this._appendTimers.indexOf(timer);
+          if (idx !== -1) this._appendTimers.splice(idx, 1);
+          resolve();
+        }
+      }, speed);
+      this._appendTimers.push(timer);
+    },
+
     append(ele, content) {
       return new Promise((resolve) => {
-        const typed = new Typed(ele, {
-          strings: ['', content],
-          typeSpeed: this.speed,
-          backSpeed: this.speed,
-          showCursor: false,
-          onComplete: () => {
-            typed.stop();
-            setTimeout(() => resolve(), 500);
-          }
-        });
-      })
+        this.typeText(ele, content, this.speed, resolve);
+      });
     },
+
     initContent() {
       let paragraphChain = Promise.resolve();
-      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title, 120));
+      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title));
       this.paragraphs.forEach((paragraph, i) => {
         paragraphChain = paragraphChain.then(() => {
           return new Promise((resolve) => {
@@ -100,6 +120,7 @@ export default {
       });
       paragraphChain.then(() => this.finish = true);
     },
+
     autoScroll() {
       this.$nextTick(() => {
         this.computeDistance().then(distance => {
@@ -116,6 +137,7 @@ export default {
         })
       });
     },
+
     computeDistance() {
       return new Promise((resolve) => {
         const lastContentIndex = this.contents.length - 1;
@@ -138,6 +160,7 @@ export default {
         }
       })
     },
+
     onImageLoad(dom) {
       const $img = $(dom);
       return new Promise(resolve => {
@@ -148,6 +171,7 @@ export default {
           });
       });
     },
+
     alignImageHeight(container) {
       const img = container.querySelector('img');
       if (!img) return;
@@ -172,8 +196,15 @@ export default {
       }
     }
   },
+
   mounted() {
     this.initContent();
+  },
+
+  beforeUnmount() {
+    // 清除所有未完成的定时器
+    this._appendTimers.forEach(timer => clearInterval(timer));
+    this._appendTimers = [];
   }
 }
 </script>
