@@ -41,6 +41,14 @@
 
             <div class="msg-content">
               <div v-if="msg.author" class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
+              <!-- 引用块 -->
+              <div v-if="msg.quoteInfo" class="msg-quote">
+                <div class="quote-line"></div>
+                <div class="quote-content">
+                  <span class="quote-author">{{ msg.quoteInfo.authorName }}</span>
+                  <span class="quote-text">{{ msg.quoteInfo.contentPreview }}</span>
+                </div>
+              </div>
               <div class="msg"
                 :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }"
                 :class="{
@@ -77,7 +85,7 @@
     <!-- 表情面板 -->
     <div class="emoji-picker-wrapper" v-show="status === 'userInput' && showEmojiPicker">
       <div class="emoji-grid">
-        <img v-for="emoji in allEmojis" :key="emoji.name" :src="'/' + getEmojiPath(emoji.name)" :alt="emoji.name"
+        <img v-for="emoji in allEmojis" :key="emoji.name" :src="getEmojiPath(emoji.name)" :alt="emoji.name"
           :title="emoji.name" @click="selectEmoji(emoji)" class="emoji-item" loading="lazy" />
       </div>
     </div>
@@ -272,14 +280,16 @@ export default {
       if (!this.timeInserted) {
         this.addTimeMessage();
         this.timeInserted = true;
-      }
-      messages.forEach(({ msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip }) => {
-        this.msgChain = this.msgChain
-          .then(() => this.sendSysMsg(msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip));
-      })
+      };
+      messages.forEach((block) => {
+        this.msgChain = this.msgChain.then(() => this.sendSysMsg(block));
+      });
     },
-    sendSysMsg(messages, inputSpeed = 150, author, triggerNextAction = null, pat = null, recall = null, tip = null) {
+    sendSysMsg(block) {
       return new Promise((resolve) => {
+        const { msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip, id, quote } = block;
+
+        // 拍一拍处理（原逻辑不变）
         if (pat) {
           let target = pat;
           let customText = null;
@@ -291,49 +301,43 @@ export default {
           const authorInfo = this.getRoleInfo(author || 'author');
           const patText = customText || targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
           const displayName = authorInfo.name || '未知';
-          const tip = `${displayName} ${patText}`;
-          this.addTipMessage(tip);
+          const tipText = `${displayName} ${patText}`;
+          this.addTipMessage(tipText);
         }
 
-        if (!messages || messages.length === 0) {
+        if (!msgs || msgs.length === 0) {
           resolve();
           return;
         }
 
         const startIndex = this.messages.length;
 
-        this.sendSysMsgInner(messages, inputSpeed, author).then(() => {
+        // 将 id 和 quote 传递给内部发送函数
+        this.sendSysMsgInner(msgs, msgInputSpeed, author, id, quote).then(() => {
           const endIndex = this.messages.length;
 
+          // 撤回处理
           if (recall && recall > 0) {
             const senderName = this.getRoleInfo(author || 'author').name || '未知';
             const timer = setTimeout(() => {
               if (this.messages.length >= endIndex) {
                 this.messages.splice(startIndex, endIndex - startIndex);
-                this.messages.push({
-                  type: 'tip',
-                  text: `${senderName}撤回了一条消息`
-                });
-                this.$nextTick(() => {
-                  onMessageSending();
-                });
+                this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` });
+                this.$nextTick(() => { onMessageSending(); });
               }
             }, recall);
             this.recallTimers.push(timer);
           }
 
           if (tip) {
-            this.messages.push({
-              type: 'tip',
-              text: tip
-            });
+            this.messages.push({ type: 'tip', text: tip });
             this.$nextTick(() => { onMessageSending(); });
           }
 
           if (triggerNextAction) {
             const trigger = () => delay(500).then(() => resolve());
             this.nextActionTrigger = {
-              inputSpeed,
+              inputSpeed: msgInputSpeed,
               triggerNextAction,
               trigger
             };
@@ -344,7 +348,7 @@ export default {
         });
       });
     },
-    sendSysMsgInner(messages, inputSpeed, author) {
+    sendSysMsgInner(messages, inputSpeed, author, externalId = null, quoteId = null) {
       return new Promise((resolve) => {
         const message = Array.isArray(messages) ? messages[messages.length - 1] : messages;
         const messageType = this.getMsgType(message);
@@ -357,7 +361,7 @@ export default {
 
         const el = this.$refs.systemInputElement;
         if (!el) {
-          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
           delay(500).then(() => resolve());
           return;
         }
@@ -377,25 +381,23 @@ export default {
             if (this.typingInstance === instance) {
               this.typingInstance = null;
             }
-            this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+            this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
             el.innerHTML = '';
             delay(500).then(() => resolve());
           });
 
           this.typingInstance = instance;
         } else if (messageType === 'voice') {
-          // const totalDelay = inputSpeed * VOICE_INPUT_SPEED_MULTIPLIER;
-          const totalDelay = 5000;
-          // 重置状态
+          const voiceProps = this.getProps(message, messageType);
+          const delayMs = parseInt(voiceProps.delay, 10);
+          const totalDelay = !isNaN(delayMs) && delayMs > 0 ? delayMs : 5000;
+
           this.voiceInputActive = true;
           this.voiceInputDuration = 0;
           this.voiceCancelActive = false;
           this.voiceResolve = resolve;
 
-          // 获取 cancel 属性
-          const props = this.getProps(message, messageType);
-          const shouldAutoCancel = (props.cancel === 'true' || props.cancel === true);
-
+          const shouldAutoCancel = (voiceProps.cancel === 'true' || voiceProps.cancel === true);
           const startTime = Date.now();
           this.voiceInputTimer = setInterval(() => {
             const elapsed = (Date.now() - startTime) / 1000;
@@ -405,30 +407,19 @@ export default {
           this.voicePushTimer = setTimeout(() => {
             clearInterval(this.voiceInputTimer);
             this.voiceInputTimer = null;
-            // 注意：此时蒙版还未关闭，语音消息已经播放完毕
 
             if (shouldAutoCancel) {
-              this.voiceCancelActive = true;   // 气泡和按钮变红
-
-              // 先发送消息（让用户看到消息出现）
-              const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
-
-              // 延迟撤回
+              this.voiceCancelActive = true;
+              const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
               this.autoCancelTimer = setTimeout(() => {
                 const msgId = msg.id;
                 const idx = this.messages.findIndex(m => m.id === msgId);
                 if (idx !== -1) {
                   const senderName = this.getRoleInfo(author || 'author').name || '未知';
                   this.messages.splice(idx, 1);
-                  this.messages.push({
-                    type: 'tip',
-                    text: `${senderName}撤回了一条消息`
-                  });
-                  this.$nextTick(() => {
-                    onMessageSending();
-                  });
+                  this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` });
+                  this.$nextTick(() => { onMessageSending(); });
                 }
-                // 关闭蒙版并重置状态
                 this.voiceInputActive = false;
                 this.voiceCancelActive = false;
                 if (this.voiceResolve) {
@@ -437,7 +428,7 @@ export default {
                 }
               }, 1000);
             } else {
-              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
               el.innerHTML = '';
               this.voiceInputActive = false;
               if (this.voiceResolve) {
@@ -447,7 +438,7 @@ export default {
             }
           }, totalDelay);
         } else {
-          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
           el.innerHTML = '';
           delay(500).then(() => resolve());
         }
@@ -704,20 +695,53 @@ export default {
       if (resolveKeyTexts.some(resolveKey => message.indexOf(resolveKey) > -1)) return false;
       return true;
     },
-    pushMsg(message, author, type = 'text') {
+    pushMsg(message, author, type = 'text', externalId = null, quoteId = null) {
       this.msgIdCounter++;
       const msg = {
         id: this.msgIdCounter,
-        author: author,
+        author,
         content: message,
         type,
         props: this.getProps(message, type),
         transcripted: false,
         transcriptMsgId: null,
+        externalId,
+        quoteId,
+        quoteInfo: null
       };
+
+      // 处理引用
+      if (quoteId) {
+        const quotedMsg = this.messages.find(m => m.externalId === quoteId);
+        if (quotedMsg) {
+          msg.quoteInfo = {
+            authorName: this.getRoleInfo(quotedMsg.author).name || '未知',
+            contentPreview: this.getContentPreview(quotedMsg)
+          };
+        } else {
+          msg.quoteInfo = {
+            authorName: '未知',
+            contentPreview: '[消息已不存在]'
+          };
+        }
+      }
+
       this.messages.push(msg);
       onMessageSending();
       return msg;
+    },
+    getContentPreview(msg) {
+      const { type, content } = msg;
+      switch (type) {
+        case 'text':
+          const plainText = content.replace(/<[^>]+>/g, '').trim();
+          return plainText.length > 30 ? plainText.slice(0, 30) + '...' : plainText;
+        case 'img': return '[图片]';
+        case 'voice': return '[语音]';
+        case 'vlog': return '[视频]';
+        case 'letter': return '[信件]';
+        default: return '[消息]';
+      }
     },
     getProps(message, type) {
       const props = {};
@@ -817,8 +841,7 @@ export default {
       if (!rawPath) return null;
       // 移除可能的 'assets/' 前缀
       const relativePath = rawPath.replace(/^assets\//, '');
-      // 使用 URL 构造函数来拼接，更安全
-      return new URL(relativePath, 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat').href;
+      return "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat/" + relativePath;
     },
     toggleEmojiPicker() {
       this.showEmojiPicker = !this.showEmojiPicker;
@@ -851,9 +874,10 @@ export default {
       return text.replace(/\[([^\]]+)\]/g, (match, name) => {
         if (hasEmoji(name)) {
           const path = this.getEmojiPath(name);
-          console.log('Rendering emoji:', name, 'Path:', path);
           if (path) {
-            return `<img src="${path}" class="inline-emoji" alt="${name}" />`;
+            const cleanPath = path.replace(/^\/+/, ''); // 移除开头的所有斜杠
+            const html = `<img src="${cleanPath}" class="inline-emoji" alt="${name}" />`;
+            return html;
           }
         }
         return match;
@@ -1427,5 +1451,60 @@ function onImageLoad($img) {
   width: 100%;
   user-select: none;
   pointer-events: none;
+}
+
+.msg-quote {
+  display: flex;
+  align-items: center;
+  background: #f0f0f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #888;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 24px;
+}
+
+.msg-quote .quote-line {
+  width: 3px;
+  background: #c0c0c0;
+  border-radius: 2px;
+  height: 20px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.msg-quote .quote-author {
+  font-weight: 500;
+  color: #333;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.msg-quote .quote-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 自己的消息引用块背景微调 */
+.msg-me .msg-quote {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.msg-me .msg-quote .quote-line {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.msg-me .msg-quote .quote-author {
+  color: white;
+}
+
+.msg-me .msg-quote .quote-text {
+  color: rgba(255, 255, 255, 0.9);
 }
 </style>

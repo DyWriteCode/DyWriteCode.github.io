@@ -1,6 +1,42 @@
 [
     {
         "msgs": [
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
+        ],
+        "id": "greeting",
+        "msgInputSpeed": 80,
+        "author": "author",
+        "recall": 100
+    },
+    {
+        "id": "second",
+        "msgs": [
+            "这是第二条消息，引用上面的那一条"
+        ],
+        "msgInputSpeed": 80,
+        "author": "K&I",
+        "quote": "greeting"
+    },
+    {
+        "msgs": [
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "<span style=\"color: red;\">红色的span标签字体</span>"
+        ],
+        "msgInputSpeed": 100
+    },
+    {
+        "msgs": [
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容'  delay=4000/>"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
             "<span style=\"color: red;\">红色的span标签字体</span>"
         ],
         "msgInputSpeed": 100
@@ -37,7 +73,7 @@
         ],
         "msgInputSpeed": 80,
         "author": "three",
-        "tip":"test"
+        "tip": "test"
     },
     {
         "msgs": [

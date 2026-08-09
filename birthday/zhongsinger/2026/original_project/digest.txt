@@ -161,7 +161,13 @@ FILE: public/options/demo/chat.json
 [
     {
         "msgs": [
-            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' />"
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容'  delay=4000/>"
         ],
         "msgInputSpeed": 80
     },
@@ -641,7 +647,7 @@ FILE: src/components/chat-dialog/index.vue
     <!-- 表情面板 -->
     <div class="emoji-picker-wrapper" v-show="status === 'userInput' && showEmojiPicker">
       <div class="emoji-grid">
-        <img v-for="emoji in allEmojis" :key="emoji.name" :src="'/' + getEmojiPath(emoji.name)" :alt="emoji.name"
+        <img v-for="emoji in allEmojis" :key="emoji.name" :src="getEmojiPath(emoji.name)" :alt="emoji.name"
           :title="emoji.name" @click="selectEmoji(emoji)" class="emoji-item" loading="lazy" />
       </div>
     </div>
@@ -948,17 +954,19 @@ export default {
 
           this.typingInstance = instance;
         } else if (messageType === 'voice') {
-          // const totalDelay = inputSpeed * VOICE_INPUT_SPEED_MULTIPLIER;
-          const totalDelay = 5000; 
+          // ====== 修改点：从 delay 属性读取动画时长 ======
+          const voiceProps = this.getProps(message, messageType);
+          const delayMs = parseInt(voiceProps.delay, 10);
+          const totalDelay = !isNaN(delayMs) && delayMs > 0 ? delayMs : 5000;
+
           // 重置状态
           this.voiceInputActive = true;
           this.voiceInputDuration = 0;
           this.voiceCancelActive = false;
           this.voiceResolve = resolve;
 
-          // 获取 cancel 属性
-          const props = this.getProps(message, messageType);
-          const shouldAutoCancel = (props.cancel === 'true' || props.cancel === true);
+          // 获取 cancel 属性（复用 voiceProps）
+          const shouldAutoCancel = (voiceProps.cancel === 'true' || voiceProps.cancel === true);
 
           const startTime = Date.now();
           this.voiceInputTimer = setInterval(() => {
@@ -969,10 +977,9 @@ export default {
           this.voicePushTimer = setTimeout(() => {
             clearInterval(this.voiceInputTimer);
             this.voiceInputTimer = null;
-            // 注意：此时蒙版还未关闭，语音消息已经播放完毕
 
             if (shouldAutoCancel) {
-              this.voiceCancelActive = true;   // 气泡和按钮变红
+              this.voiceCancelActive = true;
 
               // 先发送消息（让用户看到消息出现）
               const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
@@ -1379,7 +1386,9 @@ export default {
     getEmojiPath(name) {
       const rawPath = originalGetEmojiPath(name);
       if (!rawPath) return null;
-      return 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/WeChat/' + rawPath.replace('assets/', '');
+      // 移除可能的 'assets/' 前缀
+      const relativePath = rawPath.replace(/^assets\//, '');
+      return "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat/" + relativePath;
     },
     toggleEmojiPicker() {
       this.showEmojiPicker = !this.showEmojiPicker;
@@ -1413,7 +1422,9 @@ export default {
         if (hasEmoji(name)) {
           const path = this.getEmojiPath(name);
           if (path) {
-            return `<img src="/${path}" class="inline-emoji" alt="${name}" />`;
+            const cleanPath = path.replace(/^\/+/, ''); // 移除开头的所有斜杠
+            const html = `<img src="${cleanPath}" class="inline-emoji" alt="${name}" />`;
+            return html;
           }
         }
         return match;
