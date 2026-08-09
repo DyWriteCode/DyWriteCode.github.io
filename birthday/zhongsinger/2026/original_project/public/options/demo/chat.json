@@ -3,10 +3,16 @@
         "msgs": [
             "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
         ],
-        "id": "greeting",
         "msgInputSpeed": 80,
         "author": "author",
         "recall": 100
+    },
+    {
+        "msgs": [
+            "标签字体"
+        ],
+        "id": "greeting",
+        "msgInputSpeed": 100
     },
     {
         "id": "second",
