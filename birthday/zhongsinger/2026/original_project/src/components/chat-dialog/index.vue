@@ -711,7 +711,7 @@ export default {
     getEmojiPath(name) {
       const rawPath = originalGetEmojiPath(name);
       if (!rawPath) return null;
-      return 'assets/WeChat/' + rawPath.replace('assets/', '');
+      return 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/WeChat/' + rawPath.replace('assets/', '');
     },
     toggleEmojiPicker() {
       this.showEmojiPicker = !this.showEmojiPicker;
