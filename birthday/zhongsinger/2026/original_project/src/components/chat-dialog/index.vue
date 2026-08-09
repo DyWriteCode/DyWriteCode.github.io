@@ -29,15 +29,18 @@
         </div>
 
         <!-- 消息列表 -->
-        <div class="msg-row" v-for="(msg, index) in messages" :key="index"
-          :class="msg.author === 'me' ? 'msg-me' : 'msg-author'" :data-author="msg.author"
-          @dblclick="(e) => handleDoubleClick(msg, e)">
+        <div class="msg-row" v-for="(msg, index) in messages" :key="index" :class="[
+          msg.author === 'me' ? 'msg-me' : 'msg-author',
+          { 'no-avatar': !msg.author }
+        ]" :data-author="msg.author" @dblclick="(e) => handleDoubleClick(msg, e)">
           <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
           <template v-else>
-            <img v-if="getRoleInfo(msg.author).avatar" class="msg-avatar" :src="getRoleInfo(msg.author).avatar"
-              alt="avatar" />
+            <img v-if="msg.author && getRoleInfo(msg.author).avatar" class="msg-avatar"
+              :src="getRoleInfo(msg.author).avatar" alt="avatar" />
+            <div v-else class="msg-avatar-placeholder"></div>
+
             <div class="msg-content">
-              <div class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
+              <div v-if="msg.author" class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
               <div class="msg"
                 :style="msg.width && msg.height && { width: msg.width - 26 + 'px', height: msg.height - 18 + 'px' }"
                 :class="{
@@ -46,8 +49,8 @@
                   'animate_breathe': index === (messages.length - 1) && status === 'componentClose'
                 }" @click="$emit('msg-click', msg)">
                 <span v-if="msg.type === 'text'" v-html="renderEmoji(msg.content)"></span>
-                <component v-else :is="msg.type" v-bind="msg.props" @open="handleComponentOpen(msg)"
-                  @close="handleComponentClose" />
+                <component v-else :is="msg.type" v-bind="msg.props" :transcripted="!!msg.transcripted"
+                  @convert="(alt) => handleVoiceConvert(alt, msg)" @cancel-convert="() => handleVoiceCancel(msg)" />
               </div>
             </div>
           </template>
@@ -62,7 +65,6 @@
             v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
         </div>
 
-        <!-- 表情按钮 -->
         <div class="emoji-btn-wrapper" v-if="status === 'userInput'">
           <span class="emoji-toggle-btn" @click="toggleEmojiPicker">😊</span>
         </div>
@@ -79,6 +81,29 @@
           :title="emoji.name" @click="selectEmoji(emoji)" class="emoji-item" loading="lazy" />
       </div>
     </div>
+
+    <!-- 语音输入蒙版 -->
+    <div v-if="voiceInputActive" class="voice-input-overlay">
+      <!-- 中央气泡 -->
+      <div class="voice-input-bubble" :class="{ 'voice-canceled': voiceCancelActive }">
+        <div class="voice-wave">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span class="voice-input-duration">{{ voiceInputDuration }}''</span>
+      </div>
+
+      <!-- 底部弧形区域（始终不变红） -->
+      <div class="voice-bottom-area">
+        <!-- 取消按钮 - 圆形，始终禁用，取消时变红 -->
+        <div class="voice-cancel-btn" :class="{
+          'cancel-active': voiceCancelActive,
+          'disabled': true
+        }">
+          取消
+        </div>
+        <div class="voice-send-area">松开发送</div>
+      </div>
+    </div>
   </div>
   <MessageDetail v-if="currentOpenComponent" :type="currentOpenComponent.type" :options="currentOpenComponent.props"
     @close="handleComponentClose">
@@ -88,10 +113,10 @@
 <script>
 import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
+import voice from './voice/index.vue'
 import MessageDetail from './MessageDetail.vue'
 import './css/main.scss'
 
-// 导入 wechat-emojis 并重命名原始函数
 import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis';
 
 const AUTHOR = {
@@ -103,10 +128,13 @@ const TRIGGER_NEXT_ACTION_TYPE = {
   COMPONENT_CLOSE: 'componentClose'
 };
 
+// const VOICE_INPUT_SPEED_MULTIPLIER = 30;
+
 export default {
   components: {
     letter,
     vlog,
+    voice,
     MessageDetail,
   },
   props: {
@@ -138,12 +166,18 @@ export default {
       recallTimers: [],
       timeInserted: false,
 
-      // 表情相关
       showEmojiPicker: false,
       allEmojis: getAllEmojis(),
 
-      // 打字机实例管理
       typingInstance: null,
+
+      voiceInputActive: false,
+      voiceInputDuration: 0,
+      voiceInputTimer: null,
+      voiceCancelActive: false,    // 界面红色状态（气泡 + 按钮）
+      voicePushTimer: null,
+      voiceResolve: null,
+      autoCancelTimer: null,       // 用于自动撤回的定时器
     }
   },
   watch: {
@@ -164,7 +198,6 @@ export default {
     }
   },
   methods: {
-    // ---- 原有方法（完整保留） ----
     addTimeMessage() {
       const now = new Date();
       const hours = now.getHours();
@@ -317,7 +350,6 @@ export default {
         const messageType = this.getMsgType(message);
         this.status = 'systemInput';
 
-        // 停止之前的打字机
         if (this.typingInstance) {
           this.typingInstance.stop();
           this.typingInstance = null;
@@ -325,20 +357,15 @@ export default {
 
         const el = this.$refs.systemInputElement;
         if (!el) {
-          // 如果元素不存在，直接推送消息并继续
           this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
           delay(500).then(() => resolve());
           return;
         }
 
-        // 清空元素
         el.innerHTML = '';
-
-        // 检测是否包含 HTML 标签
         const hasHtml = /<[^>]+>/.test(message);
 
         if (messageType === 'text') {
-          // 准备 strings 数组
           let strings = [''];
           if (Array.isArray(messages)) {
             strings = strings.concat(messages);
@@ -346,39 +373,86 @@ export default {
             strings.push(messages);
           }
 
-          // 启动打字机
           const instance = this.startTyping(el, strings, inputSpeed, inputSpeed, hasHtml, () => {
-            // 打字完成
             if (this.typingInstance === instance) {
               this.typingInstance = null;
             }
-            // 推送消息到列表
             this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
-            // 清空输入区域，避免残留
             el.innerHTML = '';
             delay(500).then(() => resolve());
           });
 
           this.typingInstance = instance;
+        } else if (messageType === 'voice') {
+          // const totalDelay = inputSpeed * VOICE_INPUT_SPEED_MULTIPLIER;
+          const totalDelay = 5000;
+          // 重置状态
+          this.voiceInputActive = true;
+          this.voiceInputDuration = 0;
+          this.voiceCancelActive = false;
+          this.voiceResolve = resolve;
+
+          // 获取 cancel 属性
+          const props = this.getProps(message, messageType);
+          const shouldAutoCancel = (props.cancel === 'true' || props.cancel === true);
+
+          const startTime = Date.now();
+          this.voiceInputTimer = setInterval(() => {
+            const elapsed = (Date.now() - startTime) / 1000;
+            this.voiceInputDuration = Math.floor(elapsed);
+          }, 100);
+
+          this.voicePushTimer = setTimeout(() => {
+            clearInterval(this.voiceInputTimer);
+            this.voiceInputTimer = null;
+            // 注意：此时蒙版还未关闭，语音消息已经播放完毕
+
+            if (shouldAutoCancel) {
+              this.voiceCancelActive = true;   // 气泡和按钮变红
+
+              // 先发送消息（让用户看到消息出现）
+              const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+
+              // 延迟撤回
+              this.autoCancelTimer = setTimeout(() => {
+                const msgId = msg.id;
+                const idx = this.messages.findIndex(m => m.id === msgId);
+                if (idx !== -1) {
+                  const senderName = this.getRoleInfo(author || 'author').name || '未知';
+                  this.messages.splice(idx, 1);
+                  this.messages.push({
+                    type: 'tip',
+                    text: `${senderName}撤回了一条消息`
+                  });
+                  this.$nextTick(() => {
+                    onMessageSending();
+                  });
+                }
+                // 关闭蒙版并重置状态
+                this.voiceInputActive = false;
+                this.voiceCancelActive = false;
+                if (this.voiceResolve) {
+                  this.voiceResolve();
+                  this.voiceResolve = null;
+                }
+              }, 1000);
+            } else {
+              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
+              el.innerHTML = '';
+              this.voiceInputActive = false;
+              if (this.voiceResolve) {
+                this.voiceResolve();
+                this.voiceResolve = null;
+              }
+            }
+          }, totalDelay);
         } else {
-          // 非文本消息直接推送
           this.pushMsg(message, author || AUTHOR.AUTHOR, messageType);
-          // 清空输入区域
           el.innerHTML = '';
           delay(500).then(() => resolve());
         }
       });
     },
-    /**
- * 自实现打字机（标签整体快速输出，内部文本逐字）
- * @param {HTMLElement} element - 显示容器（systemInputElement）
- * @param {string[]} strings - 要依次显示的字符串数组（第一个为空）
- * @param {number} typeSpeed - 普通文本打字速度（毫秒/字符）
- * @param {number} backSpeed - 退格速度（毫秒/字符）
- * @param {boolean} isHtml - 是否包含HTML标签
- * @param {Function} onComplete - 完成回调
- * @returns {Object} { stop: Function }
- */
     startTyping(element, strings, typeSpeed, backSpeed, isHtml, onComplete) {
       let canceled = false;
       let timeoutId = null;
@@ -387,7 +461,6 @@ export default {
       let currentCharIndex = 0;
       let buffer = '';
 
-      // 构建内容容器和光标
       element.innerHTML = '';
       const contentSpan = document.createElement('span');
       contentSpan.className = 'typing-content';
@@ -408,10 +481,9 @@ export default {
         isRunning: true
       };
 
-      const allStrings = strings.slice(1); // 去掉第一个空字符串
+      const allStrings = strings.slice(1);
       const getCurrentString = () => allStrings[currentStringIndex] || '';
 
-      // 检查末尾是否为完整标签
       const endsWithCompleteTag = (str) => {
         const lastOpen = str.lastIndexOf('<');
         if (lastOpen === -1) return false;
@@ -419,7 +491,6 @@ export default {
         return tagPart.includes('>');
       };
 
-      // 获取末尾的完整标签
       const getLastCompleteTag = (str) => {
         const lastOpen = str.lastIndexOf('<');
         if (lastOpen === -1) return '';
@@ -431,7 +502,6 @@ export default {
         return '';
       };
 
-      // 更新显示
       const updateDisplay = () => {
         if (isHtml) {
           contentSpan.innerHTML = output;
@@ -468,18 +538,15 @@ export default {
           return;
         }
 
-        // 正向打字
         const typeForward = async () => {
           const str = getCurrentString();
           if (currentCharIndex >= str.length) return false;
 
           const char = str[currentCharIndex];
           let charsToAdd = '';
-          let isTag = false;
-          let delayTime = typeSpeed; // 默认
+          let delayTime = typeSpeed;
 
           if (isHtml && char === '<') {
-            // 收集完整标签
             buffer = '<';
             currentCharIndex++;
             while (currentCharIndex < str.length) {
@@ -489,9 +556,7 @@ export default {
               if (nextChar === '>') break;
             }
             charsToAdd = buffer;
-            isTag = true;
             buffer = '';
-            // 标签整体延迟固定为 20ms（可调整）
             delayTime = 20;
           } else {
             charsToAdd = char;
@@ -505,7 +570,6 @@ export default {
           return true;
         };
 
-        // 退格
         const typeBackward = async () => {
           if (output.length === 0) return false;
 
@@ -516,7 +580,7 @@ export default {
             if (tag) {
               removed = tag;
               output = output.slice(0, -tag.length);
-              delayTime = 20; // 标签删除也快速
+              delayTime = 20;
             } else {
               removed = output.slice(-1);
               output = output.slice(0, -1);
@@ -550,7 +614,6 @@ export default {
           }
         }
 
-        // 完成
         if (!canceled) {
           if (isHtml) {
             contentSpan.innerHTML = output;
@@ -642,13 +705,19 @@ export default {
       return true;
     },
     pushMsg(message, author, type = 'text') {
-      this.messages.push({
+      this.msgIdCounter++;
+      const msg = {
+        id: this.msgIdCounter,
         author: author,
         content: message,
         type,
         props: this.getProps(message, type),
-      });
+        transcripted: false,
+        transcriptMsgId: null,
+      };
+      this.messages.push(msg);
       onMessageSending();
+      return msg;
     },
     getProps(message, type) {
       const props = {};
@@ -667,9 +736,11 @@ export default {
       const isImg = /<img[^>]+>/.test(message);
       const isLetter = /<letter[^>]+>/.test(message);
       const isVlog = /<vlog[^>]+>/.test(message);
+      const isVoice = /<voice[^>]+>/.test(message);
       if (isImg) return 'img';
       if (isLetter) return 'letter';
       if (isVlog) return 'vlog';
+      if (isVoice) return 'voice';
       return 'text';
     },
     markMsgSize(msg, content = null) {
@@ -707,11 +778,47 @@ export default {
     handleMenuClick() { /* 可扩展 */ },
     handleMoreClick() { /* 可扩展 */ },
 
-    // ---- 新增表情相关方法 ----
+    handleVoiceConvert(alt, originalMsg) {
+      if (!alt) return;
+      if (originalMsg.transcripted) {
+        this.handleVoiceCancel(originalMsg);
+        return;
+      }
+      const transcriptMsg = {
+        id: ++this.msgIdCounter,
+        type: 'text',
+        content: alt,
+        author: null,
+        isTranscript: true
+      };
+      const index = this.messages.indexOf(originalMsg);
+      if (index === -1) return;
+      this.messages.splice(index + 1, 0, transcriptMsg);
+      originalMsg.transcripted = true;
+      originalMsg.transcriptMsgId = transcriptMsg.id;
+      this.$nextTick(() => {
+        onMessageSending();
+      });
+    },
+    handleVoiceCancel(originalMsg) {
+      if (!originalMsg.transcripted) return;
+      const transcriptId = originalMsg.transcriptMsgId;
+      if (transcriptId === null) return;
+      const idx = this.messages.findIndex(m => m.id === transcriptId);
+      if (idx !== -1) {
+        this.messages.splice(idx, 1);
+      }
+      originalMsg.transcripted = false;
+      originalMsg.transcriptMsgId = null;
+    },
+
     getEmojiPath(name) {
       const rawPath = originalGetEmojiPath(name);
       if (!rawPath) return null;
-      return 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/WeChat/' + rawPath.replace('assets/', '');
+      // 移除可能的 'assets/' 前缀
+      const relativePath = rawPath.replace(/^assets\//, '');
+      // 使用 URL 构造函数来拼接，更安全
+      return new URL(relativePath, 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat').href;
     },
     toggleEmojiPicker() {
       this.showEmojiPicker = !this.showEmojiPicker;
@@ -744,8 +851,9 @@ export default {
       return text.replace(/\[([^\]]+)\]/g, (match, name) => {
         if (hasEmoji(name)) {
           const path = this.getEmojiPath(name);
+          console.log('Rendering emoji:', name, 'Path:', path);
           if (path) {
-            return `<img src="/${path}" class="inline-emoji" alt="${name}" />`;
+            return `<img src="${path}" class="inline-emoji" alt="${name}" />`;
           }
         }
         return match;
@@ -768,10 +876,10 @@ export default {
       const body = document.getElementById('mobile-body');
       if (body) body.style.top = this.headHeight + 'px';
     });
-    this.$nextTick(() => {
+    setTimeout(() => {
       const foot = document.getElementById('mobile-foot');
       if (foot) this.footHeight = foot.offsetHeight;
-    });
+    }, 100);
     this._boundCloseEmojiPicker = this.closeEmojiPicker.bind(this);
     document.addEventListener('click', this._boundCloseEmojiPicker);
   },
@@ -784,11 +892,25 @@ export default {
       this.recallTimers.forEach(timer => clearTimeout(timer));
       this.recallTimers = [];
     }
+    if (this.voiceInputTimer) {
+      clearInterval(this.voiceInputTimer);
+      this.voiceInputTimer = null;
+    }
+    if (this.voicePushTimer) {
+      clearTimeout(this.voicePushTimer);
+      this.voicePushTimer = null;
+    }
+    if (this.autoCancelTimer) {
+      clearTimeout(this.autoCancelTimer);
+      this.autoCancelTimer = null;
+    }
+    if (this.voiceResolve) {
+      this.voiceResolve = null;
+    }
     document.removeEventListener('click', this._boundCloseEmojiPicker);
   }
 }
 
-// ---- 辅助函数（完整保留，使用 $） ----
 function onMessageSending() {
   setTimeout(() => {
     updateScroll();
@@ -841,8 +963,8 @@ function onImageLoad($img) {
   position: absolute;
   bottom: 0;
   width: 100%;
-  height: auto !important;
-  min-height: auto !important;
+  min-height: 55px;
+  height: auto;
   background: #f7f8fa;
   border-top: 1px solid #f3f3f3;
   padding: 0 !important;
@@ -881,7 +1003,6 @@ function onImageLoad($img) {
   color: black;
 }
 
-/* ====== 修复自定义光标换行问题 ====== */
 #mobile-foot .system-input-element .typed-cursor {
   display: inline !important;
   vertical-align: baseline !important;
@@ -927,7 +1048,6 @@ function onImageLoad($img) {
   align-self: flex-end;
 }
 
-/* ====== 表情按钮 ====== */
 .emoji-btn-wrapper {
   flex: 0 0 auto;
   display: flex;
@@ -951,7 +1071,6 @@ function onImageLoad($img) {
   color: #22c3aa;
 }
 
-/* ====== 表情面板 ====== */
 #mobile .emoji-picker-wrapper {
   position: absolute;
   bottom: 55px;
@@ -994,7 +1113,6 @@ function onImageLoad($img) {
   margin: 0 1px;
 }
 
-/* 移动端适配 */
 @media (max-width: 480px) {
   #mobile .emoji-picker-wrapper {
     max-height: 150px;
@@ -1008,7 +1126,168 @@ function onImageLoad($img) {
   }
 }
 
-/* ====== 原有样式（呼吸动画、头部等） ====== */
+/* ===== 语音输入蒙版 - 居中布局 ===== */
+.voice-input-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* 中央气泡 - 被取消时变红 */
+.voice-input-bubble {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px 20px 20px 20px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 160px;
+  justify-content: center;
+  margin-bottom: 20vh;
+  transition: background 0.3s;
+}
+
+.voice-input-bubble.voice-canceled {
+  background: rgba(255, 80, 80, 0.9);
+  /* 变红 */
+}
+
+/* 底部弧形区域（始终灰色，不变红） */
+.voice-bottom-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: rgba(200, 200, 200, 0.7);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 30px;
+  pointer-events: auto;
+}
+
+/* ===== 取消按钮 - 圆形，始终禁用 ===== */
+.voice-cancel-btn {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(200, 200, 200, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  transition: background 0.3s, color 0.3s;
+  /* 强制禁用，类似发送按钮禁用效果 */
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* 取消激活（变红） */
+.voice-cancel-btn.cancel-active {
+  background: #e05555;
+  color: white;
+}
+
+.voice-send-area {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 声波动画 */
+.voice-wave {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  gap: 4px;
+}
+
+.voice-wave span {
+  display: block;
+  width: 4px;
+  background: #22c3aa;
+  border-radius: 2px;
+  animation: wave 0.8s ease-in-out infinite alternate;
+}
+
+.voice-wave span:nth-child(1) {
+  height: 12px;
+  animation-delay: 0.0s;
+}
+
+.voice-wave span:nth-child(2) {
+  height: 20px;
+  animation-delay: 0.2s;
+}
+
+.voice-wave span:nth-child(3) {
+  height: 28px;
+  animation-delay: 0.4s;
+}
+
+.voice-wave span:nth-child(4) {
+  height: 20px;
+  animation-delay: 0.6s;
+}
+
+.voice-wave span:nth-child(5) {
+  height: 12px;
+  animation-delay: 0.8s;
+}
+
+@keyframes wave {
+  0% {
+    transform: scaleY(0.4);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.voice-input-duration {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* ====== 无头像消息占位 ====== */
+.msg-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin: 0 8px;
+  visibility: hidden;
+}
+
+.msg {
+  max-width: 100% !important;
+  word-break: break-word;
+}
+
 .animate_breathe {
   -webkit-animation-timing-function: ease-in-out;
   animation-timing-function: ease-in-out;
@@ -1027,8 +1306,7 @@ function onImageLoad($img) {
 @-webkit-keyframes breathe {
   0% {
     opacity: 0.4;
-    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4),
-      0 1px 1px rgba(0, 147, 223, 0.1) inset;
+    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4), 0 1px 1px rgba(0, 147, 223, 0.1) inset;
   }
 
   100% {
@@ -1040,8 +1318,7 @@ function onImageLoad($img) {
 @keyframes breathe {
   0% {
     opacity: 0.4;
-    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4),
-      0 1px 1px rgba(0, 147, 223, 0.1) inset;
+    box-shadow: 0 1px 1px rgba(0, 147, 223, 0.4), 0 1px 1px rgba(0, 147, 223, 0.1) inset;
   }
 
   100% {

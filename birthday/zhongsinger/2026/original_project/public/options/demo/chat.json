@@ -1,6 +1,12 @@
 [
     {
         "msgs": [
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' />"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
             "<span style=\"color: red;\">红色的span标签字体</span>"
         ],
         "msgInputSpeed": 100
@@ -37,7 +43,7 @@
         ],
         "msgInputSpeed": 80,
         "author": "three",
-        "tip":"test"
+        "tip": "test"
     },
     {
         "msgs": [
