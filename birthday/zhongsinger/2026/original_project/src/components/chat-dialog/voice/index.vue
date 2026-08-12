@@ -1,7 +1,6 @@
 <template>
   <div class="voice-wrapper" ref="voiceRef" @click="togglePlay" @contextmenu.prevent="handleContextMenu"
     @touchstart="onTouchStart" @touchend="onTouchEnd">
-    <!-- 声波动画 / 静态喇叭 -->
     <span class="voice-icon" v-if="!isPlaying">🔊</span>
     <span class="voice-wave" v-else>
       <span class="wave-bar"></span>
@@ -9,12 +8,10 @@
       <span class="wave-bar"></span>
     </span>
     <span class="voice-duration">{{ displayDuration }}''</span>
-    <audio ref="audio" :src="src" @loadedmetadata="onLoadedMetadata" @ended="onEnded"></audio>
+    <audio ref="audio" :src="src" @loadedmetadata="onLoadedMetadata" @ended="onEnded" @error="onError"></audio>
 
-    <!-- 使用 Teleport 将菜单传送到 body -->
     <Teleport to="body">
       <div v-show="showMenu" class="custom-voice-menu" :style="menuStyle" ref="menuRef">
-        <!-- 互斥的菜单项 -->
         <div v-if="!transcripted" class="menu-item" @click="handleSelect('transcript')">
           <var-icon name="translate" class="menu-icon" />
           <span>转文字</span>
@@ -29,7 +26,7 @@
 </template>
 
 <script>
-import { ref, computed, defineComponent, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, defineComponent, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue'
 
 export default defineComponent({
   name: 'Voice',
@@ -53,6 +50,8 @@ export default defineComponent({
   },
   emits: ['convert', 'cancel-convert'],
   setup(props, { emit }) {
+    // 生成唯一 ID
+    const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
     const menuRef = ref(null)
     const audio = ref(null)
@@ -79,16 +78,33 @@ export default defineComponent({
       return Math.round(dur)
     })
 
-    // ---------- 播放控制 ----------
+    // 重置函数（供全局管理器调用）
+    const resetToInitial = () => {
+      isPlaying.value = false
+      const audioEl = audio.value
+      if (audioEl) {
+        audioEl.currentTime = 0
+        audioEl.pause()
+      }
+    }
+
     const togglePlay = () => {
       const audioEl = audio.value
       if (!audioEl) return
-      if (isPlaying.value) {
-        audioEl.pause()
+
+      if (!isPlaying.value) {
+        // 将要播放，通知全局管理器
+        if (window.__audioManager) {
+          window.__audioManager.play(id, audioEl)
+        }
+        audioEl.play().catch(() => {
+          isPlaying.value = false
+        })
+        isPlaying.value = true
       } else {
-        audioEl.play().catch(() => { })
+        audioEl.pause()
+        isPlaying.value = false
       }
-      isPlaying.value = !isPlaying.value
     }
 
     const onLoadedMetadata = (e) => {
@@ -102,7 +118,10 @@ export default defineComponent({
       isPlaying.value = false
     }
 
-    // ---------- 菜单控制（基于元素固定位置） ----------
+    const onError = () => {
+      isPlaying.value = false
+    }
+
     const openMenu = (clientX, clientY) => {
       const rect = voiceRef.value?.getBoundingClientRect()
       let left, top
@@ -158,7 +177,6 @@ export default defineComponent({
       closeMenu()
     }
 
-    // ---------- 事件绑定 ----------
     const handleContextMenu = (e) => {
       e.preventDefault()
       openMenu(e.clientX, e.clientY)
@@ -179,7 +197,6 @@ export default defineComponent({
       }
     }
 
-    // ---------- 点击外部关闭菜单 ----------
     const handleClickOutside = (e) => {
       if (!showMenu.value) return
       const target = e.target
@@ -192,6 +209,10 @@ export default defineComponent({
 
     onMounted(() => {
       document.addEventListener('click', handleClickOutside)
+      // 注册到全局音频管理器
+      if (window.__audioManager) {
+        window.__audioManager.register(id, resetToInitial)
+      }
     })
 
     onBeforeUnmount(() => {
@@ -205,6 +226,10 @@ export default defineComponent({
         audioEl.src = ''
       }
       document.removeEventListener('click', handleClickOutside)
+      // 从全局音频管理器注销
+      if (window.__audioManager) {
+        window.__audioManager.unregister(id)
+      }
     })
 
     return {
@@ -219,6 +244,7 @@ export default defineComponent({
       togglePlay,
       onLoadedMetadata,
       onEnded,
+      onError,
       handleContextMenu,
       onTouchStart,
       onTouchEnd,
@@ -293,7 +319,6 @@ export default defineComponent({
 }
 </style>
 
-<!-- 全局样式（Teleport 内容需全局） -->
 <style>
 .custom-voice-menu {
   position: fixed;

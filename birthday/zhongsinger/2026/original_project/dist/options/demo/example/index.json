@@ -1,127 +1,24 @@
 [
     {
         "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='false' delay=4000/>"
         ],
         "msgInputSpeed": 80,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "好"
-                ],
-                "rejectKeyTexts": [],
-                "rejectHitTexts": [
-                    "输入好，听不懂吗？？？",
-                    "触发强行跳过"
-                ]
-            }
-        }
+        "author": "author"
     },
     {
         "msgs": [
-            "标签字体"
+            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
+        ],
+        "msgInputSpeed": 80,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "这是第一条消息"
         ],
         "id": "greeting",
-        "msgInputSpeed": 1,
-        "recall": 100
-    },
-    {
-        "msgs": [
-            "标签字体1"
-        ],
-        "id":"test",
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体2"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体3"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体4"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体5"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体6"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体7"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体8"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体9"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体10"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体12"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体13"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体14"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体15"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体16"
-        ],
-        "msgInputSpeed": 1
+        "msgInputSpeed": 100
     },
     {
         "id": "second",
@@ -133,46 +30,11 @@
         "quote": "greeting"
     },
     {
-        "id": "second",
-        "msgs": [
-            "这是第二条消息，引用上面的那一条"
-        ],
-        "msgInputSpeed": 80,
-        "author": "K&I",
-        "quote": "test"
-    },
-    {
-        "msgs": [
-            "标签字体abcd"
-        ],
-        "id": "greeting",
-        "msgInputSpeed": 10
-    },
-    {
-        "msgs": [
-            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
         "msgs": [
             "<span style=\"color: red;\">红色的span标签字体</span>"
         ],
         "msgInputSpeed": 100
-    },
-    {
-        "msgs": [
-            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容'  delay=4000/>"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<span style=\"color: red;\">红色的span标签字体</span>"
-        ],
-        "msgInputSpeed": 100
-    },
-    {
+    },{
         "msgs": [
             "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
         ],

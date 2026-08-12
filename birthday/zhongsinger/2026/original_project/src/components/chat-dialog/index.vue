@@ -28,12 +28,21 @@
           <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
         </div>
 
-        <!-- 消息列表 -->
+        <!-- 消息列表：添加右键/长按事件 -->
         <div class="msg-row" v-for="(msg, index) in messages" :key="index" :class="[
           msg.author === 'me' ? 'msg-me' : 'msg-author',
           { 'no-avatar': !msg.author }
-        ]" :data-author="msg.author" @dblclick="(e) => handleDoubleClick(msg, e)">
+        ]" :data-author="msg.author" :data-msg-id="msg.id" @dblclick="(e) => handleDoubleClick(msg, e)"
+          @contextmenu.prevent="(e) => openMsgContextMenu(msg, e)" @touchstart="(e) => onMsgTouchStart(msg, e)"
+          @touchend="onMsgTouchEnd" @touchmove="onMsgTouchMove">
           <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
+          <div v-else-if="msg.isTranscript" class="msg-transcript"
+            :class="{ 'msg-transcript-right': msg.author === 'me' }">
+            <div class="msg" :class="{
+              'msg-bounce-in-left': msg.author !== 'me',
+              'msg-bounce-in-right': msg.author === 'me'
+            }" v-html="renderEmoji(msg.content)"></div>
+          </div>
           <template v-else>
             <img v-if="msg.author && getRoleInfo(msg.author).avatar" class="msg-avatar"
               :src="getRoleInfo(msg.author).avatar" alt="avatar" />
@@ -41,7 +50,7 @@
 
             <div class="msg-content">
               <div v-if="msg.author" class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
-              <!-- 引用块 -->
+              <!-- 引用信息 -->
               <div v-if="msg.quoteInfo" class="msg-quote">
                 <div class="quote-line"></div>
                 <div class="quote-content">
@@ -65,84 +74,124 @@
         </div>
       </div>
     </div>
+
+    <!-- 底部输入区域，包含引用条 -->
     <div id="mobile-foot">
+      <!-- 引用条：使用 v-if 确保 quoteMsg 不为 null 时才渲染，避免空指针 -->
+      <div v-if="showQuoteBar && quoteMsg" class="quote-bar" ref="quoteBarRef" :key="'quote-bar-' + (quoteMsg ? quoteMsg.id : 'none')">
+        <div class="quote-bar-content">
+          <span class="quote-bar-author">{{ getRoleInfo(quoteMsg.author).name || '未知' }}</span>
+          <span class="quote-bar-text">{{ getContentPreview(quoteMsg) }}</span>
+        </div>
+        <span class="quote-bar-close" @click.stop="clearQuote" @touchstart.stop="clearQuote">✕</span>
+      </div>
+
       <div class="foot-wrapper">
-        <div class="input-area" ref="inputArea">
-          <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
-          <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
-            v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
+        <div class="input-area" ref="inputArea" :style="{ height: voiceInputMode ? '40px' : 'auto' }">
+          <span class="voice-toggle-btn" @click="toggleVoiceInputMode" :class="{ active: voiceInputMode }">
+            🎤
+          </span>
+
+          <template v-if="!voiceInputMode">
+            <span v-show="status === 'systemInput'" class="system-input-element" ref="systemInputElement"></span>
+            <textarea ref="userMsgInputRef" v-show="status === 'userInput'" class="user-input-textarea animate_breathe"
+              v-model="inputMessage" rows="1" @input="autoResizeTextarea" placeholder="输入消息..."></textarea>
+          </template>
+
+          <template v-else>
+            <VoiceRecorderButton ref="voiceRecorderRef" @start="startUserRecording" @stop="onVoiceStop"
+              @cancel="cancelUserRecording" @result="handleUserVoiceResult" @error="handleVoiceError"
+              @processing="onVoiceProcessing" />
+          </template>
         </div>
 
-        <div class="emoji-btn-wrapper" v-if="status === 'userInput'">
+        <div class="emoji-btn-wrapper" v-if="status === 'userInput' && !voiceInputMode">
           <span class="emoji-toggle-btn" @click="toggleEmojiPicker">😊</span>
         </div>
 
         <var-button ref="sendMsgBtnRef" type="success" size="small" :disabled="sendBtnDisabled" @click="sendUserMsg"
-          class="send-btn">发送</var-button>
+          class="send-btn">{{ isProcessing ? '处理中...' : '发送' }}</var-button>
       </div>
     </div>
 
-    <!-- 表情面板 -->
-    <div class="emoji-picker-wrapper" v-show="status === 'userInput' && showEmojiPicker">
+    <div class="emoji-picker-wrapper" v-show="status === 'userInput' && showEmojiPicker && !voiceInputMode">
       <div class="emoji-grid">
         <img v-for="emoji in allEmojis" :key="emoji.name" :src="getEmojiPath(emoji.name)" :alt="emoji.name"
           :title="emoji.name" @click="selectEmoji(emoji)" class="emoji-item" loading="lazy" />
       </div>
     </div>
 
-    <!-- 语音输入蒙版 -->
-    <div v-if="voiceInputActive" class="voice-input-overlay">
-      <!-- 中央气泡 -->
+    <div v-if="voiceInputActive" class="voice-input-overlay system-voice-overlay">
       <div class="voice-input-bubble" :class="{ 'voice-canceled': voiceCancelActive }">
         <div class="voice-wave">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
         <span class="voice-input-duration">{{ voiceInputDuration }}''</span>
       </div>
-
-      <!-- 底部弧形区域（始终不变红） -->
       <div class="voice-bottom-area">
-        <!-- 取消按钮 - 圆形，始终禁用，取消时变红 -->
-        <div class="voice-cancel-btn" :class="{
-          'cancel-active': voiceCancelActive,
-          'disabled': true
-        }">
-          取消
-        </div>
+        <div class="voice-cancel-btn" :class="{ 'cancel-active': voiceCancelActive, 'disabled': true }">取消</div>
         <div class="voice-send-area">松开发送</div>
       </div>
     </div>
+
+    <div v-if="userVoiceActive" class="voice-input-overlay user-voice-overlay">
+      <div class="voice-input-bubble" :class="{ 'voice-canceled': userVoiceCancelActive }">
+        <div class="voice-wave">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span class="voice-input-duration">{{ userVoiceDuration }}''</span>
+      </div>
+      <div class="voice-bottom-area voice-bottom-area-with-send">
+        <div class="voice-cancel-btn" :class="{ 'cancel-active': userVoiceCancelActive }" @click="cancelUserRecording">
+          取消
+        </div>
+        <div class="voice-send-btn" @click="sendUserRecording" :disabled="isProcessing">
+          {{ isProcessing ? '处理中...' : '发送' }}
+        </div>
+      </div>
+    </div>
+
+    <MessageDetail v-if="currentOpenComponent" :type="currentOpenComponent.type" :options="currentOpenComponent.props"
+      @close="handleComponentClose">
+    </MessageDetail>
+
+    <!-- 消息上下文菜单 -->
+    <Teleport to="body">
+      <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
+        <div class="menu-item" @click="handleMenuQuote">
+          <var-icon name="format_quote" class="menu-icon" />
+          <span>引用</span>
+        </div>
+      </div>
+    </Teleport>
   </div>
-  <MessageDetail v-if="currentOpenComponent" :type="currentOpenComponent.type" :options="currentOpenComponent.props"
-    @close="handleComponentClose">
-  </MessageDetail>
 </template>
 
 <script>
 import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import voice from './voice/index.vue'
+import VoiceRecorderButton from './voice/VoiceRecorderButton.vue'
 import MessageDetail from './MessageDetail.vue'
 import './css/main.scss'
-
-import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis';
+import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis'
+import { Snackbar } from '@varlet/ui'
 
 const AUTHOR = {
   AUTHOR: 'author',
   ME: 'me'
-};
+}
 const TRIGGER_NEXT_ACTION_TYPE = {
   USER_INPUT: 'userInput',
   COMPONENT_CLOSE: 'componentClose'
-};
-
-// const VOICE_INPUT_SPEED_MULTIPLIER = 30;
+}
 
 export default {
   components: {
     letter,
     vlog,
     voice,
+    VoiceRecorderButton,
     MessageDetail,
   },
   props: {
@@ -152,8 +201,13 @@ export default {
   },
   computed: {
     sendBtnDisabled() {
-      if (this.status === 'systemInput') return true;
-      return !(this.inputMessage && this.inputMessage.trim().length > 0);
+      if (this.status === 'systemInput') return true
+      if (this.voiceInputMode) return true
+      if (this.isProcessing) return true
+      return !(this.inputMessage && this.inputMessage.trim().length > 0)
+    },
+    isTouchDevice() {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0
     }
   },
   data() {
@@ -182,521 +236,578 @@ export default {
       voiceInputActive: false,
       voiceInputDuration: 0,
       voiceInputTimer: null,
-      voiceCancelActive: false,    // 界面红色状态（气泡 + 按钮）
+      voiceCancelActive: false,
       voicePushTimer: null,
       voiceResolve: null,
-      autoCancelTimer: null,       // 用于自动撤回的定时器
+      autoCancelTimer: null,
+
+      voiceInputMode: false,
+      userVoiceActive: false,
+      userVoiceDuration: 0,
+      userVoiceCancelActive: false,
+      userVoiceTimer: null,
+      userVoiceRecording: false,
+      pendingVoiceResult: null,
+      voiceStopReceived: false,
+
+      voiceBlobUrls: [],
+      isProcessing: false,
+
+      // 引用
+      quoteMsg: null,
+      showQuoteBar: false,
+
+      // 菜单
+      showMsgMenu: false,
+      msgMenuStyle: {
+        position: 'fixed',
+        left: '0px',
+        top: '0px',
+        zIndex: 99999,
+        minWidth: '130px',
+        background: 'rgba(255, 255, 255, 0.96)',
+        borderRadius: '10px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        padding: '6px 0',
+        backdropFilter: 'blur(4px)'
+      },
+      contextMsg: null,
+      touchTimer: null,
+      isTouchMoved: false,
     }
   },
   watch: {
     options() {
-      this.buildMsgChain(this.options);
+      this.buildMsgChain(this.options)
     },
     status(newVal) {
       if (newVal === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
-        this.setUserInputFoucus();
+        this.setUserInputFoucus()
+      }
+      if (newVal === 'systemInput') {
+        this.voiceInputMode = false
       }
     },
     inputMessage() {
       this.$nextTick(() => {
         if (this.$refs.userMsgInputRef) {
-          this.autoResizeTextarea({ target: this.$refs.userMsgInputRef });
+          this.autoResizeTextarea({ target: this.$refs.userMsgInputRef })
         }
-      });
+      })
+    },
+    voiceInputMode(val) {
+      if (val) {
+        this.showEmojiPicker = false
+      }
     }
   },
   methods: {
     addTimeMessage() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const prefix = hours < 12 ? '上午' : '下午';
-      const displayHour = hours % 12 || 12;
-      const timeStr = `${prefix} ${displayHour}:${minutes}`;
+      const now = new Date()
+      const hours = now.getHours()
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const prefix = hours < 12 ? '上午' : '下午'
+      const displayHour = hours % 12 || 12
+      const timeStr = `${prefix} ${displayHour}:${minutes}`
 
-      this.messages.push({
-        type: 'tip',
-        text: timeStr
-      });
-
-      this.$nextTick(() => {
-        onMessageSending();
-      });
+      this.messages.push({ type: 'tip', text: timeStr })
+      this.$nextTick(() => { this.scrollToBottom(false) })
     },
     getRoleInfo(roleName) {
-      const defaultConfig = (this.roles && this.roles._default) || { avatar: '', pat: '拍了拍TA' };
-      const roleConfig = this.roles ? this.roles[roleName] : null;
+      const defaultConfig = (this.roles && this.roles._default) || { avatar: '', pat: '拍了拍TA' }
+      const roleConfig = this.roles ? this.roles[roleName] : null
       if (roleConfig) {
         return {
           name: roleConfig.name || roleName,
           avatar: roleConfig.avatar || defaultConfig.avatar || '',
           pat: roleConfig.pat || defaultConfig.pat || '拍了拍TA'
-        };
+        }
       }
       return {
         name: roleName || '未知',
         avatar: defaultConfig.avatar || '',
         pat: defaultConfig.pat || '拍了拍TA'
-      };
+      }
     },
-    handleDoubleClick(msg) {
-      if (msg.type === 'tip') return;
-      const now = Date.now();
-      if (now - this.lastPatTime < 1000) return;
-      this.lastPatTime = now;
+    handleDoubleClick(msg, event) {
+      if (msg.isTranscript) return
+      if (msg.quoteId) {
+        const targetMsg = this.messages.find(m => m.externalId === msg.quoteId)
+        if (targetMsg) {
+          const targetEl = document.querySelector(`.msg-row[data-msg-id="${targetMsg.id}"]`)
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            targetEl.style.transition = 'background-color 0.3s'
+            targetEl.style.backgroundColor = 'rgba(34, 195, 170, 0.2)'
+            setTimeout(() => {
+              targetEl.style.backgroundColor = ''
+            }, 800)
+          }
+          return
+        } else {
+          Snackbar({
+            content: '消息已撤回',
+            duration: 2000,
+            type: 'warning'
+          })
+          return
+        }
+      }
 
-      const rowEl = event.currentTarget;
-      const avatar = rowEl.querySelector('.msg-avatar');
+      const now = Date.now()
+      if (now - this.lastPatTime < 1000) return
+      this.lastPatTime = now
+
+      const rowEl = event.currentTarget
+      const avatar = rowEl.querySelector('.msg-avatar')
       if (avatar) {
-        avatar.classList.add('shake');
+        avatar.classList.add('shake')
         avatar.addEventListener('animationend', function onEnd() {
-          avatar.classList.remove('shake');
-          avatar.removeEventListener('animationend', onEnd);
-        });
+          avatar.classList.remove('shake')
+          avatar.removeEventListener('animationend', onEnd)
+        })
       }
 
-      const targetRole = msg.author;
-      const currentUser = 'me';
-      const meInfo = this.getRoleInfo(currentUser);
-      const targetInfo = this.getRoleInfo(targetRole);
-      let patText = targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
+      const targetRole = msg.author
+      const currentUser = 'me'
+      const meInfo = this.getRoleInfo(currentUser)
+      const targetInfo = this.getRoleInfo(targetRole)
+      let patText = targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA'
       if (targetRole === currentUser && !targetInfo.pat) {
-        patText = '拍了拍自己';
+        patText = '拍了拍自己'
       }
-      const displayName = meInfo.name || '我';
-      const tip = `${displayName} ${patText}`;
-      this.addTipMessage(tip);
+      const displayName = meInfo.name || '我'
+      const tip = `${displayName} ${patText}`
+      this.addTipMessage(tip)
     },
     addTipMessage(text) {
-      this.messages.push({
-        type: 'tip',
-        text: text,
-      });
-      this.$nextTick(() => {
-        onMessageSending();
-      });
+      this.messages.push({ type: 'tip', text })
+      this.$nextTick(() => { this.scrollToBottom(false) })
     },
     buildMsgChain(messages) {
       if (!this.timeInserted) {
-        this.addTimeMessage();
-        this.timeInserted = true;
-      };
+        this.addTimeMessage()
+        this.timeInserted = true
+      }
       messages.forEach((block) => {
-        this.msgChain = this.msgChain.then(() => this.sendSysMsg(block));
-      });
+        this.msgChain = this.msgChain.then(() => this.sendSysMsg(block))
+      })
     },
     sendSysMsg(block) {
       return new Promise((resolve) => {
-        const { msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip, id, quote } = block;
+        const { msgs, msgInputSpeed, author, triggerNextAction, pat, recall, tip, id, quote } = block
 
-        // 拍一拍处理（原逻辑不变）
         if (pat) {
-          let target = pat;
-          let customText = null;
+          let target = pat
+          let customText = null
           if (typeof pat === 'object') {
-            target = pat.target || 'me';
-            customText = pat.text;
+            target = pat.target || 'me'
+            customText = pat.text
           }
-          const targetInfo = this.getRoleInfo(target);
-          const authorInfo = this.getRoleInfo(author || 'author');
-          const patText = customText || targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA';
-          const displayName = authorInfo.name || '未知';
-          const tipText = `${displayName} ${patText}`;
-          this.addTipMessage(tipText);
+          const targetInfo = this.getRoleInfo(target)
+          const authorInfo = this.getRoleInfo(author || 'author')
+          const patText = customText || targetInfo.pat || this.getRoleInfo('_default')?.pat || '拍了拍TA'
+          const displayName = authorInfo.name || '未知'
+          this.addTipMessage(`${displayName} ${patText}`)
         }
 
         if (!msgs || msgs.length === 0) {
-          resolve();
-          return;
+          resolve()
+          return
         }
 
-        const startIndex = this.messages.length;
+        const startIndex = this.messages.length
 
-        // 将 id 和 quote 传递给内部发送函数
         this.sendSysMsgInner(msgs, msgInputSpeed, author, id, quote).then(() => {
-          const endIndex = this.messages.length;
+          const endIndex = this.messages.length
 
-          // 撤回处理
           if (recall && recall > 0) {
-            const senderName = this.getRoleInfo(author || 'author').name || '未知';
+            const senderName = this.getRoleInfo(author || 'author').name || '未知'
             const timer = setTimeout(() => {
               if (this.messages.length >= endIndex) {
-                this.messages.splice(startIndex, endIndex - startIndex);
-                this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` });
-                this.$nextTick(() => { onMessageSending(); });
+                this.messages.splice(startIndex, endIndex - startIndex)
+                this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` })
+                this.$nextTick(() => { this.scrollToBottom(false) })
               }
-            }, recall);
-            this.recallTimers.push(timer);
+            }, recall)
+            this.recallTimers.push(timer)
           }
 
           if (tip) {
-            this.messages.push({ type: 'tip', text: tip });
-            this.$nextTick(() => { onMessageSending(); });
+            this.messages.push({ type: 'tip', text: tip })
+            this.$nextTick(() => { this.scrollToBottom(false) })
           }
 
           if (triggerNextAction) {
-            const trigger = () => delay(500).then(() => resolve());
+            const trigger = () => delay(500).then(() => resolve())
             this.nextActionTrigger = {
               inputSpeed: msgInputSpeed,
               triggerNextAction,
               trigger
-            };
-            this.status = triggerNextAction.type;
+            }
+            this.status = triggerNextAction.type
           } else {
-            resolve();
+            resolve()
           }
-        });
-      });
+        })
+      })
     },
     sendSysMsgInner(messages, inputSpeed, author, externalId = null, quoteId = null) {
       return new Promise((resolve) => {
-        const message = Array.isArray(messages) ? messages[messages.length - 1] : messages;
-        const messageType = this.getMsgType(message);
-        this.status = 'systemInput';
+        const message = Array.isArray(messages) ? messages[messages.length - 1] : messages
+        const messageType = this.getMsgType(message)
+        this.status = 'systemInput'
+        this.voiceInputMode = false
 
         if (this.typingInstance) {
-          this.typingInstance.stop();
-          this.typingInstance = null;
+          this.typingInstance.stop()
+          this.typingInstance = null
         }
 
-        const el = this.$refs.systemInputElement;
+        const el = this.$refs.systemInputElement
         if (!el) {
-          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
-          delay(500).then(() => resolve());
-          return;
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId)
+          delay(500).then(() => resolve())
+          return
         }
 
-        el.innerHTML = '';
-        const hasHtml = /<[^>]+>/.test(message);
+        el.innerHTML = ''
+        const hasHtml = /<[^>]+>/.test(message)
 
         if (messageType === 'text') {
-          let strings = [''];
+          let strings = ['']
           if (Array.isArray(messages)) {
-            strings = strings.concat(messages);
+            strings = strings.concat(messages)
           } else {
-            strings.push(messages);
+            strings.push(messages)
           }
 
           const instance = this.startTyping(el, strings, inputSpeed, inputSpeed, hasHtml, () => {
             if (this.typingInstance === instance) {
-              this.typingInstance = null;
+              this.typingInstance = null
             }
-            this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
-            el.innerHTML = '';
-            delay(500).then(() => resolve());
-          });
+            this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId)
+            el.innerHTML = ''
+            delay(500).then(() => resolve())
+          })
 
-          this.typingInstance = instance;
+          this.typingInstance = instance
         } else if (messageType === 'voice') {
-          const voiceProps = this.getProps(message, messageType);
-          const delayMs = parseInt(voiceProps.delay, 10);
-          const totalDelay = !isNaN(delayMs) && delayMs > 0 ? delayMs : 5000;
+          const voiceProps = this.getProps(message, messageType)
+          const delayMs = parseInt(voiceProps.delay, 10)
+          const totalDelay = !isNaN(delayMs) && delayMs > 0 ? delayMs : 5000
 
-          this.voiceInputActive = true;
-          this.voiceInputDuration = 0;
-          this.voiceCancelActive = false;
-          this.voiceResolve = resolve;
+          this.voiceInputActive = true
+          this.voiceInputDuration = 0
+          this.voiceCancelActive = false
+          this.voiceResolve = resolve
 
-          const shouldAutoCancel = (voiceProps.cancel === 'true' || voiceProps.cancel === true);
-          const startTime = Date.now();
+          const shouldAutoCancel = (voiceProps.cancel === 'true' || voiceProps.cancel === true)
+          const startTime = Date.now()
           this.voiceInputTimer = setInterval(() => {
-            const elapsed = (Date.now() - startTime) / 1000;
-            this.voiceInputDuration = Math.floor(elapsed);
-          }, 100);
+            const elapsed = (Date.now() - startTime) / 1000
+            this.voiceInputDuration = Math.floor(elapsed)
+          }, 100)
 
           this.voicePushTimer = setTimeout(() => {
-            clearInterval(this.voiceInputTimer);
-            this.voiceInputTimer = null;
+            clearInterval(this.voiceInputTimer)
+            this.voiceInputTimer = null
 
             if (shouldAutoCancel) {
-              this.voiceCancelActive = true;
-              const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
+              this.voiceCancelActive = true
+              const msg = this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId)
               this.autoCancelTimer = setTimeout(() => {
-                const msgId = msg.id;
-                const idx = this.messages.findIndex(m => m.id === msgId);
+                const msgId = msg.id
+                const idx = this.messages.findIndex(m => m.id === msgId)
                 if (idx !== -1) {
-                  const senderName = this.getRoleInfo(author || 'author').name || '未知';
-                  this.messages.splice(idx, 1);
-                  this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` });
-                  this.$nextTick(() => { onMessageSending(); });
+                  const senderName = this.getRoleInfo(author || 'author').name || '未知'
+                  this.messages.splice(idx, 1)
+                  this.messages.push({ type: 'tip', text: `${senderName}撤回了一条消息` })
+                  this.$nextTick(() => { this.scrollToBottom(false) })
                 }
-                this.voiceInputActive = false;
-                this.voiceCancelActive = false;
+                this.voiceInputActive = false
+                this.voiceCancelActive = false
                 if (this.voiceResolve) {
-                  this.voiceResolve();
-                  this.voiceResolve = null;
+                  this.voiceResolve()
+                  this.voiceResolve = null
                 }
-              }, 1000);
+              }, 1000)
             } else {
-              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
-              el.innerHTML = '';
-              this.voiceInputActive = false;
+              this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId)
+              el.innerHTML = ''
+              this.voiceInputActive = false
               if (this.voiceResolve) {
-                this.voiceResolve();
-                this.voiceResolve = null;
+                this.voiceResolve()
+                this.voiceResolve = null
               }
             }
-          }, totalDelay);
+          }, totalDelay)
         } else {
-          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId);
-          el.innerHTML = '';
-          delay(500).then(() => resolve());
+          this.pushMsg(message, author || AUTHOR.AUTHOR, messageType, externalId, quoteId)
+          el.innerHTML = ''
+          delay(500).then(() => resolve())
         }
-      });
+      })
     },
     startTyping(element, strings, typeSpeed, backSpeed, isHtml, onComplete) {
-      let canceled = false;
-      let timeoutId = null;
-      let output = '';
-      let currentStringIndex = 0;
-      let currentCharIndex = 0;
-      let buffer = '';
+      let canceled = false
+      let timeoutId = null
+      let output = ''
+      let currentStringIndex = 0
+      let currentCharIndex = 0
+      let buffer = ''
 
-      element.innerHTML = '';
-      const contentSpan = document.createElement('span');
-      contentSpan.className = 'typing-content';
-      element.appendChild(contentSpan);
-      const cursorSpan = document.createElement('span');
-      cursorSpan.className = 'typed-cursor';
-      cursorSpan.textContent = '|';
-      element.appendChild(cursorSpan);
+      element.innerHTML = ''
+      const contentSpan = document.createElement('span')
+      contentSpan.className = 'typing-content'
+      element.appendChild(contentSpan)
+      const cursorSpan = document.createElement('span')
+      cursorSpan.className = 'typed-cursor'
+      cursorSpan.textContent = '|'
+      element.appendChild(cursorSpan)
 
       const instance = {
         stop: () => {
-          canceled = true;
+          canceled = true
           if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
+            clearTimeout(timeoutId)
+            timeoutId = null
           }
         },
         isRunning: true
-      };
+      }
 
-      const allStrings = strings.slice(1);
-      const getCurrentString = () => allStrings[currentStringIndex] || '';
+      const allStrings = strings.slice(1)
+      const getCurrentString = () => allStrings[currentStringIndex] || ''
 
       const endsWithCompleteTag = (str) => {
-        const lastOpen = str.lastIndexOf('<');
-        if (lastOpen === -1) return false;
-        const tagPart = str.slice(lastOpen);
-        return tagPart.includes('>');
-      };
+        const lastOpen = str.lastIndexOf('<')
+        if (lastOpen === -1) return false
+        const tagPart = str.slice(lastOpen)
+        return tagPart.includes('>')
+      }
 
       const getLastCompleteTag = (str) => {
-        const lastOpen = str.lastIndexOf('<');
-        if (lastOpen === -1) return '';
-        const tagPart = str.slice(lastOpen);
-        const closeIdx = tagPart.indexOf('>');
+        const lastOpen = str.lastIndexOf('<')
+        if (lastOpen === -1) return ''
+        const tagPart = str.slice(lastOpen)
+        const closeIdx = tagPart.indexOf('>')
         if (closeIdx !== -1) {
-          return tagPart.slice(0, closeIdx + 1);
+          return tagPart.slice(0, closeIdx + 1)
         }
-        return '';
-      };
+        return ''
+      }
 
       const updateDisplay = () => {
         if (isHtml) {
-          contentSpan.innerHTML = output;
+          contentSpan.innerHTML = output
         } else {
-          contentSpan.textContent = output;
+          contentSpan.textContent = output
         }
         this.$nextTick(() => {
           requestAnimationFrame(() => {
-            const container = document.getElementById('mobile-body-content');
+            const container = document.getElementById('mobile-body-content')
             if (container) {
-              container.scrollTop = container.scrollHeight;
+              container.scrollTop = container.scrollHeight
             }
-            element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          });
-        });
-      };
+            element.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          })
+        })
+      }
 
       const delayMs = (ms) => new Promise(resolve => {
-        if (canceled) return resolve();
+        if (canceled) return resolve()
         timeoutId = setTimeout(() => {
-          timeoutId = null;
-          resolve();
-        }, ms);
-      });
+          timeoutId = null
+          resolve()
+        }, ms)
+      })
 
       const run = async () => {
         if (allStrings.length === 0) {
           if (!canceled) {
-            contentSpan.innerHTML = output;
-            cursorSpan.remove();
-            onComplete();
+            contentSpan.innerHTML = output
+            cursorSpan.remove()
+            onComplete()
           }
-          instance.isRunning = false;
-          return;
+          instance.isRunning = false
+          return
         }
 
         const typeForward = async () => {
-          const str = getCurrentString();
-          if (currentCharIndex >= str.length) return false;
+          const str = getCurrentString()
+          if (currentCharIndex >= str.length) return false
 
-          const char = str[currentCharIndex];
-          let charsToAdd = '';
-          let delayTime = typeSpeed;
+          const char = str[currentCharIndex]
+          let charsToAdd = ''
+          let delayTime = typeSpeed
 
           if (isHtml && char === '<') {
-            buffer = '<';
-            currentCharIndex++;
+            buffer = '<'
+            currentCharIndex++
             while (currentCharIndex < str.length) {
-              const nextChar = str[currentCharIndex];
-              buffer += nextChar;
-              currentCharIndex++;
-              if (nextChar === '>') break;
+              const nextChar = str[currentCharIndex]
+              buffer += nextChar
+              currentCharIndex++
+              if (nextChar === '>') break
             }
-            charsToAdd = buffer;
-            buffer = '';
-            delayTime = 20;
+            charsToAdd = buffer
+            buffer = ''
+            delayTime = 20
           } else {
-            charsToAdd = char;
-            currentCharIndex++;
-            delayTime = typeSpeed;
+            charsToAdd = char
+            currentCharIndex++
+            delayTime = typeSpeed
           }
 
-          output += charsToAdd;
-          updateDisplay();
-          await delayMs(delayTime);
-          return true;
-        };
+          output += charsToAdd
+          updateDisplay()
+          await delayMs(delayTime)
+          return true
+        }
 
         const typeBackward = async () => {
-          if (output.length === 0) return false;
+          if (output.length === 0) return false
 
-          let removed = '';
-          let delayTime = backSpeed;
+          let removed = ''
+          let delayTime = backSpeed
           if (isHtml && endsWithCompleteTag(output)) {
-            const tag = getLastCompleteTag(output);
+            const tag = getLastCompleteTag(output)
             if (tag) {
-              removed = tag;
-              output = output.slice(0, -tag.length);
-              delayTime = 20;
+              removed = tag
+              output = output.slice(0, -tag.length)
+              delayTime = 20
             } else {
-              removed = output.slice(-1);
-              output = output.slice(0, -1);
+              removed = output.slice(-1)
+              output = output.slice(0, -1)
             }
           } else {
-            removed = output.slice(-1);
-            output = output.slice(0, -1);
+            removed = output.slice(-1)
+            output = output.slice(0, -1)
           }
-          updateDisplay();
-          await delayMs(delayTime);
-          return true;
-        };
+          updateDisplay()
+          await delayMs(delayTime)
+          return true
+        }
 
         while (currentStringIndex < allStrings.length && !canceled) {
           while (currentCharIndex < allStrings[currentStringIndex].length && !canceled) {
-            const result = await typeForward();
-            if (!result) break;
+            const result = await typeForward()
+            if (!result) break
           }
-          if (canceled) break;
+          if (canceled) break
 
           if (currentStringIndex < allStrings.length - 1) {
             while (output.length > 0 && !canceled) {
-              const result = await typeBackward();
-              if (!result) break;
+              const result = await typeBackward()
+              if (!result) break
             }
-            if (canceled) break;
-            currentStringIndex++;
-            currentCharIndex = 0;
+            if (canceled) break
+            currentStringIndex++
+            currentCharIndex = 0
           } else {
-            break;
+            break
           }
         }
 
         if (!canceled) {
           if (isHtml) {
-            contentSpan.innerHTML = output;
+            contentSpan.innerHTML = output
           } else {
-            contentSpan.textContent = output;
+            contentSpan.textContent = output
           }
-          cursorSpan.remove();
-          onComplete();
+          cursorSpan.remove()
+          onComplete()
         }
-        instance.isRunning = false;
-      };
+        instance.isRunning = false
+      }
 
-      run();
-      return instance;
+      run()
+      return instance
     },
     sendUserMsg() {
-      const message = this.inputMessage;
-      this.inputMessage = '';
-      this.pushMsg(message, AUTHOR.ME, 'text');
+      const message = this.inputMessage
+      this.inputMessage = ''
+      const quoteId = this.quoteMsg ? this.quoteMsg.id : null
+      this.pushMsg(message, AUTHOR.ME, 'text', null, quoteId)
+      this.clearQuote()
 
-      if (!this.nextActionTrigger) return;
+      if (!this.nextActionTrigger) return
 
-      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger;
-      const { type, options } = triggerNextAction;
-      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options;
+      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
+      const { type, options } = triggerNextAction
+      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options
 
       if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
         if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
-          const rejectDisabled = tryCnt >= rejectHitTexts.length - 1;
-          const rejectText = rejectHitTexts[Math.min(tryCnt, rejectHitTexts.length - 1)];
-          let rejectSysMsgChain = Promise.resolve();
+          const rejectDisabled = tryCnt >= rejectHitTexts.length
+          const rejectIndex = Math.min(tryCnt, rejectHitTexts.length - 1)
+          const rejectText = rejectHitTexts[rejectIndex]
+          let rejectSysMsgChain = Promise.resolve()
           if (Array.isArray(rejectText)) {
             rejectText.forEach(text => {
               rejectSysMsgChain = rejectSysMsgChain
-                .then(() => this.sendSysMsg(text, inputSpeed));
+                .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }))
             })
           } else {
-            rejectSysMsgChain = this.sendSysMsg(rejectText, inputSpeed);
+            rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
           }
           rejectSysMsgChain.then(() => {
             if (rejectDisabled) {
-              this.handleTriggerNextAction();
+              this.handleTriggerNextAction()
             } else {
-              this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+              this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
             }
-          });
-          this.nextActionTrigger.tryCnt = tryCnt + 1;
+          })
+          this.nextActionTrigger.tryCnt = tryCnt + 1
         } else {
-          this.handleTriggerNextAction();
+          this.handleTriggerNextAction()
         }
       }
     },
     handleComponentOpen({ type, props }) {
-      this.currentOpenComponent = { type, props };
+      this.currentOpenComponent = { type, props }
     },
     handleComponentClose() {
-      this.currentOpenComponent = null;
-      if (!this.nextActionTrigger) return;
-      const { triggerNextAction } = this.nextActionTrigger;
+      this.currentOpenComponent = null
+      if (!this.nextActionTrigger) return
+      const { triggerNextAction } = this.nextActionTrigger
       if (triggerNextAction.type === TRIGGER_NEXT_ACTION_TYPE.COMPONENT_CLOSE) {
-        this.handleTriggerNextAction();
+        this.handleTriggerNextAction()
       }
     },
     handleTriggerNextAction() {
-      if (!this.nextActionTrigger) return;
-      const { trigger } = this.nextActionTrigger;
-      trigger();
-      this.nextActionTrigger = null;
+      if (!this.nextActionTrigger) return
+      const { trigger } = this.nextActionTrigger
+      trigger()
+      this.nextActionTrigger = null
     },
     setUserInputFoucus() {
       const iosSpecialProcess = () => {
         try {
-          const isiOS = !!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
-          if (isiOS) {
-            this.$refs['userMsgInputRef'].scrollIntoView(true);
+          const isiOS = !!navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/)
+          if (isiOS && this.$refs['userMsgInputRef']) {
+            this.$refs['userMsgInputRef'].scrollIntoView(true)
           }
         } catch (ignore) { }
       }
       setTimeout(() => {
         this.$nextTick(() => {
-          iosSpecialProcess();
-          this.$refs['userMsgInputRef'].focus();
-        });
-      }, 1000);
+          iosSpecialProcess()
+          if (this.$refs['userMsgInputRef']) {
+            this.$refs['userMsgInputRef'].focus()
+          }
+        })
+      }, 1000)
     },
     rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
-      if (rejectKeyTexts.some(rejectText => message.indexOf(rejectText) > -1)) return true;
-      if (resolveKeyTexts.some(resolveKey => message.indexOf(resolveKey) > -1)) return false;
-      return true;
+      const trimmed = message.trim()
+      if (rejectKeyTexts.some(key => trimmed.includes(key))) return true
+      if (resolveKeyTexts.some(key => trimmed.includes(key))) return false
+      return true
     },
     pushMsg(message, author, type = 'text', externalId = null, quoteId = null) {
-      this.msgIdCounter++;
+      this.msgIdCounter++
       const msg = {
         id: this.msgIdCounter,
         author,
@@ -707,282 +818,598 @@ export default {
         transcriptMsgId: null,
         externalId,
         quoteId,
-        quoteInfo: null
-      };
+        quoteInfo: null,
+        isTranscript: false
+      }
 
-      // 处理引用
       if (quoteId) {
-        const quotedMsg = this.messages.find(m => m.externalId === quoteId);
+        const quotedMsg = this.messages.find(m => m.id === quoteId)
         if (quotedMsg) {
           msg.quoteInfo = {
             authorName: this.getRoleInfo(quotedMsg.author).name || '未知',
             contentPreview: this.getContentPreview(quotedMsg)
-          };
+          }
         } else {
           msg.quoteInfo = {
             authorName: '未知',
-            contentPreview: '[消息已不存在]'
-          };
+            contentPreview: '[消息已撤回]'
+          }
         }
       }
 
-      this.messages.push(msg);
-      onMessageSending();
-      return msg;
+      this.messages.push(msg)
+      this.scrollToBottom(false)
+      return msg
     },
     getContentPreview(msg) {
-      const { type, content } = msg;
+      const { type, content } = msg
       switch (type) {
         case 'text':
-          const plainText = content.replace(/<[^>]+>/g, '').trim();
-          return plainText.length > 30 ? plainText.slice(0, 30) + '...' : plainText;
-        case 'img': return '[图片]';
-        case 'voice': return '[语音]';
-        case 'vlog': return '[视频]';
-        case 'letter': return '[信件]';
-        default: return '[消息]';
+          const plainText = content.replace(/<[^>]+>/g, '').trim()
+          return plainText.length > 30 ? plainText.slice(0, 30) + '...' : plainText
+        case 'img': return '[图片]'
+        case 'voice': return '[语音]'
+        case 'vlog': return '[视频]'
+        case 'letter': return '[信件]'
+        default: return '[消息]'
       }
     },
     getProps(message, type) {
-      const props = {};
-      if (type === 'text') return props;
-      const domParse = new DOMParser();
-      const messageDoc = domParse.parseFromString(message, 'text/html');
-      const messageDoms = messageDoc.getElementsByTagName(type);
+      const props = {}
+      if (type === 'text') return props
+      const domParse = new DOMParser()
+      const messageDoc = domParse.parseFromString(message, 'text/html')
+      const messageDoms = messageDoc.getElementsByTagName(type)
       if (messageDoms.length === 1) {
-        const messageDom = messageDoms[0];
-        const attrs = messageDom.getAttributeNames();
-        attrs.forEach(attrName => props[attrName] = messageDom.getAttribute(attrName));
+        const messageDom = messageDoms[0]
+        const attrs = messageDom.getAttributeNames()
+        attrs.forEach(attrName => props[attrName] = messageDom.getAttribute(attrName))
       }
-      return props;
+      return props
     },
     getMsgType(message) {
-      const isImg = /<img[^>]+>/.test(message);
-      const isLetter = /<letter[^>]+>/.test(message);
-      const isVlog = /<vlog[^>]+>/.test(message);
-      const isVoice = /<voice[^>]+>/.test(message);
-      if (isImg) return 'img';
-      if (isLetter) return 'letter';
-      if (isVlog) return 'vlog';
-      if (isVoice) return 'voice';
-      return 'text';
+      const isImg = /<img[^>]+>/.test(message)
+      const isLetter = /<letter[^>]+>/.test(message)
+      const isVlog = /<vlog[^>]+>/.test(message)
+      const isVoice = /<voice[^>]+>/.test(message)
+      if (isImg) return 'img'
+      if (isLetter) return 'letter'
+      if (isVlog) return 'vlog'
+      if (isVoice) return 'voice'
+      return 'text'
     },
     markMsgSize(msg, content = null) {
-      this.latestMsgContent = content || msg.content;
+      this.latestMsgContent = content || msg.content
       return delay(0)
         .then(() => msg.type === 'img' && onImageLoad($('#mock-msg img')))
         .then(() => {
-          Object.assign(msg, getMockMsgSize());
-          this.messages = [...this.messages];
-        });
+          Object.assign(msg, getMockMsgSize())
+          this.messages = [...this.messages]
+        })
     },
     autoResizeTextarea(e) {
-      const el = e.target;
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-      el.scrollTop = el.scrollHeight;
+      const el = e.target
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+      el.scrollTop = el.scrollHeight
       this.$nextTick(() => {
-        const foot = document.getElementById('mobile-foot');
-        if (foot) this.footHeight = foot.offsetHeight;
+        const foot = document.getElementById('mobile-foot')
+        if (foot) this.footHeight = foot.offsetHeight
         requestAnimationFrame(() => {
-          const container = document.getElementById('mobile-body-content');
+          const container = document.getElementById('mobile-body-content')
           if (container) {
-            container.scrollTop = container.scrollHeight;
+            container.scrollTop = container.scrollHeight
           }
-          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        });
-      });
+          el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        })
+      })
     },
     updateTime() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      this.currentTime = h + ':' + m;
+      const now = new Date()
+      const h = String(now.getHours()).padStart(2, '0')
+      const m = String(now.getMinutes()).padStart(2, '0')
+      this.currentTime = h + ':' + m
     },
-    handleMenuClick() { /* 可扩展 */ },
-    handleMoreClick() { /* 可扩展 */ },
+    handleMenuClick() { },
+    handleMoreClick() { },
+
+    scrollToBottom(force = true) {
+      if (!force) return
+      this.$nextTick(() => {
+        const container = document.getElementById('mobile-body-content')
+        if (container) {
+          container.scrollTop = container.scrollHeight
+        }
+      })
+    },
 
     handleVoiceConvert(alt, originalMsg) {
-      if (!alt) return;
+      if (!alt) return
       if (originalMsg.transcripted) {
-        this.handleVoiceCancel(originalMsg);
-        return;
+        this.handleVoiceCancel(originalMsg)
+        return
       }
       const transcriptMsg = {
         id: ++this.msgIdCounter,
         type: 'text',
         content: alt,
-        author: null,
-        isTranscript: true
-      };
-      const index = this.messages.indexOf(originalMsg);
-      if (index === -1) return;
-      this.messages.splice(index + 1, 0, transcriptMsg);
-      originalMsg.transcripted = true;
-      originalMsg.transcriptMsgId = transcriptMsg.id;
-      this.$nextTick(() => {
-        onMessageSending();
-      });
+        author: originalMsg.author,
+        isTranscript: true,
+        transcripted: false
+      }
+      const index = this.messages.indexOf(originalMsg)
+      if (index === -1) return
+      this.messages.splice(index + 1, 0, transcriptMsg)
+      originalMsg.transcripted = true
+      originalMsg.transcriptMsgId = transcriptMsg.id
     },
     handleVoiceCancel(originalMsg) {
-      if (!originalMsg.transcripted) return;
-      const transcriptId = originalMsg.transcriptMsgId;
-      if (transcriptId === null) return;
-      const idx = this.messages.findIndex(m => m.id === transcriptId);
+      if (!originalMsg.transcripted) return
+      const transcriptId = originalMsg.transcriptMsgId
+      if (transcriptId === null) return
+      const idx = this.messages.findIndex(m => m.id === transcriptId)
       if (idx !== -1) {
-        this.messages.splice(idx, 1);
+        this.messages.splice(idx, 1)
       }
-      originalMsg.transcripted = false;
-      originalMsg.transcriptMsgId = null;
+      originalMsg.transcripted = false
+      originalMsg.transcriptMsgId = null
     },
 
     getEmojiPath(name) {
-      const rawPath = originalGetEmojiPath(name);
-      if (!rawPath) return null;
-      // 移除可能的 'assets/' 前缀
-      const relativePath = rawPath.replace(/^assets\//, '');
-      return "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat/" + relativePath;
+      const rawPath = originalGetEmojiPath(name)
+      if (!rawPath) return null
+      const relativePath = rawPath.replace(/^assets\//, '')
+      return "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/WeChat/" + relativePath
     },
     toggleEmojiPicker() {
-      this.showEmojiPicker = !this.showEmojiPicker;
+      this.showEmojiPicker = !this.showEmojiPicker
       if (this.showEmojiPicker) {
         this.$nextTick(() => {
-          this.$refs.userMsgInputRef?.focus();
-        });
+          this.$refs.userMsgInputRef?.focus()
+        })
       }
     },
     selectEmoji(emoji) {
-      const textarea = this.$refs.userMsgInputRef;
-      if (!textarea) return;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const before = this.inputMessage.substring(0, start);
-      const after = this.inputMessage.substring(end);
-      this.inputMessage = before + `[${emoji.name}]` + after;
+      const textarea = this.$refs.userMsgInputRef
+      if (!textarea) return
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const before = this.inputMessage.substring(0, start)
+      const after = this.inputMessage.substring(end)
+      this.inputMessage = before + `[${emoji.name}]` + after
 
       this.$nextTick(() => {
-        const newPos = start + emoji.name.length + 2;
-        textarea.selectionStart = newPos;
-        textarea.selectionEnd = newPos;
-        textarea.focus();
-        this.autoResizeTextarea({ target: textarea });
-      });
-      this.showEmojiPicker = false;
+        const newPos = start + emoji.name.length + 2
+        textarea.selectionStart = newPos
+        textarea.selectionEnd = newPos
+        textarea.focus()
+        this.autoResizeTextarea({ target: textarea })
+      })
+      this.showEmojiPicker = false
     },
     renderEmoji(text) {
-      if (!text) return '';
+      if (!text) return ''
       return text.replace(/\[([^\]]+)\]/g, (match, name) => {
         if (hasEmoji(name)) {
-          const path = this.getEmojiPath(name);
+          const path = this.getEmojiPath(name)
           if (path) {
-            const cleanPath = path.replace(/^\/+/, ''); // 移除开头的所有斜杠
-            const html = `<img src="${cleanPath}" class="inline-emoji" alt="${name}" />`;
-            return html;
+            const cleanPath = path.replace(/^\/+/, '')
+            return `<img src="${cleanPath}" class="inline-emoji" alt="${name}" />`
           }
         }
-        return match;
-      });
+        return match
+      })
     },
     closeEmojiPicker(e) {
-      const container = this.$refs.mobileRef;
-      if (!container) return;
-      const picker = container.querySelector('.emoji-picker-wrapper');
-      const btn = container.querySelector('.emoji-toggle-btn');
+      const container = this.$refs.mobileRef
+      if (!container) return
+      const picker = container.querySelector('.emoji-picker-wrapper')
+      const btn = container.querySelector('.emoji-toggle-btn')
       if (this.showEmojiPicker && picker && !picker.contains(e.target) && !btn?.contains(e.target)) {
-        this.showEmojiPicker = false;
+        this.showEmojiPicker = false
       }
     },
+
+    toggleVoiceInputMode() {
+      this.voiceInputMode = !this.voiceInputMode
+      if (this.voiceInputMode) {
+        this.showEmojiPicker = false
+        if (this.userVoiceActive) {
+          this.cancelUserRecording()
+        }
+      }
+    },
+
+    startUserRecording() {
+      if (this.userVoiceTimer) {
+        clearInterval(this.userVoiceTimer)
+        this.userVoiceTimer = null
+      }
+      this.userVoiceActive = true
+      this.userVoiceDuration = 0
+      this.userVoiceCancelActive = false
+      this.userVoiceRecording = true
+      this.pendingVoiceResult = null
+      this.voiceStopReceived = false
+
+      const startTime = Date.now()
+      this.userVoiceTimer = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000
+        this.userVoiceDuration = Math.floor(elapsed)
+      }, 100)
+    },
+
+    onVoiceStop() {
+      this.voiceStopReceived = true
+      this.isProcessing = false
+      this.clearUserVoiceTimer()
+    },
+
+    stopUserRecording() {
+      if (this.userVoiceTimer) {
+        clearInterval(this.userVoiceTimer)
+        this.userVoiceTimer = null
+      }
+      this.userVoiceActive = false
+      this.userVoiceRecording = false
+    },
+
+    cancelUserRecording() {
+      this.isProcessing = false
+      this.userVoiceCancelActive = true
+      this.clearUserVoiceTimer()
+      setTimeout(() => {
+        if (this.userVoiceTimer) {
+          clearInterval(this.userVoiceTimer)
+          this.userVoiceTimer = null
+        }
+        this.userVoiceActive = false
+        this.userVoiceRecording = false
+        this.userVoiceCancelActive = false
+        if (this.$refs.voiceRecorderRef) {
+          this.$refs.voiceRecorderRef.cancelRecording()
+        }
+      }, 300)
+    },
+
+    sendUserRecording() {
+      if (this.isProcessing) return
+      this.clearUserVoiceTimer()
+      if (this.$refs.voiceRecorderRef) {
+        this.$refs.voiceRecorderRef.sendRecording()
+      }
+    },
+
+    clearUserVoiceTimer() {
+      if (this.userVoiceTimer) {
+        clearInterval(this.userVoiceTimer)
+        this.userVoiceTimer = null
+      }
+    },
+
+    handleVoiceError() {
+      this.isProcessing = false
+      this.stopUserRecording()
+      this.voiceInputMode = false
+      Snackbar({
+        content: '无法访问麦克风，请检查权限',
+        duration: 2000,
+        type: 'error'
+      })
+    },
+
+    handleUserVoiceResult(result) {
+      this.isProcessing = false
+      this.pendingVoiceResult = result
+      this.stopUserRecording()
+
+      const text = result.text.trim()
+      if (!text) {
+        Snackbar({
+          content: '没听清，请再说一遍',
+          duration: 1500,
+          type: 'warning'
+        })
+        if (this.nextActionTrigger) {
+          this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
+        }
+        return
+      }
+
+      let audioUrl = null
+      if (result.blob) {
+        audioUrl = URL.createObjectURL(result.blob)
+        this.voiceBlobUrls.push(audioUrl)
+      } else {
+        audioUrl = result.url
+      }
+
+      const voiceMsg = {
+        src: audioUrl,
+        alt: text,
+        delay: 0,
+      }
+      const msg = this.pushMsg('', AUTHOR.ME, 'voice', null, null)
+      msg.props = voiceMsg
+      msg.content = ''
+
+      if (this.nextActionTrigger) {
+        const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
+        const { type, options } = triggerNextAction
+        if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
+          if (this.rejectNextMsg(text, options.resolveKeyTexts, options.rejectKeyTexts)) {
+            const rejectDisabled = tryCnt >= options.rejectHitTexts.length
+            const rejectIndex = Math.min(tryCnt, options.rejectHitTexts.length - 1)
+            const rejectText = options.rejectHitTexts[rejectIndex]
+            let rejectSysMsgChain = Promise.resolve()
+            if (Array.isArray(rejectText)) {
+              rejectText.forEach(text => {
+                rejectSysMsgChain = rejectSysMsgChain
+                  .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }))
+              })
+            } else {
+              rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
+            }
+            rejectSysMsgChain.then(() => {
+              if (rejectDisabled) {
+                this.handleTriggerNextAction()
+              } else {
+                this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
+              }
+            })
+            this.nextActionTrigger.tryCnt = tryCnt + 1
+          } else {
+            this.handleTriggerNextAction()
+          }
+        }
+      }
+    },
+
+    onVoiceProcessing() {
+      this.isProcessing = true
+    },
+
+    // ----- 引用方法 -----
+    openMsgContextMenu(msg, event) {
+      if (msg.type === 'tip') return
+      this.contextMsg = msg
+      // 防御性获取元素：优先使用 currentTarget，若为空则使用 target 或 srcElement
+      let targetEl = event.currentTarget
+      if (!targetEl) {
+        targetEl = event.target || event.srcElement
+      }
+      if (!targetEl) {
+        targetEl = document.querySelector(`.msg-row[data-msg-id="${msg.id}"]`)
+      }
+      if (!targetEl) {
+        targetEl = this.$refs.mobileRef
+      }
+
+      let rect = null
+      if (targetEl) {
+        rect = targetEl.getBoundingClientRect()
+      }
+      let left = event.clientX || (rect ? rect.left + rect.width / 2 : window.innerWidth / 2)
+      let top = event.clientY || (rect ? rect.top : window.innerHeight / 2)
+
+      const menuWidth = 130
+      const menuHeight = 80
+      const winWidth = window.innerWidth
+      const winHeight = window.innerHeight
+
+      if (left + menuWidth > winWidth - 10) left = winWidth - menuWidth - 10
+      if (left < 10) left = 10
+      if (top + menuHeight > winHeight - 10) top = (rect ? rect.top : 0) - menuHeight - 8
+      if (top < 10) top = 10
+
+      this.msgMenuStyle = {
+        ...this.msgMenuStyle,
+        left: left + 'px',
+        top: top + 'px'
+      }
+      this.showMsgMenu = true
+    },
+
+    handleMenuQuote() {
+      if (!this.contextMsg) return
+      this.quoteMsg = this.contextMsg
+      this.showQuoteBar = true
+      this.closeMsgMenu()
+      this.$nextTick(() => {
+        if (this.$refs.userMsgInputRef) {
+          this.$refs.userMsgInputRef.focus()
+        }
+      })
+    },
+
+    closeMsgMenu() {
+      this.showMsgMenu = false
+      this.contextMsg = null
+    },
+
+    clearQuote() {
+      // 重置数据
+      this.quoteMsg = null
+      this.showQuoteBar = false
+      // 强制更新视图
+      this.$forceUpdate()
+      // 直接操作 DOM 隐藏引用条（确保视觉移除）
+      const el = this.$refs.quoteBarRef
+      if (el) {
+        el.style.display = 'none'
+        // 彻底移除占位空间
+        el.style.height = '0'
+        el.style.padding = '0'
+        el.style.margin = '0'
+        el.style.overflow = 'hidden'
+        el.style.border = 'none'
+      }
+      // 额外通过类名查找隐藏（防止 ref 未更新）
+      const quoteBarEl = document.querySelector('.quote-bar')
+      if (quoteBarEl && quoteBarEl.parentNode === document.getElementById('mobile-foot')) {
+        quoteBarEl.style.display = 'none'
+        quoteBarEl.style.height = '0'
+        quoteBarEl.style.padding = '0'
+        quoteBarEl.style.margin = '0'
+        quoteBarEl.style.overflow = 'hidden'
+        quoteBarEl.style.border = 'none'
+      }
+      // 重新计算底部高度并滚动
+      this.$nextTick(() => {
+        const foot = document.getElementById('mobile-foot')
+        if (foot) {
+          this.footHeight = foot.offsetHeight
+        }
+        const container = document.getElementById('mobile-body-content')
+        if (container) {
+          container.scrollTop = container.scrollHeight
+        }
+      })
+    },
+
+    onMsgTouchStart(msg, event) {
+      if (msg.type === 'tip') return
+      this.isTouchMoved = false
+      this.touchTimer = setTimeout(() => {
+        this.openMsgContextMenu(msg, event)
+        event.preventDefault()
+        this.touchTimer = null
+      }, 500)
+    },
+
+    onMsgTouchEnd() {
+      if (this.touchTimer) {
+        clearTimeout(this.touchTimer)
+        this.touchTimer = null
+      }
+    },
+
+    onMsgTouchMove() {
+      this.isTouchMoved = true
+      if (this.touchTimer) {
+        clearTimeout(this.touchTimer)
+        this.touchTimer = null
+      }
+    },
+
+    closeMsgMenuOnClickOutside(e) {
+      if (this.showMsgMenu) {
+        const menuEl = this.$refs.msgMenuRef
+        if (menuEl && !menuEl.contains(e.target)) {
+          this.closeMsgMenu()
+        }
+      }
+    }
   },
   mounted() {
-    this.updateTime();
-    setInterval(this.updateTime, 60000);
+    this.updateTime()
+    setInterval(this.updateTime, 60000)
     this.$nextTick(() => {
-      const body = document.getElementById('mobile-body');
-      if (body) body.style.top = this.headHeight + 'px';
-    });
+      const body = document.getElementById('mobile-body')
+      if (body) body.style.top = this.headHeight + 'px'
+    })
     setTimeout(() => {
-      const foot = document.getElementById('mobile-foot');
-      if (foot) this.footHeight = foot.offsetHeight;
-    }, 100);
-    this._boundCloseEmojiPicker = this.closeEmojiPicker.bind(this);
-    document.addEventListener('click', this._boundCloseEmojiPicker);
+      const foot = document.getElementById('mobile-foot')
+      if (foot) this.footHeight = foot.offsetHeight
+    }, 100)
+    this._boundCloseEmojiPicker = this.closeEmojiPicker.bind(this)
+    document.addEventListener('click', this._boundCloseEmojiPicker)
+
+    this._boundCloseMsgMenu = this.closeMsgMenuOnClickOutside.bind(this)
+    document.addEventListener('click', this._boundCloseMsgMenu)
+
+    if (!window.__audioManager) {
+      window.__audioManager = {
+        currentId: null,
+        currentAudio: null,
+        registered: {},
+
+        register(id, resetFn) {
+          this.registered[id] = resetFn
+        },
+        unregister(id) {
+          delete this.registered[id]
+          if (this.currentId === id) {
+            this.currentId = null
+            this.currentAudio = null
+          }
+        },
+        play(id, audioEl) {
+          if (this.currentId !== null && this.currentId !== id) {
+            const resetFn = this.registered[this.currentId]
+            if (resetFn) {
+              resetFn()
+            }
+            if (this.currentAudio && this.currentAudio !== audioEl) {
+              this.currentAudio.pause()
+              this.currentAudio.currentTime = 0
+            }
+          }
+          this.currentId = id
+          this.currentAudio = audioEl
+        }
+      }
+    }
   },
   beforeUnmount() {
     if (this.typingInstance) {
-      this.typingInstance.stop();
-      this.typingInstance = null;
+      this.typingInstance.stop()
+      this.typingInstance = null
     }
     if (this.recallTimers) {
-      this.recallTimers.forEach(timer => clearTimeout(timer));
-      this.recallTimers = [];
+      this.recallTimers.forEach(timer => clearTimeout(timer))
+      this.recallTimers = []
     }
     if (this.voiceInputTimer) {
-      clearInterval(this.voiceInputTimer);
-      this.voiceInputTimer = null;
+      clearInterval(this.voiceInputTimer)
+      this.voiceInputTimer = null
     }
     if (this.voicePushTimer) {
-      clearTimeout(this.voicePushTimer);
-      this.voicePushTimer = null;
+      clearTimeout(this.voicePushTimer)
+      this.voicePushTimer = null
     }
     if (this.autoCancelTimer) {
-      clearTimeout(this.autoCancelTimer);
-      this.autoCancelTimer = null;
+      clearTimeout(this.autoCancelTimer)
+      this.autoCancelTimer = null
     }
     if (this.voiceResolve) {
-      this.voiceResolve = null;
+      this.voiceResolve = null
     }
-    document.removeEventListener('click', this._boundCloseEmojiPicker);
+    this.clearUserVoiceTimer()
+    document.removeEventListener('click', this._boundCloseEmojiPicker)
+    document.removeEventListener('click', this._boundCloseMsgMenu)
+
+    this.voiceBlobUrls.forEach(url => URL.revokeObjectURL(url))
+    this.voiceBlobUrls = []
+    this.clearQuote()
+    this.closeMsgMenu()
   }
 }
 
-function onMessageSending() {
-  setTimeout(() => {
-    updateScroll();
-    const $latestMsg = $('#mobile-body-content .msg-row:last-child .msg');
-    $latestMsg.find('a').attr('target', '_blank');
-    onImageLoad($latestMsg).then(updateScroll);
-  });
-}
-
-function updateScroll() {
-  const $chatbox = $('#mobile-body-content');
-  const distance = $chatbox[0].scrollHeight - $chatbox.height() - $chatbox.scrollTop();
-  const duration = 250;
-  const startTime = Date.now();
-  requestAnimationFrame(function step() {
-    const p = Math.min(1, (Date.now() - startTime) / duration);
-    $chatbox.scrollTop($chatbox.scrollTop() + distance * p);
-    p < 1 && requestAnimationFrame(step);
-  });
-}
-
 function delay(amount = 0) {
-  return new Promise(resolve => setTimeout(resolve, amount));
+  return new Promise(resolve => setTimeout(resolve, amount))
 }
 
 function getMockMsgSize() {
-  const $mockMsg = $('#mock-msg');
+  const $mockMsg = $('#mock-msg')
   return {
     width: $mockMsg.width(),
     height: $mockMsg.height()
-  };
+  }
 }
 
 function onImageLoad($img) {
   return new Promise(resolve => {
     $img.one('load', resolve).each((index, target) => {
-      target.complete && $(target).trigger('load');
-    });
-  });
+      target.complete && $(target).trigger('load')
+    })
+  })
 }
 </script>
 
-<style scoped>
-/* 空 */
-</style>
+<style scoped></style>
 
 <style>
-/* ====== 全局样式（包含表情相关及光标修复） ====== */
 #mobile-foot {
   position: absolute;
   bottom: 0;
@@ -1002,6 +1429,8 @@ function onImageLoad($img) {
   gap: 8px;
   flex-wrap: nowrap;
   min-height: 55px;
+  position: relative;
+  z-index: 5;  /* 低于引用条 */
 }
 
 #mobile-foot .input-area {
@@ -1014,6 +1443,8 @@ function onImageLoad($img) {
   padding: 4px 14px;
   min-height: 40px;
   box-shadow: 5px 5px 15px 0 rgba(102, 102, 102, 0.1);
+  gap: 8px;
+  overflow: visible;
 }
 
 #mobile-foot .system-input-element {
@@ -1064,12 +1495,47 @@ function onImageLoad($img) {
   min-height: 24px;
   max-height: 80px;
   font-family: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 #mobile-foot .send-btn {
   flex: 0 0 auto;
   height: 36px;
   align-self: flex-end;
+}
+
+.voice-toggle-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #555;
+  transition: background 0.2s, color 0.2s;
+}
+
+.voice-toggle-btn:hover {
+  background: #d0d0d0;
+}
+
+.voice-toggle-btn.active {
+  background: #22c3aa;
+  color: white;
+}
+
+.voice-recorder-button {
+  padding: 6px 0 !important;
+}
+
+.voice-recorder-button .recorder-btn {
+  height: 32px !important;
+  padding: 4px 16px !important;
 }
 
 .emoji-btn-wrapper {
@@ -1150,7 +1616,6 @@ function onImageLoad($img) {
   }
 }
 
-/* ===== 语音输入蒙版 - 居中布局 ===== */
 .voice-input-overlay {
   position: absolute;
   top: 0;
@@ -1158,7 +1623,6 @@ function onImageLoad($img) {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 500;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1166,7 +1630,14 @@ function onImageLoad($img) {
   pointer-events: none;
 }
 
-/* 中央气泡 - 被取消时变红 */
+.system-voice-overlay {
+  z-index: 500;
+}
+
+.user-voice-overlay {
+  z-index: 600;
+}
+
 .voice-input-bubble {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 20px 20px 20px 20px;
@@ -1183,10 +1654,8 @@ function onImageLoad($img) {
 
 .voice-input-bubble.voice-canceled {
   background: rgba(255, 80, 80, 0.9);
-  /* 变红 */
 }
 
-/* 底部弧形区域（始终灰色，不变红） */
 .voice-bottom-area {
   position: absolute;
   bottom: 0;
@@ -1196,52 +1665,55 @@ function onImageLoad($img) {
   background: rgba(200, 200, 200, 0.7);
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   padding-bottom: 30px;
   pointer-events: auto;
+  gap: 40px;
 }
 
-/* ===== 取消按钮 - 圆形，始终禁用 ===== */
-.voice-cancel-btn {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
+.voice-bottom-area-with-send {
+  justify-content: center;
+  gap: 60px;
+}
+
+.voice-cancel-btn,
+.voice-send-btn {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: rgba(200, 200, 200, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: #333;
-  z-index: 2;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(220, 220, 220, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   user-select: none;
+  cursor: pointer;
   transition: background 0.3s, color 0.3s;
-  /* 强制禁用，类似发送按钮禁用效果 */
-  pointer-events: none;
-  cursor: not-allowed;
-  opacity: 0.85;
 }
 
-/* 取消激活（变红） */
 .voice-cancel-btn.cancel-active {
   background: #e05555;
   color: white;
 }
 
-.voice-send-area {
-  font-size: 18px;
-  color: #333;
-  font-weight: 500;
+.voice-send-btn {
+  background: #22c3aa;
+  color: white;
 }
 
-/* 声波动画 */
+.voice-send-btn:hover {
+  background: #1aa08b;
+}
+
+.voice-cancel-btn:hover {
+  background: #c0c0c0;
+}
+
 .voice-wave {
   display: flex;
   align-items: center;
@@ -1298,7 +1770,31 @@ function onImageLoad($img) {
   color: #333;
 }
 
-/* ====== 无头像消息占位 ====== */
+.msg-transcript {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 4px;
+  padding-left: 0;
+  padding-right: 0;
+  width: 100%;
+}
+
+.msg-transcript-right {
+  justify-content: flex-end;
+}
+
+.msg-transcript .msg {
+  max-width: 80%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  background: #e8e8e8;
+  color: #333;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 13px;
+  height: auto !important;
+}
+
 .msg-avatar-placeholder {
   width: 40px;
   height: 40px;
@@ -1307,9 +1803,20 @@ function onImageLoad($img) {
   visibility: hidden;
 }
 
+/* 所有消息气泡强制换行 */
 .msg {
   max-width: 100% !important;
   word-break: break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 消息内部的引用信息自动换行 */
+.msg-quote .quote-text {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
+  max-height: none;
 }
 
 .animate_breathe {
@@ -1453,18 +1960,25 @@ function onImageLoad($img) {
   pointer-events: none;
 }
 
+/* ----- 引用框样式（消息内部）----- */
 .msg-quote {
   display: flex;
   align-items: center;
-  background: #f0f0f0;
+  background: #f0f0f0 !important;
   border-radius: 4px;
   padding: 4px 8px;
   margin-bottom: 4px;
   font-size: 12px;
-  color: #888;
+  color: #333 !important;
   max-width: 100%;
   box-sizing: border-box;
   min-height: 24px;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  max-height: 3.2em;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.4 !important;
 }
 
 .msg-quote .quote-line {
@@ -1478,33 +1992,86 @@ function onImageLoad($img) {
 
 .msg-quote .quote-author {
   font-weight: 500;
-  color: #333;
+  color: #333 !important;
   margin-right: 4px;
   white-space: nowrap;
 }
 
 .msg-quote .quote-text {
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
+  color: #333 !important;
+  word-wrap: break-word;
 }
 
-/* 自己的消息引用块背景微调 */
 .msg-me .msg-quote {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #333 !important;
 }
 
 .msg-me .msg-quote .quote-line {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.6) !important;
 }
 
-.msg-me .msg-quote .quote-author {
-  color: white;
-}
-
+.msg-me .msg-quote .quote-author,
 .msg-me .msg-quote .quote-text {
-  color: rgba(255, 255, 255, 0.9);
+  color: #333 !important;
+}
+
+/* ----- 引用条（输入框上方）----- */
+.quote-bar {
+  position: relative;
+  z-index: 20;  /* 高于输入区域 */
+  pointer-events: auto !important;
+  background: #f0f0f0 !important;
+  padding: 4px 12px !important;
+  border-bottom: 1px solid #ddd !important;
+  min-height: 32px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.quote-bar-content {
+  flex: 1;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal;
+  max-height: 40px;
+  line-height: 1.4;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.quote-bar-author {
+  font-weight: bold;
+  margin-right: 6px;
+  color: #22c3aa !important;
+}
+
+.quote-bar-text {
+  color: #555 !important;
+  word-break: break-word;
+}
+
+.quote-bar-close {
+  pointer-events: auto !important;
+  cursor: pointer;
+  padding: 6px 14px;   /* 增大点击区域 */
+  font-size: 20px;
+  color: #999;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color 0.2s;
+  z-index: 30;
+  line-height: 1;
+}
+
+.quote-bar-close:hover {
+  color: #333;
 }
 </style>
