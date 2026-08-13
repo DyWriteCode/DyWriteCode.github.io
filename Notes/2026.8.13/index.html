@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI短剧“发刀子”受欢迎程度简要推导</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                tags: 'ams'
+            },
+            svg: { fontCache: 'global' },
+            options: { skipHtmlTypes: 'script', processHtmlClass: 'math' }
+        };
+    </script>
+    <link href="https://cdn.jsdmirror.com?v=20260812124452" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260812124452" rel="dns-prefetch" />
+    <script id="MathJax-script" async src="https://cdn.jsdmirror.com/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #f7f9fc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0b1a2f;
+            line-height: 1.7;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2.8rem 3rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; border-bottom: 3px solid #e2e8f0; padding-bottom: 0.8rem; margin-bottom: 2rem; }
+        h2 { font-size: 1.8rem; font-weight: 600; margin-top: 3rem; margin-bottom: 1.4rem; border-left: 6px solid #3b82f6; padding-left: 1.2rem; color: #0b1a2f; }
+        h3 { font-size: 1.4rem; font-weight: 600; margin-top: 2.2rem; margin-bottom: 0.8rem; color: #1e293b; }
+        h4 { font-size: 1.15rem; font-weight: 600; margin-top: 1.8rem; margin-bottom: 0.5rem; color: #2d3a4f; }
+        p { margin-bottom: 1rem; }
+        .math-block {
+            background: #f1f5f9;
+            padding: 1.6rem 2rem;
+            border-radius: 20px;
+            margin: 1.4rem 0 1.8rem 0;
+            overflow-x: auto;
+            border: 1px solid #e6edf5;
+        }
+        .math-block .math { display: block; text-align: center; }
+        .math-inline { background: #f1f5f9; padding: 0.1rem 0.5rem; border-radius: 8px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        th { background: #1e293b; color: white; font-weight: 600; padding: 12px 14px; text-align: left; }
+        td { padding: 12px 14px; border-bottom: 1px solid #e9edf2; vertical-align: top; }
+        .badge {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+            margin-right: 0.5rem;
+        }
+        .badge-green { background: #10b981; }
+        .badge-red { background: #ef4444; }
+        .badge-yellow { background: #f59e0b; color: #0b1a2f; }
+        .note-box {
+            background: #fefce8;
+            border-left: 6px solid #f59e0b;
+            padding: 1.2rem 1.8rem;
+            border-radius: 14px;
+            margin: 1.8rem 0;
+        }
+        .note-box strong { color: #92400e; }
+        .hr-light { margin: 2.8rem 0; border: 0; height: 1px; background: linear-gradient(to right, #d1d9e6, transparent); }
+        .footer-meta { margin-top: 3.5rem; font-size: 0.9rem; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 2rem; }
+        @media (max-width: 700px) {
+            body { padding: 1rem 0.5rem; }
+            .container { padding: 1.8rem 1.2rem; }
+            h1 { font-size: 1.8rem; }
+            .math-block { padding: 1rem; }
+            table { font-size: 0.85rem; }
+            th, td { padding: 8px 6px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1> · AI短剧“发刀子”受欢迎程度 <br><span style="font-size:1.5rem;font-weight:400;color:#2d3a4f;">完整推导</span></h1>
+
+    <p style="font-size:1.1rem;margin-bottom:2rem;">
+        本推导从零开始，引入 <strong>九大核心变量</strong>，逐步构建读者心理、平台算法、IP属性与动态演化的完整数学模型。
+        部分数学模型使用的已知数学模型包括：<strong>朗伯 W 函数</strong>、<strong>双曲正切函数</strong>、<strong>微分方程</strong>，以及一些已知的有关的数据模型
+    </p>
+
+    <!-- ============================================================ -->
+    <h2>第一部分 · 变量定义与基础公理体系</h2>
+    <p>定义目标函数 <strong>\(H\)</strong> 为 AI 短剧综合受欢迎指数（数值越高，完播率、互动率、播放量综合表现越优）。</p>
+
+    <h3>1.1 核心自变量</h3>
+    <table>
+        <thead><tr><th>符号</th><th>含义</th><th>取值性质</th></tr></thead>
+        <tbody>
+            <tr><td>\(L\)</td><td>原著总字数（正比于 AI 短剧总时长）</td><td>\(L > 0\)，单位为“万字”</td></tr>
+            <tr><td>\(P\)</td><td>文本“刀子”的原始情感冲击力</td><td>固定常数，\(P > 0\)</td></tr>
+            <tr><td>\(\delta\)</td><td>AI 视觉化放大系数（画面、音效加成）</td><td>\(\delta > 1\)，通常取 5~10</td></tr>
+            <tr><td>\(\xi\)</td><td>时代共情系数</td><td>\(\xi > 0\)（现代 \(> 1\)，古代 \(< 1\)）</td></tr>
+            <tr><td>\(\tau\)</td><td>刀子时机系数</td><td>\(0 < \tau \le 1\)（黄金分割点附近最优）</td></tr>
+            <tr><td>\(w\)</td><td>作者文笔系数</td><td>\(w > 0\)（优秀 \(> 1\)，干瘪 \(< 1\)）</td></tr>
+            <tr><td>\(K\)</td><td>小说知名度</td><td>\(0 \le K \le 1\)，<strong>动态变量</strong>（随时间演化）</td></tr>
+            <tr><td>\(F\)</td><td>小说完结程度</td><td>\(0 \le F \le 1\)（1 为已完结）</td></tr>
+            <tr><td>\(\epsilon\)</td><td>外部红利（平台补贴、社会热点等）</td><td>\(\epsilon > -1\)</td></tr>
+            <tr><td>\(t\)</td><td>时间（用于动态演化）</td><td>\(t \ge 0\)</td></tr>
+        </tbody>
+    </table>
+
+    <h3>1.2 固定参数</h3>
+    <table>
+        <thead><tr><th>符号</th><th>含义</th><th>典型范围</th></tr></thead>
+        <tbody>
+            <tr><td>\(\alpha\)</td><td>情感积累效率常数</td><td>\(2 \sim 5\)</td></tr>
+            <tr><td>\(\beta\)</td><td>伤害敏感系数</td><td>\(1 \sim 4\)</td></tr>
+            <tr><td>\(\eta_0\)</td><td>基准弃剧系数</td><td>\(0.3 \sim 0.8\)</td></tr>
+            <tr><td>\(\kappa\)</td><td>社交裂变强度</td><td>\(0.5 \sim 1.5\)</td></tr>
+            <tr><td>\(\lambda_1\)</td><td>共鸣超然折扣强度</td><td>\(0.2 \sim 0.5\)</td></tr>
+            <tr><td>\(\lambda_2\)</td><td>震惊超然折扣强度</td><td>\(0.8 \sim 2.0\)（\(> \lambda_1\)）</td></tr>
+            <tr><td>\(\nu\)</td><td>时长惩罚系数</td><td>\(0.01 \sim 0.05\)</td></tr>
+            <tr><td>\(L_0\)</td><td>平台最优甜区字数</td><td>通常 \(3 \sim 8\) 万字</td></tr>
+            <tr><td>\(\rho\)</td><td>热度反哺知名度速率</td><td>\(0.1 \sim 0.5\)</td></tr>
+            <tr><td>\(\mu\)</td><td>IP 品牌转化系数</td><td>\(0.5 \sim 2.0\)</td></tr>
+        </tbody>
+    </table>
+
+    <hr class="hr-light">
+
+    <h2>第二部分 · 第一步推导：拆分的超然折扣系数</h2>
+
+    <h4>共鸣通道（温和折扣）</h4>
+    <p>读者即使知道结局，前期共情依然有效，折扣较弱：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \sigma_1 = e^{-\lambda_1 K F}, \quad 0 < \lambda_1 < 1
+        \]</span>
+    </div>
+
+    <h4>震惊通道（猛烈折扣）</h4>
+    <p>已知刀子后，意外感和痛苦被大幅削弱，折扣更强：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \sigma_2 = e^{-\lambda_2 K F}, \quad \lambda_2 > \lambda_1
+        \]</span>
+    </div>
+
+    <p><strong>边界验证：</strong></p>
+    <ul>
+        <li>若 \(K = 0\) 或 \(F = 0\)（不知名或未完结），\(\sigma_1 = \sigma_2 = 1\)（毫不知情，全效）。</li>
+        <li>若 \(K = 1, F = 1\)（国民级完结作品），\(\sigma_1 = e^{-\lambda_1} > e^{-\lambda_2} = \sigma_2\)，共鸣保留更多，震惊消失更快。</li>
+    </ul>
+
+    <hr class="hr-light">
+
+    <h2>第三部分 · 第二步推导：修正后的情感净动能 \(Q\)（微元积分法）</h2>
+
+    <h3>3.1 情感积累项 \(E\)（使用温和折扣 \(\sigma_1\)）</h3>
+    <p>读者在阅读第 \(l\) 个千字时的边际情感投入量，与共情、时机、共鸣折扣成正比，但随已读字数增加而边际递减：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \frac{dE}{dl} = \frac{\alpha \cdot \xi \cdot \tau \cdot \sigma_1}{l}
+        \]</span>
+    </div>
+    <p>从小说开头（\(l = 1\)）积分至总篇幅 \(l = L\)：</p>
+    <div class="math-block">
+        <span class="math">\[
+            E = \int_{1}^{L} \frac{\alpha \xi \tau \sigma_1}{l} \, dl
+            = \alpha \xi \tau \sigma_1 \int_{1}^{L} \frac{1}{l} \, dl
+            = \alpha \xi \tau \sigma_1 \left[ \ln l \right]_{1}^{L}
+            = \alpha \xi \tau \sigma_1 \ln L
+        \]</span>
+    </div>
+
+    <h3>3.2 伤害惩罚项 \(D\)（使用猛烈折扣 \(\sigma_2\)）</h3>
+    <p>“刀子”的原始冲击力为 \(P\)，造成的负面效用被文笔、共情、篇幅稀释，同时被已知剧透（\(\sigma_2\)）大幅削弱：</p>
+    <div class="math-block">
+        <span class="math">\[
+            D = \frac{\beta P}{w \xi L} \cdot \sigma_2
+        \]</span>
+    </div>
+
+    <h3>3.3 合并得真实情感净动能 \(Q\)</h3>
+    <p>净动能为“积累的感动”减去“刀子的痛苦”：</p>
+    <div class="math-block">
+        <span class="math">\[
+            Q = E - D = \alpha \xi \tau \sigma_1 \ln L - \frac{\beta P \sigma_2}{w \xi L}
+        \]</span>
+        <span class="math">\[
+            \boxed{
+            Q = \alpha \xi \tau e^{-\lambda_1 K F} \ln L - \frac{\beta P e^{-\lambda_2 K F}}{w \xi L}
+            }
+        \]</span>
+    </div>
+
+    <p><strong>极限分析：</strong></p>
+    <ul>
+        <li>当 \(L \to 0^+\)（极短篇）：\(\ln L \to -\infty\)，且 \(\frac{1}{L} \to +\infty\)，主导项为负无穷，故 \(Q \to -\infty\)（极度厌恶）。</li>
+        <li>当 \(L \to +\infty\)（长篇）：\(\ln L \to +\infty\)，\(\frac{1}{L} \to 0\)，故 \(Q \to +\infty\)（审美升华）。</li>
+        <li>已知剧情（大 \(K, F\)）时，\(\sigma_2\) 使短篇的负向值略微缓和，但无法改变趋势。</li>
+    </ul>
+
+    <hr class="hr-light">
+
+    <h2>第四部分 · 第三步推导：AI短剧完播率 \(CR\)（平台第一权重）</h2>
+
+    <h3>4.1 视觉冲击强度的换算</h3>
+    <p>文字刀子经 AI 画面、音效、剪辑强化后，实际冲击力放大为：</p>
+    <div class="math-block">
+        <span class="math">\[
+            P_v = \delta \cdot P
+        \]</span>
+    </div>
+
+    <h3>4.2 弃剧概率 \(\rho\) 的构造</h3>
+    <p>观众在任意时刻划走的概率，等于“视觉冲击强度”除以“心理耐受度”。耐受度由时代（\(\xi\)）、时机（\(\tau\)）、文笔（\(w\)）和已知剧透带来的防御（\(\sigma_2\)）共同提供，且随篇幅 \(L\) 线性积累：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w L}
+        \]</span>
+    </div>
+    <p><strong>注意：</strong>这里使用 \(\sigma_2\)（震惊折扣），因为已知剧情会降低弃剧概率（观众更倾向于“打卡”名场面）。</p>
+
+    <h3>4.3 完播率定义与硬截断</h3>
+    <div class="math-block">
+        <span class="math">\[
+            CR = 1 - \rho = 1 - \frac{\eta_0 \delta P \sigma_2}{\xi \tau w L}
+        \]</span>
+        <span class="math">\[
+            \boxed{
+            CR = 1 - \frac{\eta_0 \delta P e^{-\lambda_2 K F}}{\xi \tau w L}
+            }
+        \]</span>
+    </div>
+    <p><strong>硬性截断：</strong>若 \(L < \frac{\eta_0 \delta P \sigma_2}{\xi \tau w}\)，则 \(CR < 0\)，实际完播率强制归零（\(CR = 0\)）。</p>
+
+    <hr class="hr-light">
+
+    <h2>第五部分 · 第四步推导：修正后的算法推荐热度 \(R_{alg}\)（含饱和互动项）</h2>
+
+
+    <div class="math-block">
+        <span class="math">\[
+            I = \frac{1 + \tanh(\kappa Q)}{2} = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}
+        \]</span>
+    </div>
+    <ul>
+        <li>当 \(Q \to +\infty\)（神作）：\(I \to 1\)（高互动）</li>
+        <li>当 \(Q = 0\)（平淡）：\(I = 0.5\)（中等互动）</li>
+        <li>当 \(Q \to -\infty\)（烂到极致）：\(I \to 0^+\)（趋近于0，但不归零，保留“吐槽”空间）</li>
+    </ul>
+
+    <h3>5.1 算法热度公式</h3>
+    <p>平台推荐算法：推荐分 = 完播率² × 互动率。因此：</p>
+    <div class="math-block">
+        <span class="math">\[
+            R_{alg} = Q \times CR^2 \times I
+        \]</span>
+        <span class="math">\[
+            \boxed{
+            R_{alg} = Q \cdot CR^2 \cdot \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}
+            }
+        \]</span>
+    </div>
+
+    <h3>5.2 完整展开式（代入 \(Q\) 和 \(CR\)）</h3>
+    <div class="math-block">
+        <span class="math">\[
+            R_{alg} =
+            \left( \alpha \xi \tau \sigma_1 \ln L - \frac{\beta P \sigma_2}{w \xi L} \right)
+            \cdot
+            \left( 1 - \frac{\eta_0 \delta P \sigma_2}{\xi \tau w L} \right)^2
+            \cdot
+            \frac{
+            \exp\left[ \kappa \left( \alpha \xi \tau \sigma_1 \ln L - \frac{\beta P \sigma_2}{w \xi L} \right) \right]
+            }{
+            \exp\left[ \kappa \left( \alpha \xi \tau \sigma_1 \ln L - \frac{\beta P \sigma_2}{w \xi L} \right) \right]
+            +
+            \exp\left[ -\kappa \left( \alpha \xi \tau \sigma_1 \ln L - \frac{\beta P \sigma_2}{w \xi L} \right) \right]
+            }
+        \]</span>
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第六部分 · 第五步推导：IP自带硬核流量 \(R_{ip}\)（粉丝护城河）</h2>
+    <p>知名且完结的作品（\(K, F\) 大），自带搜索流量与情怀播放。这部分流量完全不受完播率影响，是独立于算法推荐之外的“保底热度”。</p>
+    <div class="math-block">
+        <span class="math">\[
+            R_{ip} = \mu K F
+        \]</span>
+    </div>
+    <p>将外部红利（平台补贴、社会热点等）打包为 \(\epsilon\)，则前两项合并后的原始总热度为：</p>
+    <div class="math-block">
+        <span class="math">\[
+            R_{total} = (R_{alg} + R_{ip}) \cdot (1 + \epsilon)
+        \]</span>
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第七部分 · 第六步推导：时长折损税 \(T(L)\)（甜区偏差模型）</h2>
+    <div class="math-block">
+        <span class="math">\[
+            T(L) = \nu (L - L_0)^2
+        \]</span>
+    </div>
+    <ul>
+        <li>当 \(L = L_0\)：惩罚为 0（最佳时长）</li>
+        <li>当 \(L \to 0\) 或 \(L \to \infty\)：惩罚急剧上升</li>
+    </ul>
+
+    <p>最终受欢迎指数 \(H\) 为总热度减去时长惩罚：</p>
+    <div class="math-block">
+        <span class="math">\[
+            H = R_{total} - T(L) = (R_{alg} + \mu K F)(1 + \epsilon) - \nu (L - L_0)^2
+        \]</span>
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第八部分 · 第七步推导：知名度 \(K\) 的动态演化</h2>
+    <div class="math-block">
+        <span class="math">\[
+            \frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K), \quad K(0) = K_0
+        \]</span>
+    </div>
+    <ul>
+        <li>\(\rho > 0\)：热度反哺速率</li>
+        <li>\(H(t)\)：当前时刻的受欢迎指数（依赖当前 \(K\)）</li>
+        <li>\((1 - K)\)：知名度天花板限制</li>
+    </ul>
+    <p><strong>稳态分析：</strong>当 \(\frac{dK}{dt} = 0\) 时，要么 \(H = 0\)（无热度），要么 \(K = 1\)（家喻户晓）。中间状态由微分方程决定。</p>
+    <p>对于短篇发刀（初始 \(K_0 \approx 0\)），若首次发布时 \(H(0) < 0\)，则 \(\frac{dK}{dt} < 0\)，知名度反而下降，被算法雪藏。<br>
+    对于长篇发刀（初始 \(K_0 \approx 0\)，但 \(H(0) > 0\)），则 \(\frac{dK}{dt} > 0\)，知名度逐渐上升，形成正反馈。</p>
+
+    <hr class="hr-light">
+
+    <h2>第九部分 · 第八步推导：精确阈值 \(L^*\)（朗伯 W 函数解）</h2>
+
+    <h3>9.1 文本层面不惹人厌（\(Q > 0\)）</h3>
+    <div class="math-block">
+        <span class="math">\[
+            \alpha \xi \tau \sigma_1 \ln L > \frac{\beta P \sigma_2}{w \xi L}
+        \]</span>
+    </div>
+    <p>两边同乘 \(L\)（正数）：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \alpha \xi \tau \sigma_1 \cdot L \ln L > \frac{\beta P \sigma_2}{w \xi}
+        \]</span>
+    </div>
+    <p>令 \(A = \alpha \xi \tau \sigma_1\)，\(B = \frac{\beta P \sigma_2}{w \xi}\)，则不等式为：</p>
+    <div class="math-block">
+        <span class="math">\[
+            A L \ln L > B
+        \]</span>
+    </div>
+    <p>设 \(y = \ln L\)，则 \(L = e^y\)，代入得：</p>
+    <div class="math-block">
+        <span class="math">\[
+            A y e^y > B \quad \Rightarrow \quad y e^y > \frac{B}{A}
+        \]</span>
+    </div>
+    <p>方程 \(y e^y = C\) 的解为 \(y = W(C)\)，其中 \(W\) 为朗伯 W 函数（主支）。因此：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \ln L > W\left( \frac{B}{A} \right) \quad \Rightarrow \quad L > \exp\left[ W\left( \frac{B}{A} \right) \right]
+        \]</span>
+    </div>
+    <p>利用恒等式 \(\exp(W(x)) = \frac{x}{W(x)}\)，得到精确的 \(L_1\)：</p>
+    <div class="math-block">
+        <span class="math">\[
+            L_1 = \frac{B}{A \cdot W\left( \frac{B}{A} \right)}
+            = \frac{\frac{\beta P \sigma_2}{w \xi}}{\alpha \xi \tau \sigma_1 \cdot W\left( \frac{\beta P \sigma_2}{\alpha w \xi^2 \tau \sigma_1} \right)}
+        \]</span>
+        <span class="math">\[
+            \boxed{
+            L_1 = \frac{\beta P \sigma_2}{w \xi \cdot \alpha \xi \tau \sigma_1 \cdot W\left( \frac{\beta P \sigma_2}{\alpha w \xi^2 \tau \sigma_1} \right)}
+            }
+        \]</span>
+    </div>
+
+    <h3>9.2 视觉层面不被划走（\(CR > 0\)）</h3>
+    <div class="math-block">
+        <span class="math">\[
+            1 - \frac{\eta_0 \delta P \sigma_2}{\xi \tau w L} > 0 \quad \Rightarrow \quad L > \frac{\eta_0 \delta P \sigma_2}{\xi \tau w}
+        \]</span>
+        <span class="math">\[
+            \boxed{
+            L_2 = \frac{\eta_0 \delta P \sigma_2}{\xi \tau w}
+            }
+        \]</span>
+    </div>
+
+    <h3>9.3 综合生效门槛</h3>
+    <p>算法推荐项 \(R_{alg}\) 产生正向贡献的最低篇幅为两者中的较大值：</p>
+    <div class="math-block">
+        <span class="math">\[
+            \boxed{
+            L^* = \max\left( L_1,\ L_2 \right)
+            }
+        \]</span>
+    </div>
+    <p>若 \(L < L^*\)，则 \(R_{alg} = 0\)（完播率截断或文本负向），公式坍缩为纯IP流量减时长惩罚：</p>
+    <div class="math-block">
+        <span class="math">\[
+            H = \mu K F (1 + \epsilon) - \nu (L - L_0)^2
+        \]</span>
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第十部分 · 第九步：完整最终公式（汇总所有修正）</h2>
+    <p>将动态知名度隐式纳入（每个时间步先解微分方程得到 \(K(t)\)，再代入静态公式），最终<strong>准静态表达式</strong>为：</p>
+    <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+        <span class="math">\[
+            \boxed{
+            \begin{aligned}
+            H(t) =\ &
+            \Bigg[
+            \left( \alpha \xi \tau e^{-\lambda_1 K(t)F} \ln L - \frac{\beta P e^{-\lambda_2 K(t)F}}{w \xi L} \right)
+            \cdot
+            \left( 1 - \frac{\eta_0 \delta P e^{-\lambda_2 K(t)F}}{\xi \tau w L} \right)^2
+            \cdot
+            \frac{
+            \exp\left[ \kappa \left( \alpha \xi \tau e^{-\lambda_1 K(t)F} \ln L - \frac{\beta P e^{-\lambda_2 K(t)F}}{w \xi L} \right) \right]
+            }{
+            \exp\left[ \kappa \left( \alpha \xi \tau e^{-\lambda_1 K(t)F} \ln L - \frac{\beta P e^{-\lambda_2 K(t)F}}{w \xi L} \right) \right]
+            +
+            \exp\left[ -\kappa \left( \alpha \xi \tau e^{-\lambda_1 K(t)F} \ln L - \frac{\beta P e^{-\lambda_2 K(t)F}}{w \xi L} \right) \right]
+            }
+            \\
+            &+
+            \mu K(t) F
+            \Bigg]
+            \cdot
+            (1 + \epsilon)
+            -
+            \nu (L - L_0)^2
+            \end{aligned}
+            }
+        \]</span>
+        <p style="margin-top:0.6rem;text-align:center;font-size:0.95rem;">其中 \(K(t)\) 由微分方程 \(\frac{dK}{dt} = \rho H(t) (1-K)\) 驱动，\(K(0)=K_0\)。</p>
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第十一部分 · 极限推演与最终商业判据</h2>
+
+    <h3>11.1 原创不知名短篇（\(K_0 \approx 0,\ L \ll L_0,\ L < L^*\)）</h3>
+    <ul>
+        <li>\(\sigma_1 = \sigma_2 = 1\)（无人知晓）</li>
+        <li>因 \(L\) 极小，\(CR = 0\)（完播率截断）</li>
+        <li>\(R_{alg} = 0\)（算法项归零）</li>
+        <li>\(R_{ip} = \mu K F \approx 0\)</li>
+        <li>\(H(0) = -\nu (L - L_0)^2 < 0\)（偏离甜区）</li>
+        <li>动力学：\(\frac{dK}{dt} = \rho H(0)(1-0) < 0\)，知名度持续下降</li>
+    </ul>
+    <div class="note-box">
+        <strong>❌ 结论：</strong> 热度为负且被算法永久雪藏，<strong>绝对不可行</strong>。
+    </div>
+
+    <h3>11.2 顶级 IP 完结短篇（\(K_0 = 1,\ F = 1,\ L \ll L_0\)）</h3>
+    <ul>
+        <li>\(\sigma_1 = e^{-\lambda_1}\)，\(\sigma_2 = e^{-\lambda_2}\)</li>
+        <li>\(CR = 0\) 依然（短篇无法突破视觉阈值）</li>
+        <li>\(R_{alg} = 0\)</li>
+        <li>\(R_{ip} = \mu\)</li>
+        <li>\(H = \mu (1+\epsilon) - \nu (L - L_0)^2\)</li>
+    </ul>
+    <div class="note-box">
+        <strong>⚠️ 结论：</strong> 若 \(\mu (1+\epsilon) > \nu (L - L_0)^2\) 则热度为正，但无算法推荐，<strong>仅靠情怀保本，无法破圈</strong>。
+    </div>
+
+    <h3>11.3 原创长篇（\(K_0 \approx 0,\ L \gg L_0,\ L > L^*\)）</h3>
+    <ul>
+        <li>\(\sigma_1 \approx 1,\ \sigma_2 \approx 1\)（初始不知名）</li>
+        <li>\(CR \to 1\)（完播率接近满值）</li>
+        <li>\(Q \approx \alpha \xi \tau \ln L \to +\infty\)</li>
+        <li>互动项 \(\frac{e^{\kappa Q}}{e^{\kappa Q}+e^{-\kappa Q}} \to 1\)</li>
+        <li>\(R_{alg} \approx (\alpha \xi \tau \ln L) \cdot 1^2 \cdot L^{\kappa \alpha \xi \tau}\)</li>
+        <li>时长惩罚 \(\nu (L - L_0)^2 \approx \nu L^2\)（当 \(L \gg L_0\)）</li>
+    </ul>
+    <p><strong>增长阶比较：</strong></p>
+    <ul>
+        <li>算法项增长阶：\(L^{\kappa \alpha \xi \tau}\)</li>
+        <li>惩罚项增长阶：\(L^2\)</li>
+        <li>因为 \(\kappa \alpha \xi \tau > 1\)，且通常 \(\kappa \alpha \xi \tau > 2\)（例如 \(\kappa=1,\alpha=3,\xi=1.5,\tau=0.8 \Rightarrow 3.6 > 2\)），所以算法项<strong>严格超二次增长</strong>，惩罚项仅为二次。</li>
+    </ul>
+    <p>因此 \(H \to +\infty\)，且 \(\frac{dK}{dt} = \rho H (1-K) > 0\)，知名度持续上升，最终 \(K \to 1\)。</p>
+    <div class="note-box">
+        <strong>✅ 结论：</strong> 长篇发刀是唯一符合算法、人性与动态增长的最优路径，<strong>爆款预定</strong>。
+    </div>
+
+    <hr class="hr-light">
+
+    <h2>第十二部分 · 修正前后对比总结</h2>
+    <table>
+        <thead><tr><th>修正点</th><th>旧版缺陷</th><th>增强版修正</th><th>对结果的影响</th></tr></thead>
+        <tbody>
+            <tr><td>超然折扣</td><td>均匀稀释</td><td>双通道 \(\sigma_1 > \sigma_2\)</td><td>知名IP短篇预测值提高（共鸣保留）</td></tr>
+            <tr><td>时长惩罚</td><td>\(\nu L^2\) 单调</td><td>\(\nu (L - L_0)^2\) 甜区模型</td><td>过短或过长均惩罚，中篇有甜区优势</td></tr>
+            <tr><td>阈值求解</td><td>近似 \(\ln L \approx 1\)</td><td>朗伯 W 精确解</td><td>短篇与中篇的边界量化更准确</td></tr>
+            <tr><td>知名度</td><td>静态常数</td><td>动态微分 \(\frac{dK}{dt} = \rho H(1-K)\)</td><td>可预测爆款反哺原著的反向作用</td></tr>
+            <tr><td>互动项</td><td>\(e^{\kappa Q}\) 在 \(Q \to -\infty\) 时归零</td><td>\(\frac{e^{\kappa Q}}{e^{\kappa Q}+e^{-\kappa Q}}\)</td><td>极端烂短剧的“黑红”吐槽效应被捕捉</td></tr>
+        </tbody>
+    </table>
+
+    <hr class="hr-light">
+
+    <h2>最终文字结论</h2>
+    <div style="background:#f0f7ff;padding:1.8rem 2.2rem;border-radius:20px;border:1px solid #dbeafe;">
+        <ol style="font-size:1.05rem;line-height:2.2;margin-left:1.2rem;">
+            <li><strong>短篇原创发刀：</strong>完播率截断、偏离甜区、知名度负反馈，三重打击下 <strong>绝对不可行</strong>。</li>
+            <li><strong>IP 短篇发刀：</strong>可依靠情怀流量 \(\mu KF\) 存活，但无法触发算法推荐，破圈概率极低。边界条件：\(\mu (1+\epsilon) > \nu (L - L_0)^2\)。</li>
+            <li><strong>长篇发刀：</strong>算法项呈超二次增长（\(L^{\kappa \alpha \xi \tau}\)），时长惩罚仅为二次（\(L^2\)），且热度反哺知名度形成正反馈闭环，是 <strong>唯一的最优商业化路径</strong>。</li>
+            <li><strong>最优甜区：</strong>\(L_0\)（通常 3~8 万字）是时长惩罚最低点，但实际爆款需远超此值（>30 万字）以驱动算法项爆发。</li>
+        </ol>
+    </div>
+</div>
+</body>
+</html>
