@@ -59,19 +59,23 @@ FILE: index.html
 ================================================
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title></title>
-    </head>
-    <body>
-        <div id="app"></div>
-        <script type="module" src="/src/main.js"></script>
-        <script src="js/zepto.min.js"></script>
-    </body>
-</html>
 
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script src="https://unpkg.com/vconsole/dist/vconsole.min.js"></script>
+    <script>new VConsole()</script>
+    <script type="module" src="/src/main.js"></script>
+    <script src="js/zepto.min.js"></script>
+</body>
+
+</html>
 
 
 ================================================
@@ -112,6 +116,10 @@ export default ({ mode }) => {
   return defineConfig({
     base: loadEnv(mode, process.cwd()).VITE_BASE_URL,
     plugins: [vue()],
+    server: {
+      https: true,
+      host: '0.0.0.0',
+    },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json', '.vue'],
     },
@@ -470,16 +478,16 @@ FILE: public/options/demo/chat.json
 [
     {
         "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+            "本条消息用户输入包括[1]才能进入下一步，多次将强行跳过"
         ],
-        "msgInputSpeed": 80,
+        "msgInputSpeed": 8,
         "triggerNextAction": {
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好"
+                    "1"
                 ],
-                "rejectKeyTexts": [],
+                "rejectKeyTexts": ["2"],
                 "rejectHitTexts": [
                     "输入好，听不懂吗？？？",
                     "触发强行跳过"
@@ -615,7 +623,7 @@ FILE: public/options/demo/chat.json
             "标签字体abcd"
         ],
         "id": "greeting",
-        "msgInputSpeed": 10
+        "msgInputSpeed": 10000000
     },
     {
         "msgs": [
@@ -1068,7 +1076,6 @@ FILE: src/components/chat-dialog/index.vue
           <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
         </div>
 
-        <!-- 消息列表：添加右键/长按事件 -->
         <div class="msg-row" v-for="(msg, index) in messages" :key="index" :class="[
           msg.author === 'me' ? 'msg-me' : 'msg-author',
           { 'no-avatar': !msg.author }
@@ -1077,11 +1084,14 @@ FILE: src/components/chat-dialog/index.vue
           @touchend="onMsgTouchEnd" @touchmove="onMsgTouchMove">
           <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
           <div v-else-if="msg.isTranscript" class="msg-transcript"
-            :class="{ 'msg-transcript-right': msg.author === 'me' }">
-            <div class="msg" :class="{
-              'msg-bounce-in-left': msg.author !== 'me',
-              'msg-bounce-in-right': msg.author === 'me'
-            }" v-html="renderEmoji(msg.content)"></div>
+            :class="[msg.author === 'me' ? 'msg-me' : 'msg-author']">
+            <div class="msg-avatar-placeholder"></div>
+            <div class="msg-content">
+              <div class="msg" :class="{
+                'msg-bounce-in-left': msg.author !== 'me',
+                'msg-bounce-in-right': msg.author === 'me'
+              }" v-html="renderEmoji(msg.content)"></div>
+            </div>
           </div>
           <template v-else>
             <img v-if="msg.author && getRoleInfo(msg.author).avatar" class="msg-avatar"
@@ -1090,9 +1100,8 @@ FILE: src/components/chat-dialog/index.vue
 
             <div class="msg-content">
               <div v-if="msg.author" class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
-              <!-- 引用信息 -->
               <div v-if="msg.quoteInfo" class="msg-quote">
-                <div class="quote-line"></div>
+                <var-icon name="format-list-checkbox" class="quote-icon" />
                 <div class="quote-content">
                   <span class="quote-author">{{ msg.quoteInfo.authorName }}</span>
                   <span class="quote-text">{{ msg.quoteInfo.contentPreview }}</span>
@@ -1115,11 +1124,15 @@ FILE: src/components/chat-dialog/index.vue
       </div>
     </div>
 
-    <!-- 底部输入区域，包含引用条 -->
+    <div v-if="!isUserAtBottom && messages.length > 0" class="scroll-to-bottom-btn" @click="scrollToBottom(true)">
+      <var-icon name="arrow-down" size="24" />
+    </div>
+
     <div id="mobile-foot">
-      <!-- 引用条：使用 v-if 确保 quoteMsg 不为 null 时才渲染，避免空指针 -->
-      <div v-if="showQuoteBar && quoteMsg" class="quote-bar" ref="quoteBarRef" :key="'quote-bar-' + (quoteMsg ? quoteMsg.id : 'none')">
+      <div v-if="showQuoteBar && quoteMsg" class="quote-bar" ref="quoteBarRef"
+        :key="'quote-bar-' + (quoteMsg ? quoteMsg.id : 'none')">
         <div class="quote-bar-content">
+          <var-icon name="format-list-checkbox" class="quote-icon" />
           <span class="quote-bar-author">{{ getRoleInfo(quoteMsg.author).name || '未知' }}</span>
           <span class="quote-bar-text">{{ getContentPreview(quoteMsg) }}</span>
         </div>
@@ -1128,7 +1141,9 @@ FILE: src/components/chat-dialog/index.vue
 
       <div class="foot-wrapper">
         <div class="input-area" ref="inputArea" :style="{ height: voiceInputMode ? '40px' : 'auto' }">
-          <span class="voice-toggle-btn" @click="toggleVoiceInputMode" :class="{ active: voiceInputMode }">
+          <span class="voice-toggle-btn"
+            :class="{ active: voiceInputMode, disabled: status === 'systemInput' || isProcessing }"
+            @click="toggleVoiceInputMode">
             🎤
           </span>
 
@@ -1195,11 +1210,14 @@ FILE: src/components/chat-dialog/index.vue
       @close="handleComponentClose">
     </MessageDetail>
 
-    <!-- 消息上下文菜单 -->
     <Teleport to="body">
       <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
+        <div v-if="contextMsg && contextMsg.type === 'voice'" class="menu-item" @click="handleMenuVoiceConvert">
+          <var-icon name="translate" class="menu-icon" />
+          <span>{{ contextMsg.transcripted ? '取消转文字' : '转文字' }}</span>
+        </div>
         <div class="menu-item" @click="handleMenuQuote">
-          <var-icon name="format_quote" class="menu-icon" />
+          <var-icon name="format-list-checkbox" class="menu-icon" />
           <span>引用</span>
         </div>
       </div>
@@ -1293,11 +1311,9 @@ export default {
       voiceBlobUrls: [],
       isProcessing: false,
 
-      // 引用
       quoteMsg: null,
       showQuoteBar: false,
 
-      // 菜单
       showMsgMenu: false,
       msgMenuStyle: {
         position: 'fixed',
@@ -1314,6 +1330,8 @@ export default {
       contextMsg: null,
       touchTimer: null,
       isTouchMoved: false,
+      isUserAtBottom: true,        // 用户是否在底部
+      scrollThreshold: 20,          // 判定底部的阈值（像素）
     }
   },
   watch: {
@@ -1342,6 +1360,17 @@ export default {
     }
   },
   methods: {
+    checkIfAtBottom() {
+      const container = document.getElementById('mobile-body-content')
+      if (!container) return true
+      const { scrollTop, clientHeight, scrollHeight } = container
+      // 如果内容高度小于可视区域，视为在底部
+      if (scrollHeight <= clientHeight) return true
+      return scrollTop + clientHeight >= scrollHeight - this.scrollThreshold
+    },
+    handleScroll() {
+      this.isUserAtBottom = this.checkIfAtBottom()
+    },
     addTimeMessage() {
       const now = new Date()
       const hours = now.getHours()
@@ -1372,7 +1401,10 @@ export default {
     handleDoubleClick(msg, event) {
       if (msg.isTranscript) return
       if (msg.quoteId) {
-        const targetMsg = this.messages.find(m => m.externalId === msg.quoteId)
+        let targetMsg = this.messages.find(m => m.id === msg.quoteId)
+        if (!targetMsg && typeof msg.quoteId === 'string') {
+          targetMsg = this.messages.find(m => m.externalId === msg.quoteId)
+        }
         if (targetMsg) {
           const targetEl = document.querySelector(`.msg-row[data-msg-id="${targetMsg.id}"]`)
           if (targetEl) {
@@ -1647,7 +1679,7 @@ export default {
         this.$nextTick(() => {
           requestAnimationFrame(() => {
             const container = document.getElementById('mobile-body-content')
-            if (container) {
+            if (container && this.isUserAtBottom) {
               container.scrollTop = container.scrollHeight
             }
             element.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
@@ -1780,9 +1812,16 @@ export default {
 
       if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
         if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
-          const rejectDisabled = tryCnt >= rejectHitTexts.length
-          const rejectIndex = Math.min(tryCnt, rejectHitTexts.length - 1)
-          const rejectText = rejectHitTexts[rejectIndex]
+          const currentTry = tryCnt
+          const totalRejects = rejectHitTexts.length
+
+          // 如果已经用完了所有拒绝消息，直接继续
+          if (currentTry >= totalRejects) {
+            this.handleTriggerNextAction()
+            return
+          }
+
+          const rejectText = rejectHitTexts[currentTry]
           let rejectSysMsgChain = Promise.resolve()
           if (Array.isArray(rejectText)) {
             rejectText.forEach(text => {
@@ -1792,14 +1831,18 @@ export default {
           } else {
             rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
           }
+
+          // 更新尝试次数（发送完成后将使用新值判断）
+          this.nextActionTrigger.tryCnt = currentTry + 1
+
           rejectSysMsgChain.then(() => {
-            if (rejectDisabled) {
+            // 发送完成后判断是否已用完所有拒绝消息
+            if (this.nextActionTrigger.tryCnt >= totalRejects) {
               this.handleTriggerNextAction()
             } else {
               this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
             }
           })
-          this.nextActionTrigger.tryCnt = tryCnt + 1
         } else {
           this.handleTriggerNextAction()
         }
@@ -1863,7 +1906,10 @@ export default {
       }
 
       if (quoteId) {
-        const quotedMsg = this.messages.find(m => m.id === quoteId)
+        let quotedMsg = this.messages.find(m => m.id === quoteId)
+        if (!quotedMsg && typeof quoteId === 'string') {
+          quotedMsg = this.messages.find(m => m.externalId === quoteId)
+        }
         if (quotedMsg) {
           msg.quoteInfo = {
             authorName: this.getRoleInfo(quotedMsg.author).name || '未知',
@@ -1878,7 +1924,9 @@ export default {
       }
 
       this.messages.push(msg)
-      this.scrollToBottom(false)
+      //this.scrollToBottom(false)
+      // this.scrollToBottom(true)
+      this.scrollToBottom()
       return msg
     },
     getContentPreview(msg) {
@@ -1937,7 +1985,7 @@ export default {
         if (foot) this.footHeight = foot.offsetHeight
         requestAnimationFrame(() => {
           const container = document.getElementById('mobile-body-content')
-          if (container) {
+          if (container && this.isUserAtBottom) {
             container.scrollTop = container.scrollHeight
           }
           el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
@@ -1953,8 +2001,8 @@ export default {
     handleMenuClick() { },
     handleMoreClick() { },
 
-    scrollToBottom(force = true) {
-      if (!force) return
+    scrollToBottom(force = false) {
+      if (!force && !this.isUserAtBottom) return
       this.$nextTick(() => {
         const container = document.getElementById('mobile-body-content')
         if (container) {
@@ -2051,6 +2099,9 @@ export default {
     },
 
     toggleVoiceInputMode() {
+      if (this.status === 'systemInput' || this.isProcessing) {
+        return
+      }
       this.voiceInputMode = !this.voiceInputMode
       if (this.voiceInputMode) {
         this.showEmojiPicker = false
@@ -2144,18 +2195,8 @@ export default {
       this.stopUserRecording()
 
       const text = result.text.trim()
-      if (!text) {
-        Snackbar({
-          content: '没听清，请再说一遍',
-          duration: 1500,
-          type: 'warning'
-        })
-        if (this.nextActionTrigger) {
-          this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
-        }
-        return
-      }
 
+      // 始终构建语音消息（无论是否有文字）
       let audioUrl = null
       if (result.blob) {
         audioUrl = URL.createObjectURL(result.blob)
@@ -2166,21 +2207,45 @@ export default {
 
       const voiceMsg = {
         src: audioUrl,
-        alt: text,
+        alt: text,           // 可能为空，但语音播放不受影响
         delay: 0,
       }
-      const msg = this.pushMsg('', AUTHOR.ME, 'voice', null, null)
+
+      const quoteId = this.quoteMsg ? this.quoteMsg.id : null
+      const msg = this.pushMsg('', AUTHOR.ME, 'voice', null, quoteId)
       msg.props = voiceMsg
       msg.content = ''
 
+      this.clearQuote()
+
+      // 如果识别文字为空，仅提示但不影响发送
+      if (!text) {
+        Snackbar({
+          content: '语音已发送（未识别到文字）',
+          duration: 1500,
+          type: 'warning'
+        })
+        // 不处理下一步，保持当前状态（让用户继续输入）
+        return
+      }
+
+      // 文字非空，继续处理下一步逻辑
       if (this.nextActionTrigger) {
         const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
         const { type, options } = triggerNextAction
+        const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options
+
         if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
-          if (this.rejectNextMsg(text, options.resolveKeyTexts, options.rejectKeyTexts)) {
-            const rejectDisabled = tryCnt >= options.rejectHitTexts.length
-            const rejectIndex = Math.min(tryCnt, options.rejectHitTexts.length - 1)
-            const rejectText = options.rejectHitTexts[rejectIndex]
+          if (this.rejectNextMsg(text, resolveKeyTexts, rejectKeyTexts)) {
+            const currentTry = tryCnt
+            const totalRejects = rejectHitTexts.length
+
+            if (currentTry >= totalRejects) {
+              this.handleTriggerNextAction()
+              return
+            }
+
+            const rejectText = rejectHitTexts[currentTry]
             let rejectSysMsgChain = Promise.resolve()
             if (Array.isArray(rejectText)) {
               rejectText.forEach(text => {
@@ -2190,14 +2255,16 @@ export default {
             } else {
               rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
             }
+
+            this.nextActionTrigger.tryCnt = currentTry + 1
+
             rejectSysMsgChain.then(() => {
-              if (rejectDisabled) {
+              if (this.nextActionTrigger.tryCnt >= totalRejects) {
                 this.handleTriggerNextAction()
               } else {
                 this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
               }
             })
-            this.nextActionTrigger.tryCnt = tryCnt + 1
           } else {
             this.handleTriggerNextAction()
           }
@@ -2209,11 +2276,11 @@ export default {
       this.isProcessing = true
     },
 
-    // ----- 引用方法 -----
     openMsgContextMenu(msg, event) {
       if (msg.type === 'tip') return
       this.contextMsg = msg
-      // 防御性获取元素：优先使用 currentTarget，若为空则使用 target 或 srcElement
+
+      // 获取目标消息行元素
       let targetEl = event.currentTarget
       if (!targetEl) {
         targetEl = event.target || event.srcElement
@@ -2229,25 +2296,50 @@ export default {
       if (targetEl) {
         rect = targetEl.getBoundingClientRect()
       }
-      let left = event.clientX || (rect ? rect.left + rect.width / 2 : window.innerWidth / 2)
-      let top = event.clientY || (rect ? rect.top : window.innerHeight / 2)
+      if (!rect) {
+        rect = { left: 0, top: 0, width: 0, height: 0 }
+      }
 
       const menuWidth = 130
       const menuHeight = 80
       const winWidth = window.innerWidth
       const winHeight = window.innerHeight
 
-      if (left + menuWidth > winWidth - 10) left = winWidth - menuWidth - 10
-      if (left < 10) left = 10
-      if (top + menuHeight > winHeight - 10) top = (rect ? rect.top : 0) - menuHeight - 8
-      if (top < 10) top = 10
+      // 水平居中
+      let left = rect.left + rect.width / 2 - menuWidth / 2
+      left = Math.max(10, Math.min(left, winWidth - menuWidth - 10))
 
+      // 垂直智能定位
+      let top = rect.bottom + 8
+      if (top + menuHeight > winHeight - 10) {
+        top = rect.top - menuHeight - 8
+        if (top < 10) {
+          top = Math.min(rect.bottom + 8, winHeight - menuHeight - 10)
+        }
+      }
+      top = Math.max(10, top)
+
+      // 先计算位置，再同时设置显示标志和样式
       this.msgMenuStyle = {
         ...this.msgMenuStyle,
         left: left + 'px',
         top: top + 'px'
       }
-      this.showMsgMenu = true
+      // 确保菜单显示时位置已经正确
+      this.$nextTick(() => {
+        this.showMsgMenu = true
+      })
+    },
+
+    handleMenuVoiceConvert() {
+      if (!this.contextMsg || this.contextMsg.type !== 'voice') return
+      const msg = this.contextMsg
+      if (msg.transcripted) {
+        this.handleVoiceCancel(msg)
+      } else {
+        this.handleVoiceConvert(msg.props.alt, msg)
+      }
+      this.closeMsgMenu()
     },
 
     handleMenuQuote() {
@@ -2268,24 +2360,18 @@ export default {
     },
 
     clearQuote() {
-      console.log('clearQuote called')
-      // 重置数据
       this.quoteMsg = null
       this.showQuoteBar = false
-      // 强制更新视图
       this.$forceUpdate()
-      // 直接操作 DOM 隐藏引用条（确保视觉移除）
       const el = this.$refs.quoteBarRef
       if (el) {
         el.style.display = 'none'
-        // 彻底移除占位空间
         el.style.height = '0'
         el.style.padding = '0'
         el.style.margin = '0'
         el.style.overflow = 'hidden'
         el.style.border = 'none'
       }
-      // 额外通过类名查找隐藏（防止 ref 未更新）
       const quoteBarEl = document.querySelector('.quote-bar')
       if (quoteBarEl && quoteBarEl.parentNode === document.getElementById('mobile-foot')) {
         quoteBarEl.style.display = 'none'
@@ -2295,14 +2381,13 @@ export default {
         quoteBarEl.style.overflow = 'hidden'
         quoteBarEl.style.border = 'none'
       }
-      // 重新计算底部高度并滚动
       this.$nextTick(() => {
         const foot = document.getElementById('mobile-foot')
         if (foot) {
           this.footHeight = foot.offsetHeight
         }
         const container = document.getElementById('mobile-body-content')
-        if (container) {
+        if (container && this.isUserAtBottom) {
           container.scrollTop = container.scrollHeight
         }
       })
@@ -2358,6 +2443,15 @@ export default {
 
     this._boundCloseMsgMenu = this.closeMsgMenuOnClickOutside.bind(this)
     document.addEventListener('click', this._boundCloseMsgMenu)
+
+    // 绑定滚动监听
+    this._boundScrollHandler = this.handleScroll.bind(this)
+    const container = document.getElementById('mobile-body-content')
+    if (container) {
+      container.addEventListener('scroll', this._boundScrollHandler)
+      // 初始判断
+      this.isUserAtBottom = this.checkIfAtBottom()
+    }
 
     if (!window.__audioManager) {
       window.__audioManager = {
@@ -2420,6 +2514,12 @@ export default {
     document.removeEventListener('click', this._boundCloseEmojiPicker)
     document.removeEventListener('click', this._boundCloseMsgMenu)
 
+    // 移除滚动监听
+    const container = document.getElementById('mobile-body-content')
+    if (container) {
+      container.removeEventListener('scroll', this._boundScrollHandler)
+    }
+
     this.voiceBlobUrls.forEach(url => URL.revokeObjectURL(url))
     this.voiceBlobUrls = []
     this.clearQuote()
@@ -2448,7 +2548,29 @@ function onImageLoad($img) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.scroll-to-bottom-btn {
+  position: absolute;
+  right: 20px;
+  bottom: 75px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(34, 195, 170, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 200;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.scroll-to-bottom-btn:hover {
+  transform: scale(1.1);
+}
+</style>
 
 <style>
 #mobile-foot {
@@ -2470,6 +2592,8 @@ function onImageLoad($img) {
   gap: 8px;
   flex-wrap: nowrap;
   min-height: 55px;
+  position: relative;
+  z-index: 5;
 }
 
 #mobile-foot .input-area {
@@ -2566,6 +2690,11 @@ function onImageLoad($img) {
 .voice-toggle-btn.active {
   background: #22c3aa;
   color: white;
+}
+
+.voice-toggle-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .voice-recorder-button {
@@ -2811,27 +2940,34 @@ function onImageLoad($img) {
 
 .msg-transcript {
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 4px;
-  padding-left: 0;
-  padding-right: 0;
+  align-items: flex-start;
   width: 100%;
 }
 
-.msg-transcript-right {
-  justify-content: flex-end;
+.msg-transcript .msg-avatar-placeholder {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0 8px;
+  visibility: hidden;
 }
 
-.msg-transcript .msg {
-  max-width: 80%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  background: #e8e8e8;
-  color: #333;
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 13px;
-  height: auto !important;
+.msg-transcript .msg-content {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.msg-transcript.msg-me {
+  flex-direction: row-reverse;
+}
+
+.msg-transcript.msg-me .msg-content {
+  align-items: flex-end;
+}
+
+.msg-transcript.msg-author .msg-content {
+  align-items: flex-start;
 }
 
 .msg-avatar-placeholder {
@@ -2842,7 +2978,6 @@ function onImageLoad($img) {
   visibility: hidden;
 }
 
-/* 所有消息气泡强制换行 */
 .msg {
   max-width: 100% !important;
   word-break: break-word;
@@ -2850,12 +2985,29 @@ function onImageLoad($img) {
   word-wrap: break-word;
 }
 
-/* 消息内部的引用信息自动换行 */
 .msg-quote .quote-text {
   white-space: normal;
   word-wrap: break-word;
   overflow: visible;
   max-height: none;
+}
+
+.quote-icon {
+  font-size: 16px;
+  color: #888;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.msg-me .quote-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.msg-quote .quote-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .animate_breathe {
@@ -2999,7 +3151,6 @@ function onImageLoad($img) {
   pointer-events: none;
 }
 
-/* ----- 引用框样式（消息内部）----- */
 .msg-quote {
   display: flex;
   align-items: center;
@@ -3021,12 +3172,7 @@ function onImageLoad($img) {
 }
 
 .msg-quote .quote-line {
-  width: 3px;
-  background: #c0c0c0;
-  border-radius: 2px;
-  height: 20px;
-  margin-right: 6px;
-  flex-shrink: 0;
+  display: none;
 }
 
 .msg-quote .quote-author {
@@ -3051,61 +3197,106 @@ function onImageLoad($img) {
   color: #333 !important;
 }
 
-.msg-me .msg-quote .quote-line {
-  background: rgba(255, 255, 255, 0.6) !important;
-}
-
 .msg-me .msg-quote .quote-author,
 .msg-me .msg-quote .quote-text {
   color: #333 !important;
 }
 
-/* ----- 引用条（输入框上方）----- */
 .quote-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: relative;
+  z-index: 20;
+  pointer-events: auto !important;
   background: #f0f0f0 !important;
   padding: 4px 12px !important;
   border-bottom: 1px solid #ddd !important;
-  font-size: 13px !important;
-  color: #333 !important;
   min-height: 32px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .quote-bar-content {
   flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   overflow: hidden;
-  word-wrap: break-word;
-  white-space: normal;
-  max-height: 40px;
-  line-height: 1.4;
   min-width: 0;
-  word-break: break-word;
+}
+
+.quote-bar-content .quote-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: #888;
+  margin-right: 4px;
 }
 
 .quote-bar-author {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-weight: bold;
   margin-right: 6px;
   color: #22c3aa !important;
 }
 
 .quote-bar-text {
-  color: #555 !important;
+  flex: 1 1 auto;
+  min-width: 0;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  color: #555 !important;
+  line-height: 1.4;
+  max-height: 2.8em;
 }
 
 .quote-bar-close {
+  pointer-events: auto !important;
   cursor: pointer;
-  padding: 4px 8px !important;
-  font-size: 18px;
+  padding: 6px 14px;
+  font-size: 20px;
   color: #999;
   user-select: none;
   flex-shrink: 0;
   transition: color 0.2s;
+  z-index: 30;
+  line-height: 1;
 }
+
 .quote-bar-close:hover {
   color: #333;
+}
+
+.custom-voice-menu {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  min-width: 130px;
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+}
+
+.custom-voice-menu .menu-item {
+  padding: 10px 18px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.custom-voice-menu .menu-item:hover {
+  background: #f0f0f0;
+}
+
+.custom-voice-menu .menu-icon {
+  font-size: 18px;
 }
 </style>
 
@@ -3549,22 +3740,54 @@ FILE: src/components/chat-dialog/css/_mobile.msg.scss
 
 // 头像抖动动画（模仿微信拍一拍）
 @keyframes shake {
-  0% { transform: translateX(0); }
-  10% { transform: translateX(-6px) rotate(-2deg); }
-  20% { transform: translateX(6px) rotate(2deg); }
-  30% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  50% { transform: translateX(-2px); }
-  60% { transform: translateX(2px); }
-  70% { transform: translateX(-1px); }
-  80% { transform: translateX(1px); }
-  90% { transform: translateX(0); }
-  100% { transform: translateX(0); }
+    0% {
+        transform: translateX(0);
+    }
+
+    10% {
+        transform: translateX(-6px) rotate(-2deg);
+    }
+
+    20% {
+        transform: translateX(6px) rotate(2deg);
+    }
+
+    30% {
+        transform: translateX(-4px);
+    }
+
+    40% {
+        transform: translateX(4px);
+    }
+
+    50% {
+        transform: translateX(-2px);
+    }
+
+    60% {
+        transform: translateX(2px);
+    }
+
+    70% {
+        transform: translateX(-1px);
+    }
+
+    80% {
+        transform: translateX(1px);
+    }
+
+    90% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
 }
 
 .msg-avatar.shake {
-  animation: shake 0.6s ease-in-out;
-  animation-iteration-count: 1;
+    animation: shake 0.6s ease-in-out;
+    animation-iteration-count: 1;
 }
 
 
@@ -4616,8 +4839,7 @@ export default {
 FILE: src/components/chat-dialog/voice/index.vue
 ================================================
 <template>
-  <div class="voice-wrapper" ref="voiceRef" @click="togglePlay" @contextmenu.prevent="handleContextMenu"
-    @touchstart="onTouchStart" @touchend="onTouchEnd">
+  <div class="voice-wrapper" ref="voiceRef" @click="togglePlay">
     <span class="voice-icon" v-if="!isPlaying">🔊</span>
     <span class="voice-wave" v-else>
       <span class="wave-bar"></span>
@@ -4626,24 +4848,11 @@ FILE: src/components/chat-dialog/voice/index.vue
     </span>
     <span class="voice-duration">{{ displayDuration }}''</span>
     <audio ref="audio" :src="src" @loadedmetadata="onLoadedMetadata" @ended="onEnded" @error="onError"></audio>
-
-    <Teleport to="body">
-      <div v-show="showMenu" class="custom-voice-menu" :style="menuStyle" ref="menuRef">
-        <div v-if="!transcripted" class="menu-item" @click="handleSelect('transcript')">
-          <var-icon name="translate" class="menu-icon" />
-          <span>转文字</span>
-        </div>
-        <div v-else class="menu-item" @click="handleSelect('cancel')">
-          <var-icon name="translate" class="menu-icon" />
-          <span>取消转文字</span>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
 <script>
-import { ref, computed, defineComponent, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue'
+import { ref, computed, defineComponent, onMounted, onBeforeUnmount } from 'vue'
 
 export default defineComponent({
   name: 'Voice',
@@ -4667,35 +4876,17 @@ export default defineComponent({
   },
   emits: ['convert', 'cancel-convert'],
   setup(props, { emit }) {
-    // 生成唯一 ID
     const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
-    const menuRef = ref(null)
     const audio = ref(null)
     const isPlaying = ref(false)
     const audioDuration = ref(0)
-    const touchTimer = ref(null)
-
-    const showMenu = ref(false)
-    const menuStyle = ref({
-      position: 'fixed',
-      left: '0px',
-      top: '0px',
-      zIndex: 99999,
-      minWidth: '130px',
-      background: 'rgba(255, 255, 255, 0.96)',
-      borderRadius: '10px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-      padding: '6px 0',
-      backdropFilter: 'blur(4px)'
-    })
 
     const displayDuration = computed(() => {
       const dur = audioDuration.value || Number(props.duration) || 0
       return Math.round(dur)
     })
 
-    // 重置函数（供全局管理器调用）
     const resetToInitial = () => {
       isPlaying.value = false
       const audioEl = audio.value
@@ -4710,7 +4901,6 @@ export default defineComponent({
       if (!audioEl) return
 
       if (!isPlaying.value) {
-        // 将要播放，通知全局管理器
         if (window.__audioManager) {
           window.__audioManager.play(id, audioEl)
         }
@@ -4739,111 +4929,18 @@ export default defineComponent({
       isPlaying.value = false
     }
 
-    const openMenu = (clientX, clientY) => {
-      const rect = voiceRef.value?.getBoundingClientRect()
-      let left, top
-
-      if (rect) {
-        left = rect.left
-        top = rect.bottom + 8
-
-        const menuWidth = 130
-        const menuHeight = 80
-        const winWidth = window.innerWidth
-        const winHeight = window.innerHeight
-
-        if (left + menuWidth > winWidth - 10) {
-          left = winWidth - menuWidth - 10
-        }
-        if (left < 10) left = 10
-        if (top + menuHeight > winHeight - 10) {
-          top = rect.top - menuHeight - 8
-        }
-        if (top < 10) top = 10
-      } else {
-        if (clientX !== undefined && clientY !== undefined) {
-          left = clientX
-          top = clientY + 8
-        } else {
-          left = window.innerWidth / 2 - 65
-          top = window.innerHeight / 2 - 40
-        }
-        left = Math.min(Math.max(left, 10), window.innerWidth - 140)
-        top = Math.min(Math.max(top, 10), window.innerHeight - 90)
-      }
-
-      menuStyle.value = {
-        ...menuStyle.value,
-        left: left + 'px',
-        top: top + 'px'
-      }
-
-      showMenu.value = true
-    }
-
-    const closeMenu = () => {
-      showMenu.value = false
-    }
-
-    const handleSelect = (key) => {
-      if (key === 'transcript') {
-        emit('convert', props.alt)
-      } else if (key === 'cancel') {
-        emit('cancel-convert')
-      }
-      closeMenu()
-    }
-
-    const handleContextMenu = (e) => {
-      e.preventDefault()
-      openMenu(e.clientX, e.clientY)
-    }
-
-    const onTouchStart = (e) => {
-      touchTimer.value = setTimeout(() => {
-        const touch = e.touches[0]
-        openMenu(touch.clientX, touch.clientY)
-        touchTimer.value = null
-      }, 600)
-    }
-
-    const onTouchEnd = () => {
-      if (touchTimer.value) {
-        clearTimeout(touchTimer.value)
-        touchTimer.value = null
-      }
-    }
-
-    const handleClickOutside = (e) => {
-      if (!showMenu.value) return
-      const target = e.target
-      const isInVoice = voiceRef.value?.contains(target)
-      const isInMenu = menuRef.value?.contains(target)
-      if (!isInVoice && !isInMenu) {
-        closeMenu()
-      }
-    }
-
     onMounted(() => {
-      document.addEventListener('click', handleClickOutside)
-      // 注册到全局音频管理器
       if (window.__audioManager) {
         window.__audioManager.register(id, resetToInitial)
       }
     })
 
     onBeforeUnmount(() => {
-      if (touchTimer.value) {
-        clearTimeout(touchTimer.value)
-        touchTimer.value = null
-      }
       const audioEl = audio.value
       if (audioEl) {
         audioEl.pause()
         audioEl.src = ''
       }
-      document.removeEventListener('click', handleClickOutside)
-      // 从全局音频管理器注销
       if (window.__audioManager) {
         window.__audioManager.unregister(id)
       }
@@ -4851,23 +4948,14 @@ export default defineComponent({
 
     return {
       voiceRef,
-      menuRef,
       audio,
       isPlaying,
       audioDuration,
       displayDuration,
-      showMenu,
-      menuStyle,
       togglePlay,
       onLoadedMetadata,
       onEnded,
-      onError,
-      handleContextMenu,
-      onTouchStart,
-      onTouchEnd,
-      handleSelect,
-      openMenu,
-      closeMenu
+      onError
     }
   }
 })
@@ -4936,38 +5024,6 @@ export default defineComponent({
 }
 </style>
 
-<style>
-.custom-voice-menu {
-  position: fixed;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 6px 0;
-  min-width: 130px;
-  backdrop-filter: blur(4px);
-  z-index: 99999;
-}
-
-.custom-voice-menu .menu-item {
-  padding: 10px 18px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  color: #333;
-  transition: background 0.15s;
-}
-
-.custom-voice-menu .menu-item:hover {
-  background: #f0f0f0;
-}
-
-.custom-voice-menu .menu-icon {
-  font-size: 18px;
-}
-</style>
-
 
 ================================================
 FILE: src/components/chat-dialog/voice/VoiceRecorderButton.vue
@@ -4976,12 +5032,12 @@ FILE: src/components/chat-dialog/voice/VoiceRecorderButton.vue
     <div class="voice-recorder-button" :class="{ active: isRecording || isProcessing }">
         <div class="recorder-btn" @mousedown="handlePointerDown" @mouseup="handlePointerUp"
             @mouseleave="handlePointerLeave" @touchstart="handleTouchStart" @touchend="handleTouchEnd"
-            @touchcancel="handleTouchCancel">
+            @touchcancel="handleTouchCancel" style="touch-action: none; cursor: pointer;">
             <span v-if="isProcessing">处理中...</span>
-            <span v-else-if="!isRecording && !isPcClickMode">按住说话</span>
-            <span v-else-if="isRecording && isPcClickMode">点击结束</span>
-            <span v-else-if="isRecording && !isPcClickMode">松开结束</span>
-            <span v-else-if="!isRecording && isPcClickMode">按住说话</span>
+            <span v-else-if="!isRecording && !isPcClickMode">按住 说话</span>
+            <span v-else-if="isRecording && isPcClickMode">点击 结束</span>
+            <span v-else-if="isRecording && !isPcClickMode">松开 结束</span>
+            <span v-else-if="!isRecording && isPcClickMode">按住 说话</span>
         </div>
     </div>
 </template>
@@ -4993,8 +5049,8 @@ export default {
         disabled: Boolean,
         autoSend: {
             type: Boolean,
-            default: true
-        }
+            default: true,
+        },
     },
     emits: ['start', 'stop', 'cancel', 'result', 'error', 'processing'],
     data() {
@@ -5018,320 +5074,444 @@ export default {
             touchStartTime: 0,
             isProcessing: false,
             _sending: false,
-        }
+            _cancelled: false,
+            // 标记是否支持识别
+            _recognitionSupported: true,
+        };
     },
     mounted() {
-        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-        this.isPcClickMode = !this.isTouchDevice
+        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        this.isPcClickMode = !this.isTouchDevice;
+        console.log('[VoiceRecorderButton] mounted, isTouchDevice =', this.isTouchDevice);
     },
     methods: {
         createRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+            console.log('[VoiceRecorderButton] createRecognition called');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                this.$emit('error', new Error('浏览器不支持语音识别'))
-                return null
+                console.warn('[VoiceRecorderButton] SpeechRecognition not supported, will continue without recognition');
+                this._recognitionSupported = false;
+                return null;
             }
-            const rec = new SpeechRecognition()
-            rec.lang = 'zh-CN'
-            rec.continuous = true
-            rec.interimResults = true
+            const rec = new SpeechRecognition();
+            rec.lang = 'zh-CN';
+            rec.continuous = true;
+            rec.interimResults = true;
 
             rec.onresult = (event) => {
-                let interim = ''
-                let final = ''
+                let interim = '';
+                let final = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const result = event.results[i]
-                    const transcript = result[0].transcript
+                    const result = event.results[i];
+                    const transcript = result[0].transcript;
                     if (result.isFinal) {
-                        final += transcript
+                        final += transcript;
                     } else {
-                        interim += transcript
+                        interim += transcript;
                     }
                 }
                 if (final) {
-                    this.sessionText = final
+                    this.sessionText = final;
+                    console.log('[VoiceRecorderButton] 识别最终文字:', final);
                 } else if (interim) {
-                    this.sessionText = interim
+                    this.sessionText = interim;
+                    console.log('[VoiceRecorderButton] 识别临时文字:', interim);
                 }
-            }
+            };
 
             rec.onerror = (event) => {
-                console.warn('识别错误', event.error)
+                console.warn('[VoiceRecorderButton] 识别错误', event.error);
                 if (event.error === 'not-allowed') {
-                    this.$emit('error', event)
+                    // 权限错误才触发 error，其他错误忽略
+                    this.$emit('error', event);
                 } else {
-                    try { rec.stop() } catch (e) { }
-                    this.$emit('cancel')
-                    this.resetState()
-                    this._sending = false
-                    this.isProcessing = false
+                    try {
+                        rec.stop();
+                    } catch (_) { }
+                    // 不触发 cancel，仅让识别结束
                 }
-            }
+            };
 
             rec.onend = () => {
-                this.recognitionEnded = true
-            }
+                console.log('[VoiceRecorderButton] 识别结束');
+                this.recognitionEnded = true;
+            };
 
-            return rec
+            this._recognitionSupported = true;
+            return rec;
         },
 
         startRecording() {
-            if (this.disabled) return
-
-            if (this.currentRecognition) {
-                try { this.currentRecognition.abort() } catch (e) { }
-                this.currentRecognition = null
+            console.log('[VoiceRecorderButton] startRecording called, disabled=', this.disabled);
+            if (this.disabled || this.isRecording || this.isRecordingStarted) {
+                console.log('[VoiceRecorderButton] 被阻止：disabled或已在录音');
+                return;
             }
 
-            this.sessionText = ''
-            this.recognitionEnded = false
-            this.audioChunks = []
-            this.pendingBlob = null
-            this.pendingUrl = null
-            this.pendingText = ''
-            this.isStoppedManually = false
-            this.isRecordingStarted = false
-            this.isProcessing = false
-            this._sending = false
+            this._cancelled = false;
+            this.fullCleanup();
 
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    this.stream = stream
+            console.log('[VoiceRecorderButton] 请求 getUserMedia...');
+            navigator.mediaDevices
+                .getUserMedia({ audio: true })
+                .then((stream) => {
+                    console.log('[VoiceRecorderButton] getUserMedia 成功');
+                    this.stream = stream;
 
-                    const rec = this.createRecognition()
-                    if (!rec) {
-                        this.releaseStream()
-                        return
+                    // 尝试创建语音识别（失败也不影响录音）
+                    const rec = this.createRecognition();
+                    this.currentRecognition = rec;
+                    if (rec) {
+                        try {
+                            rec.start();
+                            console.log('[VoiceRecorderButton] SpeechRecognition 已启动');
+                        } catch (e) {
+                            console.warn('[VoiceRecorderButton] SpeechRecognition start 异常', e);
+                            // 启动失败，将 recognition 置空，后续视为不支持
+                            this.currentRecognition = null;
+                            this._recognitionSupported = false;
+                        }
+                    } else {
+                        // 不支持识别，直接标记结束
+                        this.recognitionEnded = true;
+                        this._recognitionSupported = false;
                     }
-                    this.currentRecognition = rec
-                    try {
-                        rec.start()
-                    } catch (e) { /* ignore */ }
 
-                    this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-                    this.mediaRecorder.ondataavailable = (e) => {
-                        if (e.data.size > 0) {
-                            this.audioChunks.push(e.data)
+                    // 准备 MediaRecorder
+                    let mimeType = 'audio/webm';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'audio/ogg; codecs=opus';
+                        if (!MediaRecorder.isTypeSupported(mimeType)) {
+                            mimeType = '';
                         }
                     }
-                    this.mediaRecorder.onstop = () => {
-                        this.handleStop()
+                    console.log('[VoiceRecorderButton] 使用 MIME 类型:', mimeType || '默认');
+                    try {
+                        this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType || undefined });
+                    } catch (e) {
+                        console.warn('[VoiceRecorderButton] MediaRecorder 构造降级', e);
+                        this.mediaRecorder = new MediaRecorder(stream);
                     }
-                    this.mediaRecorder.start()
-                    this.isRecording = true
-                    this.isRecordingStarted = true
-                    this.$emit('start')
+
+                    this.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            this.audioChunks.push(e.data);
+                            console.log('[VoiceRecorderButton] 收到音频数据块, size=', e.data.size);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        console.log('[VoiceRecorderButton] MediaRecorder onstop 触发');
+                        this.handleStop();
+                    };
+
+                    try {
+                        this.mediaRecorder.start();
+                        console.log('[VoiceRecorderButton] MediaRecorder.start() 成功');
+                        this.isRecording = true;
+                        this.isRecordingStarted = true;
+                        this.$emit('start');
+                    } catch (err) {
+                        console.error('[VoiceRecorderButton] MediaRecorder.start() 异常', err);
+                        this.releaseStream();
+                        // 不触发 error，仅重置状态，让用户重试
+                        this.resetState();
+                        // 提示用户错误（可通过父组件显示）
+                        this.$emit('error', err);
+                    }
                 })
-                .catch(err => {
-                    console.error('麦克风获取失败', err)
-                    this.$emit('error', err)
-                    this.isRecording = false
-                })
+                .catch((err) => {
+                    console.error('[VoiceRecorderButton] getUserMedia 失败', err);
+                    this.releaseStream();
+                    // 仅当权限被拒绝时才触发 error
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        this.$emit('error', err);
+                    } else {
+                        // 其他错误（如无设备）静默处理
+                        this.resetState();
+                    }
+                });
+        },
+
+        stopRecordingManually() {
+            console.log('[VoiceRecorderButton] stopRecordingManually');
+            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                try {
+                    this.mediaRecorder.stop();
+                } catch (e) {
+                    console.warn('[VoiceRecorderButton] stop 异常', e);
+                    this.cleanupAfterStop();
+                }
+            } else {
+                this.cleanupAfterStop();
+            }
+        },
+
+        cleanupAfterStop() {
+            console.log('[VoiceRecorderButton] cleanupAfterStop');
+            if (this.mediaRecorder) {
+                this.mediaRecorder.onstop = null;
+            }
+            this.releaseStream();
+            this.resetState();
+            this._sending = false;
+            this.isProcessing = false;
         },
 
         handleStop() {
+            console.log('[VoiceRecorderButton] handleStop');
+            // 如果存在识别实例，尝试停止
             if (this.currentRecognition) {
                 try {
-                    this.currentRecognition.stop()
-                } catch (e) { }
+                    this.currentRecognition.stop();
+                } catch (_) { }
+            } else {
+                // 无识别实例，直接标记识别结束
+                this.recognitionEnded = true;
             }
 
             const waitForEnd = () => {
                 return new Promise((resolve) => {
                     if (this.recognitionEnded) {
-                        resolve()
-                        return
+                        resolve();
+                        return;
                     }
                     this.waitRecognitionTimer = setTimeout(() => {
-                        resolve()
-                    }, 2000)
+                        console.log('[VoiceRecorderButton] 等待识别超时，强行继续');
+                        resolve();
+                    }, 2000);
                     if (this.currentRecognition) {
-                        const originalOnEnd = this.currentRecognition.onend
+                        const originalOnEnd = this.currentRecognition.onend;
                         this.currentRecognition.onend = () => {
-                            clearTimeout(this.waitRecognitionTimer)
-                            this.waitRecognitionTimer = null
-                            if (originalOnEnd) originalOnEnd.call(this.currentRecognition)
-                            resolve()
-                        }
+                            clearTimeout(this.waitRecognitionTimer);
+                            this.waitRecognitionTimer = null;
+                            if (originalOnEnd) originalOnEnd.call(this.currentRecognition);
+                            resolve();
+                        };
                     }
-                })
-            }
+                });
+            };
 
             waitForEnd().then(() => {
-                this.processStopResult()
-            })
+                this.processStopResult();
+            });
         },
 
         processStopResult() {
-            // 先发出 stop 事件，让父组件停止计时器
-            this.$emit('stop')
+            console.log('[VoiceRecorderButton] processStopResult');
+            this.$emit('stop');
 
             if (this.audioChunks.length === 0) {
-                this.clearPending()
-                this.$emit('cancel')
-                this.resetState()
-                this._sending = false
-                this.isProcessing = false
-                return
+                console.log('[VoiceRecorderButton] 无音频数据，取消');
+                this.clearPending();
+                this.$emit('cancel');
+                this.fullCleanup();
+                this._sending = false;
+                this.isProcessing = false;
+                return;
             }
 
-            const blob = new Blob(this.audioChunks, { type: 'audio/webm' })
-            const url = URL.createObjectURL(blob)
-            const text = this.sessionText.trim() || ''
+            const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const text = this.sessionText.trim() || '';
+            console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)');
 
-            if (!text) {
-                this.clearPending()
-                this.$emit('cancel')
-                this.audioChunks = []
-                this.releaseStream()
-                this.resetState()
-                this._sending = false
-                this.isProcessing = false
-                return
+            // 检查录音时长（至少 1 秒，避免无意义短录音）
+            if (blob.size < 1024) {
+                console.log('[VoiceRecorderButton] 录音太短，取消');
+                this.clearPending();
+                this.$emit('cancel');
+                this.audioChunks = [];
+                this.releaseStream();
+                this.fullCleanup();
+                this._sending = false;
+                this.isProcessing = false;
+                return;
             }
 
+            // 即使文本为空也发送，父组件可处理
             if (this.autoSend) {
-                this.$emit('result', { blob, url, text })
-                this.clearPending()
+                this.$emit('result', { blob, url, text });
+                this.clearPending();
             } else {
-                this.pendingBlob = blob
-                this.pendingUrl = url
-                this.pendingText = text
+                this.pendingBlob = blob;
+                this.pendingUrl = url;
+                this.pendingText = text;
             }
 
-            this.audioChunks = []
-            this.releaseStream()
-            this.resetState()
-            this._sending = false
-            this.isProcessing = false
+            this.audioChunks = [];
+            this.releaseStream();
+            this.fullCleanup();
+            this._sending = false;
+            this.isProcessing = false;
         },
 
         resetState() {
-            this.isRecording = false
-            this.isRecordingStarted = false
+            console.log('[VoiceRecorderButton] resetState');
+            this.isRecording = false;
+            this.isRecordingStarted = false;
             if (this.currentRecognition) {
-                try { this.currentRecognition.abort() } catch (e) { }
-                this.currentRecognition = null
+                try {
+                    this.currentRecognition.abort();
+                } catch (_) { }
+                this.currentRecognition = null;
             }
-            this.sessionText = ''
-            this.recognitionEnded = false
-            clearTimeout(this.waitRecognitionTimer)
-            this.waitRecognitionTimer = null
+            this.sessionText = '';
+            this.recognitionEnded = false;
+            clearTimeout(this.waitRecognitionTimer);
+            this.waitRecognitionTimer = null;
         },
 
-        cancelRecording() {
-            if (this.currentRecognition) {
-                try { this.currentRecognition.abort() } catch (e) { }
-                this.currentRecognition = null
-            }
-            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-                this.mediaRecorder.onstop = null
-                this.mediaRecorder.stop()
-            }
-            this.releaseStream()
-            this.audioChunks = []
-            this.clearPending()
-            this.$emit('cancel')
-            this.resetState()
-            this._sending = false
-            this.isProcessing = false
+        fullCleanup() {
+            console.log('[VoiceRecorderButton] fullCleanup');
+            this.releaseStream();
+            this.resetState();
+            this.clearPending();
+            this.audioChunks = [];
+            this.isRecording = false;
+            this.isRecordingStarted = false;
+            this._sending = false;
+            this.isProcessing = false;
         },
 
         releaseStream() {
             if (this.stream) {
-                this.stream.getTracks().forEach(track => track.stop())
-                this.stream = null
+                this.stream.getTracks().forEach((track) => track.stop());
+                this.stream = null;
+                console.log('[VoiceRecorderButton] 释放媒体流');
             }
         },
 
         clearPending() {
             if (this.pendingUrl) {
-                URL.revokeObjectURL(this.pendingUrl)
-                this.pendingUrl = null
+                URL.revokeObjectURL(this.pendingUrl);
+                this.pendingUrl = null;
             }
-            this.pendingBlob = null
-            this.pendingText = ''
+            this.pendingBlob = null;
+            this.pendingText = '';
+        },
+
+        cancelRecording() {
+            if (this._cancelled) {
+                console.log('[VoiceRecorderButton] 重复取消，忽略');
+                return;
+            }
+            this._cancelled = true;
+            console.log('[VoiceRecorderButton] cancelRecording 被调用');
+
+            if (this.currentRecognition) {
+                try {
+                    this.currentRecognition.abort();
+                } catch (_) { }
+                this.currentRecognition = null;
+            }
+            if (this.mediaRecorder) {
+                try {
+                    if (this.mediaRecorder.state === 'recording') {
+                        this.mediaRecorder.stop();
+                    }
+                } catch (_) { }
+                this.mediaRecorder = null;
+            }
+            this.fullCleanup();
+            this.$emit('cancel');
         },
 
         sendRecording() {
-            if (this._sending || this.isProcessing) return
+            console.log('[VoiceRecorderButton] sendRecording');
+            if (this._sending || this.isProcessing) return;
 
             if (this.pendingBlob && this.pendingUrl !== null) {
                 this.$emit('result', {
                     blob: this.pendingBlob,
                     url: this.pendingUrl,
-                    text: this.pendingText
-                })
-                this.clearPending()
-                return
+                    text: this.pendingText,
+                });
+                this.clearPending();
+                return;
             }
 
             if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-                this._sending = true
-                this.isProcessing = true
-                this.$emit('processing')
-                this.mediaRecorder.stop()
-                return
+                this._sending = true;
+                this.isProcessing = true;
+                this.$emit('processing');
+                this.mediaRecorder.stop();
+                return;
             }
 
-            this.$emit('cancel')
+            this.$emit('cancel');
         },
 
-        // 触摸/鼠标事件
+        // ----- 触摸事件（移动端） -----
         handleTouchStart(e) {
-            if (this.disabled) return
-            if (!this.isTouchDevice) return
-            this.startRecording()
-            this.touchStartTime = Date.now()
+            console.log('[VoiceRecorderButton] handleTouchStart, disabled=', this.disabled);
+            e.preventDefault();
+            if (this.disabled || this.isRecording || this.isRecordingStarted) {
+                console.log('[VoiceRecorderButton] touch 被阻止');
+                return;
+            }
+            this._cancelled = false;
+            this.startRecording();
+            this.touchStartTime = Date.now();
         },
 
         handleTouchEnd(e) {
-            if (!this.isTouchDevice) return
-            const duration = Date.now() - (this.touchStartTime || 0)
-            if (duration < 300) {
-                this.cancelRecording()
-                return
+            console.log('[VoiceRecorderButton] handleTouchEnd');
+            if (!this.isTouchDevice) return;
+            const duration = Date.now() - (this.touchStartTime || 0);
+            console.log('[VoiceRecorderButton] 触摸时长(ms):', duration);
+
+            if (!this.isRecording && !this.isRecordingStarted) {
+                console.log('[VoiceRecorderButton] 录音未开始，忽略触摸结束');
+                return;
             }
-            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-                this.mediaRecorder.stop()
-            }
+            this.stopRecordingManually();
         },
 
         handleTouchCancel(e) {
-            if (!this.isTouchDevice) return
-            this.cancelRecording()
+            console.log('[VoiceRecorderButton] handleTouchCancel');
+            // 忽略系统取消，继续录音
+            console.log('[VoiceRecorderButton] touchcancel 被忽略，继续录音');
         },
 
+        // ----- 鼠标事件（PC） -----
         handlePointerDown(e) {
-            if (this.disabled) return
-            if (this.isTouchDevice) return
-            if (!this.isRecording && !this.isRecordingStarted) {
-                this.startRecording()
+            console.log('[VoiceRecorderButton] handlePointerDown');
+            if (this.disabled || this.isTouchDevice) return;
+            if (this.isRecording || this.isRecordingStarted) {
+                this.stopRecordingManually();
             } else {
-                if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-                    this.mediaRecorder.stop()
-                }
+                this.startRecording();
             }
         },
 
         handlePointerUp(e) { },
         handlePointerLeave(e) { },
     },
+
     beforeUnmount() {
+        console.log('[VoiceRecorderButton] beforeUnmount');
         if (this.currentRecognition) {
-            try { this.currentRecognition.abort() } catch (e) { }
-            this.currentRecognition = null
+            try {
+                this.currentRecognition.abort();
+            } catch (_) { }
+            this.currentRecognition = null;
         }
-        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-            this.mediaRecorder.stop()
+        if (this.mediaRecorder) {
+            try {
+                if (this.mediaRecorder.state === 'recording') {
+                    this.mediaRecorder.stop();
+                }
+            } catch (_) { }
+            this.mediaRecorder = null;
         }
-        this.releaseStream()
-        this.clearPending()
-        clearTimeout(this.waitRecognitionTimer)
-        this._sending = false
-        this.isProcessing = false
-    }
-}
+        this.releaseStream();
+        this.clearPending();
+        clearTimeout(this.waitRecognitionTimer);
+        this._sending = false;
+        this.isProcessing = false;
+    },
+};
 </script>
 
 <style scoped>
@@ -5355,6 +5535,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    touch-action: none;
 }
 
 .recorder-btn:active {

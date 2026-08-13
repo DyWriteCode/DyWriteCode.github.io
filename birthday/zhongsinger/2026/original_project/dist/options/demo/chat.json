@@ -1,16 +1,16 @@
 [
     {
         "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
+            "本条消息用户输入包括[1]才能进入下一步，多次将强行跳过"
         ],
-        "msgInputSpeed": 80,
+        "msgInputSpeed": 8,
         "triggerNextAction": {
             "type": "userInput",
             "options": {
                 "resolveKeyTexts": [
-                    "好"
+                    "1"
                 ],
-                "rejectKeyTexts": [],
+                "rejectKeyTexts": ["2"],
                 "rejectHitTexts": [
                     "输入好，听不懂吗？？？",
                     "触发强行跳过"
@@ -146,7 +146,7 @@
             "标签字体abcd"
         ],
         "id": "greeting",
-        "msgInputSpeed": 10
+        "msgInputSpeed": 10000000
     },
     {
         "msgs": [

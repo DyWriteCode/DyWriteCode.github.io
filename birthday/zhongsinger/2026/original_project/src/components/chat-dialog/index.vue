@@ -28,7 +28,6 @@
           <div id="mock-msg" class="msg" v-html="latestMsgContent"></div>
         </div>
 
-        <!-- 消息列表：添加右键/长按事件 -->
         <div class="msg-row" v-for="(msg, index) in messages" :key="index" :class="[
           msg.author === 'me' ? 'msg-me' : 'msg-author',
           { 'no-avatar': !msg.author }
@@ -37,11 +36,14 @@
           @touchend="onMsgTouchEnd" @touchmove="onMsgTouchMove">
           <div v-if="msg.type === 'tip'" class="msg-tip">{{ msg.text }}</div>
           <div v-else-if="msg.isTranscript" class="msg-transcript"
-            :class="{ 'msg-transcript-right': msg.author === 'me' }">
-            <div class="msg" :class="{
-              'msg-bounce-in-left': msg.author !== 'me',
-              'msg-bounce-in-right': msg.author === 'me'
-            }" v-html="renderEmoji(msg.content)"></div>
+            :class="[msg.author === 'me' ? 'msg-me' : 'msg-author']">
+            <div class="msg-avatar-placeholder"></div>
+            <div class="msg-content">
+              <div class="msg" :class="{
+                'msg-bounce-in-left': msg.author !== 'me',
+                'msg-bounce-in-right': msg.author === 'me'
+              }" v-html="renderEmoji(msg.content)"></div>
+            </div>
           </div>
           <template v-else>
             <img v-if="msg.author && getRoleInfo(msg.author).avatar" class="msg-avatar"
@@ -50,9 +52,8 @@
 
             <div class="msg-content">
               <div v-if="msg.author" class="msg-nickname">{{ getRoleInfo(msg.author).name }}</div>
-              <!-- 引用信息 -->
               <div v-if="msg.quoteInfo" class="msg-quote">
-                <div class="quote-line"></div>
+                <var-icon name="format-list-checkbox" class="quote-icon" />
                 <div class="quote-content">
                   <span class="quote-author">{{ msg.quoteInfo.authorName }}</span>
                   <span class="quote-text">{{ msg.quoteInfo.contentPreview }}</span>
@@ -75,11 +76,15 @@
       </div>
     </div>
 
-    <!-- 底部输入区域，包含引用条 -->
+    <div v-if="!isUserAtBottom && messages.length > 0" class="scroll-to-bottom-btn" @click="scrollToBottom(true)">
+      <var-icon name="arrow-down" size="24" />
+    </div>
+
     <div id="mobile-foot">
-      <!-- 引用条：使用 v-if 确保 quoteMsg 不为 null 时才渲染，避免空指针 -->
-      <div v-if="showQuoteBar && quoteMsg" class="quote-bar" ref="quoteBarRef" :key="'quote-bar-' + (quoteMsg ? quoteMsg.id : 'none')">
+      <div v-if="showQuoteBar && quoteMsg" class="quote-bar" ref="quoteBarRef"
+        :key="'quote-bar-' + (quoteMsg ? quoteMsg.id : 'none')">
         <div class="quote-bar-content">
+          <var-icon name="format-list-checkbox" class="quote-icon" />
           <span class="quote-bar-author">{{ getRoleInfo(quoteMsg.author).name || '未知' }}</span>
           <span class="quote-bar-text">{{ getContentPreview(quoteMsg) }}</span>
         </div>
@@ -88,7 +93,9 @@
 
       <div class="foot-wrapper">
         <div class="input-area" ref="inputArea" :style="{ height: voiceInputMode ? '40px' : 'auto' }">
-          <span class="voice-toggle-btn" @click="toggleVoiceInputMode" :class="{ active: voiceInputMode }">
+          <span class="voice-toggle-btn"
+            :class="{ active: voiceInputMode, disabled: status === 'systemInput' || isProcessing }"
+            @click="toggleVoiceInputMode">
             🎤
           </span>
 
@@ -155,11 +162,14 @@
       @close="handleComponentClose">
     </MessageDetail>
 
-    <!-- 消息上下文菜单 -->
     <Teleport to="body">
       <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
+        <div v-if="contextMsg && contextMsg.type === 'voice'" class="menu-item" @click="handleMenuVoiceConvert">
+          <var-icon name="translate" class="menu-icon" />
+          <span>{{ contextMsg.transcripted ? '取消转文字' : '转文字' }}</span>
+        </div>
         <div class="menu-item" @click="handleMenuQuote">
-          <var-icon name="format_quote" class="menu-icon" />
+          <var-icon name="format-list-checkbox" class="menu-icon" />
           <span>引用</span>
         </div>
       </div>
@@ -253,11 +263,9 @@ export default {
       voiceBlobUrls: [],
       isProcessing: false,
 
-      // 引用
       quoteMsg: null,
       showQuoteBar: false,
 
-      // 菜单
       showMsgMenu: false,
       msgMenuStyle: {
         position: 'fixed',
@@ -274,6 +282,8 @@ export default {
       contextMsg: null,
       touchTimer: null,
       isTouchMoved: false,
+      isUserAtBottom: true,        // 用户是否在底部
+      scrollThreshold: 20,          // 判定底部的阈值（像素）
     }
   },
   watch: {
@@ -302,6 +312,17 @@ export default {
     }
   },
   methods: {
+    checkIfAtBottom() {
+      const container = document.getElementById('mobile-body-content')
+      if (!container) return true
+      const { scrollTop, clientHeight, scrollHeight } = container
+      // 如果内容高度小于可视区域，视为在底部
+      if (scrollHeight <= clientHeight) return true
+      return scrollTop + clientHeight >= scrollHeight - this.scrollThreshold
+    },
+    handleScroll() {
+      this.isUserAtBottom = this.checkIfAtBottom()
+    },
     addTimeMessage() {
       const now = new Date()
       const hours = now.getHours()
@@ -332,7 +353,10 @@ export default {
     handleDoubleClick(msg, event) {
       if (msg.isTranscript) return
       if (msg.quoteId) {
-        const targetMsg = this.messages.find(m => m.externalId === msg.quoteId)
+        let targetMsg = this.messages.find(m => m.id === msg.quoteId)
+        if (!targetMsg && typeof msg.quoteId === 'string') {
+          targetMsg = this.messages.find(m => m.externalId === msg.quoteId)
+        }
         if (targetMsg) {
           const targetEl = document.querySelector(`.msg-row[data-msg-id="${targetMsg.id}"]`)
           if (targetEl) {
@@ -607,7 +631,7 @@ export default {
         this.$nextTick(() => {
           requestAnimationFrame(() => {
             const container = document.getElementById('mobile-body-content')
-            if (container) {
+            if (container && this.isUserAtBottom) {
               container.scrollTop = container.scrollHeight
             }
             element.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
@@ -740,9 +764,16 @@ export default {
 
       if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
         if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
-          const rejectDisabled = tryCnt >= rejectHitTexts.length
-          const rejectIndex = Math.min(tryCnt, rejectHitTexts.length - 1)
-          const rejectText = rejectHitTexts[rejectIndex]
+          const currentTry = tryCnt
+          const totalRejects = rejectHitTexts.length
+
+          // 如果已经用完了所有拒绝消息，直接继续
+          if (currentTry >= totalRejects) {
+            this.handleTriggerNextAction()
+            return
+          }
+
+          const rejectText = rejectHitTexts[currentTry]
           let rejectSysMsgChain = Promise.resolve()
           if (Array.isArray(rejectText)) {
             rejectText.forEach(text => {
@@ -752,14 +783,18 @@ export default {
           } else {
             rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
           }
+
+          // 更新尝试次数（发送完成后将使用新值判断）
+          this.nextActionTrigger.tryCnt = currentTry + 1
+
           rejectSysMsgChain.then(() => {
-            if (rejectDisabled) {
+            // 发送完成后判断是否已用完所有拒绝消息
+            if (this.nextActionTrigger.tryCnt >= totalRejects) {
               this.handleTriggerNextAction()
             } else {
               this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
             }
           })
-          this.nextActionTrigger.tryCnt = tryCnt + 1
         } else {
           this.handleTriggerNextAction()
         }
@@ -823,7 +858,10 @@ export default {
       }
 
       if (quoteId) {
-        const quotedMsg = this.messages.find(m => m.id === quoteId)
+        let quotedMsg = this.messages.find(m => m.id === quoteId)
+        if (!quotedMsg && typeof quoteId === 'string') {
+          quotedMsg = this.messages.find(m => m.externalId === quoteId)
+        }
         if (quotedMsg) {
           msg.quoteInfo = {
             authorName: this.getRoleInfo(quotedMsg.author).name || '未知',
@@ -838,7 +876,9 @@ export default {
       }
 
       this.messages.push(msg)
-      this.scrollToBottom(false)
+      //this.scrollToBottom(false)
+      // this.scrollToBottom(true)
+      this.scrollToBottom()
       return msg
     },
     getContentPreview(msg) {
@@ -897,7 +937,7 @@ export default {
         if (foot) this.footHeight = foot.offsetHeight
         requestAnimationFrame(() => {
           const container = document.getElementById('mobile-body-content')
-          if (container) {
+          if (container && this.isUserAtBottom) {
             container.scrollTop = container.scrollHeight
           }
           el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
@@ -913,8 +953,8 @@ export default {
     handleMenuClick() { },
     handleMoreClick() { },
 
-    scrollToBottom(force = true) {
-      if (!force) return
+    scrollToBottom(force = false) {
+      if (!force && !this.isUserAtBottom) return
       this.$nextTick(() => {
         const container = document.getElementById('mobile-body-content')
         if (container) {
@@ -1011,6 +1051,9 @@ export default {
     },
 
     toggleVoiceInputMode() {
+      if (this.status === 'systemInput' || this.isProcessing) {
+        return
+      }
       this.voiceInputMode = !this.voiceInputMode
       if (this.voiceInputMode) {
         this.showEmojiPicker = false
@@ -1104,18 +1147,8 @@ export default {
       this.stopUserRecording()
 
       const text = result.text.trim()
-      if (!text) {
-        Snackbar({
-          content: '没听清，请再说一遍',
-          duration: 1500,
-          type: 'warning'
-        })
-        if (this.nextActionTrigger) {
-          this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
-        }
-        return
-      }
 
+      // 始终构建语音消息（无论是否有文字）
       let audioUrl = null
       if (result.blob) {
         audioUrl = URL.createObjectURL(result.blob)
@@ -1126,21 +1159,45 @@ export default {
 
       const voiceMsg = {
         src: audioUrl,
-        alt: text,
+        alt: text,           // 可能为空，但语音播放不受影响
         delay: 0,
       }
-      const msg = this.pushMsg('', AUTHOR.ME, 'voice', null, null)
+
+      const quoteId = this.quoteMsg ? this.quoteMsg.id : null
+      const msg = this.pushMsg('', AUTHOR.ME, 'voice', null, quoteId)
       msg.props = voiceMsg
       msg.content = ''
 
+      this.clearQuote()
+
+      // 如果识别文字为空，仅提示但不影响发送
+      if (!text) {
+        Snackbar({
+          content: '语音已发送（未识别到文字）',
+          duration: 1500,
+          type: 'warning'
+        })
+        // 不处理下一步，保持当前状态（让用户继续输入）
+        return
+      }
+
+      // 文字非空，继续处理下一步逻辑
       if (this.nextActionTrigger) {
         const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
         const { type, options } = triggerNextAction
+        const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options
+
         if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
-          if (this.rejectNextMsg(text, options.resolveKeyTexts, options.rejectKeyTexts)) {
-            const rejectDisabled = tryCnt >= options.rejectHitTexts.length
-            const rejectIndex = Math.min(tryCnt, options.rejectHitTexts.length - 1)
-            const rejectText = options.rejectHitTexts[rejectIndex]
+          if (this.rejectNextMsg(text, resolveKeyTexts, rejectKeyTexts)) {
+            const currentTry = tryCnt
+            const totalRejects = rejectHitTexts.length
+
+            if (currentTry >= totalRejects) {
+              this.handleTriggerNextAction()
+              return
+            }
+
+            const rejectText = rejectHitTexts[currentTry]
             let rejectSysMsgChain = Promise.resolve()
             if (Array.isArray(rejectText)) {
               rejectText.forEach(text => {
@@ -1150,14 +1207,16 @@ export default {
             } else {
               rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
             }
+
+            this.nextActionTrigger.tryCnt = currentTry + 1
+
             rejectSysMsgChain.then(() => {
-              if (rejectDisabled) {
+              if (this.nextActionTrigger.tryCnt >= totalRejects) {
                 this.handleTriggerNextAction()
               } else {
                 this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
               }
             })
-            this.nextActionTrigger.tryCnt = tryCnt + 1
           } else {
             this.handleTriggerNextAction()
           }
@@ -1169,11 +1228,11 @@ export default {
       this.isProcessing = true
     },
 
-    // ----- 引用方法 -----
     openMsgContextMenu(msg, event) {
       if (msg.type === 'tip') return
       this.contextMsg = msg
-      // 防御性获取元素：优先使用 currentTarget，若为空则使用 target 或 srcElement
+
+      // 获取目标消息行元素
       let targetEl = event.currentTarget
       if (!targetEl) {
         targetEl = event.target || event.srcElement
@@ -1189,25 +1248,50 @@ export default {
       if (targetEl) {
         rect = targetEl.getBoundingClientRect()
       }
-      let left = event.clientX || (rect ? rect.left + rect.width / 2 : window.innerWidth / 2)
-      let top = event.clientY || (rect ? rect.top : window.innerHeight / 2)
+      if (!rect) {
+        rect = { left: 0, top: 0, width: 0, height: 0 }
+      }
 
       const menuWidth = 130
       const menuHeight = 80
       const winWidth = window.innerWidth
       const winHeight = window.innerHeight
 
-      if (left + menuWidth > winWidth - 10) left = winWidth - menuWidth - 10
-      if (left < 10) left = 10
-      if (top + menuHeight > winHeight - 10) top = (rect ? rect.top : 0) - menuHeight - 8
-      if (top < 10) top = 10
+      // 水平居中
+      let left = rect.left + rect.width / 2 - menuWidth / 2
+      left = Math.max(10, Math.min(left, winWidth - menuWidth - 10))
 
+      // 垂直智能定位
+      let top = rect.bottom + 8
+      if (top + menuHeight > winHeight - 10) {
+        top = rect.top - menuHeight - 8
+        if (top < 10) {
+          top = Math.min(rect.bottom + 8, winHeight - menuHeight - 10)
+        }
+      }
+      top = Math.max(10, top)
+
+      // 先计算位置，再同时设置显示标志和样式
       this.msgMenuStyle = {
         ...this.msgMenuStyle,
         left: left + 'px',
         top: top + 'px'
       }
-      this.showMsgMenu = true
+      // 确保菜单显示时位置已经正确
+      this.$nextTick(() => {
+        this.showMsgMenu = true
+      })
+    },
+
+    handleMenuVoiceConvert() {
+      if (!this.contextMsg || this.contextMsg.type !== 'voice') return
+      const msg = this.contextMsg
+      if (msg.transcripted) {
+        this.handleVoiceCancel(msg)
+      } else {
+        this.handleVoiceConvert(msg.props.alt, msg)
+      }
+      this.closeMsgMenu()
     },
 
     handleMenuQuote() {
@@ -1228,23 +1312,18 @@ export default {
     },
 
     clearQuote() {
-      // 重置数据
       this.quoteMsg = null
       this.showQuoteBar = false
-      // 强制更新视图
       this.$forceUpdate()
-      // 直接操作 DOM 隐藏引用条（确保视觉移除）
       const el = this.$refs.quoteBarRef
       if (el) {
         el.style.display = 'none'
-        // 彻底移除占位空间
         el.style.height = '0'
         el.style.padding = '0'
         el.style.margin = '0'
         el.style.overflow = 'hidden'
         el.style.border = 'none'
       }
-      // 额外通过类名查找隐藏（防止 ref 未更新）
       const quoteBarEl = document.querySelector('.quote-bar')
       if (quoteBarEl && quoteBarEl.parentNode === document.getElementById('mobile-foot')) {
         quoteBarEl.style.display = 'none'
@@ -1254,14 +1333,13 @@ export default {
         quoteBarEl.style.overflow = 'hidden'
         quoteBarEl.style.border = 'none'
       }
-      // 重新计算底部高度并滚动
       this.$nextTick(() => {
         const foot = document.getElementById('mobile-foot')
         if (foot) {
           this.footHeight = foot.offsetHeight
         }
         const container = document.getElementById('mobile-body-content')
-        if (container) {
+        if (container && this.isUserAtBottom) {
           container.scrollTop = container.scrollHeight
         }
       })
@@ -1317,6 +1395,15 @@ export default {
 
     this._boundCloseMsgMenu = this.closeMsgMenuOnClickOutside.bind(this)
     document.addEventListener('click', this._boundCloseMsgMenu)
+
+    // 绑定滚动监听
+    this._boundScrollHandler = this.handleScroll.bind(this)
+    const container = document.getElementById('mobile-body-content')
+    if (container) {
+      container.addEventListener('scroll', this._boundScrollHandler)
+      // 初始判断
+      this.isUserAtBottom = this.checkIfAtBottom()
+    }
 
     if (!window.__audioManager) {
       window.__audioManager = {
@@ -1379,6 +1466,12 @@ export default {
     document.removeEventListener('click', this._boundCloseEmojiPicker)
     document.removeEventListener('click', this._boundCloseMsgMenu)
 
+    // 移除滚动监听
+    const container = document.getElementById('mobile-body-content')
+    if (container) {
+      container.removeEventListener('scroll', this._boundScrollHandler)
+    }
+
     this.voiceBlobUrls.forEach(url => URL.revokeObjectURL(url))
     this.voiceBlobUrls = []
     this.clearQuote()
@@ -1407,7 +1500,29 @@ function onImageLoad($img) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.scroll-to-bottom-btn {
+  position: absolute;
+  right: 20px;
+  bottom: 75px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(34, 195, 170, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 200;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.scroll-to-bottom-btn:hover {
+  transform: scale(1.1);
+}
+</style>
 
 <style>
 #mobile-foot {
@@ -1430,7 +1545,7 @@ function onImageLoad($img) {
   flex-wrap: nowrap;
   min-height: 55px;
   position: relative;
-  z-index: 5;  /* 低于引用条 */
+  z-index: 5;
 }
 
 #mobile-foot .input-area {
@@ -1527,6 +1642,11 @@ function onImageLoad($img) {
 .voice-toggle-btn.active {
   background: #22c3aa;
   color: white;
+}
+
+.voice-toggle-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .voice-recorder-button {
@@ -1772,27 +1892,34 @@ function onImageLoad($img) {
 
 .msg-transcript {
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 4px;
-  padding-left: 0;
-  padding-right: 0;
+  align-items: flex-start;
   width: 100%;
 }
 
-.msg-transcript-right {
-  justify-content: flex-end;
+.msg-transcript .msg-avatar-placeholder {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0 8px;
+  visibility: hidden;
 }
 
-.msg-transcript .msg {
-  max-width: 80%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  background: #e8e8e8;
-  color: #333;
-  border-radius: 4px;
-  padding: 4px 12px;
-  font-size: 13px;
-  height: auto !important;
+.msg-transcript .msg-content {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.msg-transcript.msg-me {
+  flex-direction: row-reverse;
+}
+
+.msg-transcript.msg-me .msg-content {
+  align-items: flex-end;
+}
+
+.msg-transcript.msg-author .msg-content {
+  align-items: flex-start;
 }
 
 .msg-avatar-placeholder {
@@ -1803,7 +1930,6 @@ function onImageLoad($img) {
   visibility: hidden;
 }
 
-/* 所有消息气泡强制换行 */
 .msg {
   max-width: 100% !important;
   word-break: break-word;
@@ -1811,12 +1937,29 @@ function onImageLoad($img) {
   word-wrap: break-word;
 }
 
-/* 消息内部的引用信息自动换行 */
 .msg-quote .quote-text {
   white-space: normal;
   word-wrap: break-word;
   overflow: visible;
   max-height: none;
+}
+
+.quote-icon {
+  font-size: 16px;
+  color: #888;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.msg-me .quote-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.msg-quote .quote-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .animate_breathe {
@@ -1960,7 +2103,6 @@ function onImageLoad($img) {
   pointer-events: none;
 }
 
-/* ----- 引用框样式（消息内部）----- */
 .msg-quote {
   display: flex;
   align-items: center;
@@ -1982,12 +2124,7 @@ function onImageLoad($img) {
 }
 
 .msg-quote .quote-line {
-  width: 3px;
-  background: #c0c0c0;
-  border-radius: 2px;
-  height: 20px;
-  margin-right: 6px;
-  flex-shrink: 0;
+  display: none;
 }
 
 .msg-quote .quote-author {
@@ -2012,19 +2149,14 @@ function onImageLoad($img) {
   color: #333 !important;
 }
 
-.msg-me .msg-quote .quote-line {
-  background: rgba(255, 255, 255, 0.6) !important;
-}
-
 .msg-me .msg-quote .quote-author,
 .msg-me .msg-quote .quote-text {
   color: #333 !important;
 }
 
-/* ----- 引用条（输入框上方）----- */
 .quote-bar {
   position: relative;
-  z-index: 20;  /* 高于输入区域 */
+  z-index: 20;
   pointer-events: auto !important;
   background: #f0f0f0 !important;
   padding: 4px 12px !important;
@@ -2038,30 +2170,44 @@ function onImageLoad($img) {
 
 .quote-bar-content {
   flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
   overflow: hidden;
-  word-wrap: break-word;
-  white-space: normal;
-  max-height: 40px;
-  line-height: 1.4;
   min-width: 0;
-  word-break: break-word;
+}
+
+.quote-bar-content .quote-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: #888;
+  margin-right: 4px;
 }
 
 .quote-bar-author {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-weight: bold;
   margin-right: 6px;
   color: #22c3aa !important;
 }
 
 .quote-bar-text {
-  color: #555 !important;
+  flex: 1 1 auto;
+  min-width: 0;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  color: #555 !important;
+  line-height: 1.4;
+  max-height: 2.8em;
 }
 
 .quote-bar-close {
   pointer-events: auto !important;
   cursor: pointer;
-  padding: 6px 14px;   /* 增大点击区域 */
+  padding: 6px 14px;
   font-size: 20px;
   color: #999;
   user-select: none;
@@ -2073,5 +2219,35 @@ function onImageLoad($img) {
 
 .quote-bar-close:hover {
   color: #333;
+}
+
+.custom-voice-menu {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  min-width: 130px;
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+}
+
+.custom-voice-menu .menu-item {
+  padding: 10px 18px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.custom-voice-menu .menu-item:hover {
+  background: #f0f0f0;
+}
+
+.custom-voice-menu .menu-icon {
+  font-size: 18px;
 }
 </style>
