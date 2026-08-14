@@ -8,8 +8,14 @@
     <link href="https://cdn.jsdmirror.com?v=20260814042853" rel="dns-prefetch" />
     <link href="https://cdn.jsdelivr.net?v=20260814042853" rel="preconnect" />
     <link href="https://cdn.jsdelivr.net?v=20260814042853" rel="dns-prefetch" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@d0e135d.16.9/dist/katex.min.css?v=20260814042853"
+    <link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/katex@0.16.9/dist/katex.min.css"
         integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdmirror.com/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdmirror.com/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});"></script>
     <link
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@35dfb53/preview_assets/home.ico?v=20260814042853"
         rel="icon" type="image/png" />
@@ -17,12 +23,6 @@
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@35dfb53/preview_assets/check-update.js?v=20260814042853"
         type="module">
         </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@d0e135d.16.9/dist/katex.min.js?v=20260814042853"
-        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
-        crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@d0e135d.16.9/dist/contrib/auto-render.min.js?v=20260814042853"
-        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
-        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});"></script>
     <title>模型理论依据</title>
     <style>
         * {
@@ -145,6 +145,7 @@
             .theory-grid {
                 grid-template-columns: 1fr;
             }
+
             .container {
                 padding: 1.5rem 1.2rem;
             }
@@ -182,57 +183,80 @@
 
             <div class="theory-card">
                 <h3>微元积分法</h3>
-                <div class="desc"><strong>核心原理：</strong>微积分的基本思想——“先微后积”。将一个连续变化的过程（如阅读积累）拆分成无穷多个瞬间（微元），建立每个瞬间的局部关系（微分方程），然后通过积分将这些局部贡献累积成整体总量。这是推导连续累加型变量的数学核心。</div>
-                <div class="usage">用于情感积累项 \(E = \int_{1}^{L} \frac{\alpha \xi \tau \sigma_1}{l} dl\) 的推导，将文字层面的累积感受量化为数学积分，最终得到 \(E = \alpha \xi \tau \sigma_1 \ln L\)。</div>
-                <div class="formula-ref">📍 对应公式：\(\frac{dE}{dl} = \frac{\alpha \xi \tau \sigma_1}{l}\) → \(E = \alpha \xi \tau \sigma_1 \ln L\)</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>微积分的基本思想——“先微后积”。将一个连续变化的过程（如阅读积累）拆分成无穷多个瞬间（微元），建立每个瞬间的局部关系（微分方程），然后通过积分将这些局部贡献累积成整体总量。这是推导连续累加型变量的数学核心。
+                </div>
+                <div class="usage">用于情感积累项 \(E = \int_{1}^{L} \frac{\alpha \xi \tau \sigma_1}{l} dl\)
+                    的推导，将文字层面的累积感受量化为数学积分，最终得到 \(E = \alpha \xi \tau \sigma_1 \ln L\)。</div>
+                <div class="formula-ref">📍 对应公式：\(\frac{dE}{dl} = \frac{\alpha \xi \tau \sigma_1}{l}\) → \(E = \alpha
+                    \xi \tau \sigma_1 \ln L\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>朗伯 W 函数</h3>
-                <div class="desc"><strong>核心原理：</strong>这是一种超越函数，定义为 \( z = W(z)e^{W(z)} \)。它专门用于求解形如 \( y e^y = x \) 的方程，此类方程在变量指数化增长且带有线性系数的场景中频繁出现。它没有初等表达式，是数学中处理复杂隐函数的标准工具。</div>
-                <div class="usage">用于精确求解文本不惹人厌的最小篇幅 \(L_1\)，避免了使用 \(\ln L \approx 1\) 的低精度近似。将不等式 \(A L \ln L > B\) 转化为 \(y e^y > B/A\) 后精确求解。</div>
-                <div class="formula-ref">📍 对应公式：\(L_1 = \frac{\beta P \sigma_2}{w \xi \cdot \alpha \xi \tau \sigma_1 \cdot W( \frac{\beta P \sigma_2}{\alpha w \xi^2 \tau \sigma_1} )}\)</div>
+                <div class="desc"><strong>核心原理：</strong>这是一种超越函数，定义为 \( z = W(z)e^{W(z)} \)。它专门用于求解形如 \( y e^y = x \)
+                    的方程，此类方程在变量指数化增长且带有线性系数的场景中频繁出现。它没有初等表达式，是数学中处理复杂隐函数的标准工具。</div>
+                <div class="usage">用于精确求解文本不惹人厌的最小篇幅 \(L_1\)，避免了使用 \(\ln L \approx 1\) 的低精度近似。将不等式 \(A L \ln L > B\) 转化为
+                    \(y e^y > B/A\) 后精确求解。</div>
+                <div class="formula-ref">📍 对应公式：\(L_1 = \frac{\beta P \sigma_2}{w \xi \cdot \alpha \xi \tau \sigma_1
+                    \cdot W( \frac{\beta P \sigma_2}{\alpha w \xi^2 \tau \sigma_1} )}\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>双曲正切函数 \(\tanh\)</h3>
-                <div class="desc"><strong>核心原理：</strong>S 型饱和函数，输出值严格限制在 \(-1\) 和 \(1\) 之间，表达式为 \(\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}\)。它的导数平滑且渐近饱和，非常适合用来映射那些“过低或过高都会失效”的中间变量。</div>
-                <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情绪唤醒映射到 \((0,1)\) 概率空间，保留极端负面情况下的最低互动（“黑红”现象）。</div>
+                <div class="desc"><strong>核心原理：</strong>S 型饱和函数，输出值严格限制在 \(-1\) 和 \(1\) 之间，表达式为 \(\tanh(x) = \frac{e^x -
+                    e^{-x}}{e^x + e^{-x}}\)。它的导数平滑且渐近饱和，非常适合用来映射那些“过低或过高都会失效”的中间变量。</div>
+                <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情绪唤醒映射到 \((0,1)\)
+                    概率空间，保留极端负面情况下的最低互动（“黑红”现象）。</div>
                 <div class="formula-ref">📍 对应公式：\(I = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>一阶微分方程 / 逻辑斯蒂增长</h3>
-                <div class="desc"><strong>核心原理：</strong>逻辑斯蒂增长模型 \(\frac{dx}{dt} = r x (1 - x/K)\) 是描述受限增长的标准模型。其特点是：初期近似指数增长，中期线性增长，后期因接近承载能力 \(K\) 而趋于饱和。在传播学中，它常被用来模拟热点事件的扩散趋势。</div>
-                <div class="usage">用于知名度 \(K\) 的动态演化 \(\frac{dK}{dt} = \rho H(t)(1-K)\)，精确刻画了IP热度受限于市场总量的增长逻辑，实现了“热度反哺知名度”的正反馈闭环。</div>
+                <div class="desc"><strong>核心原理：</strong>逻辑斯蒂增长模型 \(\frac{dx}{dt} = r x (1 - x/K)\)
+                    是描述受限增长的标准模型。其特点是：初期近似指数增长，中期线性增长，后期因接近承载能力 \(K\) 而趋于饱和。在传播学中，它常被用来模拟热点事件的扩散趋势。</div>
+                <div class="usage">用于知名度 \(K\) 的动态演化 \(\frac{dK}{dt} = \rho
+                    H(t)(1-K)\)，精确刻画了IP热度受限于市场总量的增长逻辑，实现了“热度反哺知名度”的正反馈闭环。</div>
                 <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K)\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>S 型函数（sigmoid）</h3>
-                <div class="desc"><strong>核心原理：</strong>S 型函数（sigmoid）是一种单调递增的非线性函数，形式为 \(\Theta(x) = \frac{1}{1 + e^{-x}}\)，其输出范围在 \((0,1)\) 之间。它常用于将阈值效应平滑化，避免硬截断导致的不连续跳跃。</div>
-                <div class="usage">用于平滑阈值 \(L^*\) 的过渡，替代原硬截断 \(\max(L_1, L_2)\)。使算法热度 \(R_{alg}\) 从短篇到长篇连续变化，避免在阈值处的不连续跳跃。</div>
+                <div class="desc"><strong>核心原理：</strong>S 型函数（sigmoid）是一种单调递增的非线性函数，形式为 \(\Theta(x) = \frac{1}{1 +
+                    e^{-x}}\)，其输出范围在 \((0,1)\) 之间。它常用于将阈值效应平滑化，避免硬截断导致的不连续跳跃。</div>
+                <div class="usage">用于平滑阈值 \(L^*\) 的过渡，替代原硬截断 \(\max(L_1, L_2)\)。使算法热度 \(R_{alg}\)
+                    从短篇到长篇连续变化，避免在阈值处的不连续跳跃。</div>
                 <div class="formula-ref">📍 对应公式：\(\Theta(L; L^*, \gamma) = \frac{1}{1 + e^{-\gamma (L - L^*)}}\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>偏导数与敏感性分析</h3>
-                <div class="desc"><strong>核心原理：</strong>偏导数 \(\frac{\partial H}{\partial x_i}\) 衡量当其他变量固定时，变量 \(x_i\) 微小变化对目标函数 \(H\) 的影响程度。通过计算各偏导数并排序，可识别对结果影响最大的“杠杆变量”。这是优化决策中的标准工具。</div>
+                <div class="desc"><strong>核心原理：</strong>偏导数 \(\frac{\partial H}{\partial x_i}\) 衡量当其他变量固定时，变量 \(x_i\)
+                    微小变化对目标函数 \(H\) 的影响程度。通过计算各偏导数并排序，可识别对结果影响最大的“杠杆变量”。这是优化决策中的标准工具。</div>
                 <div class="usage">用于计算各变量对 \(H\) 的边际贡献排序。发现 \(\xi\)（共情）和 \(\tau\)（时机）在长篇区间边际贡献最高，指导创作者优先优化这两个方向。</div>
-                <div class="formula-ref">📍 对应公式：\(\frac{\partial H}{\partial \xi} \approx \alpha \tau e^{-\lambda_1 K F} \ln L \cdot (1 + \kappa Q) \cdot CR^2 \cdot I \cdot \Theta\)</div>
+                <div class="formula-ref">📍 对应公式：\(\frac{\partial H}{\partial \xi} \approx \alpha \tau e^{-\lambda_1 K
+                    F} \ln L \cdot (1 + \kappa Q) \cdot CR^2 \cdot I \cdot \Theta\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>贝叶斯网络与协方差结构</h3>
-                <div class="desc"><strong>核心原理：</strong>贝叶斯网络是一种概率图模型，用有向无环图（DAG）表示变量间的条件依赖关系。协方差结构描述变量间的协同变化。在此模型中，我们用确定性的函数映射（如 \(\xi = f_\xi(G,S,\psi,w)\)）来固化变量间的依赖关系。</div>
-                <div class="usage">将变量间的条件依赖关系固化为数学函数，所有后续公式中的 \(\xi,\tau,w,\delta\) 均指代这些贝叶斯函数值。具体依赖关系为：\(G \rightarrow \xi,\tau,w,\delta\)；\(S \rightarrow \xi,\tau,w\)；\(\psi \rightarrow \xi,\tau,w\)；\(L \rightarrow \tau\)。</div>
-                <div class="formula-ref">📍 对应公式：\(\xi(G,S,\psi,w) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5)) \cdot (1 + \alpha_{\xi,w} \cdot \tilde{w})\)</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>贝叶斯网络是一种概率图模型，用有向无环图（DAG）表示变量间的条件依赖关系。协方差结构描述变量间的协同变化。在此模型中，我们用确定性的函数映射（如
+                    \(\xi = f_\xi(G,S,\psi,w)\)）来固化变量间的依赖关系。</div>
+                <div class="usage">将变量间的条件依赖关系固化为数学函数，所有后续公式中的 \(\xi,\tau,w,\delta\) 均指代这些贝叶斯函数值。具体依赖关系为：\(G \rightarrow
+                    \xi,\tau,w,\delta\)；\(S \rightarrow \xi,\tau,w\)；\(\psi \rightarrow \xi,\tau,w\)；\(L \rightarrow
+                    \tau\)。</div>
+                <div class="formula-ref">📍 对应公式：\(\xi(G,S,\psi,w) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot
+                    \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5)) \cdot (1 + \alpha_{\xi,w}
+                    \cdot \tilde{w})\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>归一化处理</h3>
-                <div class="desc"><strong>核心原理：</strong>归一化将不同量纲或尺度的数据映射到统一的区间（通常为 \([0,1]\)），以消除量纲影响。常用方法为 min-max 归一化：\(\tilde{x} = \frac{x - x_{\min}}{x_{\max} - x_{\min}}\)。</div>
-                <div class="usage">将文笔系数 \(w\) 归一化为 \(\tilde{w}\)，用于贝叶斯函数中的交叉项计算（如 \(\alpha_{\xi,w} \cdot \tilde{w}\)），使得协变强度的度量不受文笔绝对数值范围的影响。</div>
+                <div class="desc"><strong>核心原理：</strong>归一化将不同量纲或尺度的数据映射到统一的区间（通常为 \([0,1]\)），以消除量纲影响。常用方法为 min-max
+                    归一化：\(\tilde{x} = \frac{x - x_{\min}}{x_{\max} - x_{\min}}\)。</div>
+                <div class="usage">将文笔系数 \(w\) 归一化为 \(\tilde{w}\)，用于贝叶斯函数中的交叉项计算（如 \(\alpha_{\xi,w} \cdot
+                    \tilde{w}\)），使得协变强度的度量不受文笔绝对数值范围的影响。</div>
                 <div class="formula-ref">📍 对应公式：\(\tilde{w} = \frac{w - w_{\min}}{w_{\max} - w_{\min}}\)</div>
             </div>
 
@@ -244,176 +268,236 @@
 
             <div class="theory-card">
                 <h3>元认知防御机制</h3>
-                <div class="desc"><strong>核心原理：</strong>元认知即“对思考的思考”。当读者意识到自己正在被故事“操纵”时（尤其是已知剧情走向），会下意识地激活一种情感防火墙。他们不再毫无防备地投入情感，而是切换到一种审视、分析的状态，从而降低共情伤害。这种机制是读者对剧透的本能心理保护。</div>
-                <div class="usage">用于定义超然折扣系数 \(\sigma_1 = e^{-\lambda_1 K F}\) 和 \(\sigma_2 = e^{-\lambda_2 K F}\)，其中 \(\lambda_1\) 较小（共鸣防御弱），\(\lambda_2\) 较大（震惊防御强），区分已知剧情对“共鸣”与“震惊”的差异化削弱。</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>元认知即“对思考的思考”。当读者意识到自己正在被故事“操纵”时（尤其是已知剧情走向），会下意识地激活一种情感防火墙。他们不再毫无防备地投入情感，而是切换到一种审视、分析的状态，从而降低共情伤害。这种机制是读者对剧透的本能心理保护。
+                </div>
+                <div class="usage">用于定义超然折扣系数 \(\sigma_1 = e^{-\lambda_1 K F}\) 和 \(\sigma_2 = e^{-\lambda_2 K F}\)，其中
+                    \(\lambda_1\) 较小（共鸣防御弱），\(\lambda_2\) 较大（震惊防御强），区分已知剧情对“共鸣”与“震惊”的差异化削弱。</div>
                 <div class="formula-ref">📍 对应公式：\(\sigma_1 = e^{-\lambda_1 K F},\ \sigma_2 = e^{-\lambda_2 K F}\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>预期违背理论 (Burgoon)</h3>
-                <div class="desc"><strong>核心原理：</strong>该理论认为，人类对事件有稳定的心理预期。当事件与预期严重不符时（如主角突然死亡），会产生强烈的生理和心理唤起。但如果读者提前知道结局（剧透），预期被“修正”，这种违背感会大幅削弱，导致“刀子”失去冲击力。</div>
-                <div class="usage">支撑 \(\sigma_2 = e^{-\lambda_2 K F}\) 的合理性，即已知剧情（高 \(K, F\)）会让“震惊”防御更强（\(\lambda_2\) 较大），因为预期已被提前修正。</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>该理论认为，人类对事件有稳定的心理预期。当事件与预期严重不符时（如主角突然死亡），会产生强烈的生理和心理唤起。但如果读者提前知道结局（剧透），预期被“修正”，这种违背感会大幅削弱，导致“刀子”失去冲击力。
+                </div>
+                <div class="usage">支撑 \(\sigma_2 = e^{-\lambda_2 K F}\) 的合理性，即已知剧情（高 \(K, F\)）会让“震惊”防御更强（\(\lambda_2\)
+                    较大），因为预期已被提前修正。</div>
                 <div class="formula-ref">📍 对应公式：\(\sigma_2 = e^{-\lambda_2 K F}\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>损失厌恶理论 (Kahneman &amp; Tversky)</h3>
-                <div class="desc"><strong>核心原理：</strong>前景理论的核心支柱。实验证明，人类对“失去”的敏感度是“获得”的2倍左右。失去一个心爱的角色（刀子）带来的痛苦，远大于获得同等快乐带来的幸福。这就是为什么刀子情节如此有力，也如此危险。</div>
-                <div class="usage">用于构建伤害惩罚项 \(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\)，其中 \(\beta\) 即为损失厌恶系数，量化了痛苦敏感度（典型范围为 \(1 \sim 4\)）。</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>前景理论的核心支柱。实验证明，人类对“失去”的敏感度是“获得”的2倍左右。失去一个心爱的角色（刀子）带来的痛苦，远大于获得同等快乐带来的幸福。这就是为什么刀子情节如此有力，也如此危险。
+                </div>
+                <div class="usage">用于构建伤害惩罚项 \(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\)，其中 \(\beta\)
+                    即为损失厌恶系数，量化了痛苦敏感度（典型范围为 \(1 \sim 4\)）。</div>
                 <div class="formula-ref">📍 对应公式：\(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>参照点依赖</h3>
-                <div class="desc"><strong>核心原理：</strong>人们对结果的判断不是基于绝对值，而是基于与“参照点”的偏差。在阅读中，参照点是角色的现状或美好预期。刀子的作用就是强行改变这个参照点，将主角从“幸福”拉向“悲剧”，这种偏差越大，读者受到的冲击越强。</div>
-                <div class="usage">影响伤害惩罚项中 \(P\) 的感知强度。已知剧情会预先移动参照点（读者知道“后面要出事”），从而减轻后续的实际冲击，与 \(\sigma_2\) 的削弱作用协同。</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>人们对结果的判断不是基于绝对值，而是基于与“参照点”的偏差。在阅读中，参照点是角色的现状或美好预期。刀子的作用就是强行改变这个参照点，将主角从“幸福”拉向“悲剧”，这种偏差越大，读者受到的冲击越强。
+                </div>
+                <div class="usage">影响伤害惩罚项中 \(P\) 的感知强度。已知剧情会预先移动参照点（读者知道“后面要出事”），从而减轻后续的实际冲击，与 \(\sigma_2\) 的削弱作用协同。
+                </div>
                 <div class="formula-ref">📍 对应公式：作用于 \(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\) 中的 \(P\) 感知调整</div>
             </div>
 
             <div class="theory-card">
                 <h3>韦伯-费希纳定律（对数扩展）</h3>
-                <div class="desc"><strong>核心原理：</strong>心理物理学经典定律：物理刺激量与心理感受量呈对数关系（\(S = k \ln I\)）。应用到阅读中，随着读者阅读字数（\(L\)）的增加，每增加一千字带来的额外情感投入（边际效用）是递减的。因此，情感积累随篇幅呈对数增长，而非线性增长。</div>
+                <div class="desc"><strong>核心原理：</strong>心理物理学经典定律：物理刺激量与心理感受量呈对数关系（\(S = k \ln
+                    I\)）。应用到阅读中，随着读者阅读字数（\(L\)）的增加，每增加一千字带来的额外情感投入（边际效用）是递减的。因此，情感积累随篇幅呈对数增长，而非线性增长。</div>
                 <div class="usage">用于情感积累项 \(E = \alpha \xi \tau \sigma_1 \ln L\)，精确刻画了共情随篇幅增加而边际递减的规律。</div>
                 <div class="formula-ref">📍 对应公式：\(E = \alpha \xi \tau \sigma_1 \ln L\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>峰终定律 (Kahneman)</h3>
-                <div class="desc"><strong>核心原理：</strong>人类大脑对一段经历的评价，强烈偏向于“峰值时刻”（最好或最坏的部分）和“结束时刻”。中间的平淡部分几乎被忽略。这意味着，刀子如果出现在剧情峰值（如黄金分割点），将极大提升整部剧的印象分，使其成为观众心中的“神作”。</div>
-                <div class="usage">用于刀子时机系数 \(\tau\)，强调最佳刀子位置（如全篇的黄金分割点）能最大化峰值体验。不同题材、视角和风格下，\(\tau\) 的最优值不同（如病娇、悬疑对时机敏感）。</div>
-                <div class="formula-ref">📍 对应公式：\(\tau(G,S,\psi,L) = \tau_0(G) \cdot (1 + \alpha_{\tau,S} \cdot \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\tau,\psi} \cdot (\psi - 0.5)) \cdot (1 + \alpha_{\tau,L} \cdot (L - L_0))\)</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>人类大脑对一段经历的评价，强烈偏向于“峰值时刻”（最好或最坏的部分）和“结束时刻”。中间的平淡部分几乎被忽略。这意味着，刀子如果出现在剧情峰值（如黄金分割点），将极大提升整部剧的印象分，使其成为观众心中的“神作”。
+                </div>
+                <div class="usage">用于刀子时机系数 \(\tau\)，强调最佳刀子位置（如全篇的黄金分割点）能最大化峰值体验。不同题材、视角和风格下，\(\tau\)
+                    的最优值不同（如病娇、悬疑对时机敏感）。</div>
+                <div class="formula-ref">📍 对应公式：\(\tau(G,S,\psi,L) = \tau_0(G) \cdot (1 + \alpha_{\tau,S} \cdot
+                    \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\tau,\psi} \cdot (\psi - 0.5)) \cdot (1 +
+                    \alpha_{\tau,L} \cdot (L - L_0))\)</div>
             </div>
 
             <div class="theory-card">
                 <h3>心理距离理论 (Trope &amp; Liberman)</h3>
-                <div class="desc"><strong>核心原理：</strong>心理距离（时间、空间、社会、假设性）越近，解释水平越低（具体），共情越强；距离越远，解释水平越高（抽象），共情越弱。现代都市题材（\(G\)）近在咫尺（\(\xi > 1\)），而古代或玄幻题材心理距离较远（\(\xi < 1\)），观众更倾向于“看戏”而非“代入”。</div>
-                <div class="usage">用于时代共情系数 \(\xi\) 的取值依据，区分现代题材与古代/玄幻题材的共情效率。在贝叶斯函数中，\(\xi_0(G)\) 作为题材基准值，进一步受 \(S\) 和 \(\psi\) 调节。</div>
-                <div class="formula-ref">📍 对应公式：\(\xi(G,S,\psi,w) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5)) \cdot (1 + \alpha_{\xi,w} \cdot \tilde{w})\)</div>
+                <div class="desc">
+                    <strong>核心原理：</strong>心理距离（时间、空间、社会、假设性）越近，解释水平越低（具体），共情越强；距离越远，解释水平越高（抽象），共情越弱。现代都市题材（\(G\)）近在咫尺（\(\xi
+                    > 1\)），而古代或玄幻题材心理距离较远（\(\xi < 1\)），观众更倾向于“看戏”而非“代入”。</div>
+                        <div class="usage">用于时代共情系数 \(\xi\) 的取值依据，区分现代题材与古代/玄幻题材的共情效率。在贝叶斯函数中，\(\xi_0(G)\) 作为题材基准值，进一步受
+                            \(S\) 和 \(\psi\) 调节。</div>
+                        <div class="formula-ref">📍 对应公式：\(\xi(G,S,\psi,w) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot
+                            \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5)) \cdot (1 +
+                            \alpha_{\xi,w} \cdot \tilde{w})\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>认知负荷理论 (Sweller)</h3>
+                    <div class="desc"><strong>核心原理：</strong>工作记忆的容量是有限的（通常认为最多同时处理4个组块）。如果AI短剧时长过长（\(L\)
+                        过大），信息量超载，会导致观众理解困难、精神疲劳，最终触发“滑动离开”行为。这种负荷是导致长视频完播率下降的核心原因。</div>
+                    <div class="usage">用于时长惩罚项 \(T(L) = \nu (L - L_0)^2\)，超出甜区的时长会急剧增加认知负荷，降低热度。过短则信息不足（也是负荷），形成双罚。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>注意力峰值模型</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>注意力随时间变化的曲线呈倒U型。观众在视频开始时集中注意力，随后逐渐达到峰值，如果内容无法在峰值前抓住他们，注意力就会不可逆转地衰退。因此，存在一个最优时长（甜区
+                        \(L_0\)），能最大化观众在峰值区的停留。</div>
+                    <div class="usage">结合认知负荷理论，用于确定最优甜区 \(L_0\)（通常 3~8 万字），偏离该值会产生显著的流量惩罚。这是 \(T(L) = \nu (L - L_0)^2\)
+                        的理论基础。</div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L_0\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>情绪唤醒理论 (Duffy)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>情绪唤醒度（生理激活水平）与行为反应呈倒U型关系。适度的唤醒（感动、揪心）会促进分享和评论；但极度过度的唤醒（极度愤怒、绝望）会导致用户为了自我保护而回避（关闭视频）。因此，互动率需要一个S型饱和函数来建模。
+                    </div>
+                    <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情感动能 \(Q\) 映射到互动概率，保留极端情况下的最低互动（\(Q
+                        \to -\infty\) 时 \(I \to 0^+\)）。</div>
+                    <div class="formula-ref">📍 对应公式：\(I = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>完成效应 / 闭合需求</h3>
+                    <div class="desc"><strong>核心原理：</strong>格式塔心理学原则。人类大脑厌恶未完成的任务（蔡格尼克效应）。连载中的作品（\(F\)
+                        较小）会持续产生心理张力，而已完结的作品（\(F\) 较大）提供闭合感，这种闭合感会让观众更愿意在事后讨论和推荐作品，形成长尾IP价值。</div>
+                    <div class="usage">用于完结程度 \(F\)，已完结作品更易引发读者回顾和讨论，提升IP自带流量 \(R_{ip} = \mu K F\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
             </div>
 
-            <div class="theory-card">
-                <h3>认知负荷理论 (Sweller)</h3>
-                <div class="desc"><strong>核心原理：</strong>工作记忆的容量是有限的（通常认为最多同时处理4个组块）。如果AI短剧时长过长（\(L\) 过大），信息量超载，会导致观众理解困难、精神疲劳，最终触发“滑动离开”行为。这种负荷是导致长视频完播率下降的核心原因。</div>
-                <div class="usage">用于时长惩罚项 \(T(L) = \nu (L - L_0)^2\)，超出甜区的时长会急剧增加认知负荷，降低热度。过短则信息不足（也是负荷），形成双罚。</div>
-                <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\)</div>
+            <!-- ==================== 传播学 / 社会学 ==================== -->
+            <h2>📢 传播学与社会学</h2>
+            <div class="theory-grid">
+
+                <div class="theory-card">
+                    <h3>媒介丰富度理论 (Daft &amp; Lengel)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>不同媒介传递信息的能力不同。面谈（音视频）比书面文件（纯文字）更“丰富”，因为它包含非语言信号、语气和即时反馈。AI短剧结合了视觉、音频和文本，信息丰富度远高于纯文本，因此能更快、更强烈地唤起观众的情感共鸣。
+                    </div>
+                    <div class="usage">用于视觉放大系数 \(\delta\)，解释为什么AI视觉化（多模态）会呈倍数级放大“刀子”的冲击力。\(\delta > 1\)，通常取 5~10。</div>
+                    <div class="formula-ref">📍 对应公式：\(P_v = \delta \cdot P\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>社会传染模型 (Rogers)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>创新扩散理论的变种。热度和观点通过社会网络像传染病一样传播。一部AI短剧的受欢迎度（\(H\)）本身就是一种“病原体”，它能通过口碑、推荐和社交媒体感染新的观众。这种传播受限于潜在观众的总量（上限1），呈现出逻辑斯蒂增长的特征。
+                    </div>
+                    <div class="usage">用于知名度动态方程 \(\frac{dK}{dt} = \rho H(t)(1-K)\)，热度反哺知名度的增长过程，形成“爆款带动IP升温”的正反馈闭环。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K)\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>网络效应</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>产品或服务的价值随着使用人数的增加而增加。在AI短剧场景中，一个剧集越火，平台算法越会推荐它，越多的观众看到它，它就越火。这是一个典型的正反馈飞轮。模型中的知名度
+                        \(K\) 动态演化捕捉了这个特性。</div>
+                    <div class="usage">支撑知名度动态中的逻辑斯蒂增长项，使模型能模拟“爆款反哺IP”的正反馈闭环，即 \(\frac{dK}{dt} = \rho H(t)(1-K)\)
+                        中的增长机制。</div>
+                    <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho H(t)(1-K)\) 中的正反馈项</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>品牌资产模型 (Aaker)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>品牌资产是由品牌知名度、品牌联想、感知质量和品牌忠诚度构成的。一个知名的IP（如《斗罗大陆》）本身就是一个强大的品牌。这种品牌资产是AI短剧的“初始资本”，即使用户没看过短剧，也会因为IP本身而点击观看。
+                    </div>
+                    <div class="usage">用于IP自带流量 \(R_{ip} = \mu K F\)，知名度和完结度直接转化为搜索流量和情怀播放，这部分流量不受算法完播率影响。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>品牌延伸理论 (Aaker &amp; Keller)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>消费者会将对原始品牌（母品牌）的态度迁移到其延伸产品（子品牌）上。当一部知名小说（母品牌）被改编成AI短剧（子品牌）时，粉丝的好感度会直接“下载”到短剧上，降低短剧的冷启动成本。
+                    </div>
+                    <div class="usage">支撑 \(R_{ip}\) 的合理性，\(\mu\) 即为母品牌（IP）到子品牌（短剧）的迁移系数，范围通常为 \(0.5 \sim 2.0\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\) 中的 \(\mu\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>搜索红利</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>在各大视频和社交平台上，搜索依然是重要的流量入口。知名IP天然带有搜索热词，用户会主动通过搜索来查找相关短剧。这种流量不需要算法推荐，是硬通货，确保了短剧即使算法表现一般也能有保底播放量。
+                    </div>
+                    <div class="usage">独立于 \(R_{alg}\) 的保底流量来源，体现在 \(R_{ip} = \mu K F\)
+                        对平台搜索场景的覆盖，解释了为何知名IP短剧即使质量平庸也能有基础播放。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>信息加工容量理论</h3>
+                    <div class="desc"><strong>核心原理：</strong>人类的认知加工能力是有限的。短视频的精髓在于“短”，因为短意味着信息量少，加工成本低。如果AI短剧太长（\(L\)
+                        过大），观众的大脑需要处理过多的情节、人物和情感信息，导致认知超载，进而引发逃离行为。</div>
+                    <div class="usage">用于变量 \(L\) 对认知负荷的基础影响，是时长惩罚项 \(T(L) = \nu (L - L_0)^2\) 存在的底层逻辑之一。</div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L\) 来源</div>
+                </div>
+
             </div>
 
-            <div class="theory-card">
-                <h3>注意力峰值模型</h3>
-                <div class="desc"><strong>核心原理：</strong>注意力随时间变化的曲线呈倒U型。观众在视频开始时集中注意力，随后逐渐达到峰值，如果内容无法在峰值前抓住他们，注意力就会不可逆转地衰退。因此，存在一个最优时长（甜区 \(L_0\)），能最大化观众在峰值区的停留。</div>
-                <div class="usage">结合认知负荷理论，用于确定最优甜区 \(L_0\)（通常 3~8 万字），偏离该值会产生显著的流量惩罚。这是 \(T(L) = \nu (L - L_0)^2\) 的理论基础。</div>
-                <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L_0\)</div>
+            <!-- ==================== 平台算法相关 ==================== -->
+            <h2>📱 平台与算法</h2>
+            <div class="theory-grid">
+
+                <div class="theory-card">
+                    <h3>注意力分配理论</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>在信息过载的时代，用户的注意力是最稀缺的资源。平台的核心算法本质上是一个“注意力分配器”。完播率和互动率是衡量一个内容吸引注意力的关键指标。如果内容无法在短时间内抢占用户注意力，就会被算法抛弃。
+                    </div>
+                    <div class="usage">用于完播率 \(CR\) 模型的基础假设，将弃剧概率定义为“冲击”与“耐受”的博弈结果：\(\rho = \frac{\eta_0 \delta P
+                        \sigma_2}{\xi \tau w L}\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>冲击-耐受博弈</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>用户在观看视频时，大脑处于一个动态博弈状态：内容不断提供“冲击”（情感、视觉、信息），而用户的“耐受度”（注意力剩余、兴趣度）不断被消耗。当“冲击”超过“耐受”时（内容太无聊或太刺激），用户就会滑动离开。
+                    </div>
+                    <div class="usage">构造弃剧概率 \(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)，耐受度由共情 \(\xi\)、时机 \(\tau\)、文笔 \(w\)、已知防御 \(\sigma_2\) 及篇幅 \(L\) 共同决定，直观地描述了用户与内容之间的博弈关系。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>完播率² × 互动率 范式</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>这是通过对抖音、快手等短视频平台算法进行反向工程得到的经验公式。平台认为“留住人”（完播率）的权重远高于“让人动”（互动率）。因此，完播率被赋予平方权重，以放大其在推荐系统中的作用力。
+                    </div>
+                    <div class="usage">用于算法推荐热度 \(R_{alg} = Q \cdot CR^2 \cdot I\)，精确复刻了平台对流量的分配逻辑。\(CR^2\)
+                        确保完播率提升带来的流量增益远大于互动率提升。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{alg} = Q \cdot CR^2 \cdot I\)</div>
+                </div>
+
             </div>
 
-            <div class="theory-card">
-                <h3>情绪唤醒理论 (Duffy)</h3>
-                <div class="desc"><strong>核心原理：</strong>情绪唤醒度（生理激活水平）与行为反应呈倒U型关系。适度的唤醒（感动、揪心）会促进分享和评论；但极度过度的唤醒（极度愤怒、绝望）会导致用户为了自我保护而回避（关闭视频）。因此，互动率需要一个S型饱和函数来建模。</div>
-                <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情感动能 \(Q\) 映射到互动概率，保留极端情况下的最低互动（\(Q \to -\infty\) 时 \(I \to 0^+\)）。</div>
-                <div class="formula-ref">📍 对应公式：\(I = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}\)</div>
-            </div>
+            <hr class="hr-light">
 
-            <div class="theory-card">
-                <h3>完成效应 / 闭合需求</h3>
-                <div class="desc"><strong>核心原理：</strong>格式塔心理学原则。人类大脑厌恶未完成的任务（蔡格尼克效应）。连载中的作品（\(F\) 较小）会持续产生心理张力，而已完结的作品（\(F\) 较大）提供闭合感，这种闭合感会让观众更愿意在事后讨论和推荐作品，形成长尾IP价值。</div>
-                <div class="usage">用于完结程度 \(F\)，已完结作品更易引发读者回顾和讨论，提升IP自带流量 \(R_{ip} = \mu K F\)。</div>
-                <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+            <p style="font-size:0.95rem; color:#475569; text-align:center;">
+                ✅ 以上理论共同构成完整模型的学科基础
+            </p>
+
+            <div class="footer-meta">
+                📚 详细解释 · 配合主模型推导文档使用
             </div>
 
         </div>
-
-        <!-- ==================== 传播学 / 社会学 ==================== -->
-        <h2>📢 传播学与社会学</h2>
-        <div class="theory-grid">
-
-            <div class="theory-card">
-                <h3>媒介丰富度理论 (Daft &amp; Lengel)</h3>
-                <div class="desc"><strong>核心原理：</strong>不同媒介传递信息的能力不同。面谈（音视频）比书面文件（纯文字）更“丰富”，因为它包含非语言信号、语气和即时反馈。AI短剧结合了视觉、音频和文本，信息丰富度远高于纯文本，因此能更快、更强烈地唤起观众的情感共鸣。</div>
-                <div class="usage">用于视觉放大系数 \(\delta\)，解释为什么AI视觉化（多模态）会呈倍数级放大“刀子”的冲击力。\(\delta > 1\)，通常取 5~10。</div>
-                <div class="formula-ref">📍 对应公式：\(P_v = \delta \cdot P\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>社会传染模型 (Rogers)</h3>
-                <div class="desc"><strong>核心原理：</strong>创新扩散理论的变种。热度和观点通过社会网络像传染病一样传播。一部AI短剧的受欢迎度（\(H\)）本身就是一种“病原体”，它能通过口碑、推荐和社交媒体感染新的观众。这种传播受限于潜在观众的总量（上限1），呈现出逻辑斯蒂增长的特征。</div>
-                <div class="usage">用于知名度动态方程 \(\frac{dK}{dt} = \rho H(t)(1-K)\)，热度反哺知名度的增长过程，形成“爆款带动IP升温”的正反馈闭环。</div>
-                <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K)\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>网络效应</h3>
-                <div class="desc"><strong>核心原理：</strong>产品或服务的价值随着使用人数的增加而增加。在AI短剧场景中，一个剧集越火，平台算法越会推荐它，越多的观众看到它，它就越火。这是一个典型的正反馈飞轮。模型中的知名度 \(K\) 动态演化捕捉了这个特性。</div>
-                <div class="usage">支撑知名度动态中的逻辑斯蒂增长项，使模型能模拟“爆款反哺IP”的正反馈闭环，即 \(\frac{dK}{dt} = \rho H(t)(1-K)\) 中的增长机制。</div>
-                <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho H(t)(1-K)\) 中的正反馈项</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>品牌资产模型 (Aaker)</h3>
-                <div class="desc"><strong>核心原理：</strong>品牌资产是由品牌知名度、品牌联想、感知质量和品牌忠诚度构成的。一个知名的IP（如《斗罗大陆》）本身就是一个强大的品牌。这种品牌资产是AI短剧的“初始资本”，即使用户没看过短剧，也会因为IP本身而点击观看。</div>
-                <div class="usage">用于IP自带流量 \(R_{ip} = \mu K F\)，知名度和完结度直接转化为搜索流量和情怀播放，这部分流量不受算法完播率影响。</div>
-                <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>品牌延伸理论 (Aaker &amp; Keller)</h3>
-                <div class="desc"><strong>核心原理：</strong>消费者会将对原始品牌（母品牌）的态度迁移到其延伸产品（子品牌）上。当一部知名小说（母品牌）被改编成AI短剧（子品牌）时，粉丝的好感度会直接“下载”到短剧上，降低短剧的冷启动成本。</div>
-                <div class="usage">支撑 \(R_{ip}\) 的合理性，\(\mu\) 即为母品牌（IP）到子品牌（短剧）的迁移系数，范围通常为 \(0.5 \sim 2.0\)。</div>
-                <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\) 中的 \(\mu\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>搜索红利</h3>
-                <div class="desc"><strong>核心原理：</strong>在各大视频和社交平台上，搜索依然是重要的流量入口。知名IP天然带有搜索热词，用户会主动通过搜索来查找相关短剧。这种流量不需要算法推荐，是硬通货，确保了短剧即使算法表现一般也能有保底播放量。</div>
-                <div class="usage">独立于 \(R_{alg}\) 的保底流量来源，体现在 \(R_{ip} = \mu K F\) 对平台搜索场景的覆盖，解释了为何知名IP短剧即使质量平庸也能有基础播放。</div>
-                <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>信息加工容量理论</h3>
-                <div class="desc"><strong>核心原理：</strong>人类的认知加工能力是有限的。短视频的精髓在于“短”，因为短意味着信息量少，加工成本低。如果AI短剧太长（\(L\) 过大），观众的大脑需要处理过多的情节、人物和情感信息，导致认知超载，进而引发逃离行为。</div>
-                <div class="usage">用于变量 \(L\) 对认知负荷的基础影响，是时长惩罚项 \(T(L) = \nu (L - L_0)^2\) 存在的底层逻辑之一。</div>
-                <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L\) 来源</div>
-            </div>
-
-        </div>
-
-        <!-- ==================== 平台算法相关 ==================== -->
-        <h2>📱 平台与算法</h2>
-        <div class="theory-grid">
-
-            <div class="theory-card">
-                <h3>注意力分配理论</h3>
-                <div class="desc"><strong>核心原理：</strong>在信息过载的时代，用户的注意力是最稀缺的资源。平台的核心算法本质上是一个“注意力分配器”。完播率和互动率是衡量一个内容吸引注意力的关键指标。如果内容无法在短时间内抢占用户注意力，就会被算法抛弃。</div>
-                <div class="usage">用于完播率 \(CR\) 模型的基础假设，将弃剧概率定义为“冲击”与“耐受”的博弈结果：\(\rho = \frac{\eta_0 \delta P \sigma_2}{\xi \tau w L}\)。</div>
-                <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w L}\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>冲击-耐受博弈</h3>
-                <div class="desc"><strong>核心原理：</strong>用户在观看视频时，大脑处于一个动态博弈状态：内容不断提供“冲击”（情感、视觉、信息），而用户的“耐受度”（注意力剩余、兴趣度）不断被消耗。当“冲击”超过“耐受”时（内容太无聊或太刺激），用户就会滑动离开。</div>
-                <div class="usage">构造弃剧概率 \(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w L}\)，耐受度由共情 \(\xi\)、时机 \(\tau\)、文笔 \(w\)、已知防御 \(\sigma_2\) 及篇幅 \(L\) 共同决定，直观地描述了用户与内容之间的博弈关系。</div>
-                <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w L}\)</div>
-            </div>
-
-            <div class="theory-card">
-                <h3>完播率² × 互动率 范式</h3>
-                <div class="desc"><strong>核心原理：</strong>这是通过对抖音、快手等短视频平台算法进行反向工程得到的经验公式。平台认为“留住人”（完播率）的权重远高于“让人动”（互动率）。因此，完播率被赋予平方权重，以放大其在推荐系统中的作用力。</div>
-                <div class="usage">用于算法推荐热度 \(R_{alg} = Q \cdot CR^2 \cdot I\)，精确复刻了平台对流量的分配逻辑。\(CR^2\) 确保完播率提升带来的流量增益远大于互动率提升。</div>
-                <div class="formula-ref">📍 对应公式：\(R_{alg} = Q \cdot CR^2 \cdot I\)</div>
-            </div>
-
-        </div>
-
-        <hr class="hr-light">
-
-        <p style="font-size:0.95rem; color:#475569; text-align:center;">
-            ✅ 以上理论共同构成完整模型的学科基础
-        </p>
-
-        <div class="footer-meta">
-            📚 详细解释 · 配合主模型推导文档使用
-        </div>
-
-    </div>
 </body>
 
 </html>
