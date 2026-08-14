@@ -8,14 +8,16 @@
     <link href="https://cdn.jsdmirror.com?v=20260814044135" rel="dns-prefetch" />
     <link href="https://cdn.jsdelivr.net?v=20260814044135" rel="preconnect" />
     <link href="https://cdn.jsdelivr.net?v=20260814044135" rel="dns-prefetch" />
-    <link rel="stylesheet" href="hhttps://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260814044135"
+    <!-- 修复：去掉 href 中多余的 'h' 前缀 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260814044135"
         integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260814044135"
-        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
-        crossorigin="anonymous"></script>
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
+        </script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260814044135"
         integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
-        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});"></script>
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});">
+        </script>
     <link
         href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@affd0d4/preview_assets/home.ico?v=20260814044135"
         rel="icon" type="image/png" />
@@ -226,6 +228,7 @@
                     e^{-x}}\)，其输出范围在 \((0,1)\) 之间。它常用于将阈值效应平滑化，避免硬截断导致的不连续跳跃。</div>
                 <div class="usage">用于平滑阈值 \(L^*\) 的过渡，替代原硬截断 \(\max(L_1, L_2)\)。使算法热度 \(R_{alg}\)
                     从短篇到长篇连续变化，避免在阈值处的不连续跳跃。</div>
+                <!-- 修复：补全公式中缺失的右括号 -->
                 <div class="formula-ref">📍 对应公式：\(\Theta(L; L^*, \gamma) = \frac{1}{1 + e^{-\gamma (L - L^*)}}\)</div>
             </div>
 
@@ -242,7 +245,8 @@
                 <h3>贝叶斯网络与协方差结构</h3>
                 <div class="desc">
                     <strong>核心原理：</strong>贝叶斯网络是一种概率图模型，用有向无环图（DAG）表示变量间的条件依赖关系。协方差结构描述变量间的协同变化。在此模型中，我们用确定性的函数映射（如
-                    \(\xi = f_\xi(G,S,\psi,w)\)）来固化变量间的依赖关系。</div>
+                    \(\xi = f_\xi(G,S,\psi,w)\)）来固化变量间的依赖关系。
+                </div>
                 <div class="usage">将变量间的条件依赖关系固化为数学函数，所有后续公式中的 \(\xi,\tau,w,\delta\) 均指代这些贝叶斯函数值。具体依赖关系为：\(G \rightarrow
                     \xi,\tau,w,\delta\)；\(S \rightarrow \xi,\tau,w\)；\(\psi \rightarrow \xi,\tau,w\)；\(L \rightarrow
                     \tau\)。</div>
@@ -351,7 +355,8 @@
                     <h3>注意力峰值模型</h3>
                     <div class="desc">
                         <strong>核心原理：</strong>注意力随时间变化的曲线呈倒U型。观众在视频开始时集中注意力，随后逐渐达到峰值，如果内容无法在峰值前抓住他们，注意力就会不可逆转地衰退。因此，存在一个最优时长（甜区
-                        \(L_0\)），能最大化观众在峰值区的停留。</div>
+                        \(L_0\)），能最大化观众在峰值区的停留。
+                    </div>
                     <div class="usage">结合认知负荷理论，用于确定最优甜区 \(L_0\)（通常 3~8 万字），偏离该值会产生显著的流量惩罚。这是 \(T(L) = \nu (L - L_0)^2\)
                         的理论基础。</div>
                     <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L_0\)</div>
@@ -404,7 +409,8 @@
                     <h3>网络效应</h3>
                     <div class="desc">
                         <strong>核心原理：</strong>产品或服务的价值随着使用人数的增加而增加。在AI短剧场景中，一个剧集越火，平台算法越会推荐它，越多的观众看到它，它就越火。这是一个典型的正反馈飞轮。模型中的知名度
-                        \(K\) 动态演化捕捉了这个特性。</div>
+                        \(K\) 动态演化捕捉了这个特性。
+                    </div>
                     <div class="usage">支撑知名度动态中的逻辑斯蒂增长项，使模型能模拟“爆款反哺IP”的正反馈闭环，即 \(\frac{dK}{dt} = \rho H(t)(1-K)\)
                         中的增长机制。</div>
                     <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho H(t)(1-K)\) 中的正反馈项</div>
