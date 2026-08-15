@@ -33,7 +33,6 @@ def generate_html(commits):
     repo = os.environ.get('GITHUB_REPOSITORY', 'DyWriteCode/DyWriteCode.github.io')
     json_data = json.dumps(commits, ensure_ascii=False)
 
-    # 此 CSS 完全复制自原始 digest.txt，并确保 .author-tag 和 .avatar 样式完整
     html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -85,33 +84,33 @@ def generate_html(commits):
         tr:last-child td {{ border-bottom: none; }}
         tr.hidden {{ display: none; }}
         tr.current-match td {{ background: #fef9e7 !important; outline: 2px solid #facc15; outline-offset: -2px; }}
-        /* 双击行跳转 */
         tr[data-hash] {{ cursor: pointer; }}
         tr[data-hash]:hover td {{ background: #f1f5f9; }}
         .highlight {{ background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }}
-        /* ----- 作者标签样式（原始完整定义） ----- */
+
+        /* ===== 作者标签样式（添加 !important 确保生效） ===== */
         .author-tag {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 12px 4px 8px;
-            border-radius: 40px;
-            font-weight: 500;
-            font-size: 13px;
-            background: #eef2f6;
-            color: #1e293b;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 4px 12px 4px 8px !important;
+            border-radius: 40px !important;
+            font-weight: 500 !important;
+            font-size: 13px !important;
+            background: #eef2f6 !important;
+            color: #1e293b !important;
         }}
         .author-tag .avatar {{
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: #fff;
-            flex-shrink: 0;
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 50% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #fff !important;
+            flex-shrink: 0 !important;
         }}
         .hash {{ font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f1f5f9; padding: 2px 8px; border-radius: 12px; font-size: 13px; color: #1e293b; letter-spacing: 0.2px; }}
         .date {{ color: #475569; font-size: 13px; white-space: nowrap; }}
@@ -190,7 +189,7 @@ def generate_html(commits):
         return color;
     }}
 
-    // ---- 渲染表格（保证作者列显示头像+名字） ----
+    // ---- 渲染表格 ----
     function renderTable(data) {{
         if (data.length === 0) {{ tbody.innerHTML = ''; noResult.style.display = 'block'; totalCount.textContent = '共 0 条'; return; }}
         noResult.style.display = 'none';
@@ -199,9 +198,11 @@ def generate_html(commits):
         data.forEach(item => {{
             const color = getAuthorColor(item.author);
             const initial = item.author.charAt(0).toUpperCase();
+            // 生成带头像的作者列
+            const authorHtml = `<span class="author-tag"><span class="avatar" style="background:${{color}};">${{initial}}</span>${{item.author}}</span>`;
             html += `<tr data-hash="${{item.hash}}" data-author="${{item.author}}" data-date="${{item.date}}" data-subject="${{item.subject}}">
                 <td><span class="hash">${{item.hash}}</span></td>
-                <td><span class="author-tag"><span class="avatar" style="background:${{color}};">${{initial}}</span>${{item.author}}</span></td>
+                <td>${{authorHtml}}</td>
                 <td class="date">${{item.date}}</td>
                 <td class="subject">${{item.subject}}</td>
             </tr>`;
@@ -211,7 +212,7 @@ def generate_html(commits):
 
     renderTable(commitData);
 
-    // ---- 双击行跳转 GitHub Commit ----
+    // ---- 双击跳转 ----
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
         if (!tr || tr.classList.contains('hidden')) return;
@@ -240,7 +241,7 @@ def generate_html(commits):
         return {{ field: null, value: trimmed }};
     }}
 
-    // ---- 高亮指定字段 ----
+    // ---- 高亮 ----
     function highlightField(row, field, query) {{
         const cells = row.querySelectorAll('td');
         cells.forEach(cell => {{
@@ -267,7 +268,6 @@ def generate_html(commits):
     }}
 
     let currentMatches = [], currentIndex = -1;
-    // ---- 执行搜索 ----
     function performSearch() {{
         const {{ field, value: query }} = parseSearch(searchInput.value);
         const rows = tbody.querySelectorAll('tr');
@@ -341,7 +341,6 @@ def generate_html(commits):
         noResult.style.display = visible === 0 ? 'block' : 'none';
     }}
 
-    // ---- 导航 ----
     function navigate(delta) {{
         if (currentMatches.length === 0) return;
         if (currentIndex >= 0) currentMatches[currentIndex].classList.remove('current-match');
@@ -351,7 +350,6 @@ def generate_html(commits):
         matchInfo.textContent = `${{currentIndex+1}} / ${{currentMatches.length}}`;
     }}
 
-    // ---- 事件绑定 ----
     searchInput.addEventListener('input', performSearch);
     searchInput.addEventListener('keydown', e => {{
         if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }}
