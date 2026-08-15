@@ -20,7 +20,7 @@ def get_commit_data():
             parts = line.split('|', 3)
             if len(parts) == 4:
                 commits.append({
-                    'hash': parts[0][:7],   # 短哈希
+                    'hash': parts[0][:7],
                     'author': parts[1],
                     'date': parts[2],
                     'subject': parts[3]
@@ -31,15 +31,9 @@ def get_commit_data():
         return []
 
 def generate_html(commits):
-    """生成包含提交历史的 HTML 文件"""
-    
-    # 从环境变量获取仓库名，若不存在则使用默认
     repo = os.environ.get('GITHUB_REPOSITORY', 'DyWriteCode/DyWriteCode.github.io')
-    
-    # 将 commits 转换为 JSON 字符串（安全转义）
     json_data = json.dumps(commits, ensure_ascii=False)
-    
-    # HTML 模板（完整内联，避免额外文件）
+
     html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -54,12 +48,9 @@ def generate_html(commits):
         .header h1 {{ font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }}
         .header h1 small {{ font-size: 16px; font-weight: 400; color: #6b7a8f; }}
         .commit-count {{ background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }}
-        /* ----- 搜索框固定 ----- */
+
+        /* ---- 搜索框（保持原风格，增加固定） ---- */
         .search-area {{
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: #f8fafc;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -68,11 +59,14 @@ def generate_html(commits):
             padding: 6px 16px 6px 20px;
             border-radius: 60px;
             border: 1px solid #e2e8f0;
+            background: #ffffff;
             transition: border-color 0.2s, box-shadow 0.2s;
-            backdrop-filter: blur(4px);
-            border-bottom: 1px solid #d1d9e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }}
-        .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }}
+        .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12), 0 2px 8px rgba(0,0,0,0.04); }}
         .search-area .search-icon {{ font-size: 18px; color: #94a3b8; flex-shrink: 0; }}
         .search-area input {{ flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 16px; outline: none; color: #0f172a; min-width: 160px; }}
         .search-area input::placeholder {{ color: #94a3b8; font-weight: 400; }}
@@ -84,6 +78,7 @@ def generate_html(commits):
         .search-meta .clear-btn {{ background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }}
         .search-meta .clear-btn.visible {{ display: inline-block; }}
         .search-meta .clear-btn:hover {{ color: #475569; }}
+
         .table-wrap {{ overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }}
         th {{ text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }}
@@ -91,7 +86,6 @@ def generate_html(commits):
         tr:last-child td {{ border-bottom: none; }}
         tr.hidden {{ display: none; }}
         tr.current-match td {{ background: #fef9e7 !important; outline: 2px solid #facc15; outline-offset: -2px; }}
-        /* 双击行时鼠标样式 */
         tr[data-hash] {{ cursor: pointer; }}
         tr[data-hash]:hover td {{ background: #f1f5f9; }}
         .highlight {{ background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }}
@@ -136,8 +130,6 @@ def generate_html(commits):
 (function() {{
     'use strict';
     const commitData = {json_data};
-
-    // ----- 仓库名（用于构建 Commit 链接）-----
     const repo = '{repo}';
 
     const tbody = document.getElementById('commitBody');
@@ -180,20 +172,16 @@ def generate_html(commits):
 
     renderTable(commitData);
 
-    // ----- 双击行跳转到 GitHub Commit -----
+    // 双击跳转
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
-        if (!tr) return;
-        if (tr.classList.contains('hidden')) return;
+        if (!tr || tr.classList.contains('hidden')) return;
         const hash = tr.dataset.hash;
-        if (hash) {{
-            window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
-        }}
+        if (hash) window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
     }});
 
-    // ----- 增强搜索：解析前缀 -----
+    // 搜索解析
     function parseSearch(input) {{
-        // 支持前缀: hash:, h:, author:, a:, date:, d:, subject:, s:
         const trimmed = input.trim();
         if (!trimmed) return {{ field: null, value: null }};
         const lower = trimmed.toLowerCase();
@@ -213,63 +201,45 @@ def generate_html(commits):
         return {{ field: null, value: trimmed }};
     }}
 
-    // 高亮特定字段（只高亮指定字段，若字段为 null 则高亮所有）
     function highlightField(row, field, query) {{
-        // 清除之前的高亮
+        // 清除已有高亮
         const cells = row.querySelectorAll('td');
         cells.forEach(cell => {{
             const text = cell.textContent;
-            // 移除已有高亮
-            const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-            cell.innerHTML = newHtml;
+            cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
         }});
         if (!query) return;
-
         const escapeRegExp = str => str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&');
         const regex = new RegExp(escapeRegExp(query), 'gi');
-
         if (field) {{
-            // 只高亮指定列
-            const colMap = {{ hash: 1, author: 2, date: 3, subject: 4 }};
+            const colMap = {{ hash:1, author:2, date:3, subject:4 }};
             const idx = colMap[field];
             if (!idx) return;
             const cell = row.querySelector(`td:nth-child(${{idx}})`);
             if (!cell) return;
             const text = cell.textContent;
-            if (regex.test(text)) {{
-                cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
-            }}
+            if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
         }} else {{
-            // 全局高亮（所有列）
             const cells = row.querySelectorAll('td');
             cells.forEach(cell => {{
                 const text = cell.textContent;
-                if (regex.test(text)) {{
-                    cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
-                }}
+                if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
             }});
         }}
     }}
 
     let currentMatches = [], currentIndex = -1;
-    function escapeRegExp(str) {{ return str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&'); }}
-
     function performSearch() {{
-        const rawQuery = searchInput.value;
-        const {{ field, value: query }} = parseSearch(rawQuery);
-
+        const {{ field, value: query }} = parseSearch(searchInput.value);
         const rows = tbody.querySelectorAll('tr');
 
-        // 如果无查询，则显示所有行并清除高亮
         if (!query) {{
             rows.forEach(row => {{
                 row.classList.remove('hidden', 'current-match');
-                // 移除高亮
                 const cells = row.querySelectorAll('td');
                 cells.forEach(cell => {{
                     const text = cell.textContent;
-                    const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-                    cell.innerHTML = newHtml;
+                    cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
                 }});
             }});
             currentMatches = []; currentIndex = -1;
@@ -282,35 +252,28 @@ def generate_html(commits):
         }}
 
         clearBtn.classList.add('visible');
-
         const regex = new RegExp(escapeRegExp(query), 'gi');
         let matchedRows = [];
 
         rows.forEach(row => {{
-            // 先清除高亮和隐藏状态
             row.classList.remove('hidden', 'current-match');
             const cells = row.querySelectorAll('td');
             cells.forEach(cell => {{
                 const text = cell.textContent;
-                const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-                cell.innerHTML = newHtml;
+                cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
             }});
 
             let match = false;
             if (field) {{
-                // 限定字段搜索
-                const value = row.dataset[field]; // dataset 对应 data-* 属性
+                const value = row.dataset[field];
                 if (value && value.toLowerCase().includes(query.toLowerCase())) {{
                     match = true;
-                    // 高亮该字段
                     highlightField(row, field, query);
                 }}
             }} else {{
-                // 全局搜索
                 const text = (row.dataset.hash + ' ' + row.dataset.author + ' ' + row.dataset.date + ' ' + row.dataset.subject).toLowerCase();
                 if (text.includes(query.toLowerCase())) {{
                     match = true;
-                    // 高亮所有字段
                     highlightField(row, null, query);
                 }}
             }}
@@ -335,7 +298,6 @@ def generate_html(commits):
             nextBtn.disabled = true;
         }}
         matchInfo.textContent = currentMatches.length > 0 ? `1 / ${{currentMatches.length}}` : '0 / 0';
-
         const visible = rows.length - document.querySelectorAll('tr.hidden').length;
         totalCount.textContent = `共 ${{visible}} 条`;
         noResult.style.display = visible === 0 ? 'block' : 'none';
@@ -361,14 +323,13 @@ def generate_html(commits):
 </script>
 </body>
 </html>'''
-    
-    # 写入文件
+
     with open('commit-history.html', 'w', encoding='utf-8') as f:
         f.write(html_template)
-    
+
     print(f"✅ commit-history.html 已生成，包含 {len(commits)} 条提交记录")
-    print(f"📌 仓库名: {repo}，双击行将跳转至对应的 GitHub Commit")
-    print("🔍 搜索增强：支持 hash:/h:, author:/a:, date:/d:, subject:/s: 前缀，无前缀则全局搜索")
+    print(f"📌 仓库名: {repo}，双击行跳转至 GitHub Commit")
+    print("🔍 搜索增强: hash:/h:, author:/a:, date:/d:, subject:/s: 前缀，无前缀全局搜索")
 
 if __name__ == '__main__':
     commits = get_commit_data()
