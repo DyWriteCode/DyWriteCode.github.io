@@ -7,7 +7,6 @@ import os
 import sys
 
 def get_commit_data():
-    """通过 git log 获取所有提交记录"""
     try:
         output = subprocess.check_output(
             ['git', 'log', '--pretty=format:%H|%an|%ad|%s', '--date=iso'],
@@ -34,6 +33,7 @@ def generate_html(commits):
     repo = os.environ.get('GITHUB_REPOSITORY', 'DyWriteCode/DyWriteCode.github.io')
     json_data = json.dumps(commits, ensure_ascii=False)
 
+    # 以下 CSS 完全复制自原始 digest.txt 中的 commit-history.html，仅增加了 .search-area 的 sticky 属性
     html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -48,25 +48,23 @@ def generate_html(commits):
         .header h1 {{ font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }}
         .header h1 small {{ font-size: 16px; font-weight: 400; color: #6b7a8f; }}
         .commit-count {{ background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }}
-
-        /* ---- 搜索框（保持原风格，增加固定） ---- */
+        /* 搜索框：原样式 + sticky 固定 */
         .search-area {{
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 22px;
+            background: #f8fafc;
             padding: 6px 16px 6px 20px;
             border-radius: 60px;
             border: 1px solid #e2e8f0;
-            background: #ffffff;
             transition: border-color 0.2s, box-shadow 0.2s;
             position: sticky;
             top: 0;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }}
-        .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12), 0 2px 8px rgba(0,0,0,0.04); }}
+        .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }}
         .search-area .search-icon {{ font-size: 18px; color: #94a3b8; flex-shrink: 0; }}
         .search-area input {{ flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 16px; outline: none; color: #0f172a; min-width: 160px; }}
         .search-area input::placeholder {{ color: #94a3b8; font-weight: 400; }}
@@ -78,7 +76,6 @@ def generate_html(commits):
         .search-meta .clear-btn {{ background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }}
         .search-meta .clear-btn.visible {{ display: inline-block; }}
         .search-meta .clear-btn:hover {{ color: #475569; }}
-
         .table-wrap {{ overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }}
         th {{ text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }}
@@ -180,7 +177,7 @@ def generate_html(commits):
         if (hash) window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
     }});
 
-    // 搜索解析
+    // 搜索解析（支持前缀）
     function parseSearch(input) {{
         const trimmed = input.trim();
         if (!trimmed) return {{ field: null, value: null }};
