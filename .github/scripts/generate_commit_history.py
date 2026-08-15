@@ -116,7 +116,7 @@ def generate_html(commits):
     </div>
     <div class="search-area">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="搜索提交哈希、作者、备注或日期…" autofocus>
+        <input type="text" id="searchInput" placeholder="搜索提交哈希、作者、备注或日期… (支持 hash:xxx, author:xxx, subject:xxx, date:xxx)" autofocus>
         <div class="search-meta">
             <span class="match-info" id="matchInfo">0 / 0</span>
             <button class="nav-btn" id="prevBtn" title="上一个匹配 (Shift+Enter)">↑</button>
@@ -184,7 +184,6 @@ def generate_html(commits):
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
         if (!tr) return;
-        // 如果该行被搜索隐藏，则不跳转
         if (tr.classList.contains('hidden')) return;
         const hash = tr.dataset.hash;
         if (hash) {{
@@ -192,50 +191,156 @@ def generate_html(commits):
         }}
     }});
 
-    let currentMatches = [], currentIndex = -1;
-    function escapeRegExp(str) {{ return str.replace('/[.*+?^${{}}()|[\]\\\\]/g', '\\\\$&'); }}
-    function highlightField(row, field, query) {{
-        const cell = row.querySelector(`td:nth-child(${{ {{hash:1,author:2,date:3,subject:4}}[field] || 4 }})`);
-        if (!cell) return;
-        const text = cell.textContent;
-        if (!text) return;
-        const regex = new RegExp(escapeRegExp(query), 'gi');
-        if (!regex.test(text)) return;
-        cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
-    }}
-    function performSearch() {{
-        const query = searchInput.value.trim();
-        const rows = tbody.querySelectorAll('tr');
-        if (!query) {{
-            rows.forEach(row => row.classList.remove('hidden','current-match'));
-            rows.forEach(row => row.querySelectorAll('.highlight').forEach(el => {{ const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); }}));
-            currentMatches = []; currentIndex = -1; matchInfo.textContent = '0 / 0'; prevBtn.disabled = true; nextBtn.disabled = true; clearBtn.classList.remove('visible');
-            totalCount.textContent = `共 ${{commitData.length}} 条`; noResult.style.display = 'none'; return;
+    // ----- 增强搜索：解析前缀 -----
+    function parseSearch(input) {{
+        // 支持前缀: hash:, h:, author:, a:, date:, d:, subject:, s:
+        const trimmed = input.trim();
+        if (!trimmed) return {{ field: null, value: null }};
+        const lower = trimmed.toLowerCase();
+        const prefixMap = {{
+            'hash:': 'hash', 'h:': 'hash',
+            'author:': 'author', 'a:': 'author',
+            'date:': 'date', 'd:': 'date',
+            'subject:': 'subject', 's:': 'subject'
+        }};
+        for (const [key, field] of Object.entries(prefixMap)) {{
+            if (lower.startsWith(key)) {{
+                const value = trimmed.slice(key.length).trim();
+                if (value) return {{ field, value }};
+                break;
+            }}
         }}
-        clearBtn.classList.add('visible');
-        const regex = new RegExp(escapeRegExp(query), 'gi');
-        let matchCount = 0, matchedRows = [];
-        rows.forEach(row => {{
-            row.querySelectorAll('.highlight').forEach(el => {{ const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); }});
-            const text = (row.dataset.hash+' '+row.dataset.author+' '+row.dataset.date+' '+row.dataset.subject).toLowerCase();
-            if (text.includes(query.toLowerCase())) {{
-                row.classList.remove('hidden');
-                matchedRows.push(row);
-                matchCount++;
-                highlightField(row, 'hash', query);
-                highlightField(row, 'author', query);
-                highlightField(row, 'date', query);
-                highlightField(row, 'subject', query);
-            }} else row.classList.add('hidden');
-            row.classList.remove('current-match');
+        return {{ field: null, value: trimmed }};
+    }}
+
+    // 高亮特定字段（只高亮指定字段，若字段为 null 则高亮所有）
+    function highlightField(row, field, query) {{
+        // 清除之前的高亮
+        const cells = row.querySelectorAll('td');
+        cells.forEach(cell => {{
+            const text = cell.textContent;
+            // 移除已有高亮
+            const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
+            cell.innerHTML = newHtml;
         }});
-        currentMatches = matchedRows; currentIndex = -1;
-        if (currentMatches.length > 0) {{ currentIndex = 0; currentMatches[0].classList.add('current-match'); currentMatches[0].scrollIntoView({{ block: 'nearest', behavior: 'smooth' }}); prevBtn.disabled = false; nextBtn.disabled = false; }} else {{ prevBtn.disabled = true; nextBtn.disabled = true; }}
+        if (!query) return;
+
+        const escapeRegExp = str => str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&');
+        const regex = new RegExp(escapeRegExp(query), 'gi');
+
+        if (field) {{
+            // 只高亮指定列
+            const colMap = {{ hash: 1, author: 2, date: 3, subject: 4 }};
+            const idx = colMap[field];
+            if (!idx) return;
+            const cell = row.querySelector(`td:nth-child(${{idx}})`);
+            if (!cell) return;
+            const text = cell.textContent;
+            if (regex.test(text)) {{
+                cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+            }}
+        }} else {{
+            // 全局高亮（所有列）
+            const cells = row.querySelectorAll('td');
+            cells.forEach(cell => {{
+                const text = cell.textContent;
+                if (regex.test(text)) {{
+                    cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+                }}
+            }});
+        }}
+    }}
+
+    let currentMatches = [], currentIndex = -1;
+    function escapeRegExp(str) {{ return str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&'); }}
+
+    function performSearch() {{
+        const rawQuery = searchInput.value;
+        const {{ field, value: query }} = parseSearch(rawQuery);
+
+        const rows = tbody.querySelectorAll('tr');
+
+        // 如果无查询，则显示所有行并清除高亮
+        if (!query) {{
+            rows.forEach(row => {{
+                row.classList.remove('hidden', 'current-match');
+                // 移除高亮
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => {{
+                    const text = cell.textContent;
+                    const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
+                    cell.innerHTML = newHtml;
+                }});
+            }});
+            currentMatches = []; currentIndex = -1;
+            matchInfo.textContent = '0 / 0';
+            prevBtn.disabled = true; nextBtn.disabled = true;
+            clearBtn.classList.remove('visible');
+            totalCount.textContent = `共 ${{commitData.length}} 条`;
+            noResult.style.display = 'none';
+            return;
+        }}
+
+        clearBtn.classList.add('visible');
+
+        const regex = new RegExp(escapeRegExp(query), 'gi');
+        let matchedRows = [];
+
+        rows.forEach(row => {{
+            // 先清除高亮和隐藏状态
+            row.classList.remove('hidden', 'current-match');
+            const cells = row.querySelectorAll('td');
+            cells.forEach(cell => {{
+                const text = cell.textContent;
+                const newHtml = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
+                cell.innerHTML = newHtml;
+            }});
+
+            let match = false;
+            if (field) {{
+                // 限定字段搜索
+                const value = row.dataset[field]; // dataset 对应 data-* 属性
+                if (value && value.toLowerCase().includes(query.toLowerCase())) {{
+                    match = true;
+                    // 高亮该字段
+                    highlightField(row, field, query);
+                }}
+            }} else {{
+                // 全局搜索
+                const text = (row.dataset.hash + ' ' + row.dataset.author + ' ' + row.dataset.date + ' ' + row.dataset.subject).toLowerCase();
+                if (text.includes(query.toLowerCase())) {{
+                    match = true;
+                    // 高亮所有字段
+                    highlightField(row, null, query);
+                }}
+            }}
+
+            if (match) {{
+                matchedRows.push(row);
+            }} else {{
+                row.classList.add('hidden');
+            }}
+        }});
+
+        currentMatches = matchedRows;
+        currentIndex = -1;
+        if (currentMatches.length > 0) {{
+            currentIndex = 0;
+            currentMatches[0].classList.add('current-match');
+            currentMatches[0].scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+        }} else {{
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+        }}
         matchInfo.textContent = currentMatches.length > 0 ? `1 / ${{currentMatches.length}}` : '0 / 0';
+
         const visible = rows.length - document.querySelectorAll('tr.hidden').length;
         totalCount.textContent = `共 ${{visible}} 条`;
         noResult.style.display = visible === 0 ? 'block' : 'none';
     }}
+
     function navigate(delta) {{
         if (currentMatches.length === 0) return;
         if (currentIndex >= 0) currentMatches[currentIndex].classList.remove('current-match');
@@ -244,6 +349,7 @@ def generate_html(commits):
         currentMatches[currentIndex].scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
         matchInfo.textContent = `${{currentIndex+1}} / ${{currentMatches.length}}`;
     }}
+
     searchInput.addEventListener('input', performSearch);
     searchInput.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }} else if (e.key === 'Enter' && e.shiftKey) {{ e.preventDefault(); navigate(-1); }} }});
     prevBtn.addEventListener('click', () => navigate(-1));
@@ -262,6 +368,7 @@ def generate_html(commits):
     
     print(f"✅ commit-history.html 已生成，包含 {len(commits)} 条提交记录")
     print(f"📌 仓库名: {repo}，双击行将跳转至对应的 GitHub Commit")
+    print("🔍 搜索增强：支持 hash:/h:, author:/a:, date:/d:, subject:/s: 前缀，无前缀则全局搜索")
 
 if __name__ == '__main__':
     commits = get_commit_data()
