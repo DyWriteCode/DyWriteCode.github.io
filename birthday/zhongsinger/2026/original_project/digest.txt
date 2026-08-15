@@ -90,6 +90,7 @@ FILE: package.json
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deepgram/sdk": "^5.8.0",
     "@varlet/ui": "^1.24.1",
     "animate.css": "^4.1.1",
     "vue": "^3.2.25",
@@ -136,6 +137,7 @@ VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
 VITE_ROLES_PATH=options/demo/roles.json
+VITE_DEEPGRAM_API_KEY=063998309ee3b9ff33a6cb2ad09452f11052c07e
 
 
 ================================================
@@ -146,6 +148,7 @@ VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
 VITE_ROLES_PATH=options/demo/roles.json
+VITE_DEEPGRAM_API_KEY=063998309ee3b9ff33a6cb2ad09452f11052c07e
 
 
 ================================================
@@ -156,6 +159,7 @@ VITE_BASE_URL=/
 VITE_CHAT_OPTIONS_PATH=options/demo/chat.json
 VITE_AVATARS_PATH=options/demo/avatars.json
 VITE_ROLES_PATH=options/demo/roles.json
+VITE_DEEPGRAM_API_KEY=063998309ee3b9ff33a6cb2ad09452f11052c07e
 
 
 ================================================
@@ -2195,6 +2199,7 @@ export default {
       this.stopUserRecording()
 
       const text = result.text.trim()
+      const duration = result.duration || 0  // 接收时长
 
       // 始终构建语音消息（无论是否有文字）
       let audioUrl = null
@@ -2207,8 +2212,9 @@ export default {
 
       const voiceMsg = {
         src: audioUrl,
-        alt: text,           // 可能为空，但语音播放不受影响
+        alt: text,
         delay: 0,
+        duration: duration,  // 将时长传递给 Voice 组件
       }
 
       const quoteId = this.quoteMsg ? this.quoteMsg.id : null
@@ -2218,18 +2224,16 @@ export default {
 
       this.clearQuote()
 
-      // 如果识别文字为空，仅提示但不影响发送
       if (!text) {
         Snackbar({
           content: '语音已发送（未识别到文字）',
           duration: 1500,
           type: 'warning'
         })
-        // 不处理下一步，保持当前状态（让用户继续输入）
         return
       }
 
-      // 文字非空，继续处理下一步逻辑
+      // 处理下一步逻辑（原有代码保持不变）
       if (this.nextActionTrigger) {
         const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
         const { type, options } = triggerNextAction
@@ -4847,12 +4851,12 @@ FILE: src/components/chat-dialog/voice/index.vue
       <span class="wave-bar"></span>
     </span>
     <span class="voice-duration">{{ displayDuration }}''</span>
-    <audio ref="audio" :src="src" @loadedmetadata="onLoadedMetadata" @ended="onEnded" @error="onError"></audio>
+    <audio ref="audio" :src="src" preload="metadata" @loadedmetadata="onLoadedMetadata" @error="onError"></audio>
   </div>
 </template>
 
 <script>
-import { ref, computed, defineComponent, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, defineComponent, onMounted, onBeforeUnmount, watch } from 'vue'
 
 export default defineComponent({
   name: 'Voice',
@@ -4875,17 +4879,80 @@ export default defineComponent({
     }
   },
   emits: ['convert', 'cancel-convert'],
-  setup(props, { emit }) {
+  setup(props) {
     const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
     const audio = ref(null)
     const isPlaying = ref(false)
     const audioDuration = ref(0)
+    let pollTimer = null
+    let retryCount = 0
+    const MAX_RETRIES = 15
 
     const displayDuration = computed(() => {
-      const dur = audioDuration.value || Number(props.duration) || 0
+      let dur = audioDuration.value
+      // 如果 audioDuration 无效（包括 Infinity），则使用 props.duration
+      if (!isFinite(dur) || dur <= 0) {
+        dur = Number(props.duration) || 0
+      }
+      if (!isFinite(dur) || dur < 0) dur = 0
       return Math.round(dur)
     })
+
+    const tryGetDuration = () => {
+      const audioEl = audio.value
+      if (!audioEl) return false
+      if (audioEl.readyState >= 1 && audioEl.duration && isFinite(audioEl.duration) && audioEl.duration > 0) {
+        audioDuration.value = audioEl.duration
+        return true
+      }
+      return false
+    }
+
+    const startPolling = () => {
+      // 如果 props.duration 已经有效，就不需要轮询了
+      const propDur = Number(props.duration)
+      if (propDur > 0) {
+        audioDuration.value = propDur
+        return
+      }
+
+      if (pollTimer) clearInterval(pollTimer)
+      retryCount = 0
+      pollTimer = setInterval(() => {
+        if (tryGetDuration()) {
+          clearInterval(pollTimer)
+          pollTimer = null
+          return
+        }
+        retryCount++
+        if (retryCount >= MAX_RETRIES) {
+          clearInterval(pollTimer)
+          pollTimer = null
+          // 如果最终仍无法获取，且没有传入 duration，则置0
+          if (!Number(props.duration)) {
+            audioDuration.value = 0
+          }
+          console.warn('[Voice] 获取音频时长超时，src:', props.src)
+        }
+      }, 300)
+    }
+
+    const onLoadedMetadata = (e) => {
+      const audioEl = e.target
+      if (audioEl && audioEl.duration && isFinite(audioEl.duration) && audioEl.duration > 0) {
+        audioDuration.value = audioEl.duration
+        if (pollTimer) {
+          clearInterval(pollTimer)
+          pollTimer = null
+        }
+      }
+    }
+
+    const onError = () => {
+      isPlaying.value = false
+      tryGetDuration()
+    }
 
     const resetToInitial = () => {
       isPlaying.value = false
@@ -4914,28 +4981,36 @@ export default defineComponent({
       }
     }
 
-    const onLoadedMetadata = (e) => {
-      const audioEl = e.target
-      if (audioEl && audioEl.duration) {
-        audioDuration.value = audioEl.duration
+    const loadAudio = () => {
+      const audioEl = audio.value
+      if (!audioEl) return
+      audioDuration.value = 0
+      audioEl.load()
+      // 如果传入 duration，直接使用，不轮询
+      if (Number(props.duration) > 0) {
+        audioDuration.value = Number(props.duration)
+        return
       }
+      if (tryGetDuration()) return
+      startPolling()
     }
 
-    const onEnded = () => {
-      isPlaying.value = false
-    }
-
-    const onError = () => {
-      isPlaying.value = false
-    }
+    watch(() => props.src, () => {
+      loadAudio()
+    }, { immediate: false })
 
     onMounted(() => {
       if (window.__audioManager) {
         window.__audioManager.register(id, resetToInitial)
       }
+      loadAudio()
     })
 
     onBeforeUnmount(() => {
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+      }
       const audioEl = audio.value
       if (audioEl) {
         audioEl.pause()
@@ -4954,7 +5029,6 @@ export default defineComponent({
       displayDuration,
       togglePlay,
       onLoadedMetadata,
-      onEnded,
       onError
     }
   }
@@ -5051,6 +5125,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        apiKey: {
+            type: String,
+            default: () => import.meta.env.VITE_DEEPGRAM_API_KEY || '',
+        },
     },
     emits: ['start', 'stop', 'cancel', 'result', 'error', 'processing'],
     data() {
@@ -5059,24 +5137,34 @@ export default {
             isPcClickMode: false,
             mediaRecorder: null,
             audioChunks: [],
-            currentRecognition: null,
             sessionText: '',
             recognitionEnded: false,
-            holdTimer: null,
             isTouchDevice: false,
             stream: null,
             pendingBlob: null,
             pendingUrl: null,
             pendingText: '',
-            isStoppedManually: false,
             isRecordingStarted: false,
             waitRecognitionTimer: null,
             touchStartTime: 0,
             isProcessing: false,
             _sending: false,
             _cancelled: false,
-            // 标记是否支持识别
-            _recognitionSupported: true,
+
+            socket: null,
+            deepgramConnected: false,
+            deepgramFinalText: '',
+            deepgramInterimText: '',
+            isDeepgramClosing: false,
+            _processLock: false,
+            _processed: false,
+
+            // 【新增】录音开始时间戳（毫秒）
+            _recordStartTime: 0,
+            // 【新增】录音时长（秒）
+            _recordDuration: 0,
+
+            MIN_PACKET_SIZE: 1024,
         };
     },
     mounted() {
@@ -5085,156 +5173,159 @@ export default {
         console.log('[VoiceRecorderButton] mounted, isTouchDevice =', this.isTouchDevice);
     },
     methods: {
-        createRecognition() {
-            console.log('[VoiceRecorderButton] createRecognition called');
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                console.warn('[VoiceRecorderButton] SpeechRecognition not supported, will continue without recognition');
-                this._recognitionSupported = false;
-                return null;
-            }
-            const rec = new SpeechRecognition();
-            rec.lang = 'zh-CN';
-            rec.continuous = true;
-            rec.interimResults = true;
-
-            rec.onresult = (event) => {
-                let interim = '';
-                let final = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const result = event.results[i];
-                    const transcript = result[0].transcript;
-                    if (result.isFinal) {
-                        final += transcript;
-                    } else {
-                        interim += transcript;
-                    }
+        // -------------------- Deepgram 连接 --------------------
+        connectDeepgram() {
+            return new Promise((resolve, reject) => {
+                const apiKey = this.apiKey;
+                if (!apiKey) {
+                    reject(new Error('Deepgram API Key 未配置'));
+                    return;
                 }
-                if (final) {
-                    this.sessionText = final;
-                    console.log('[VoiceRecorderButton] 识别最终文字:', final);
-                } else if (interim) {
-                    this.sessionText = interim;
-                    console.log('[VoiceRecorderButton] 识别临时文字:', interim);
+                const WS_URL = `wss://api.deepgram.com/v1/listen?model=nova-3&language=zh-CN&interim_results=true&punctuate=true`;
+                try {
+                    this.socket = new WebSocket(WS_URL, ['token', apiKey]);
+                } catch (err) {
+                    reject(new Error('WebSocket 创建失败: ' + err.message));
+                    return;
                 }
-            };
-
-            rec.onerror = (event) => {
-                console.warn('[VoiceRecorderButton] 识别错误', event.error);
-                if (event.error === 'not-allowed') {
-                    // 权限错误才触发 error，其他错误忽略
-                    this.$emit('error', event);
-                } else {
+                this.socket.onopen = () => {
+                    console.log('[Deepgram] WebSocket 已连接');
+                    this.deepgramConnected = true;
+                    resolve();
+                };
+                this.socket.onmessage = (event) => {
                     try {
-                        rec.stop();
-                    } catch (_) { }
-                    // 不触发 cancel，仅让识别结束
-                }
-            };
-
-            rec.onend = () => {
-                console.log('[VoiceRecorderButton] 识别结束');
-                this.recognitionEnded = true;
-            };
-
-            this._recognitionSupported = true;
-            return rec;
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'Results') {
+                            const channel = data.channel;
+                            if (channel && channel.alternatives && channel.alternatives.length > 0) {
+                                const alt = channel.alternatives[0];
+                                const transcript = alt.transcript || '';
+                                const isFinal = data.is_final === true;
+                                if (isFinal && transcript) {
+                                    this.deepgramFinalText += (this.deepgramFinalText ? ' ' : '') + transcript;
+                                    this.sessionText = this.deepgramFinalText;
+                                    console.log('[Deepgram] 最终识别:', transcript);
+                                } else if (transcript) {
+                                    this.deepgramInterimText = transcript;
+                                    this.sessionText = this.deepgramFinalText
+                                        ? this.deepgramFinalText + ' ' + transcript
+                                        : transcript;
+                                    console.log('[Deepgram] 临时识别:', transcript);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('[Deepgram] 解析消息失败:', err);
+                    }
+                };
+                this.socket.onerror = (err) => {
+                    console.error('[Deepgram] WebSocket 错误:', err);
+                    this.deepgramConnected = false;
+                    reject(new Error('Deepgram 连接错误，请检查 API Key 和网络'));
+                };
+                this.socket.onclose = (event) => {
+                    console.log('[Deepgram] WebSocket 已关闭', event.code, event.reason);
+                    this.deepgramConnected = false;
+                    if (!this.recognitionEnded) {
+                        this.recognitionEnded = true;
+                        if (this.waitRecognitionTimer) {
+                            clearTimeout(this.waitRecognitionTimer);
+                            this.waitRecognitionTimer = null;
+                        }
+                        if (!this.isRecording && !this.isRecordingStarted && !this._processLock) {
+                            this.processStopResult();
+                        }
+                    }
+                };
+            });
         },
 
-        startRecording() {
-            console.log('[VoiceRecorderButton] startRecording called, disabled=', this.disabled);
-            if (this.disabled || this.isRecording || this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] 被阻止：disabled或已在录音');
+        sendAudioData(data) {
+            if (data.byteLength < this.MIN_PACKET_SIZE) {
+                console.log('[VoiceRecorderButton] 数据包过小，丢弃:', data.byteLength, 'bytes');
                 return;
             }
+            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(data);
+                console.log('[VoiceRecorderButton] 音频数据已发送, size:', data.byteLength);
+            } else {
+                console.warn('[Deepgram] 连接未就绪，丢弃音频数据');
+            }
+        },
 
+        // -------------------- 录音控制 --------------------
+        startRecording() {
+            if (this.disabled || this.isRecording || this.isRecordingStarted) return;
             this._cancelled = false;
+            this._processed = false;
             this.fullCleanup();
 
-            console.log('[VoiceRecorderButton] 请求 getUserMedia...');
-            navigator.mediaDevices
-                .getUserMedia({ audio: true })
+            // 记录开始时间
+            this._recordStartTime = Date.now();
+
+            this.connectDeepgram()
+                .then(() => navigator.mediaDevices.getUserMedia({ audio: true }))
                 .then((stream) => {
-                    console.log('[VoiceRecorderButton] getUserMedia 成功');
                     this.stream = stream;
-
-                    // 尝试创建语音识别（失败也不影响录音）
-                    const rec = this.createRecognition();
-                    this.currentRecognition = rec;
-                    if (rec) {
-                        try {
-                            rec.start();
-                            console.log('[VoiceRecorderButton] SpeechRecognition 已启动');
-                        } catch (e) {
-                            console.warn('[VoiceRecorderButton] SpeechRecognition start 异常', e);
-                            // 启动失败，将 recognition 置空，后续视为不支持
-                            this.currentRecognition = null;
-                            this._recognitionSupported = false;
-                        }
-                    } else {
-                        // 不支持识别，直接标记结束
-                        this.recognitionEnded = true;
-                        this._recognitionSupported = false;
-                    }
-
-                    // 准备 MediaRecorder
-                    let mimeType = 'audio/webm';
+                    let mimeType = 'audio/webm;codecs=opus';
                     if (!MediaRecorder.isTypeSupported(mimeType)) {
-                        mimeType = 'audio/ogg; codecs=opus';
+                        mimeType = 'audio/webm';
                         if (!MediaRecorder.isTypeSupported(mimeType)) {
-                            mimeType = '';
+                            mimeType = 'audio/ogg;codecs=opus';
+                            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                                mimeType = '';
+                            }
                         }
                     }
-                    console.log('[VoiceRecorderButton] 使用 MIME 类型:', mimeType || '默认');
                     try {
                         this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType || undefined });
                     } catch (e) {
-                        console.warn('[VoiceRecorderButton] MediaRecorder 构造降级', e);
                         this.mediaRecorder = new MediaRecorder(stream);
                     }
+                    console.log('[VoiceRecorderButton] MediaRecorder 使用 MIME:', this.mediaRecorder.mimeType);
 
                     this.mediaRecorder.ondataavailable = (e) => {
                         if (e.data.size > 0) {
                             this.audioChunks.push(e.data);
-                            console.log('[VoiceRecorderButton] 收到音频数据块, size=', e.data.size);
+                            e.data.arrayBuffer().then((buffer) => {
+                                this.sendAudioData(buffer);
+                            }).catch((err) => {
+                                console.warn('[VoiceRecorderButton] 转换音频数据失败', err);
+                            });
                         }
                     };
 
                     this.mediaRecorder.onstop = () => {
                         console.log('[VoiceRecorderButton] MediaRecorder onstop 触发');
+                        // 计算实际录音时长（毫秒转秒）
+                        this._recordDuration = (Date.now() - this._recordStartTime) / 1000;
                         this.handleStop();
                     };
 
-                    try {
-                        this.mediaRecorder.start();
-                        console.log('[VoiceRecorderButton] MediaRecorder.start() 成功');
-                        this.isRecording = true;
-                        this.isRecordingStarted = true;
-                        this.$emit('start');
-                    } catch (err) {
-                        console.error('[VoiceRecorderButton] MediaRecorder.start() 异常', err);
-                        this.releaseStream();
-                        // 不触发 error，仅重置状态，让用户重试
-                        this.resetState();
-                        // 提示用户错误（可通过父组件显示）
-                        this.$emit('error', err);
-                    }
+                    this.mediaRecorder.start(500);
+                    this.isRecording = true;
+                    this.isRecordingStarted = true;
+                    this.recognitionEnded = false;
+                    this.deepgramFinalText = '';
+                    this.deepgramInterimText = '';
+                    this.sessionText = '';
+                    this.$emit('start');
                 })
                 .catch((err) => {
-                    console.error('[VoiceRecorderButton] getUserMedia 失败', err);
+                    console.error('[VoiceRecorderButton] 启动失败', err);
                     this.releaseStream();
-                    // 仅当权限被拒绝时才触发 error
-                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    if (err.message && err.message.includes('API Key')) {
+                        this.$emit('error', err);
+                    } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                         this.$emit('error', err);
                     } else {
-                        // 其他错误（如无设备）静默处理
                         this.resetState();
                     }
                 });
         },
 
         stopRecordingManually() {
-            console.log('[VoiceRecorderButton] stopRecordingManually');
             if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
                 try {
                     this.mediaRecorder.stop();
@@ -5248,7 +5339,6 @@ export default {
         },
 
         cleanupAfterStop() {
-            console.log('[VoiceRecorderButton] cleanupAfterStop');
             if (this.mediaRecorder) {
                 this.mediaRecorder.onstop = null;
             }
@@ -5258,46 +5348,32 @@ export default {
             this.isProcessing = false;
         },
 
+        // -------------------- 停止与结果处理 --------------------
         handleStop() {
             console.log('[VoiceRecorderButton] handleStop');
-            // 如果存在识别实例，尝试停止
-            if (this.currentRecognition) {
-                try {
-                    this.currentRecognition.stop();
-                } catch (_) { }
-            } else {
-                // 无识别实例，直接标记识别结束
+            this.recognitionEnded = false;
+
+            if (this.waitRecognitionTimer) clearTimeout(this.waitRecognitionTimer);
+            this.waitRecognitionTimer = setTimeout(() => {
+                console.log('[VoiceRecorderButton] 等待识别超时，强制处理');
                 this.recognitionEnded = true;
-            }
-
-            const waitForEnd = () => {
-                return new Promise((resolve) => {
-                    if (this.recognitionEnded) {
-                        resolve();
-                        return;
-                    }
-                    this.waitRecognitionTimer = setTimeout(() => {
-                        console.log('[VoiceRecorderButton] 等待识别超时，强行继续');
-                        resolve();
-                    }, 2000);
-                    if (this.currentRecognition) {
-                        const originalOnEnd = this.currentRecognition.onend;
-                        this.currentRecognition.onend = () => {
-                            clearTimeout(this.waitRecognitionTimer);
-                            this.waitRecognitionTimer = null;
-                            if (originalOnEnd) originalOnEnd.call(this.currentRecognition);
-                            resolve();
-                        };
-                    }
-                });
-            };
-
-            waitForEnd().then(() => {
-                this.processStopResult();
-            });
+                this.waitRecognitionTimer = null;
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    try { this.socket.close(); } catch (_) { }
+                }
+                if (!this._processLock) {
+                    this.processStopResult();
+                }
+            }, 5000);
         },
 
         processStopResult() {
+            if (this._processLock || this._processed) {
+                console.log('[VoiceRecorderButton] 结果已被处理，忽略');
+                return;
+            }
+            this._processLock = true;
+            this._processed = true;
             console.log('[VoiceRecorderButton] processStopResult');
             this.$emit('stop');
 
@@ -5308,15 +5384,18 @@ export default {
                 this.fullCleanup();
                 this._sending = false;
                 this.isProcessing = false;
+                this._processLock = false;
                 return;
             }
 
             const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
             const text = this.sessionText.trim() || '';
-            console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)');
+            // 最终时长（秒），取整，至少为1
+            const duration = Math.max(1, Math.round(this._recordDuration));
 
-            // 检查录音时长（至少 1 秒，避免无意义短录音）
+            console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)', '时长:', duration, '秒');
+
             if (blob.size < 1024) {
                 console.log('[VoiceRecorderButton] 录音太短，取消');
                 this.clearPending();
@@ -5326,17 +5405,19 @@ export default {
                 this.fullCleanup();
                 this._sending = false;
                 this.isProcessing = false;
+                this._processLock = false;
                 return;
             }
 
-            // 即使文本为空也发送，父组件可处理
             if (this.autoSend) {
-                this.$emit('result', { blob, url, text });
+                // 【关键】在 result 中携带 duration
+                this.$emit('result', { blob, url, text, duration });
                 this.clearPending();
             } else {
                 this.pendingBlob = blob;
                 this.pendingUrl = url;
                 this.pendingText = text;
+                this.pendingDuration = duration; // 需要增加 data 字段
             }
 
             this.audioChunks = [];
@@ -5344,26 +5425,20 @@ export default {
             this.fullCleanup();
             this._sending = false;
             this.isProcessing = false;
+            this._processLock = false;
         },
 
         resetState() {
-            console.log('[VoiceRecorderButton] resetState');
             this.isRecording = false;
             this.isRecordingStarted = false;
-            if (this.currentRecognition) {
-                try {
-                    this.currentRecognition.abort();
-                } catch (_) { }
-                this.currentRecognition = null;
-            }
-            this.sessionText = '';
             this.recognitionEnded = false;
-            clearTimeout(this.waitRecognitionTimer);
-            this.waitRecognitionTimer = null;
+            if (this.waitRecognitionTimer) {
+                clearTimeout(this.waitRecognitionTimer);
+                this.waitRecognitionTimer = null;
+            }
         },
 
         fullCleanup() {
-            console.log('[VoiceRecorderButton] fullCleanup');
             this.releaseStream();
             this.resetState();
             this.clearPending();
@@ -5372,6 +5447,15 @@ export default {
             this.isRecordingStarted = false;
             this._sending = false;
             this.isProcessing = false;
+            if (this.socket) {
+                try { this.socket.close(); } catch (_) { }
+                this.socket = null;
+            }
+            this.deepgramConnected = false;
+            this.isDeepgramClosing = false;
+            this._processLock = false;
+            this._recordStartTime = 0;
+            this._recordDuration = 0;
         },
 
         releaseStream() {
@@ -5389,21 +5473,16 @@ export default {
             }
             this.pendingBlob = null;
             this.pendingText = '';
+            this.pendingDuration = 0;
         },
 
         cancelRecording() {
-            if (this._cancelled) {
-                console.log('[VoiceRecorderButton] 重复取消，忽略');
-                return;
-            }
+            if (this._cancelled) return;
             this._cancelled = true;
-            console.log('[VoiceRecorderButton] cancelRecording 被调用');
-
-            if (this.currentRecognition) {
-                try {
-                    this.currentRecognition.abort();
-                } catch (_) { }
-                this.currentRecognition = null;
+            console.log('[VoiceRecorderButton] cancelRecording');
+            if (this.socket) {
+                try { this.socket.close(); } catch (_) { }
+                this.socket = null;
             }
             if (this.mediaRecorder) {
                 try {
@@ -5426,6 +5505,7 @@ export default {
                     blob: this.pendingBlob,
                     url: this.pendingUrl,
                     text: this.pendingText,
+                    duration: this.pendingDuration || 0,
                 });
                 this.clearPending();
                 return;
@@ -5442,41 +5522,25 @@ export default {
             this.$emit('cancel');
         },
 
-        // ----- 触摸事件（移动端） -----
+        // ----- 触摸事件 -----
         handleTouchStart(e) {
-            console.log('[VoiceRecorderButton] handleTouchStart, disabled=', this.disabled);
             e.preventDefault();
-            if (this.disabled || this.isRecording || this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] touch 被阻止');
-                return;
-            }
+            if (this.disabled || this.isRecording || this.isRecordingStarted) return;
             this._cancelled = false;
             this.startRecording();
             this.touchStartTime = Date.now();
         },
-
         handleTouchEnd(e) {
-            console.log('[VoiceRecorderButton] handleTouchEnd');
             if (!this.isTouchDevice) return;
-            const duration = Date.now() - (this.touchStartTime || 0);
-            console.log('[VoiceRecorderButton] 触摸时长(ms):', duration);
-
-            if (!this.isRecording && !this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] 录音未开始，忽略触摸结束');
-                return;
-            }
+            if (!this.isRecording && !this.isRecordingStarted) return;
             this.stopRecordingManually();
         },
-
         handleTouchCancel(e) {
-            console.log('[VoiceRecorderButton] handleTouchCancel');
-            // 忽略系统取消，继续录音
-            console.log('[VoiceRecorderButton] touchcancel 被忽略，继续录音');
+            console.log('[VoiceRecorderButton] touchcancel 被忽略');
         },
 
-        // ----- 鼠标事件（PC） -----
+        // ----- 鼠标事件 -----
         handlePointerDown(e) {
-            console.log('[VoiceRecorderButton] handlePointerDown');
             if (this.disabled || this.isTouchDevice) return;
             if (this.isRecording || this.isRecordingStarted) {
                 this.stopRecordingManually();
@@ -5484,18 +5548,15 @@ export default {
                 this.startRecording();
             }
         },
-
         handlePointerUp(e) { },
         handlePointerLeave(e) { },
     },
 
     beforeUnmount() {
         console.log('[VoiceRecorderButton] beforeUnmount');
-        if (this.currentRecognition) {
-            try {
-                this.currentRecognition.abort();
-            } catch (_) { }
-            this.currentRecognition = null;
+        if (this.socket) {
+            try { this.socket.close(); } catch (_) { }
+            this.socket = null;
         }
         if (this.mediaRecorder) {
             try {
@@ -5507,9 +5568,14 @@ export default {
         }
         this.releaseStream();
         this.clearPending();
-        clearTimeout(this.waitRecognitionTimer);
+        if (this.waitRecognitionTimer) {
+            clearTimeout(this.waitRecognitionTimer);
+            this.waitRecognitionTimer = null;
+        }
         this._sending = false;
         this.isProcessing = false;
+        this._processLock = false;
+        this._processed = false;
     },
 };
 </script>

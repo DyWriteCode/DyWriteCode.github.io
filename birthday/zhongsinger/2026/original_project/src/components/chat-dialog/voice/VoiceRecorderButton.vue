@@ -21,6 +21,10 @@ export default {
             type: Boolean,
             default: true,
         },
+        apiKey: {
+            type: String,
+            default: () => import.meta.env.VITE_DEEPGRAM_API_KEY || '',
+        },
     },
     emits: ['start', 'stop', 'cancel', 'result', 'error', 'processing'],
     data() {
@@ -29,9 +33,7 @@ export default {
             isPcClickMode: false,
             mediaRecorder: null,
             audioChunks: [],
-            currentRecognition: null,
             sessionText: '',
-            lastInterimText: '',
             recognitionEnded: false,
             isTouchDevice: false,
             stream: null,
@@ -44,9 +46,19 @@ export default {
             isProcessing: false,
             _sending: false,
             _cancelled: false,
-            _recognitionSupported: true,
-            _isRecognitionActive: false,
-            _recognitionStarted: false,   // 标记识别是否已成功启动
+
+            socket: null,
+            deepgramConnected: false,
+            deepgramFinalText: '',
+            deepgramInterimText: '',
+            isDeepgramClosing: false,
+            _processLock: false,
+            _processed: false,
+
+            _recordStartTime: 0,
+            _recordDuration: 0,
+
+            MIN_PACKET_SIZE: 1024,
         };
     },
     mounted() {
@@ -55,203 +67,180 @@ export default {
         console.log('[VoiceRecorderButton] mounted, isTouchDevice =', this.isTouchDevice);
     },
     methods: {
-        createRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                console.warn('[VoiceRecorderButton] SpeechRecognition not supported');
-                this._recognitionSupported = false;
-                return null;
-            }
-            const rec = new SpeechRecognition();
-            rec.lang = 'zh-CN';
-            rec.continuous = true;          // 连续识别，防止过早结束
-            rec.interimResults = true;
-            rec.maxAlternatives = 1;
-
-            rec.onstart = () => {
-                this._isRecognitionActive = true;
-                this._recognitionStarted = true;
-                this.sessionText = '';
-                this.lastInterimText = '';
-                console.log('[VoiceRecorderButton] 识别已激活');
-            };
-
-            rec.onresult = (event) => {
-                let interim = '';
-                let final = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const result = event.results[i];
-                    const transcript = result[0].transcript;
-                    if (result.isFinal) {
-                        final += transcript;
-                    } else {
-                        interim += transcript;
-                    }
-                }
-                if (final) {
-                    this.sessionText = final;
-                    console.log('[VoiceRecorderButton] 识别最终文字:', final);
-                }
-                if (interim) {
-                    this.lastInterimText = interim;
-                    console.log('[VoiceRecorderButton] 识别临时文字:', interim);
-                }
-            };
-
-            rec.onerror = (event) => {
-                if (event.error === 'aborted') {
-                    console.log('[VoiceRecorderButton] 识别被主动终止（符合预期）');
-                    this._isRecognitionActive = false;
+        // -------------------- Deepgram 连接 --------------------
+        connectDeepgram() {
+            return new Promise((resolve, reject) => {
+                const apiKey = this.apiKey;
+                if (!apiKey) {
+                    reject(new Error('Deepgram API Key 未配置'));
                     return;
                 }
-                console.warn('[VoiceRecorderButton] 识别错误', event.error);
-                this._isRecognitionActive = false;
-                if (event.error === 'not-allowed') {
-                    this.$emit('error', event);
+                const WS_URL = `wss://api.deepgram.com/v1/listen?model=nova-3&language=zh-CN&interim_results=true&punctuate=true`;
+                try {
+                    this.socket = new WebSocket(WS_URL, ['token', apiKey]);
+                } catch (err) {
+                    reject(new Error('WebSocket 创建失败: ' + err.message));
+                    return;
                 }
-            };
-
-            rec.onend = () => {
-                console.log('[VoiceRecorderButton] 识别结束');
-                this._isRecognitionActive = false;
-                this.recognitionEnded = true;
-                // 如果没有最终结果，使用临时结果兜底
-                if (!this.sessionText && this.lastInterimText) {
-                    this.sessionText = this.lastInterimText;
-                    console.log('[VoiceRecorderButton] 使用临时结果作为最终文字:', this.sessionText);
-                }
-            };
-
-            this._recognitionSupported = true;
-            return rec;
+                this.socket.onopen = () => {
+                    console.log('[Deepgram] WebSocket 已连接');
+                    this.deepgramConnected = true;
+                    resolve();
+                };
+                this.socket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'Results') {
+                            const channel = data.channel;
+                            if (channel && channel.alternatives && channel.alternatives.length > 0) {
+                                const alt = channel.alternatives[0];
+                                const transcript = alt.transcript || '';
+                                const isFinal = data.is_final === true;
+                                if (isFinal && transcript) {
+                                    this.deepgramFinalText += (this.deepgramFinalText ? ' ' : '') + transcript;
+                                    this.sessionText = this.deepgramFinalText;
+                                    console.log('[Deepgram] 最终识别:', transcript);
+                                } else if (transcript) {
+                                    this.deepgramInterimText = transcript;
+                                    this.sessionText = this.deepgramFinalText
+                                        ? this.deepgramFinalText + ' ' + transcript
+                                        : transcript;
+                                    console.log('[Deepgram] 临时识别:', transcript);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('[Deepgram] 解析消息失败:', err);
+                    }
+                };
+                this.socket.onerror = (err) => {
+                    console.error('[Deepgram] WebSocket 错误:', err);
+                    this.deepgramConnected = false;
+                    reject(new Error('Deepgram 连接错误，请检查 API Key 和网络'));
+                };
+                this.socket.onclose = (event) => {
+                    console.log('[Deepgram] WebSocket 已关闭', event.code, event.reason);
+                    this.deepgramConnected = false;
+                    if (!this.recognitionEnded) {
+                        this.recognitionEnded = true;
+                        if (this.waitRecognitionTimer) {
+                            clearTimeout(this.waitRecognitionTimer);
+                            this.waitRecognitionTimer = null;
+                        }
+                        if (!this.isRecording && !this.isRecordingStarted && !this._processLock) {
+                            this.processStopResult();
+                        }
+                    }
+                };
+            });
         },
 
-        // 设置 MediaRecorder（单独抽离，便于启动时机控制）
-        setupMediaRecorder(stream) {
-            let mimeType = 'audio/webm';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'audio/ogg; codecs=opus';
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    mimeType = '';
-                }
-            }
-            try {
-                this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType || undefined });
-            } catch (e) {
-                console.warn('[VoiceRecorderButton] MediaRecorder 构造降级', e);
-                this.mediaRecorder = new MediaRecorder(stream);
-            }
-
-            this.mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    this.audioChunks.push(e.data);
-                }
-            };
-
-            this.mediaRecorder.onstop = () => {
-                console.log('[VoiceRecorderButton] MediaRecorder onstop 触发');
-                this.handleStop();
-            };
-        },
-
-        startRecording() {
-            console.log('[VoiceRecorderButton] startRecording called, disabled=', this.disabled);
-            if (this.disabled || this.isRecording || this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] 被阻止');
+        sendAudioData(data) {
+            if (data.byteLength < this.MIN_PACKET_SIZE) {
+                console.log('[VoiceRecorderButton] 数据包过小，丢弃:', data.byteLength, 'bytes');
                 return;
             }
+            if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(data);
+                console.log('[VoiceRecorderButton] 音频数据已发送, size:', data.byteLength);
+            } else {
+                console.warn('[Deepgram] 连接未就绪，丢弃音频数据');
+            }
+        },
 
+        // -------------------- 录音控制（关键修改：先获取麦克风，再连 WebSocket）--------------------
+        startRecording() {
+            if (this.disabled || this.isRecording || this.isRecordingStarted) return;
             this._cancelled = false;
+            this._processed = false;
             this.fullCleanup();
 
-            navigator.mediaDevices
-                .getUserMedia({ audio: true })
+            this._recordStartTime = Date.now();
+
+            // 1. 先获取麦克风流（同步，保证用户手势上下文）
+            navigator.mediaDevices.getUserMedia({ audio: true })
                 .then((stream) => {
-                    console.log('[VoiceRecorderButton] getUserMedia 成功');
                     this.stream = stream;
+                    // 2. 连接 Deepgram（异步，此时仍在用户手势后的微任务中，部分浏览器仍允许）
+                    return this.connectDeepgram().then(() => stream);
+                })
+                .then((stream) => {
+                    // 3. 创建 MediaRecorder
+                    let mimeType = this.getSupportedMimeType();
+                    try {
+                        this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType || undefined });
+                    } catch (e) {
+                        this.mediaRecorder = new MediaRecorder(stream);
+                    }
+                    console.log('[VoiceRecorderButton] MediaRecorder 使用 MIME:', this.mediaRecorder.mimeType);
 
-                    // ---- 先启动 SpeechRecognition ----
-                    const rec = this.createRecognition();
-                    this.currentRecognition = rec;
-                    if (rec) {
-                        // 保存原始 onstart，以便在识别启动后启动 MediaRecorder
-                        const originalOnStart = rec.onstart;
-                        rec.onstart = (event) => {
-                            if (originalOnStart) originalOnStart.call(rec, event);
-                            // 识别已激活，此时启动 MediaRecorder
-                            if (!this.mediaRecorder) {
-                                this.setupMediaRecorder(this.stream);
-                                try {
-                                    this.mediaRecorder.start();
-                                    console.log('[VoiceRecorderButton] MediaRecorder 启动成功（识别激活后）');
-                                    this.isRecording = true;
-                                    this.isRecordingStarted = true;
-                                    this.$emit('start');
-                                } catch (err) {
-                                    console.error('[VoiceRecorderButton] MediaRecorder 启动失败', err);
-                                    this.releaseStream();
-                                    this.resetState();
-                                    this.$emit('error', err);
-                                }
-                            }
-                        };
+                    this.mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            this.audioChunks.push(e.data);
+                            e.data.arrayBuffer().then((buffer) => {
+                                this.sendAudioData(buffer);
+                            }).catch((err) => {
+                                console.warn('[VoiceRecorderButton] 转换音频数据失败', err);
+                            });
+                        }
+                    };
 
-                        try {
-                            rec.start();
-                            console.log('[VoiceRecorderButton] SpeechRecognition 启动指令已发送');
-                        } catch (e) {
-                            console.warn('[VoiceRecorderButton] SpeechRecognition start 异常', e);
-                            this.currentRecognition = null;
-                            this._isRecognitionActive = false;
-                            this._recognitionSupported = false;
-                            // 识别启动失败，直接启动 MediaRecorder 作为后备
-                            if (!this.mediaRecorder) {
-                                this.setupMediaRecorder(this.stream);
-                                try {
-                                    this.mediaRecorder.start();
-                                    this.isRecording = true;
-                                    this.isRecordingStarted = true;
-                                    this.$emit('start');
-                                } catch (err) {
-                                    this.releaseStream();
-                                    this.resetState();
-                                    this.$emit('error', err);
-                                }
-                            }
-                        }
-                    } else {
-                        // 不支持识别，直接启动 MediaRecorder
-                        this.setupMediaRecorder(this.stream);
-                        try {
-                            this.mediaRecorder.start();
-                            this.isRecording = true;
-                            this.isRecordingStarted = true;
-                            this.$emit('start');
-                        } catch (err) {
-                            this.releaseStream();
-                            this.resetState();
-                            this.$emit('error', err);
-                        }
-                        this.recognitionEnded = true;
-                        this._recognitionSupported = false;
+                    this.mediaRecorder.onstop = () => {
+                        console.log('[VoiceRecorderButton] MediaRecorder onstop 触发');
+                        this._recordDuration = (Date.now() - this._recordStartTime) / 1000;
+                        this.handleStop();
+                    };
+
+                    try {
+                        this.mediaRecorder.start(500);
+                    } catch (e) {
+                        console.error('[VoiceRecorderButton] MediaRecorder.start 失败', e);
+                        this.releaseStream();
+                        this.$emit('error', new Error('无法启动录音，请检查麦克风权限或浏览器兼容性'));
+                        return;
                     }
 
-                    // 防止识别启动失败但 MediaRecorder 已启动时，仍需有超时保护
-                    // 如果 3 秒后识别仍未激活，强制启动 MediaRecorder（但上面已经启动，所以这里不重复）
+                    this.isRecording = true;
+                    this.isRecordingStarted = true;
+                    this.recognitionEnded = false;
+                    this.deepgramFinalText = '';
+                    this.deepgramInterimText = '';
+                    this.sessionText = '';
+                    this.$emit('start');
                 })
                 .catch((err) => {
-                    console.error('[VoiceRecorderButton] getUserMedia 失败', err);
+                    console.error('[VoiceRecorderButton] 启动失败', err);
                     this.releaseStream();
                     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        this.$emit('error', new Error('未获取到麦克风权限，请在浏览器设置中允许'));
+                    } else if (err.message && err.message.includes('API Key')) {
                         this.$emit('error', err);
                     } else {
-                        this.resetState();
+                        // 其他错误（如无设备）也提示用户
+                        this.$emit('error', new Error('无法访问麦克风，请检查设备或权限'));
                     }
+                    this.resetState();
                 });
         },
 
+        // 检测支持的 MIME 类型（移动端兼容）
+        getSupportedMimeType() {
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/mp4',
+                'audio/ogg;codecs=opus',
+                'audio/ogg'
+            ];
+            for (let type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    return type;
+                }
+            }
+            return '';
+        },
+
         stopRecordingManually() {
-            console.log('[VoiceRecorderButton] stopRecordingManually');
             if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
                 try {
                     this.mediaRecorder.stop();
@@ -265,7 +254,6 @@ export default {
         },
 
         cleanupAfterStop() {
-            console.log('[VoiceRecorderButton] cleanupAfterStop');
             if (this.mediaRecorder) {
                 this.mediaRecorder.onstop = null;
             }
@@ -277,49 +265,29 @@ export default {
 
         handleStop() {
             console.log('[VoiceRecorderButton] handleStop');
+            this.recognitionEnded = false;
 
-            // 如果识别仍活跃，调用 stop() 让它结束并生成最终结果
-            if (this.currentRecognition && this._isRecognitionActive) {
-                try {
-                    this.currentRecognition.stop();
-                    console.log('[VoiceRecorderButton] 已调用 recognition.stop()');
-                } catch (e) {
-                    console.warn('[VoiceRecorderButton] stop 调用异常', e);
-                }
-            } else {
-                console.log('[VoiceRecorderButton] 识别已非活跃，跳过 stop 调用');
+            if (this.waitRecognitionTimer) clearTimeout(this.waitRecognitionTimer);
+            this.waitRecognitionTimer = setTimeout(() => {
+                console.log('[VoiceRecorderButton] 等待识别超时，强制处理');
                 this.recognitionEnded = true;
-            }
-
-            // 等待识别结束或超时
-            const waitForEnd = () => {
-                return new Promise((resolve) => {
-                    if (this.recognitionEnded) {
-                        resolve();
-                        return;
-                    }
-                    this.waitRecognitionTimer = setTimeout(() => {
-                        console.log('[VoiceRecorderButton] 等待识别超时，强行继续');
-                        resolve();
-                    }, 2000);
-                    if (this.currentRecognition) {
-                        const originalOnEnd = this.currentRecognition.onend;
-                        this.currentRecognition.onend = () => {
-                            clearTimeout(this.waitRecognitionTimer);
-                            this.waitRecognitionTimer = null;
-                            if (originalOnEnd) originalOnEnd.call(this.currentRecognition);
-                            resolve();
-                        };
-                    }
-                });
-            };
-
-            waitForEnd().then(() => {
-                this.processStopResult();
-            });
+                this.waitRecognitionTimer = null;
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    try { this.socket.close(); } catch (_) { }
+                }
+                if (!this._processLock) {
+                    this.processStopResult();
+                }
+            }, 5000);
         },
 
         processStopResult() {
+            if (this._processLock || this._processed) {
+                console.log('[VoiceRecorderButton] 结果已被处理，忽略');
+                return;
+            }
+            this._processLock = true;
+            this._processed = true;
             console.log('[VoiceRecorderButton] processStopResult');
             this.$emit('stop');
 
@@ -330,13 +298,16 @@ export default {
                 this.fullCleanup();
                 this._sending = false;
                 this.isProcessing = false;
+                this._processLock = false;
                 return;
             }
 
             const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
             const text = this.sessionText.trim() || '';
-            console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)');
+            const duration = Math.max(1, Math.round(this._recordDuration));
+
+            console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)', '时长:', duration, '秒');
 
             if (blob.size < 1024) {
                 console.log('[VoiceRecorderButton] 录音太短，取消');
@@ -347,16 +318,18 @@ export default {
                 this.fullCleanup();
                 this._sending = false;
                 this.isProcessing = false;
+                this._processLock = false;
                 return;
             }
 
             if (this.autoSend) {
-                this.$emit('result', { blob, url, text });
+                this.$emit('result', { blob, url, text, duration });
                 this.clearPending();
             } else {
                 this.pendingBlob = blob;
                 this.pendingUrl = url;
                 this.pendingText = text;
+                this.pendingDuration = duration;
             }
 
             this.audioChunks = [];
@@ -364,29 +337,20 @@ export default {
             this.fullCleanup();
             this._sending = false;
             this.isProcessing = false;
+            this._processLock = false;
         },
 
         resetState() {
-            console.log('[VoiceRecorderButton] resetState');
             this.isRecording = false;
             this.isRecordingStarted = false;
-            this._isRecognitionActive = false;
-            this._recognitionStarted = false;
-            if (this.currentRecognition) {
-                try {
-                    this.currentRecognition.abort();
-                } catch (_) { }
-                this.currentRecognition = null;
-            }
-            this.sessionText = '';
-            this.lastInterimText = '';
             this.recognitionEnded = false;
-            clearTimeout(this.waitRecognitionTimer);
-            this.waitRecognitionTimer = null;
+            if (this.waitRecognitionTimer) {
+                clearTimeout(this.waitRecognitionTimer);
+                this.waitRecognitionTimer = null;
+            }
         },
 
         fullCleanup() {
-            console.log('[VoiceRecorderButton] fullCleanup');
             this.releaseStream();
             this.resetState();
             this.clearPending();
@@ -395,6 +359,15 @@ export default {
             this.isRecordingStarted = false;
             this._sending = false;
             this.isProcessing = false;
+            if (this.socket) {
+                try { this.socket.close(); } catch (_) { }
+                this.socket = null;
+            }
+            this.deepgramConnected = false;
+            this.isDeepgramClosing = false;
+            this._processLock = false;
+            this._recordStartTime = 0;
+            this._recordDuration = 0;
         },
 
         releaseStream() {
@@ -412,24 +385,17 @@ export default {
             }
             this.pendingBlob = null;
             this.pendingText = '';
+            this.pendingDuration = 0;
         },
 
         cancelRecording() {
-            if (this._cancelled) {
-                console.log('[VoiceRecorderButton] 重复取消，忽略');
-                return;
-            }
+            if (this._cancelled) return;
             this._cancelled = true;
-            console.log('[VoiceRecorderButton] cancelRecording 被调用');
-
-            if (this.currentRecognition && this._isRecognitionActive) {
-                try {
-                    this.currentRecognition.abort();
-                } catch (_) { }
-            } else {
-                console.log('[VoiceRecorderButton] 识别已非活跃，跳过 abort');
+            console.log('[VoiceRecorderButton] cancelRecording');
+            if (this.socket) {
+                try { this.socket.close(); } catch (_) { }
+                this.socket = null;
             }
-
             if (this.mediaRecorder) {
                 try {
                     if (this.mediaRecorder.state === 'recording') {
@@ -451,6 +417,7 @@ export default {
                     blob: this.pendingBlob,
                     url: this.pendingUrl,
                     text: this.pendingText,
+                    duration: this.pendingDuration || 0,
                 });
                 this.clearPending();
                 return;
@@ -469,37 +436,23 @@ export default {
 
         // ----- 触摸事件 -----
         handleTouchStart(e) {
-            console.log('[VoiceRecorderButton] handleTouchStart, disabled=', this.disabled);
             e.preventDefault();
-            if (this.disabled || this.isRecording || this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] touch 被阻止');
-                return;
-            }
+            if (this.disabled || this.isRecording || this.isRecordingStarted) return;
             this._cancelled = false;
             this.startRecording();
             this.touchStartTime = Date.now();
         },
-
         handleTouchEnd(e) {
-            console.log('[VoiceRecorderButton] handleTouchEnd');
             if (!this.isTouchDevice) return;
-            const duration = Date.now() - (this.touchStartTime || 0);
-            console.log('[VoiceRecorderButton] 触摸时长(ms):', duration);
-
-            if (!this.isRecording && !this.isRecordingStarted) {
-                console.log('[VoiceRecorderButton] 录音未开始，忽略触摸结束');
-                return;
-            }
+            if (!this.isRecording && !this.isRecordingStarted) return;
             this.stopRecordingManually();
         },
-
         handleTouchCancel(e) {
-            console.log('[VoiceRecorderButton] handleTouchCancel, ignore');
+            console.log('[VoiceRecorderButton] touchcancel 被忽略');
         },
 
         // ----- 鼠标事件 -----
         handlePointerDown(e) {
-            console.log('[VoiceRecorderButton] handlePointerDown');
             if (this.disabled || this.isTouchDevice) return;
             if (this.isRecording || this.isRecordingStarted) {
                 this.stopRecordingManually();
@@ -507,17 +460,15 @@ export default {
                 this.startRecording();
             }
         },
-
         handlePointerUp(e) { },
         handlePointerLeave(e) { },
     },
 
     beforeUnmount() {
         console.log('[VoiceRecorderButton] beforeUnmount');
-        if (this.currentRecognition && this._isRecognitionActive) {
-            try {
-                this.currentRecognition.abort();
-            } catch (_) { }
+        if (this.socket) {
+            try { this.socket.close(); } catch (_) { }
+            this.socket = null;
         }
         if (this.mediaRecorder) {
             try {
@@ -529,10 +480,14 @@ export default {
         }
         this.releaseStream();
         this.clearPending();
-        clearTimeout(this.waitRecognitionTimer);
+        if (this.waitRecognitionTimer) {
+            clearTimeout(this.waitRecognitionTimer);
+            this.waitRecognitionTimer = null;
+        }
         this._sending = false;
         this.isProcessing = false;
-        this._isRecognitionActive = false;
+        this._processLock = false;
+        this._processed = false;
     },
 };
 </script>

@@ -7,12 +7,12 @@
       <span class="wave-bar"></span>
     </span>
     <span class="voice-duration">{{ displayDuration }}''</span>
-    <audio ref="audio" :src="src" @loadedmetadata="onLoadedMetadata" @ended="onEnded" @error="onError"></audio>
+    <audio ref="audio" :src="src" preload="metadata" @loadedmetadata="onLoadedMetadata" @error="onError"></audio>
   </div>
 </template>
 
 <script>
-import { ref, computed, defineComponent, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, defineComponent, onMounted, onBeforeUnmount, watch } from 'vue'
 
 export default defineComponent({
   name: 'Voice',
@@ -35,17 +35,80 @@ export default defineComponent({
     }
   },
   emits: ['convert', 'cancel-convert'],
-  setup(props, { emit }) {
+  setup(props) {
     const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
     const audio = ref(null)
     const isPlaying = ref(false)
     const audioDuration = ref(0)
+    let pollTimer = null
+    let retryCount = 0
+    const MAX_RETRIES = 15
 
     const displayDuration = computed(() => {
-      const dur = audioDuration.value || Number(props.duration) || 0
+      let dur = audioDuration.value
+      // 如果 audioDuration 无效（包括 Infinity），则使用 props.duration
+      if (!isFinite(dur) || dur <= 0) {
+        dur = Number(props.duration) || 0
+      }
+      if (!isFinite(dur) || dur < 0) dur = 0
       return Math.round(dur)
     })
+
+    const tryGetDuration = () => {
+      const audioEl = audio.value
+      if (!audioEl) return false
+      if (audioEl.readyState >= 1 && audioEl.duration && isFinite(audioEl.duration) && audioEl.duration > 0) {
+        audioDuration.value = audioEl.duration
+        return true
+      }
+      return false
+    }
+
+    const startPolling = () => {
+      // 如果 props.duration 已经有效，就不需要轮询了
+      const propDur = Number(props.duration)
+      if (propDur > 0) {
+        audioDuration.value = propDur
+        return
+      }
+
+      if (pollTimer) clearInterval(pollTimer)
+      retryCount = 0
+      pollTimer = setInterval(() => {
+        if (tryGetDuration()) {
+          clearInterval(pollTimer)
+          pollTimer = null
+          return
+        }
+        retryCount++
+        if (retryCount >= MAX_RETRIES) {
+          clearInterval(pollTimer)
+          pollTimer = null
+          // 如果最终仍无法获取，且没有传入 duration，则置0
+          if (!Number(props.duration)) {
+            audioDuration.value = 0
+          }
+          console.warn('[Voice] 获取音频时长超时，src:', props.src)
+        }
+      }, 300)
+    }
+
+    const onLoadedMetadata = (e) => {
+      const audioEl = e.target
+      if (audioEl && audioEl.duration && isFinite(audioEl.duration) && audioEl.duration > 0) {
+        audioDuration.value = audioEl.duration
+        if (pollTimer) {
+          clearInterval(pollTimer)
+          pollTimer = null
+        }
+      }
+    }
+
+    const onError = () => {
+      isPlaying.value = false
+      tryGetDuration()
+    }
 
     const resetToInitial = () => {
       isPlaying.value = false
@@ -74,28 +137,36 @@ export default defineComponent({
       }
     }
 
-    const onLoadedMetadata = (e) => {
-      const audioEl = e.target
-      if (audioEl && audioEl.duration) {
-        audioDuration.value = audioEl.duration
+    const loadAudio = () => {
+      const audioEl = audio.value
+      if (!audioEl) return
+      audioDuration.value = 0
+      audioEl.load()
+      // 如果传入 duration，直接使用，不轮询
+      if (Number(props.duration) > 0) {
+        audioDuration.value = Number(props.duration)
+        return
       }
+      if (tryGetDuration()) return
+      startPolling()
     }
 
-    const onEnded = () => {
-      isPlaying.value = false
-    }
-
-    const onError = () => {
-      isPlaying.value = false
-    }
+    watch(() => props.src, () => {
+      loadAudio()
+    }, { immediate: false })
 
     onMounted(() => {
       if (window.__audioManager) {
         window.__audioManager.register(id, resetToInitial)
       }
+      loadAudio()
     })
 
     onBeforeUnmount(() => {
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+      }
       const audioEl = audio.value
       if (audioEl) {
         audioEl.pause()
@@ -114,7 +185,6 @@ export default defineComponent({
       displayDuration,
       togglePlay,
       onLoadedMetadata,
-      onEnded,
       onError
     }
   }
