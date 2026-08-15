@@ -33,7 +33,7 @@ def generate_html(commits):
     repo = os.environ.get('GITHUB_REPOSITORY', 'DyWriteCode/DyWriteCode.github.io')
     json_data = json.dumps(commits, ensure_ascii=False)
 
-    # 以下 CSS 完全复制自原始 digest.txt 中的 commit-history.html，仅增加了 .search-area 的 sticky 属性
+    # 此 CSS 完全复制自原始 digest.txt，并确保 .author-tag 和 .avatar 样式完整
     html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -48,7 +48,8 @@ def generate_html(commits):
         .header h1 {{ font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }}
         .header h1 small {{ font-size: 16px; font-weight: 400; color: #6b7a8f; }}
         .commit-count {{ background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }}
-        /* 搜索框：原样式 + sticky 固定 */
+
+        /* ----- 搜索框（原始样式 + sticky 固定） ----- */
         .search-area {{
             display: flex;
             align-items: center;
@@ -76,6 +77,7 @@ def generate_html(commits):
         .search-meta .clear-btn {{ background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }}
         .search-meta .clear-btn.visible {{ display: inline-block; }}
         .search-meta .clear-btn:hover {{ color: #475569; }}
+
         .table-wrap {{ overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }}
         th {{ text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }}
@@ -83,17 +85,55 @@ def generate_html(commits):
         tr:last-child td {{ border-bottom: none; }}
         tr.hidden {{ display: none; }}
         tr.current-match td {{ background: #fef9e7 !important; outline: 2px solid #facc15; outline-offset: -2px; }}
+        /* 双击行跳转 */
         tr[data-hash] {{ cursor: pointer; }}
         tr[data-hash]:hover td {{ background: #f1f5f9; }}
         .highlight {{ background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }}
-        .author-tag {{ display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 40px; font-weight: 500; font-size: 13px; background: #eef2f6; color: #1e293b; }}
-        .author-tag .avatar {{ width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }}
+        /* ----- 作者标签样式（原始完整定义） ----- */
+        .author-tag {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px 4px 8px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 13px;
+            background: #eef2f6;
+            color: #1e293b;
+        }}
+        .author-tag .avatar {{
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            flex-shrink: 0;
+        }}
         .hash {{ font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f1f5f9; padding: 2px 8px; border-radius: 12px; font-size: 13px; color: #1e293b; letter-spacing: 0.2px; }}
         .date {{ color: #475569; font-size: 13px; white-space: nowrap; }}
         .subject {{ max-width: 380px; word-break: break-word; }}
         .no-results {{ text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; }}
-        @media (max-width: 680px) {{ .container {{ padding: 18px 14px; }} .header {{ flex-direction: column; align-items: stretch; }} .header h1 {{ font-size: 22px; }} .search-area {{ padding: 4px 12px 4px 16px; border-radius: 40px; }} .search-meta .match-info {{ min-width: 44px; font-size: 13px; }} .search-meta .nav-btn {{ width: 28px; height: 28px; font-size: 14px; }} th, td {{ padding: 10px 12px; font-size: 13px; }} .author-tag {{ font-size: 12px; padding: 2px 10px 2px 6px; }} .hash {{ font-size: 12px; }} }}
-        @media (max-width: 480px) {{ .table-wrap {{ border-radius: 12px; }} table {{ font-size: 12px; min-width: 480px; }} .subject {{ max-width: 140px; }} }}
+
+        @media (max-width: 680px) {{
+            .container {{ padding: 18px 14px; }}
+            .header {{ flex-direction: column; align-items: stretch; }}
+            .header h1 {{ font-size: 22px; }}
+            .search-area {{ padding: 4px 12px 4px 16px; border-radius: 40px; }}
+            .search-meta .match-info {{ min-width: 44px; font-size: 13px; }}
+            .search-meta .nav-btn {{ width: 28px; height: 28px; font-size: 14px; }}
+            th, td {{ padding: 10px 12px; font-size: 13px; }}
+            .author-tag {{ font-size: 12px; padding: 2px 10px 2px 6px; }}
+            .hash {{ font-size: 12px; }}
+        }}
+        @media (max-width: 480px) {{
+            .table-wrap {{ border-radius: 12px; }}
+            table {{ font-size: 12px; min-width: 480px; }}
+            .subject {{ max-width: 140px; }}
+        }}
         .table-wrap::-webkit-scrollbar {{ height: 6px; }}
         .table-wrap::-webkit-scrollbar-thumb {{ background: #d1d9e6; border-radius: 12px; }}
         .table-wrap::-webkit-scrollbar-track {{ background: #f1f5f9; }}
@@ -138,6 +178,7 @@ def generate_html(commits):
     const nextBtn = document.getElementById('nextBtn');
     const clearBtn = document.getElementById('clearBtn');
 
+    // ---- 作者颜色映射 ----
     const authorColorMap = new Map();
     const avatarColors = ['#3b82f6','#8b5cf6','#ec4899','#ef4444','#f59e0b','#10b981','#06b6d4','#6366f1','#d946ef','#f97316','#14b8a6'];
     function getAuthorColor(author) {{
@@ -149,6 +190,7 @@ def generate_html(commits):
         return color;
     }}
 
+    // ---- 渲染表格（保证作者列显示头像+名字） ----
     function renderTable(data) {{
         if (data.length === 0) {{ tbody.innerHTML = ''; noResult.style.display = 'block'; totalCount.textContent = '共 0 条'; return; }}
         noResult.style.display = 'none';
@@ -169,7 +211,7 @@ def generate_html(commits):
 
     renderTable(commitData);
 
-    // 双击跳转
+    // ---- 双击行跳转 GitHub Commit ----
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
         if (!tr || tr.classList.contains('hidden')) return;
@@ -177,7 +219,7 @@ def generate_html(commits):
         if (hash) window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
     }});
 
-    // 搜索解析（支持前缀）
+    // ---- 解析搜索前缀 ----
     function parseSearch(input) {{
         const trimmed = input.trim();
         if (!trimmed) return {{ field: null, value: null }};
@@ -198,8 +240,8 @@ def generate_html(commits):
         return {{ field: null, value: trimmed }};
     }}
 
+    // ---- 高亮指定字段 ----
     function highlightField(row, field, query) {{
-        // 清除已有高亮
         const cells = row.querySelectorAll('td');
         cells.forEach(cell => {{
             const text = cell.textContent;
@@ -217,7 +259,6 @@ def generate_html(commits):
             const text = cell.textContent;
             if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
         }} else {{
-            const cells = row.querySelectorAll('td');
             cells.forEach(cell => {{
                 const text = cell.textContent;
                 if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
@@ -226,6 +267,7 @@ def generate_html(commits):
     }}
 
     let currentMatches = [], currentIndex = -1;
+    // ---- 执行搜索 ----
     function performSearch() {{
         const {{ field, value: query }} = parseSearch(searchInput.value);
         const rows = tbody.querySelectorAll('tr');
@@ -249,7 +291,6 @@ def generate_html(commits):
         }}
 
         clearBtn.classList.add('visible');
-        const regex = new RegExp(escapeRegExp(query), 'gi');
         let matchedRows = [];
 
         rows.forEach(row => {{
@@ -300,6 +341,7 @@ def generate_html(commits):
         noResult.style.display = visible === 0 ? 'block' : 'none';
     }}
 
+    // ---- 导航 ----
     function navigate(delta) {{
         if (currentMatches.length === 0) return;
         if (currentIndex >= 0) currentMatches[currentIndex].classList.remove('current-match');
@@ -309,13 +351,23 @@ def generate_html(commits):
         matchInfo.textContent = `${{currentIndex+1}} / ${{currentMatches.length}}`;
     }}
 
+    // ---- 事件绑定 ----
     searchInput.addEventListener('input', performSearch);
-    searchInput.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }} else if (e.key === 'Enter' && e.shiftKey) {{ e.preventDefault(); navigate(-1); }} }});
+    searchInput.addEventListener('keydown', e => {{
+        if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }}
+        else if (e.key === 'Enter' && e.shiftKey) {{ e.preventDefault(); navigate(-1); }}
+    }});
     prevBtn.addEventListener('click', () => navigate(-1));
     nextBtn.addEventListener('click', () => navigate(1));
     clearBtn.addEventListener('click', () => {{ searchInput.value = ''; performSearch(); searchInput.focus(); }});
     performSearch();
-    document.addEventListener('keydown', e => {{ if ((e.ctrlKey || e.metaKey) && e.key === 'f') {{ e.preventDefault(); searchInput.focus(); searchInput.select(); }} }});
+    document.addEventListener('keydown', e => {{
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {{
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }}
+    }});
 }})();
 </script>
 </body>
