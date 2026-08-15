@@ -155,7 +155,7 @@ def generate_html(commits):
     renderTable(commitData);
 
     let currentMatches = [], currentIndex = -1;
-    function escapeRegExp(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function escapeRegExp(str) { return str.replace('/[.*+?^${}()|[\]\\]/g', '\\$&'); }
     function highlightField(row, field, query) {
         const cell = row.querySelector(`td:nth-child(${ {hash:1,author:2,date:3,subject:4}[field] || 4 })`);
         if (!cell) return;
