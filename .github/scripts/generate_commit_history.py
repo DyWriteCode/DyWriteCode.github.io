@@ -33,56 +33,79 @@ def get_commit_data():
 def generate_html(commits):
     """生成包含提交历史的 HTML 文件"""
     
+    # 从环境变量获取仓库名，若不存在则使用默认
+    repo = os.environ.get('GITHUB_REPOSITORY', 'DyWriteCode/DyWriteCode.github.io')
+    
     # 将 commits 转换为 JSON 字符串（安全转义）
     json_data = json.dumps(commits, ensure_ascii=False)
     
     # HTML 模板（完整内联，避免额外文件）
-    html_template = '''<!DOCTYPE html>
+    html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📜 提交历史</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; padding: 30px 20px; color: #1e293b; }
-        .container { max-width: 1300px; margin: 0 auto; background: #ffffff; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); padding: 28px 30px 36px; }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; border-bottom: 2px solid #edf2f7; padding-bottom: 16px; }
-        .header h1 { font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .header h1 small { font-size: 16px; font-weight: 400; color: #6b7a8f; }
-        .commit-count { background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }
-        .search-area { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; background: #f8fafc; padding: 6px 16px 6px 20px; border-radius: 60px; border: 1px solid #e2e8f0; transition: border-color 0.2s, box-shadow 0.2s; }
-        .search-area:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }
-        .search-area .search-icon { font-size: 18px; color: #94a3b8; flex-shrink: 0; }
-        .search-area input { flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 16px; outline: none; color: #0f172a; min-width: 160px; }
-        .search-area input::placeholder { color: #94a3b8; font-weight: 400; }
-        .search-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .search-meta .match-info { font-size: 14px; color: #475569; min-width: 60px; text-align: center; user-select: none; }
-        .search-meta .nav-btn { background: transparent; border: 1px solid #d1d9e6; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #334155; transition: background 0.15s, border-color 0.15s; }
-        .search-meta .nav-btn:hover:not(:disabled) { background: #eef2f6; border-color: #b0c0d0; }
-        .search-meta .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .search-meta .clear-btn { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }
-        .search-meta .clear-btn.visible { display: inline-block; }
-        .search-meta .clear-btn:hover { color: #475569; }
-        .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
-        th { text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }
-        td { padding: 12px 18px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; transition: background 0.15s; }
-        tr:last-child td { border-bottom: none; }
-        tr.hidden { display: none; }
-        tr.current-match td { background: #fef9e7 !important; outline: 2px solid #facc15; outline-offset: -2px; }
-        .highlight { background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }
-        .author-tag { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 40px; font-weight: 500; font-size: 13px; background: #eef2f6; color: #1e293b; }
-        .author-tag .avatar { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
-        .hash { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f1f5f9; padding: 2px 8px; border-radius: 12px; font-size: 13px; color: #1e293b; letter-spacing: 0.2px; }
-        .date { color: #475569; font-size: 13px; white-space: nowrap; }
-        .subject { max-width: 380px; word-break: break-word; }
-        .no-results { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; }
-        @media (max-width: 680px) { .container { padding: 18px 14px; } .header { flex-direction: column; align-items: stretch; } .header h1 { font-size: 22px; } .search-area { padding: 4px 12px 4px 16px; border-radius: 40px; } .search-meta .match-info { min-width: 44px; font-size: 13px; } .search-meta .nav-btn { width: 28px; height: 28px; font-size: 14px; } th, td { padding: 10px 12px; font-size: 13px; } .author-tag { font-size: 12px; padding: 2px 10px 2px 6px; } .hash { font-size: 12px; } }
-        @media (max-width: 480px) { .table-wrap { border-radius: 12px; } table { font-size: 12px; min-width: 480px; } .subject { max-width: 140px; } }
-        .table-wrap::-webkit-scrollbar { height: 6px; }
-        .table-wrap::-webkit-scrollbar-thumb { background: #d1d9e6; border-radius: 12px; }
-        .table-wrap::-webkit-scrollbar-track { background: #f1f5f9; }
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; padding: 30px 20px; color: #1e293b; }}
+        .container {{ max-width: 1300px; margin: 0 auto; background: #ffffff; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); padding: 28px 30px 36px; }}
+        .header {{ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; border-bottom: 2px solid #edf2f7; padding-bottom: 16px; }}
+        .header h1 {{ font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }}
+        .header h1 small {{ font-size: 16px; font-weight: 400; color: #6b7a8f; }}
+        .commit-count {{ background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }}
+        /* ----- 搜索框固定 ----- */
+        .search-area {{
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+            padding: 6px 16px 6px 20px;
+            border-radius: 60px;
+            border: 1px solid #e2e8f0;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid #d1d9e6;
+        }}
+        .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }}
+        .search-area .search-icon {{ font-size: 18px; color: #94a3b8; flex-shrink: 0; }}
+        .search-area input {{ flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 16px; outline: none; color: #0f172a; min-width: 160px; }}
+        .search-area input::placeholder {{ color: #94a3b8; font-weight: 400; }}
+        .search-meta {{ display: flex; align-items: center; gap: 10px; flex-shrink: 0; }}
+        .search-meta .match-info {{ font-size: 14px; color: #475569; min-width: 60px; text-align: center; user-select: none; }}
+        .search-meta .nav-btn {{ background: transparent; border: 1px solid #d1d9e6; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: #334155; transition: background 0.15s, border-color 0.15s; }}
+        .search-meta .nav-btn:hover:not(:disabled) {{ background: #eef2f6; border-color: #b0c0d0; }}
+        .search-meta .nav-btn:disabled {{ opacity: 0.3; cursor: not-allowed; }}
+        .search-meta .clear-btn {{ background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }}
+        .search-meta .clear-btn.visible {{ display: inline-block; }}
+        .search-meta .clear-btn:hover {{ color: #475569; }}
+        .table-wrap {{ overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }}
+        table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }}
+        th {{ text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }}
+        td {{ padding: 12px 18px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; transition: background 0.15s; cursor: default; }}
+        tr:last-child td {{ border-bottom: none; }}
+        tr.hidden {{ display: none; }}
+        tr.current-match td {{ background: #fef9e7 !important; outline: 2px solid #facc15; outline-offset: -2px; }}
+        /* 双击行时鼠标样式 */
+        tr[data-hash] {{ cursor: pointer; }}
+        tr[data-hash]:hover td {{ background: #f1f5f9; }}
+        .highlight {{ background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }}
+        .author-tag {{ display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 40px; font-weight: 500; font-size: 13px; background: #eef2f6; color: #1e293b; }}
+        .author-tag .avatar {{ width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }}
+        .hash {{ font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f1f5f9; padding: 2px 8px; border-radius: 12px; font-size: 13px; color: #1e293b; letter-spacing: 0.2px; }}
+        .date {{ color: #475569; font-size: 13px; white-space: nowrap; }}
+        .subject {{ max-width: 380px; word-break: break-word; }}
+        .no-results {{ text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; }}
+        @media (max-width: 680px) {{ .container {{ padding: 18px 14px; }} .header {{ flex-direction: column; align-items: stretch; }} .header h1 {{ font-size: 22px; }} .search-area {{ padding: 4px 12px 4px 16px; border-radius: 40px; }} .search-meta .match-info {{ min-width: 44px; font-size: 13px; }} .search-meta .nav-btn {{ width: 28px; height: 28px; font-size: 14px; }} th, td {{ padding: 10px 12px; font-size: 13px; }} .author-tag {{ font-size: 12px; padding: 2px 10px 2px 6px; }} .hash {{ font-size: 12px; }} }}
+        @media (max-width: 480px) {{ .table-wrap {{ border-radius: 12px; }} table {{ font-size: 12px; min-width: 480px; }} .subject {{ max-width: 140px; }} }}
+        .table-wrap::-webkit-scrollbar {{ height: 6px; }}
+        .table-wrap::-webkit-scrollbar-thumb {{ background: #d1d9e6; border-radius: 12px; }}
+        .table-wrap::-webkit-scrollbar-track {{ background: #f1f5f9; }}
     </style>
 </head>
 <body>
@@ -110,9 +133,12 @@ def generate_html(commits):
     </div>
 </div>
 <script>
-(function() {
+(function() {{
     'use strict';
-    const commitData = __COMMIT_DATA__;
+    const commitData = {json_data};
+
+    // ----- 仓库名（用于构建 Commit 链接）-----
+    const repo = '{repo}';
 
     const tbody = document.getElementById('commitBody');
     const noResult = document.getElementById('noResult');
@@ -125,62 +151,74 @@ def generate_html(commits):
 
     const authorColorMap = new Map();
     const avatarColors = ['#3b82f6','#8b5cf6','#ec4899','#ef4444','#f59e0b','#10b981','#06b6d4','#6366f1','#d946ef','#f97316','#14b8a6'];
-    function getAuthorColor(author) {
+    function getAuthorColor(author) {{
         if (authorColorMap.has(author)) return authorColorMap.get(author);
         let hash = 0;
         for (let i = 0; i < author.length; i++) hash = author.charCodeAt(i) + ((hash << 5) - hash);
         const color = avatarColors[Math.abs(hash) % avatarColors.length];
         authorColorMap.set(author, color);
         return color;
-    }
+    }}
 
-    function renderTable(data) {
-        if (data.length === 0) { tbody.innerHTML = ''; noResult.style.display = 'block'; totalCount.textContent = '共 0 条'; return; }
+    function renderTable(data) {{
+        if (data.length === 0) {{ tbody.innerHTML = ''; noResult.style.display = 'block'; totalCount.textContent = '共 0 条'; return; }}
         noResult.style.display = 'none';
-        totalCount.textContent = `共 ${data.length} 条`;
+        totalCount.textContent = `共 ${{data.length}} 条`;
         let html = '';
-        data.forEach(item => {
+        data.forEach(item => {{
             const color = getAuthorColor(item.author);
             const initial = item.author.charAt(0).toUpperCase();
-            html += `<tr data-hash="${item.hash}" data-author="${item.author}" data-date="${item.date}" data-subject="${item.subject}">
-                <td><span class="hash">${item.hash}</span></td>
-                <td><span class="author-tag"><span class="avatar" style="background:${color};">${initial}</span>${item.author}</span></td>
-                <td class="date">${item.date}</td>
-                <td class="subject">${item.subject}</td>
+            html += `<tr data-hash="${{item.hash}}" data-author="${{item.author}}" data-date="${{item.date}}" data-subject="${{item.subject}}">
+                <td><span class="hash">${{item.hash}}</span></td>
+                <td><span class="author-tag"><span class="avatar" style="background:${{color}};">${{initial}}</span>${{item.author}}</span></td>
+                <td class="date">${{item.date}}</td>
+                <td class="subject">${{item.subject}}</td>
             </tr>`;
-        });
+        }});
         tbody.innerHTML = html;
-    }
+    }}
 
     renderTable(commitData);
 
+    // ----- 双击行跳转到 GitHub Commit -----
+    tbody.addEventListener('dblclick', function(e) {{
+        const tr = e.target.closest('tr');
+        if (!tr) return;
+        // 如果该行被搜索隐藏，则不跳转
+        if (tr.classList.contains('hidden')) return;
+        const hash = tr.dataset.hash;
+        if (hash) {{
+            window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
+        }}
+    }});
+
     let currentMatches = [], currentIndex = -1;
-    function escapeRegExp(str) { return str.replace('/[.*+?^${}()|[\]\\]/g', '\\$&'); }
-    function highlightField(row, field, query) {
-        const cell = row.querySelector(`td:nth-child(${ {hash:1,author:2,date:3,subject:4}[field] || 4 })`);
+    function escapeRegExp(str) {{ return str.replace('/[.*+?^${{}}()|[\]\\\\]/g', '\\\\$&'); }}
+    function highlightField(row, field, query) {{
+        const cell = row.querySelector(`td:nth-child(${{ {{hash:1,author:2,date:3,subject:4}}[field] || 4 }})`);
         if (!cell) return;
         const text = cell.textContent;
         if (!text) return;
         const regex = new RegExp(escapeRegExp(query), 'gi');
         if (!regex.test(text)) return;
-        cell.innerHTML = text.replace(regex, match => `<span class="highlight">${match}</span>`);
-    }
-    function performSearch() {
+        cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+    }}
+    function performSearch() {{
         const query = searchInput.value.trim();
         const rows = tbody.querySelectorAll('tr');
-        if (!query) {
+        if (!query) {{
             rows.forEach(row => row.classList.remove('hidden','current-match'));
-            rows.forEach(row => row.querySelectorAll('.highlight').forEach(el => { const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); }));
+            rows.forEach(row => row.querySelectorAll('.highlight').forEach(el => {{ const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); }}));
             currentMatches = []; currentIndex = -1; matchInfo.textContent = '0 / 0'; prevBtn.disabled = true; nextBtn.disabled = true; clearBtn.classList.remove('visible');
-            totalCount.textContent = `共 ${commitData.length} 条`; noResult.style.display = 'none'; return;
-        }
+            totalCount.textContent = `共 ${{commitData.length}} 条`; noResult.style.display = 'none'; return;
+        }}
         clearBtn.classList.add('visible');
         const regex = new RegExp(escapeRegExp(query), 'gi');
         let matchCount = 0, matchedRows = [];
-        rows.forEach(row => {
-            row.querySelectorAll('.highlight').forEach(el => { const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); });
+        rows.forEach(row => {{
+            row.querySelectorAll('.highlight').forEach(el => {{ const parent = el.parentNode; parent.replaceChild(document.createTextNode(el.textContent), el); parent.normalize(); }});
             const text = (row.dataset.hash+' '+row.dataset.author+' '+row.dataset.date+' '+row.dataset.subject).toLowerCase();
-            if (text.includes(query.toLowerCase())) {
+            if (text.includes(query.toLowerCase())) {{
                 row.classList.remove('hidden');
                 matchedRows.push(row);
                 matchCount++;
@@ -188,44 +226,42 @@ def generate_html(commits):
                 highlightField(row, 'author', query);
                 highlightField(row, 'date', query);
                 highlightField(row, 'subject', query);
-            } else row.classList.add('hidden');
+            }} else row.classList.add('hidden');
             row.classList.remove('current-match');
-        });
+        }});
         currentMatches = matchedRows; currentIndex = -1;
-        if (currentMatches.length > 0) { currentIndex = 0; currentMatches[0].classList.add('current-match'); currentMatches[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); prevBtn.disabled = false; nextBtn.disabled = false; } else { prevBtn.disabled = true; nextBtn.disabled = true; }
-        matchInfo.textContent = currentMatches.length > 0 ? `1 / ${currentMatches.length}` : '0 / 0';
+        if (currentMatches.length > 0) {{ currentIndex = 0; currentMatches[0].classList.add('current-match'); currentMatches[0].scrollIntoView({{ block: 'nearest', behavior: 'smooth' }}); prevBtn.disabled = false; nextBtn.disabled = false; }} else {{ prevBtn.disabled = true; nextBtn.disabled = true; }}
+        matchInfo.textContent = currentMatches.length > 0 ? `1 / ${{currentMatches.length}}` : '0 / 0';
         const visible = rows.length - document.querySelectorAll('tr.hidden').length;
-        totalCount.textContent = `共 ${visible} 条`;
+        totalCount.textContent = `共 ${{visible}} 条`;
         noResult.style.display = visible === 0 ? 'block' : 'none';
-    }
-    function navigate(delta) {
+    }}
+    function navigate(delta) {{
         if (currentMatches.length === 0) return;
         if (currentIndex >= 0) currentMatches[currentIndex].classList.remove('current-match');
         currentIndex = (currentIndex + delta + currentMatches.length) % currentMatches.length;
         currentMatches[currentIndex].classList.add('current-match');
-        currentMatches[currentIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        matchInfo.textContent = `${currentIndex+1} / ${currentMatches.length}`;
-    }
+        currentMatches[currentIndex].scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+        matchInfo.textContent = `${{currentIndex+1}} / ${{currentMatches.length}}`;
+    }}
     searchInput.addEventListener('input', performSearch);
-    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); navigate(1); } else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); navigate(-1); } });
+    searchInput.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }} else if (e.key === 'Enter' && e.shiftKey) {{ e.preventDefault(); navigate(-1); }} }});
     prevBtn.addEventListener('click', () => navigate(-1));
     nextBtn.addEventListener('click', () => navigate(1));
-    clearBtn.addEventListener('click', () => { searchInput.value = ''; performSearch(); searchInput.focus(); });
+    clearBtn.addEventListener('click', () => {{ searchInput.value = ''; performSearch(); searchInput.focus(); }});
     performSearch();
-    document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); searchInput.focus(); searchInput.select(); } });
-})();
+    document.addEventListener('keydown', e => {{ if ((e.ctrlKey || e.metaKey) && e.key === 'f') {{ e.preventDefault(); searchInput.focus(); searchInput.select(); }} }});
+}})();
 </script>
 </body>
 </html>'''
     
-    # 替换占位符
-    html_content = html_template.replace('__COMMIT_DATA__', json_data)
-    
     # 写入文件
     with open('commit-history.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
+        f.write(html_template)
     
     print(f"✅ commit-history.html 已生成，包含 {len(commits)} 条提交记录")
+    print(f"📌 仓库名: {repo}，双击行将跳转至对应的 GitHub Commit")
 
 if __name__ == '__main__':
     commits = get_commit_data()
