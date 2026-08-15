@@ -30,9 +30,31 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   git add commit-history.html
-                  git diff --staged --quiet || {
-                    git commit -m "chore: update commit-history.html [skip ci]"
-                    # 先拉取远程最新，避免冲突
-                    git pull --rebase origin main
-                    git push
-                  }
+                  # 检查是否有变动
+                  if git diff --staged --quiet; then
+                    echo "No changes to commit."
+                    exit 0
+                  fi
+                  git commit -m "chore: update commit-history.html [skip ci]"
+                  # 尝试推送，若失败则拉取远程最新并重试（最多3次）
+                  for i in 1 2 3; do
+                    echo "Push attempt $i..."
+                    if git push; then
+                      echo "Push succeeded."
+                      break
+                    else
+                      echo "Push failed, pulling latest changes..."
+                      git pull --rebase origin main
+                      # 如果 rebase 有冲突，则放弃 rebase 并退出（可考虑手动解决）
+                      if [ $? -ne 0 ]; then
+                        echo "Rebase conflict, aborting."
+                        git rebase --abort
+                        exit 1
+                      fi
+                      # 重新尝试推送
+                      if [ $i -eq 3 ]; then
+                        echo "Push failed after 3 attempts, exiting."
+                        exit 1
+                      fi
+                    fi
+                  done
