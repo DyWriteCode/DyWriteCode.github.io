@@ -1,27 +1,12 @@
 // ============================================================
-//  第一部分：vConsole 安全条件加载（新增）
-//  双重校验机制：URL 参数 + sessionStorage
-//  参数名不区分大小写（Debug/debug/DEBUG 均可）
+//  第一部分：vConsole 安全条件加载（简化版）
+//  仅需一次 ?debug=1，之后自动启用，无需 token
 // ============================================================
 (function () {
     'use strict';
 
-    // ----- 配置 -----
-    const STORAGE_KEY = 'vconsole_token';
-    const TOKEN_PARAM = 'token';
-    const ENABLE_PARAM = 'debug'; // 基准名称（小写），实际匹配时忽略大小写
-
-    // ----- 辅助函数：获取忽略大小写的参数值 -----
-    function getParamIgnoreCase(paramName, search = window.location.search) {
-        const params = new URLSearchParams(search);
-        const lowerName = paramName.toLowerCase();
-        for (let [key, value] of params.entries()) {
-            if (key.toLowerCase() === lowerName) {
-                return { key, value };
-            }
-        }
-        return null;
-    }
+    const STORAGE_KEY = 'vconsole_enabled';
+    const DEBUG_PARAM = 'debug';  // 不区分大小写
 
     function loadVConsole() {
         if (window.__vconsole_loaded) return;
@@ -30,7 +15,7 @@
         script.onload = function () {
             new VConsole();
             window.__vconsole_loaded = true;
-            console.log('[vConsole] 已安全加载');
+            console.log('[vConsole] 已加载');
         };
         script.onerror = function () {
             console.warn('[vConsole] 加载失败');
@@ -39,53 +24,38 @@
     }
 
     function initVConsole() {
-        const search = window.location.search;
-        const enableResult = getParamIgnoreCase(ENABLE_PARAM, search);
-        const tokenResult = getParamIgnoreCase(TOKEN_PARAM, search); // token 也支持忽略大小写（可选）
-        let storedToken = sessionStorage.getItem(STORAGE_KEY);
-
-        // 情况 1：首次激活（任意大小写的 Debug 参数）
-        if (enableResult !== null) {
-            const newToken = Math.random().toString(36).substring(2, 10) +
-                Date.now().toString(36);
-            sessionStorage.setItem(STORAGE_KEY, newToken);
-
-            // 构建新 URL：删除所有大小写变体的 Debug 参数，添加 token
-            const params = new URLSearchParams(search);
-            // 收集所有键名（忽略大小写匹配 debug）
-            const keysToRemove = [];
-            for (let [key] of params.entries()) {
-                if (key.toLowerCase() === ENABLE_PARAM) {
-                    keysToRemove.push(key);
-                }
+        // 检查 URL 中是否有 debug 参数（忽略大小写）
+        const params = new URLSearchParams(window.location.search);
+        let hasDebug = false;
+        let debugKey = null;
+        for (let [key] of params.entries()) {
+            if (key.toLowerCase() === DEBUG_PARAM) {
+                hasDebug = true;
+                debugKey = key;
+                break;
             }
-            keysToRemove.forEach(k => params.delete(k));
-            // 设置 token（token 我们保留大小写敏感，但这里也可以统一，不过为了兼容，我们使用固定 key）
-            params.set(TOKEN_PARAM, newToken);
+        }
 
-            const newUrl = window.location.pathname + '?' + params.toString() +
-                window.location.hash;
+        // 情况 1：URL 带 debug 参数 → 启用标记，加载 vConsole，并移除参数
+        if (hasDebug) {
+            sessionStorage.setItem(STORAGE_KEY, 'true');
+            // 移除 debug 参数（保留其他参数）
+            params.delete(debugKey);
+            const newUrl = window.location.pathname + '?' + params.toString() + window.location.hash;
             history.replaceState(null, '', newUrl);
-            window.location.reload();
+            // 立即加载 vConsole（无需刷新）
+            loadVConsole();
             return;
         }
 
-        // 情况 2：已有 token，进行双重校验（token 区分大小写，因为我们生成时区分，但用户也可能手动输入，所以我们也可以忽略大小写？为了安全，还是区分大小写）
-        // 这里为了灵活性，我们也支持忽略大小写，但建议保持区分。
-        if (tokenResult !== null) {
-            const tokenValue = tokenResult.value;
-            if (storedToken && tokenValue === storedToken) {
-                console.log('[vConsole] 双重校验通过，加载 vConsole');
-                loadVConsole();
-            } else {
-                console.warn('[vConsole] token 校验失败（可能被篡改），拒绝加载');
-                sessionStorage.removeItem(STORAGE_KEY);
-            }
+        // 情况 2：URL 无 debug，但 sessionStorage 标记存在 → 加载 vConsole
+        if (sessionStorage.getItem(STORAGE_KEY) === 'true') {
+            loadVConsole();
         }
-        // 无 token 也不带 Debug，不加载
+        // 否则不加载
     }
 
-    // 页面加载完成后执行，避免干扰首屏
+    // 页面加载完成后执行
     if (document.readyState === 'complete') {
         setTimeout(initVConsole, 300);
     } else {
@@ -98,7 +68,6 @@
 
 // ============================================================
 //  第二部分：原有反调试脚本（保持不变）
-//  从原 preview_assets/index.js 完整复制，未作任何修改
 // ============================================================
 /**
  * 反调试脚本（优化版 - 低误报/高鲁棒性）
