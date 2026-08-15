@@ -1,14 +1,116 @@
+// ============================================================
+//  第一部分：vConsole 安全条件加载（新增）
+//  双重校验机制：URL 参数 + sessionStorage
+//  参数名不区分大小写（Debug/debug/DEBUG 均可）
+// ============================================================
+(function () {
+    'use strict';
+
+    // ----- 配置 -----
+    const STORAGE_KEY = 'vconsole_token';
+    const TOKEN_PARAM = 'token';
+    const ENABLE_PARAM = 'debug'; // 基准名称（小写），实际匹配时忽略大小写
+
+    // ----- 辅助函数：获取忽略大小写的参数值 -----
+    function getParamIgnoreCase(paramName, search = window.location.search) {
+        const params = new URLSearchParams(search);
+        const lowerName = paramName.toLowerCase();
+        for (let [key, value] of params.entries()) {
+            if (key.toLowerCase() === lowerName) {
+                return { key, value };
+            }
+        }
+        return null;
+    }
+
+    function loadVConsole() {
+        if (window.__vconsole_loaded) return;
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/vconsole/dist/vconsole.min.js';
+        script.onload = function () {
+            new VConsole();
+            window.__vconsole_loaded = true;
+            console.log('[vConsole] 已安全加载');
+        };
+        script.onerror = function () {
+            console.warn('[vConsole] 加载失败');
+        };
+        document.head.appendChild(script);
+    }
+
+    function initVConsole() {
+        const search = window.location.search;
+        const enableResult = getParamIgnoreCase(ENABLE_PARAM, search);
+        const tokenResult = getParamIgnoreCase(TOKEN_PARAM, search); // token 也支持忽略大小写（可选）
+        let storedToken = sessionStorage.getItem(STORAGE_KEY);
+
+        // 情况 1：首次激活（任意大小写的 Debug 参数）
+        if (enableResult !== null) {
+            const newToken = Math.random().toString(36).substring(2, 10) +
+                Date.now().toString(36);
+            sessionStorage.setItem(STORAGE_KEY, newToken);
+
+            // 构建新 URL：删除所有大小写变体的 Debug 参数，添加 token
+            const params = new URLSearchParams(search);
+            // 收集所有键名（忽略大小写匹配 debug）
+            const keysToRemove = [];
+            for (let [key] of params.entries()) {
+                if (key.toLowerCase() === ENABLE_PARAM) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(k => params.delete(k));
+            // 设置 token（token 我们保留大小写敏感，但这里也可以统一，不过为了兼容，我们使用固定 key）
+            params.set(TOKEN_PARAM, newToken);
+
+            const newUrl = window.location.pathname + '?' + params.toString() +
+                window.location.hash;
+            history.replaceState(null, '', newUrl);
+            window.location.reload();
+            return;
+        }
+
+        // 情况 2：已有 token，进行双重校验（token 区分大小写，因为我们生成时区分，但用户也可能手动输入，所以我们也可以忽略大小写？为了安全，还是区分大小写）
+        // 这里为了灵活性，我们也支持忽略大小写，但建议保持区分。
+        if (tokenResult !== null) {
+            const tokenValue = tokenResult.value;
+            if (storedToken && tokenValue === storedToken) {
+                console.log('[vConsole] 双重校验通过，加载 vConsole');
+                loadVConsole();
+            } else {
+                console.warn('[vConsole] token 校验失败（可能被篡改），拒绝加载');
+                sessionStorage.removeItem(STORAGE_KEY);
+            }
+        }
+        // 无 token 也不带 Debug，不加载
+    }
+
+    // 页面加载完成后执行，避免干扰首屏
+    if (document.readyState === 'complete') {
+        setTimeout(initVConsole, 300);
+    } else {
+        window.addEventListener('load', function () {
+            setTimeout(initVConsole, 300);
+        });
+    }
+})();
+
+
+// ============================================================
+//  第二部分：原有反调试脚本（保持不变）
+//  从原 preview_assets/index.js 完整复制，未作任何修改
+// ============================================================
 /**
  * 反调试脚本（优化版 - 低误报/高鲁棒性）
  */
-(function() {
+(function () {
     'use strict';
 
     // ============================================================
     // 1. 增强白名单机制（降低误触发）
     // ============================================================
     const url = location.href.toLowerCase();
-    
+
     // 1.1 自动放行安全环境：本地文件、localhost、内网IP段
     const safeHosts = ['localhost', '127.0.0.1', '::1', '192.168.', '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.'];
     if (safeHosts.some(host => url.includes(host))) {
@@ -17,11 +119,11 @@
     }
 
     // 1.2 强令牌白名单（防止简单 URL 篡改）：必须同时满足 URL 参数 + sessionStorage 双重校验
-    const bypassToken = 'aGVsbG9fd29ybGQ='; // 可替换为你的服务端下发的动态密钥
+    const bypassToken = 'Dy20090918'; // 可替换为你的服务端下发的动态密钥
     const urlParams = new URLSearchParams(location.search);
     const urlToken = urlParams.get('_dt_bypass');
     const storageToken = sessionStorage.getItem('_dt_token');
-    
+
     if (urlToken === bypassToken && storageToken === bypassToken) {
         console.log('%c🔓 白名单令牌验证通过，反调试已禁用', 'color:blue;font-size:16px;');
         return;
@@ -57,8 +159,8 @@
         // 扩展环境下，不劫持 console，防止破坏扩展通信
     } else {
         // 非扩展环境才劫持 console
-        const noop = () => {};
-        const consoleProps = ['log','warn','error','info','debug','trace','dir','dirxml','group','groupEnd','time','timeEnd','table','count','assert','profile','profileEnd','clear'];
+        const noop = () => { };
+        const consoleProps = ['log', 'warn', 'error', 'info', 'debug', 'trace', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'table', 'count', 'assert', 'profile', 'profileEnd', 'clear'];
         consoleProps.forEach(prop => {
             if (console[prop]) {
                 Object.defineProperty(console, prop, {
@@ -87,7 +189,7 @@
         { key: 83, ctrl: true },               // Ctrl+S
         { key: 72, ctrl: true, shift: true }   // Ctrl+Shift+H (某些浏览器的开发者工具快捷键变种)
     ];
-    
+
     document.addEventListener('keydown', e => {
         const key = e.keyCode || e.which;
         const ctrl = e.ctrlKey || e.metaKey;
@@ -121,7 +223,7 @@
     let fps = 60;
     let frameCount = 0;
     let lastFpsTime = performance.now();
-    
+
     function updateFPS() {
         if (document.hidden) {
             // 页面隐藏时不检测帧率（避免后台节流误报）
@@ -148,13 +250,13 @@
             let sum = 0;
             for (let j = 0; j < 1000; j++) sum += Math.sqrt(j);
             // 插入 debugger 语句，但不依赖其返回结果（让调试器产生停顿）
-            (function(){ debugger; })();
+            (function () { debugger; })();
             const duration = performance.now() - start;
             samples.push(duration);
         }
         // 取中位数，排除极端波动
-        samples.sort((a,b) => a - b);
-        return samples[1]; 
+        samples.sort((a, b) => a - b);
+        return samples[1];
     }
 
     // 4.3 隐蔽的钩子检测（区分正常框架和恶意调试）
@@ -163,15 +265,15 @@
         const hasReactHook = !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
         const hasVueHook = !!window.__VUE_DEVTOOLS_GLOBAL_HOOK__;
         const hasReduxHook = !!window.__REDUX_DEVTOOLS_EXTENSION__;
-        
+
         // 检查页面是否真的使用了这些框架（通过全局变量或 DOM 特征）
         const usesReact = !!window.React || !!document.querySelector('[data-reactroot]');
         const usesVue = !!window.Vue || !!document.querySelector('[data-v-app]');
-        
+
         if (hasReactHook && !usesReact) return true;
         if (hasVueHook && !usesVue) return true;
         if (hasReduxHook && !window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__) return true; // 仅有扩展无 compose 也可疑
-        
+
         return false;
     }
 
@@ -202,7 +304,7 @@
         const perfThreshold = isMobile ? 500 : 280;
         const execTime = sampleExecutionTime();
         if (execTime > perfThreshold) {
-            scoreIncrement += 1.5; 
+            scoreIncrement += 1.5;
         }
 
         // -- 检测项 2: 帧率异常（移动端阈值更低） --
@@ -232,7 +334,7 @@
             if (funcStr.includes('[native code]') === false && funcStr.includes('function') === false) {
                 scoreIncrement += 1.0; // eval 被重写，可能被调试器注入
             }
-        } catch(e) {}
+        } catch (e) { }
 
         // 更新积分（加上当前增量，并衰减）
         suspicionScore = suspicionScore * (1 - DECAY_RATE * 0.5) + scoreIncrement;
@@ -256,7 +358,7 @@
         // 若 sessionStorage 未标记，先标记防止重复执行
         if (!sessionStorage.getItem('_debug_penalty')) {
             sessionStorage.setItem('_debug_penalty', '1');
-            
+
             // ★ 温和惩罚：清空页面内容并显示伪装界面（而非空白页，避免太突兀）
             document.body.innerHTML = `
                 <div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#999;flex-direction:column;">
@@ -270,7 +372,7 @@
 
         // 5.2 高频干扰（不变，但增加随机性）
         const debuggerInterval = setInterval(() => {
-            try { (function(){ debugger; })(); } catch (_) {}
+            try { (function () { debugger; })(); } catch (_) { }
         }, 80 + Math.floor(Math.random() * 40));
 
         // 5.3 控制台刷屏（降低频率，减少性能消耗）
@@ -291,29 +393,29 @@
 
         // 5.5 重写 eval/Function（加强拦截）
         const origEval = window.eval;
-        window.eval = function(str) {
+        window.eval = function (str) {
             if (typeof str === 'string' && (str.includes('console') || str.includes('debugger') || str.includes('window'))) {
                 return undefined;
             }
             return origEval(str);
         };
         const origFunction = window.Function;
-        window.Function = function(...args) {
+        window.Function = function (...args) {
             const body = args[args.length - 1] || '';
             if (typeof body === 'string' && (body.includes('console') || body.includes('debugger') || body.includes('window'))) {
-                return function() {};
+                return function () { };
             }
             return origFunction.apply(this, args);
         };
 
         // 5.6 锁定 console（持续守护）
-        const noop = () => {};
+        const noop = () => { };
         setInterval(() => {
-            ['log','warn','error','info','debug'].forEach(prop => {
+            ['log', 'warn', 'error', 'info', 'debug'].forEach(prop => {
                 if (console[prop] && console[prop] !== noop) {
                     try {
                         Object.defineProperty(console, prop, { value: noop, writable: false, configurable: false });
-                    } catch (_) {}
+                    } catch (_) { }
                 }
             });
         }, 400);

@@ -1147,7 +1147,6 @@ export default {
       this.stopUserRecording()
 
       const text = result.text.trim()
-      const duration = result.duration || 0  // 接收时长
 
       // 始终构建语音消息（无论是否有文字）
       let audioUrl = null
@@ -1160,9 +1159,8 @@ export default {
 
       const voiceMsg = {
         src: audioUrl,
-        alt: text,
+        alt: text,           // 可能为空，但语音播放不受影响
         delay: 0,
-        duration: duration,  // 将时长传递给 Voice 组件
       }
 
       const quoteId = this.quoteMsg ? this.quoteMsg.id : null
@@ -1172,16 +1170,18 @@ export default {
 
       this.clearQuote()
 
+      // 如果识别文字为空，仅提示但不影响发送
       if (!text) {
         Snackbar({
           content: '语音已发送（未识别到文字）',
           duration: 1500,
           type: 'warning'
         })
+        // 不处理下一步，保持当前状态（让用户继续输入）
         return
       }
 
-      // 处理下一步逻辑（原有代码保持不变）
+      // 文字非空，继续处理下一步逻辑
       if (this.nextActionTrigger) {
         const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
         const { type, options } = triggerNextAction

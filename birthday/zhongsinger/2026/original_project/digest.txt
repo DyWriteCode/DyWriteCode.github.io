@@ -63,7 +63,7 @@ FILE: index.html
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <title></title>
 </head>
 
@@ -2199,7 +2199,6 @@ export default {
       this.stopUserRecording()
 
       const text = result.text.trim()
-      const duration = result.duration || 0  // 接收时长
 
       // 始终构建语音消息（无论是否有文字）
       let audioUrl = null
@@ -2212,9 +2211,8 @@ export default {
 
       const voiceMsg = {
         src: audioUrl,
-        alt: text,
+        alt: text,           // 可能为空，但语音播放不受影响
         delay: 0,
-        duration: duration,  // 将时长传递给 Voice 组件
       }
 
       const quoteId = this.quoteMsg ? this.quoteMsg.id : null
@@ -2224,16 +2222,18 @@ export default {
 
       this.clearQuote()
 
+      // 如果识别文字为空，仅提示但不影响发送
       if (!text) {
         Snackbar({
           content: '语音已发送（未识别到文字）',
           duration: 1500,
           type: 'warning'
         })
+        // 不处理下一步，保持当前状态（让用户继续输入）
         return
       }
 
-      // 处理下一步逻辑（原有代码保持不变）
+      // 文字非空，继续处理下一步逻辑
       if (this.nextActionTrigger) {
         const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
         const { type, options } = triggerNextAction
@@ -5159,9 +5159,7 @@ export default {
             _processLock: false,
             _processed: false,
 
-            // 【新增】录音开始时间戳（毫秒）
             _recordStartTime: 0,
-            // 【新增】录音时长（秒）
             _recordDuration: 0,
 
             MIN_PACKET_SIZE: 1024,
@@ -5254,30 +5252,25 @@ export default {
             }
         },
 
-        // -------------------- 录音控制 --------------------
+        // -------------------- 录音控制（关键修改：先获取麦克风，再连 WebSocket）--------------------
         startRecording() {
             if (this.disabled || this.isRecording || this.isRecordingStarted) return;
             this._cancelled = false;
             this._processed = false;
             this.fullCleanup();
 
-            // 记录开始时间
             this._recordStartTime = Date.now();
 
-            this.connectDeepgram()
-                .then(() => navigator.mediaDevices.getUserMedia({ audio: true }))
+            // 1. 先获取麦克风流（同步，保证用户手势上下文）
+            navigator.mediaDevices.getUserMedia({ audio: true })
                 .then((stream) => {
                     this.stream = stream;
-                    let mimeType = 'audio/webm;codecs=opus';
-                    if (!MediaRecorder.isTypeSupported(mimeType)) {
-                        mimeType = 'audio/webm';
-                        if (!MediaRecorder.isTypeSupported(mimeType)) {
-                            mimeType = 'audio/ogg;codecs=opus';
-                            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                                mimeType = '';
-                            }
-                        }
-                    }
+                    // 2. 连接 Deepgram（异步，此时仍在用户手势后的微任务中，部分浏览器仍允许）
+                    return this.connectDeepgram().then(() => stream);
+                })
+                .then((stream) => {
+                    // 3. 创建 MediaRecorder
+                    let mimeType = this.getSupportedMimeType();
                     try {
                         this.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType || undefined });
                     } catch (e) {
@@ -5298,12 +5291,19 @@ export default {
 
                     this.mediaRecorder.onstop = () => {
                         console.log('[VoiceRecorderButton] MediaRecorder onstop 触发');
-                        // 计算实际录音时长（毫秒转秒）
                         this._recordDuration = (Date.now() - this._recordStartTime) / 1000;
                         this.handleStop();
                     };
 
-                    this.mediaRecorder.start(500);
+                    try {
+                        this.mediaRecorder.start(500);
+                    } catch (e) {
+                        console.error('[VoiceRecorderButton] MediaRecorder.start 失败', e);
+                        this.releaseStream();
+                        this.$emit('error', new Error('无法启动录音，请检查麦克风权限或浏览器兼容性'));
+                        return;
+                    }
+
                     this.isRecording = true;
                     this.isRecordingStarted = true;
                     this.recognitionEnded = false;
@@ -5315,14 +5315,33 @@ export default {
                 .catch((err) => {
                     console.error('[VoiceRecorderButton] 启动失败', err);
                     this.releaseStream();
-                    if (err.message && err.message.includes('API Key')) {
-                        this.$emit('error', err);
-                    } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        this.$emit('error', new Error('未获取到麦克风权限，请在浏览器设置中允许'));
+                    } else if (err.message && err.message.includes('API Key')) {
                         this.$emit('error', err);
                     } else {
-                        this.resetState();
+                        // 其他错误（如无设备）也提示用户
+                        this.$emit('error', new Error('无法访问麦克风，请检查设备或权限'));
                     }
+                    this.resetState();
                 });
+        },
+
+        // 检测支持的 MIME 类型（移动端兼容）
+        getSupportedMimeType() {
+            const types = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/mp4',
+                'audio/ogg;codecs=opus',
+                'audio/ogg'
+            ];
+            for (let type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    return type;
+                }
+            }
+            return '';
         },
 
         stopRecordingManually() {
@@ -5348,7 +5367,6 @@ export default {
             this.isProcessing = false;
         },
 
-        // -------------------- 停止与结果处理 --------------------
         handleStop() {
             console.log('[VoiceRecorderButton] handleStop');
             this.recognitionEnded = false;
@@ -5391,7 +5409,6 @@ export default {
             const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
             const text = this.sessionText.trim() || '';
-            // 最终时长（秒），取整，至少为1
             const duration = Math.max(1, Math.round(this._recordDuration));
 
             console.log('[VoiceRecorderButton] 录音结束，识别文本:', text || '(空)', '时长:', duration, '秒');
@@ -5410,14 +5427,13 @@ export default {
             }
 
             if (this.autoSend) {
-                // 【关键】在 result 中携带 duration
                 this.$emit('result', { blob, url, text, duration });
                 this.clearPending();
             } else {
                 this.pendingBlob = blob;
                 this.pendingUrl = url;
                 this.pendingText = text;
-                this.pendingDuration = duration; // 需要增加 data 字段
+                this.pendingDuration = duration;
             }
 
             this.audioChunks = [];
