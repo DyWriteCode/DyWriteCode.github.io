@@ -31,7 +31,7 @@ jobs:
         run: python -m pip install --upgrade pip
 
       - name: Replace resource links with version identifiers
-        run: python .github/scripts/update_resources.py
+        run: python .github/update_resources.py
 
       - name: Commit and push
         run: |
@@ -39,5 +39,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.json
           git add .
-          git diff --staged --quiet || git commit -m "chore: update version.json and resource links [skip ci]"
-          git push
+          # 如果文件有变更则提交
+          git diff --staged --quiet || {
+            git commit -m "chore: update version.json and resource links [skip ci]"
+            # 先拉取远程最新，避免冲突
+            git pull --rebase origin main
+            git push
+          }

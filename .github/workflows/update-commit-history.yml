@@ -15,7 +15,7 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
               with:
-                  fetch-depth: 0 # 获取所有提交历史
+                  fetch-depth: 0
 
             - name: Setup Python
               uses: actions/setup-python@v4
@@ -32,5 +32,7 @@ jobs:
                   git add commit-history.html
                   git diff --staged --quiet || {
                     git commit -m "chore: update commit-history.html [skip ci]"
+                    # 先拉取远程最新，避免冲突
+                    git pull --rebase origin main
                     git push
                   }
