@@ -157,6 +157,9 @@ def generate_html(commits):
 
     /**
      * 渲染表格，并可对指定字段添加高亮
+     * @param {Array} data          - 提交数据数组
+     * @param {Array} highlightFields - 需要高亮的字段名列表，如 ['hash', 'subject']
+     * @param {string} query       - 高亮关键词（已转义）
      */
     function renderTable(data, highlightFields, query) {{
         if (data.length === 0) {{
@@ -213,7 +216,6 @@ def generate_html(commits):
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
         if (!tr) return;
-        // 不拦截隐藏的行（即搜索后隐藏的行，但我们的渲染只显示匹配行，所以无需判断 hidden）
         const hash = tr.dataset.hash;
         if (hash) window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
     }});
@@ -241,10 +243,26 @@ def generate_html(commits):
         return {{ field: null, value: trimmed }};
     }}
 
+    // 辅助函数：将日期字符串标准化为 YYYY-MM-DD，并处理查询中的非零填充
+    function normalizeDateForMatch(dateStr) {{
+        // dateStr 形如 "2026-08-15 10:30:00 +0800"，取前10位
+        return dateStr.substring(0, 10);
+    }}
+    function normalizeQueryDate(query) {{
+        // 将用户输入的日期补零，如 "2026-8-15" -> "2026-08-15"
+        const parts = query.split('-');
+        if (parts.length !== 3) return query; // 不是标准日期格式，原样返回
+        const year = parts[0].padStart(4, '0');
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        return `${{year}}-${{month}}-${{day}}`;
+    }}
+
     let currentMatches = [], currentIndex = -1;
 
     function performSearch() {{
-        const {{ field, value: query }} = parseSearch(searchInput.value);
+        const {{ field, value: rawQuery }} = parseSearch(searchInput.value);
+        let query = rawQuery; // 原始查询词
 
         // 清空搜索状态（未输入或清空）
         if (!query) {{
@@ -262,28 +280,62 @@ def generate_html(commits):
 
         clearBtn.classList.add('visible');
 
+        // 标准化查询（仅针对日期字段）
+        let queryForFilter = query;
+        let dateNormalizedQuery = null;
+        if (field === 'date') {{
+            // 尝试将用户输入转为 YYYY-MM-DD
+            dateNormalizedQuery = normalizeQueryDate(query);
+            // 同时保留原始query用于高亮显示（高亮时显示原词）
+            queryForFilter = dateNormalizedQuery;
+        }}
+
         // ---------- 过滤数据 ----------
         const filtered = commitData.filter(item => {{
             if (field) {{
-                const value = item[field];
-                return value && value.toLowerCase().includes(query.toLowerCase());
+                let value = item[field];
+                if (field === 'date') {{
+                    // 日期字段特殊处理：取日期部分并标准化比较
+                    const datePart = normalizeDateForMatch(value);
+                    return datePart.toLowerCase().includes(queryForFilter.toLowerCase());
+                }} else {{
+                    return value && value.toLowerCase().includes(query.toLowerCase());
+                }}
             }} else {{
-                const text = (item.hash + ' ' + item.author + ' ' + item.date + ' ' + item.subject).toLowerCase();
-                return text.includes(query.toLowerCase());
+                // 全局搜索：对所有字段进行搜索，其中日期也做标准化
+                const hashMatch = item.hash.toLowerCase().includes(query.toLowerCase());
+                const authorMatch = item.author.toLowerCase().includes(query.toLowerCase());
+                const datePart = normalizeDateForMatch(item.date);
+                const dateMatch = datePart.toLowerCase().includes(query.toLowerCase());
+                const subjectMatch = item.subject.toLowerCase().includes(query.toLowerCase());
+                return hashMatch || authorMatch || dateMatch || subjectMatch;
             }}
         }});
 
         // ---------- 决定高亮字段 ----------
         let highlightFields = [];
         if (field) {{
-            // 字段搜索：只高亮该字段
             highlightFields = [field];
         }} else {{
-            // 全局搜索：只高亮 hash 和 subject（避免破坏 author 标签）
+            // 全局搜索：只高亮 hash 和 subject（避免破坏 author 标签），日期不参与高亮（日期格式复杂）
             highlightFields = ['hash', 'subject'];
         }}
 
         // ---------- 渲染过滤后的数据并应用高亮 ----------
+        // 高亮时使用的查询词：对于日期字段，用原始查询词（用户输入的），因为高亮目标是日期字段的完整字符串，可能包含时间等，但我们在 renderTable 中对 date 进行高亮时，将使用原始 query 去匹配
+        // 但是我们在 renderTable 中高亮 date 字段时，我们需要用原始 query（未经标准化），因为用户期望看到原始输入的高亮。
+        // 然而我们过滤时使用了标准化后的 query，所以过滤出的数据中 date 字段是完整的。高亮时仍用原始 query 去匹配。
+        // 注意：如果 query 是 "2026-8-15"，而 date 是 "2026-08-15 ..."，则高亮不会匹配，因为子串不同。所以对 date 高亮我们不做，或者我们可以在高亮时也标准化？但为了用户体验，我们不对 date 进行高亮，因为日期格式固定，用户输入可能不完全匹配，高亮意义不大。所以我们就不对 date 高亮。
+        // 因此，在 highlightFields 中去掉 date（如果有的话）
+        if (highlightFields.includes('date')) {{
+            // 如果字段搜索是 date，高亮时使用原始 query，但可能不匹配，所以我们可以用标准化后的 query 来高亮，但会高亮完整日期部分。
+            // 建议：对 date 字段高亮时，使用标准化后的 queryForFilter 来匹配，但为了统一，我们改用原始 query 也行，但可能不匹配。
+            // 更稳健的做法：在 renderTable 中对 date 字段的高亮逻辑，将 date 和 query 都标准化后再比较，但高亮时替换的是匹配的子串，这比较复杂。
+            // 简化：不对日期进行高亮，只过滤。因为日期搜索通常用于定位，高亮不是必须。
+            highlightFields = highlightFields.filter(f => f !== 'date');
+        }}
+        // 对于全局搜索，我们原本就不包含 date，所以没问题。
+
         renderTable(filtered, highlightFields, query);
 
         // 获取当前所有可见行（已过滤）
