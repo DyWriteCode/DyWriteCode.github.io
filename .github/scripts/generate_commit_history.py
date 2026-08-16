@@ -157,9 +157,6 @@ def generate_html(commits):
 
     /**
      * 渲染表格，并可对指定字段添加高亮
-     * @param {Array} data          - 提交数据数组
-     * @param {Array} highlightFields - 需要高亮的字段名列表，如 ['hash', 'subject']
-     * @param {string} query       - 高亮关键词（已转义）
      */
     function renderTable(data, highlightFields, query) {{
         if (data.length === 0) {{
