@@ -47,22 +47,22 @@ def generate_html(commits):
         .header h1 {{ font-size: 26px; font-weight: 600; display: flex; align-items: center; gap: 10px; }}
         .header h1 small {{ font-size: 16px; font-weight: 400; color: #6b7a8f; }}
         .commit-count {{ background: #eef2f6; padding: 6px 16px; border-radius: 40px; font-size: 14px; color: #334155; font-weight: 500; }}
-
-        /* ----- 搜索框（原始样式 + sticky 固定） ----- */
         .search-area {{
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 22px;
-            background: #f8fafc;
             padding: 6px 16px 6px 20px;
             border-radius: 60px;
             border: 1px solid #e2e8f0;
             transition: border-color 0.2s, box-shadow 0.2s;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid #d1d9e6;
         }}
         .search-area:focus-within {{ border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }}
         .search-area .search-icon {{ font-size: 18px; color: #94a3b8; flex-shrink: 0; }}
@@ -76,7 +76,6 @@ def generate_html(commits):
         .search-meta .clear-btn {{ background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 0 4px; transition: color 0.15s; display: none; }}
         .search-meta .clear-btn.visible {{ display: inline-block; }}
         .search-meta .clear-btn:hover {{ color: #475569; }}
-
         .table-wrap {{ overflow-x: auto; border-radius: 16px; border: 1px solid #edf2f7; background: #ffffff; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }}
         th {{ text-align: left; padding: 14px 18px; background: #f8fafc; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 2; }}
@@ -87,52 +86,14 @@ def generate_html(commits):
         tr[data-hash] {{ cursor: pointer; }}
         tr[data-hash]:hover td {{ background: #f1f5f9; }}
         .highlight {{ background: #fde047; padding: 0 2px; border-radius: 2px; font-weight: 500; }}
-
-        /* ===== 作者标签样式（添加 !important 确保生效） ===== */
-        .author-tag {{
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding: 4px 12px 4px 8px !important;
-            border-radius: 40px !important;
-            font-weight: 500 !important;
-            font-size: 13px !important;
-            background: #eef2f6 !important;
-            color: #1e293b !important;
-        }}
-        .author-tag .avatar {{
-            width: 24px !important;
-            height: 24px !important;
-            border-radius: 50% !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            color: #fff !important;
-            flex-shrink: 0 !important;
-        }}
+        .author-tag {{ display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 40px; font-weight: 500; font-size: 13px; background: #eef2f6; color: #1e293b; }}
+        .author-tag .avatar {{ width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }}
         .hash {{ font-family: 'JetBrains Mono', 'Cascadia Code', monospace; background: #f1f5f9; padding: 2px 8px; border-radius: 12px; font-size: 13px; color: #1e293b; letter-spacing: 0.2px; }}
         .date {{ color: #475569; font-size: 13px; white-space: nowrap; }}
         .subject {{ max-width: 380px; word-break: break-word; }}
         .no-results {{ text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 16px; }}
-
-        @media (max-width: 680px) {{
-            .container {{ padding: 18px 14px; }}
-            .header {{ flex-direction: column; align-items: stretch; }}
-            .header h1 {{ font-size: 22px; }}
-            .search-area {{ padding: 4px 12px 4px 16px; border-radius: 40px; }}
-            .search-meta .match-info {{ min-width: 44px; font-size: 13px; }}
-            .search-meta .nav-btn {{ width: 28px; height: 28px; font-size: 14px; }}
-            th, td {{ padding: 10px 12px; font-size: 13px; }}
-            .author-tag {{ font-size: 12px; padding: 2px 10px 2px 6px; }}
-            .hash {{ font-size: 12px; }}
-        }}
-        @media (max-width: 480px) {{
-            .table-wrap {{ border-radius: 12px; }}
-            table {{ font-size: 12px; min-width: 480px; }}
-            .subject {{ max-width: 140px; }}
-        }}
+        @media (max-width: 680px) {{ .container {{ padding: 18px 14px; }} .header {{ flex-direction: column; align-items: stretch; }} .header h1 {{ font-size: 22px; }} .search-area {{ padding: 4px 12px 4px 16px; border-radius: 40px; }} .search-meta .match-info {{ min-width: 44px; font-size: 13px; }} .search-meta .nav-btn {{ width: 28px; height: 28px; font-size: 14px; }} th, td {{ padding: 10px 12px; font-size: 13px; }} .author-tag {{ font-size: 12px; padding: 2px 10px 2px 6px; }} .hash {{ font-size: 12px; }} }}
+        @media (max-width: 480px) {{ .table-wrap {{ border-radius: 12px; }} table {{ font-size: 12px; min-width: 480px; }} .subject {{ max-width: 140px; }} }}
         .table-wrap::-webkit-scrollbar {{ height: 6px; }}
         .table-wrap::-webkit-scrollbar-thumb {{ background: #d1d9e6; border-radius: 12px; }}
         .table-wrap::-webkit-scrollbar-track {{ background: #f1f5f9; }}
@@ -146,7 +107,7 @@ def generate_html(commits):
     </div>
     <div class="search-area">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="搜索提交哈希、作者、备注或日期… (支持 hash:xxx, author:xxx, subject:xxx, date:xxx)" autofocus>
+        <input type="text" id="searchInput" placeholder="搜索哈希、作者、备注或日期… (支持 hash:|h:, author:|a:, subject:|s:, date:|d: 前缀)" autofocus>
         <div class="search-meta">
             <span class="match-info" id="matchInfo">0 / 0</span>
             <button class="nav-btn" id="prevBtn" title="上一个匹配 (Shift+Enter)">↑</button>
@@ -177,7 +138,7 @@ def generate_html(commits):
     const nextBtn = document.getElementById('nextBtn');
     const clearBtn = document.getElementById('clearBtn');
 
-    // ---- 作者颜色映射 ----
+    // ----- 作者颜色生成 -----
     const authorColorMap = new Map();
     const avatarColors = ['#3b82f6','#8b5cf6','#ec4899','#ef4444','#f59e0b','#10b981','#06b6d4','#6366f1','#d946ef','#f97316','#14b8a6'];
     function getAuthorColor(author) {{
@@ -189,41 +150,80 @@ def generate_html(commits):
         return color;
     }}
 
-    // ---- 渲染表格 ----
-    function renderTable(data) {{
-        if (data.length === 0) {{ tbody.innerHTML = ''; noResult.style.display = 'block'; totalCount.textContent = '共 0 条'; return; }}
+    // 转义正则特殊字符
+    function escapeRegExp(str) {{
+        return str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&');
+    }}
+
+    /**
+     * 渲染表格，并可对指定字段添加高亮
+     */
+    function renderTable(data, highlightFields, query) {{
+        if (data.length === 0) {{
+            tbody.innerHTML = '';
+            noResult.style.display = 'block';
+            totalCount.textContent = '共 0 条';
+            return;
+        }}
         noResult.style.display = 'none';
         totalCount.textContent = `共 ${{data.length}} 条`;
+
         let html = '';
         data.forEach(item => {{
             const color = getAuthorColor(item.author);
             const initial = item.author.charAt(0).toUpperCase();
-            // 生成带头像的作者列
-            const authorHtml = `<span class="author-tag"><span class="avatar" style="background:${{color}};">${{initial}}</span>${{item.author}}</span>`;
+
+            // 各字段原始内容
+            let hashText = item.hash;
+            let authorText = item.author;
+            let dateText = item.date;
+            let subjectText = item.subject;
+
+            // 如果指定了高亮字段且查询词存在，则对相应字段进行高亮替换
+            if (highlightFields && highlightFields.length && query) {{
+                const regex = new RegExp(escapeRegExp(query), 'gi');
+                if (highlightFields.includes('hash')) {{
+                    hashText = hashText.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+                }}
+                if (highlightFields.includes('author')) {{
+                    authorText = authorText.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+                }}
+                if (highlightFields.includes('date')) {{
+                    dateText = dateText.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+                }}
+                if (highlightFields.includes('subject')) {{
+                    subjectText = subjectText.replace(regex, match => `<span class="highlight">${{match}}</span>`);
+                }}
+            }}
+
             html += `<tr data-hash="${{item.hash}}" data-author="${{item.author}}" data-date="${{item.date}}" data-subject="${{item.subject}}">
-                <td><span class="hash">${{item.hash}}</span></td>
-                <td>${{authorHtml}}</td>
-                <td class="date">${{item.date}}</td>
-                <td class="subject">${{item.subject}}</td>
+                <td><span class="hash">${{hashText}}</span></td>
+                <td><span class="author-tag"><span class="avatar" style="background:${{color}};">${{initial}}</span>${{authorText}}</span></td>
+                <td class="date">${{dateText}}</td>
+                <td class="subject">${{subjectText}}</td>
             </tr>`;
         }});
         tbody.innerHTML = html;
     }}
 
+    // 初始渲染（无高亮）
     renderTable(commitData);
 
-    // ---- 双击跳转 ----
+    // ----- 双击跳转 GitHub -----
     tbody.addEventListener('dblclick', function(e) {{
         const tr = e.target.closest('tr');
-        if (!tr || tr.classList.contains('hidden')) return;
+        if (!tr) return;
+        // 不拦截隐藏的行（即搜索后隐藏的行，但我们的渲染只显示匹配行，所以无需判断 hidden）
         const hash = tr.dataset.hash;
         if (hash) window.open(`https://github.com/${{repo}}/commit/${{hash}}`, '_blank');
     }});
 
-    // ---- 解析搜索前缀 ----
+    // ============================================================
+    // 增强搜索功能：字段前缀、过滤、高亮、导航
+    // ============================================================
     function parseSearch(input) {{
         const trimmed = input.trim();
-        if (!trimmed) return {{ field: null, value: null }};
+        if (!trimmed) return {{ field: null, value: '' }};
         const lower = trimmed.toLowerCase();
         const prefixMap = {{
             'hash:': 'hash', 'h:': 'hash',
@@ -241,49 +241,19 @@ def generate_html(commits):
         return {{ field: null, value: trimmed }};
     }}
 
-    // ---- 高亮 ----
-    function highlightField(row, field, query) {{
-        const cells = row.querySelectorAll('td');
-        cells.forEach(cell => {{
-            const text = cell.textContent;
-            cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-        }});
-        if (!query) return;
-        const escapeRegExp = str => str.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&');
-        const regex = new RegExp(escapeRegExp(query), 'gi');
-        if (field) {{
-            const colMap = {{ hash:1, author:2, date:3, subject:4 }};
-            const idx = colMap[field];
-            if (!idx) return;
-            const cell = row.querySelector(`td:nth-child(${{idx}})`);
-            if (!cell) return;
-            const text = cell.textContent;
-            if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
-        }} else {{
-            cells.forEach(cell => {{
-                const text = cell.textContent;
-                if (regex.test(text)) cell.innerHTML = text.replace(regex, match => `<span class="highlight">${{match}}</span>`);
-            }});
-        }}
-    }}
-
     let currentMatches = [], currentIndex = -1;
+
     function performSearch() {{
         const {{ field, value: query }} = parseSearch(searchInput.value);
-        const rows = tbody.querySelectorAll('tr');
 
+        // 清空搜索状态（未输入或清空）
         if (!query) {{
-            rows.forEach(row => {{
-                row.classList.remove('hidden', 'current-match');
-                const cells = row.querySelectorAll('td');
-                cells.forEach(cell => {{
-                    const text = cell.textContent;
-                    cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-                }});
-            }});
-            currentMatches = []; currentIndex = -1;
+            renderTable(commitData);
+            currentMatches = [];
+            currentIndex = -1;
             matchInfo.textContent = '0 / 0';
-            prevBtn.disabled = true; nextBtn.disabled = true;
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
             clearBtn.classList.remove('visible');
             totalCount.textContent = `共 ${{commitData.length}} 条`;
             noResult.style.display = 'none';
@@ -291,39 +261,34 @@ def generate_html(commits):
         }}
 
         clearBtn.classList.add('visible');
-        let matchedRows = [];
 
-        rows.forEach(row => {{
-            row.classList.remove('hidden', 'current-match');
-            const cells = row.querySelectorAll('td');
-            cells.forEach(cell => {{
-                const text = cell.textContent;
-                cell.innerHTML = text.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
-            }});
-
-            let match = false;
+        // ---------- 过滤数据 ----------
+        const filtered = commitData.filter(item => {{
             if (field) {{
-                const value = row.dataset[field];
-                if (value && value.toLowerCase().includes(query.toLowerCase())) {{
-                    match = true;
-                    highlightField(row, field, query);
-                }}
+                const value = item[field];
+                return value && value.toLowerCase().includes(query.toLowerCase());
             }} else {{
-                const text = (row.dataset.hash + ' ' + row.dataset.author + ' ' + row.dataset.date + ' ' + row.dataset.subject).toLowerCase();
-                if (text.includes(query.toLowerCase())) {{
-                    match = true;
-                    highlightField(row, null, query);
-                }}
-            }}
-
-            if (match) {{
-                matchedRows.push(row);
-            }} else {{
-                row.classList.add('hidden');
+                const text = (item.hash + ' ' + item.author + ' ' + item.date + ' ' + item.subject).toLowerCase();
+                return text.includes(query.toLowerCase());
             }}
         }});
 
-        currentMatches = matchedRows;
+        // ---------- 决定高亮字段 ----------
+        let highlightFields = [];
+        if (field) {{
+            // 字段搜索：只高亮该字段
+            highlightFields = [field];
+        }} else {{
+            // 全局搜索：只高亮 hash 和 subject（避免破坏 author 标签）
+            highlightFields = ['hash', 'subject'];
+        }}
+
+        // ---------- 渲染过滤后的数据并应用高亮 ----------
+        renderTable(filtered, highlightFields, query);
+
+        // 获取当前所有可见行（已过滤）
+        const rows = tbody.querySelectorAll('tr');
+        currentMatches = Array.from(rows);
         currentIndex = -1;
         if (currentMatches.length > 0) {{
             currentIndex = 0;
@@ -336,9 +301,7 @@ def generate_html(commits):
             nextBtn.disabled = true;
         }}
         matchInfo.textContent = currentMatches.length > 0 ? `1 / ${{currentMatches.length}}` : '0 / 0';
-        const visible = rows.length - document.querySelectorAll('tr.hidden').length;
-        totalCount.textContent = `共 ${{visible}} 条`;
-        noResult.style.display = visible === 0 ? 'block' : 'none';
+        // 注意：totalCount 已在 renderTable 中更新为过滤后的数量
     }}
 
     function navigate(delta) {{
@@ -350,15 +313,22 @@ def generate_html(commits):
         matchInfo.textContent = `${{currentIndex+1}} / ${{currentMatches.length}}`;
     }}
 
+    // ----- 事件绑定 -----
     searchInput.addEventListener('input', performSearch);
     searchInput.addEventListener('keydown', e => {{
-        if (e.key === 'Enter') {{ e.preventDefault(); navigate(1); }}
-        else if (e.key === 'Enter' && e.shiftKey) {{ e.preventDefault(); navigate(-1); }}
+        if (e.key === 'Enter') {{
+            e.preventDefault();
+            if (e.shiftKey) navigate(-1);
+            else navigate(1);
+        }}
     }});
     prevBtn.addEventListener('click', () => navigate(-1));
     nextBtn.addEventListener('click', () => navigate(1));
-    clearBtn.addEventListener('click', () => {{ searchInput.value = ''; performSearch(); searchInput.focus(); }});
-    performSearch();
+    clearBtn.addEventListener('click', () => {{
+        searchInput.value = '';
+        performSearch();
+        searchInput.focus();
+    }});
     document.addEventListener('keydown', e => {{
         if ((e.ctrlKey || e.metaKey) && e.key === 'f') {{
             e.preventDefault();
@@ -366,6 +336,9 @@ def generate_html(commits):
             searchInput.select();
         }}
     }});
+
+    // 初始化搜索状态（显示全部）
+    performSearch();
 }})();
 </script>
 </body>
@@ -375,8 +348,8 @@ def generate_html(commits):
         f.write(html_template)
 
     print(f"✅ commit-history.html 已生成，包含 {len(commits)} 条提交记录")
-    print(f"📌 仓库名: {repo}，双击行跳转至 GitHub Commit")
-    print("🔍 搜索增强: hash:/h:, author:/a:, date:/d:, subject:/s: 前缀，无前缀全局搜索")
+    print(f"📌 仓库名: {repo}，双击行跳转至对应的 GitHub Commit")
+    print("🔍 搜索增强: 支持 hash:/h:, author:/a:, date:/d:, subject:/s: 前缀，无前缀全局搜索")
 
 if __name__ == '__main__':
     commits = get_commit_data()
