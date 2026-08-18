@@ -1,5 +1,11 @@
-* text=auto
 *.bat text eol=crlf
 *.sh text eol=lf
 *.png binary
+*.webp binary
 *.jpg binary
+*.json text
+*.md text
+*.yml text
+*.js text
+*.woff2 binary
+*.woff binary

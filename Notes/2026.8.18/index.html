@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最大似然估计(MLE)与最大后验估计(MAP) </title>
+    <link href="https://cdn.jsdmirror.com?v=20260816082125" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260816082125" rel="dns-prefetch" />
+    <link href="https://cdn.jsdelivr.net?v=20260816082125" rel="preconnect" />
+    <link href="https://cdn.jsdelivr.net?v=20260816082125" rel="dns-prefetch" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260816082125"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260816082125"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
+        </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260816082125"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});">
+        </script>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@cbf463f/preview_assets/check-update.js?v=20260816082125"
+        type="module">
+        </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f7f9fc;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0b1a2f;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2.8rem 3rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.4rem;
+            border-left: 6px solid #3b82f6;
+            padding-left: 1.2rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        h4 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-top: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .math-block {
+            background: #f1f5f9;
+            padding: 1.6rem 2rem;
+            border-radius: 20px;
+            margin: 1.4rem 0 1.8rem 0;
+            overflow-x: auto;
+            border: 1px solid #e6edf5;
+            text-align: center;
+        }
+
+        .formula-source {
+            font-size: 0.95rem;
+            color: #1e40af;
+            background: #e6f0ff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 0.8rem;
+        }
+
+        .derivation-step {
+            background: #ffffff;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            margin: 1.2rem 0 1.8rem 0;
+            border: 1px dashed #94a3b8;
+            text-align: left;
+        }
+
+        .derivation-step .math-block {
+            background: #f8fafc;
+            border: none;
+            padding: 0.8rem 0;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        .derivation-note {
+            font-size: 0.95rem;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            margin: 0.6rem 0 0.2rem 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        th {
+            background: #1e293b;
+            color: white;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e9edf2;
+            vertical-align: top;
+        }
+
+        .note-box {
+            background: #fefce8;
+            border-left: 6px solid #f59e0b;
+            padding: 1.2rem 1.8rem;
+            border-radius: 14px;
+            margin: 1.8rem 0;
+        }
+
+        .hr-light {
+            margin: 2.8rem 0;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+        }
+
+        .footer-meta {
+            margin-top: 3.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 2rem;
+        }
+
+        .theory-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.1rem 0.7rem;
+            border-radius: 20px;
+            margin-right: 0.4rem;
+        }
+
+        .compare-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .compare-item {
+            flex: 1 1 280px;
+            background: #f8fafc;
+            padding: 1.5rem 1.8rem;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .compare-item h4 {
+            margin-top: 0;
+            border-bottom: 2px solid #d1d9e6;
+            padding-bottom: 0.4rem;
+        }
+
+        .compare-item .math-block {
+            background: transparent;
+            padding: 0.6rem 0;
+            margin: 0.4rem 0;
+            border: none;
+            text-align: center;
+        }
+
+        .highlight-blue {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+        }
+
+        @media (max-width:700px) {
+            .container {
+                padding: 1.8rem 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- ====== 标题 ====== -->
+        <h1>
+            最大似然估计 (MLE) 与最大后验估计 (MAP)<br>
+            <span style="font-size:1.5rem;font-weight:400;color:#2d3a4f;">从零开始的完整数学推导</span>
+        </h1>
+        <p style="font-size:1.1rem;margin-bottom:2rem;">
+            本文从 <strong>一次抛硬币</strong> 出发，逐步推导出最大似然估计（MLE）和最大后验估计（MAP）的完整数学公式。
+            全程只用到 <strong>乘法原理、加法原理、组合数、对数、求导</strong> 等高中知识，每一行代数变形都配有详细说明。
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- 第一部分：从零开始 —— 组合数 C(10,8) 是怎么来的                -->
+        <!-- ============================================================ -->
+        <h2>第一部分 · 从零开始：组合数 \(C_{10}^{8}\) 的由来</h2>
+        <p>我们抛一枚硬币 10 次，记正面朝上的概率为 \(\theta\)。问：<strong>恰好出现 8 次正面</strong> 的概率是多少？</p>
+
+        <h3>1.1 某一种特定顺序的概率</h3>
+        <p>先规定一个 <strong>极其严格的顺序</strong>，比如「前 8 次正面，后 2 次反面」：</p>
+        <div class="math-block">
+            \[
+            P(\text{正正正正正正正正 反反}) = \underbrace{\theta \times \cdots \times \theta}_{8\text{个}} \times
+            \underbrace{(1-\theta) \times \cdots \times (1-\theta)}_{2\text{个}}
+            = \theta^{8} (1-\theta)^{2}
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【这一步在干什么？】</strong> 乘法原理：10 次独立抛掷同时发生的概率，等于每次概率的乘积。
+            8 个 \(\theta\) 相乘得 \(\theta^8\)，2 个 \((1-\theta)\) 相乘得 \((1-\theta)^2\)。
+        </div>
+
+        <h3>1.2 有多少种这样的顺序？—— 组合数</h3>
+        <p>题目只说「10 次里有 8 次正面」，<strong>并没有规定</strong> 这 8 次正面必须在前 8 次。这 8 次正面可以分布在 10 个位置中的任意 8 个位置上。</p>
+        <div class="math-block">
+            \[
+            \text{选法数} = C_{10}^{8} = \frac{10!}{8! \cdot (10-8)!} = \frac{10!}{8! \cdot 2!} = 45
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【为什么乘以组合数？】</strong> 这 45 种情况是 <strong>互斥</strong> 的（你不可能同时既是「1~8 次为正」又是「2~9 次为正」）。
+            根据 <strong>加法原理</strong>，总概率 = 45 个相同概率相加 = \(45 \times \theta^8(1-\theta)^2\)。
+        </div>
+
+        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+            <div class="formula-source">📖 原始概率公式（似然函数）</div>
+            \[
+            \boxed{L(\theta) = C_{10}^{8} \cdot \theta^{8} \cdot (1-\theta)^{2}}
+            \]
+            <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">其中 \(C_{10}^{8}=45\)
+                是组合常数，<strong>不影响求最大值的位置</strong>，后续推导中会合法地忽略它。</p>
+        </div>
+
+        <hr class="hr-light">
+
+        <!-- ============================================================ -->
+        <!-- 第二部分：最大似然估计 (MLE) 全程推导                          -->
+        <!-- ============================================================ -->
+        <h2>第二部分 · 最大似然估计 (MLE) 全程推导</h2>
+        <p><span class="theory-tag">核心理念</span> 找一个 \(\theta\)，使得 <strong>「观测到 10 次中 8 次正面」这一事件的概率最大</strong>。</p>
+
+        <h3>2.1 写出似然函数（丢掉常数）</h3>
+        <p>由于常数 \(C_{10}^{8}=45\) 在求导解方程时会被消掉（见下方证明），我们直接使用简化形式：</p>
+        <div class="math-block">
+            \[
+            L(\theta) = \theta^{8} (1-\theta)^{2}
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【为什么可以丢掉 45？】</strong> 设 \(L(\theta)=45 \cdot f(\theta)\)，则 \(L'(\theta)=45 \cdot f'(\theta)\)。
+            令 \(L'(\theta)=0\)，两边同除以 45 得 \(f'(\theta)=0\)。最大值点完全相同，故常数可忽略。
+        </div>
+
+        <h3>2.2 取对数（化乘为加）</h3>
+        <p>对 \(L(\theta)\) 取自然对数，记 \(\ell(\theta)=\ln L(\theta)\)：</p>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \ell(\theta) = \ln\left[\theta^{8}(1-\theta)^{2}\right]
+                = \ln(\theta^{8}) + \ln((1-\theta)^{2})
+                = 8\ln\theta + 2\ln(1-\theta)
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【为什么要取对数？】</strong> ① 对数函数 \(\ln\) 是单调递增的，\(L(\theta)\) 的最大值点和 \(\ln L(\theta)\) 的最大值点完全一致。
+                ② 取对数后，<strong>乘法变加法，指数变系数</strong>，求导变得非常简单。
+            </div>
+        </div>
+
+        <h3>2.3 对 \(\theta\) 求导</h3>
+        <p>对 \(\ell(\theta)\) 关于 \(\theta\) 求导（注意链式法则）：</p>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \ell'(\theta) = \frac{d}{d\theta}\big[8\ln\theta\big] + \frac{d}{d\theta}\big[2\ln(1-\theta)\big]
+                = \frac{8}{\theta} - \frac{2}{1-\theta}
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【求导细节】</strong> ① \((8\ln\theta)' = 8 \cdot \frac{1}{\theta} = \frac{8}{\theta}\)。<br>
+                ② \((2\ln(1-\theta))' = 2 \cdot \frac{1}{1-\theta} \cdot (-1) = -\frac{2}{1-\theta}\)（链式法则）。
+            </div>
+        </div>
+
+        <h3>2.4 令导数为 0，解方程</h3>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \frac{8}{\theta} - \frac{2}{1-\theta} = 0
+                \quad\Longrightarrow\quad
+                \frac{8}{\theta} = \frac{2}{1-\theta}
+                \]
+            </div>
+            <p>交叉相乘：</p>
+            <div class="math-block">
+                \[
+                8(1-\theta) = 2\theta
+                \quad\Longrightarrow\quad
+                8 - 8\theta = 2\theta
+                \quad\Longrightarrow\quad
+                8 = 10\theta
+                \quad\Longrightarrow\quad
+                \theta = \frac{8}{10} = 0.8
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【解方程思路】</strong> 移项 → 交叉相乘 → 合并同类项 → 系数化为 1。
+            </div>
+        </div>
+
+        <h3>2.5 验证最大值（二阶导数）</h3>
+        <div class="math-block">
+            \[
+            \ell''(\theta) = -\frac{8}{\theta^2} - \frac{2}{(1-\theta)^2} < 0 \] </div>
+                <p>因为 \(\theta^2>0\) 且 \((1-\theta)^2>0\)，所以 \(\ell''(\theta)<0\) 恒成立，\(\theta=0.8\) 是 <strong>
+                        最大值点</strong>。</p>
+
+                <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                    <div class="formula-source">✅ MLE 最终结论</div>
+                    \[
+                    \boxed{\hat{\theta}_{MLE} = \frac{8}{10} = 0.8}
+                    \]
+                    <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">最大似然估计认为：这枚硬币正面朝上的概率是
+                        <strong>0.8</strong>（即 8/10）。
+                    </p>
+                </div>
+
+                <hr class="hr-light">
+
+                <!-- ============================================================ -->
+                <!-- 第三部分：最大后验估计 (MAP) 全程推导                          -->
+                <!-- ============================================================ -->
+                <h2>第三部分 · 最大后验估计 (MAP) 全程推导</h2>
+                <p><span class="theory-tag">核心理念</span> 在 MLE 的基础上，乘以一个 <strong>先验信念</strong> \(P(\theta)\)。
+                    假设我们事先认为「大多数硬币是公平的」，用 \(P(\theta)=\theta(1-\theta)\) 来表达这种信念（该函数在 \(\theta=0.5\) 时取最大值）。</p>
+
+                <h3>3.1 构造 MAP 目标函数（似然 × 先验）</h3>
+                <div class="derivation-step">
+                    <div class="math-block">
+                        \[
+                        \text{目标} = L(\theta) \times P(\theta)
+                        = \big[\theta^{8}(1-\theta)^{2}\big] \times \big[\theta(1-\theta)\big]
+                        \]
+                    </div>
+                    <p>合并同底数幂（指数相加）：</p>
+                    <div class="math-block">
+                        \[
+                        \text{目标} = \theta^{8+1} \cdot (1-\theta)^{2+1}
+                        = \theta^{9} (1-\theta)^{3}
+                        \]
+                    </div>
+                    <div class="derivation-note">
+                        <strong>【先验怎么变成指数的？】</strong> \(P(\theta)=\theta(1-\theta)\) 给 \(\theta\) 的指数加了 1，给
+                        \((1-\theta)\) 的指数加了 1。
+                        所以原来 8 变成 9，2 变成 3。
+                    </div>
+                </div>
+
+                <h3>3.2 取对数</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}(\theta) = \ln\left[\theta^{9}(1-\theta)^{3}\right]
+                    = 9\ln\theta + 3\ln(1-\theta)
+                    \]
+                </div>
+
+                <h3>3.3 对 \(\theta\) 求导</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}'(\theta) = \frac{9}{\theta} - \frac{3}{1-\theta}
+                    \]
+                </div>
+
+                <h3>3.4 令导数为 0，解方程</h3>
+                <div class="derivation-step">
+                    <div class="math-block">
+                        \[
+                        \frac{9}{\theta} - \frac{3}{1-\theta} = 0
+                        \quad\Longrightarrow\quad
+                        \frac{9}{\theta} = \frac{3}{1-\theta}
+                        \]
+                    </div>
+                    <p>交叉相乘：</p>
+                    <div class="math-block">
+                        \[
+                        9(1-\theta) = 3\theta
+                        \quad\Longrightarrow\quad
+                        9 - 9\theta = 3\theta
+                        \quad\Longrightarrow\quad
+                        9 = 12\theta
+                        \quad\Longrightarrow\quad
+                        \theta = \frac{9}{12} = 0.75
+                        \]
+                    </div>
+                </div>
+
+                <h3>3.5 验证最大值</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}''(\theta) = -\frac{9}{\theta^2} - \frac{3}{(1-\theta)^2} < 0 \] </div>
+
+                        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                            <div class="formula-source">✅ MAP 最终结论</div>
+                            \[
+                            \boxed{\hat{\theta}_{MAP} = \frac{9}{12} = 0.75}
+                            \]
+                            <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">
+                                最大后验估计认为：考虑了「硬币大多公平」的先验后，正面概率被拉向 0.5，估计值为 <strong>0.75</strong>。</p>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第四部分：MLE 与 MAP 的核心对比                               -->
+                        <!-- ============================================================ -->
+                        <h2>第四部分 · MLE 与 MAP 的核心对比</h2>
+
+                        <div class="compare-box">
+                            <div class="compare-item">
+                                <h4>📊 最大似然估计 (MLE)</h4>
+                                <div class="math-block">
+                                    \[
+                                    \hat{\theta}_{MLE} = \arg\max_{\theta} P(\text{数据}|\theta)
+                                    \]
+                                </div>
+                                <p><strong>只看数据</strong>，没有任何先验信念。</p>
+                                <p>本例结果：\(\hat{\theta}_{MLE} = \dfrac{8}{10} = 0.8\)</p>
+                            </div>
+                            <div class="compare-item">
+                                <h4>📊 最大后验估计 (MAP)</h4>
+                                <div class="math-block">
+                                    \[
+                                    \hat{\theta}_{MAP} = \arg\max_{\theta} P(\text{数据}|\theta) \cdot P(\theta)
+                                    \]
+                                </div>
+                                <p><strong>数据 + 先验</strong>，先验 \(P(\theta)=\theta(1-\theta)\)。</p>
+                                <p>本例结果：\(\hat{\theta}_{MAP} = \dfrac{9}{12} = 0.75\)</p>
+                            </div>
+                        </div>
+
+                        <h3>4.1 公式对比（并排看）</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>方法</th>
+                                    <th>目标函数（取对数前）</th>
+                                    <th>目标函数（取对数后）</th>
+                                    <th>解出的 \(\theta\)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>MLE</strong></td>
+                                    <td>\(\theta^{8}(1-\theta)^{2}\)</td>
+                                    <td>\(8\ln\theta + 2\ln(1-\theta)\)</td>
+                                    <td>\(\dfrac{8}{10}=0.8\)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MAP</strong></td>
+                                    <td>\(\theta^{9}(1-\theta)^{3}\)</td>
+                                    <td>\(9\ln\theta + 3\ln(1-\theta)\)</td>
+                                    <td>\(\dfrac{9}{12}=0.75\)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="derivation-note">
+                            <strong>【规律发现】</strong> MAP 仅仅是在 MLE 的指数上 <strong>各加了一个 1</strong>（来自先验
+                            \(\theta(1-\theta)\)），
+                            所以结果从 \(\frac{8}{10}\) 变成了 \(\frac{9}{12}\)。先验相当于 <strong>「虚拟数据」</strong>——提前看到了 1 次正面和 1
+                            次反面。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第五部分：通用公式（n 个独立观测值）                           -->
+                        <!-- ============================================================ -->
+                        <h2>第五部分 · 通用框架：\(n\) 个独立观测值</h2>
+                        <p>现在把问题推广到 <strong>任意 \(n\) 次独立试验</strong>，观测值为 \(x_1, x_2, \dots, x_n\)。</p>
+
+                        <h3>5.1 通用似然函数</h3>
+                        <div class="math-block">
+                            \[
+                            L(\theta) = \prod_{i=1}^{n} P(x_i \mid \theta)
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【含义】</strong> 连乘符号 \(\prod\) 表示把 \(n\) 个独立事件的概率乘在一起。
+                            因为每次试验独立，所以联合概率等于各自概率的乘积。
+                        </div>
+
+                        <h3>5.2 取对数（通用）</h3>
+                        <div class="math-block">
+                            \[
+                            \ell(\theta) = \ln L(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta)
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【含义】</strong> 连乘变成连加（\(\sum\)），这是对数的核心威力。
+                        </div>
+
+                        <h3>5.3 MLE 通用极值方程</h3>
+                        <div class="math-block">
+                            \[
+                            \boxed{\sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) = 0}
+                            \]
+                        </div>
+                        <p>解这个方程，得到的 \(\theta\) 就是最大似然估计值。</p>
+
+                        <h3>5.4 MAP 通用极值方程</h3>
+                        <div class="math-block">
+                            \[
+                            \boxed{\sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) + \frac{d}{d\theta} \ln
+                            P(\theta) = 0}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【对比】</strong> MAP 的方程比 MLE <strong>多了一项</strong> \(\frac{d}{d\theta}\ln P(\theta)\)，
+                            这就是「先验」对估计值的 <strong>拉扯效应</strong>。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第六部分：抛硬币代入通用公式验证                              -->
+                        <!-- ============================================================ -->
+                        <h2>第六部分 · 验证：把通用公式套回抛硬币</h2>
+                        <p>抛 \(n\) 次硬币，正面出现 \(k\) 次。单个数据点 \(x_i \in \{1,0\}\) 的概率为：</p>
+                        <div class="math-block">
+                            \[
+                            P(x_i \mid \theta) = \theta^{x_i} (1-\theta)^{1-x_i}
+                            \]
+                        </div>
+                        <p>（当 \(x_i=1\) 时为 \(\theta\)，当 \(x_i=0\) 时为 \(1-\theta\)，完美统一。）</p>
+
+                        <h3>6.1 代入 MLE 通用公式</h3>
+                        <div class="derivation-step">
+                            <p>取对数：\(\ln P(x_i \mid \theta) = x_i \ln\theta + (1-x_i)\ln(1-\theta)\)</p>
+                            <p>代入 \(\sum_{i=1}^{n} \frac{d}{d\theta}\ln P = 0\)：</p>
+                            <div class="math-block">
+                                \[
+                                \sum_{i=1}^{n} \left( \frac{x_i}{\theta} - \frac{1-x_i}{1-\theta} \right) = 0
+                                \]
+                            </div>
+                            <p>因为 \(\sum x_i = k\)，\(\sum (1-x_i) = n-k\)：</p>
+                            <div class="math-block">
+                                \[
+                                \frac{k}{\theta} - \frac{n-k}{1-\theta} = 0
+                                \quad\Longrightarrow\quad
+                                k(1-\theta) = (n-k)\theta
+                                \quad\Longrightarrow\quad
+                                \theta = \frac{k}{n}
+                                \]
+                            </div>
+                            <div class="derivation-note">
+                                <strong>✅ 完美吻合！</strong> MLE 的结果就是 <strong>频率</strong> \(k/n\)。
+                            </div>
+                        </div>
+
+                        <h3>6.2 代入 MAP 通用公式（先验 \(P(\theta)=\theta(1-\theta)\)）</h3>
+                        <div class="derivation-step">
+                            <p>先验对数：\(\ln P(\theta)=\ln\theta+\ln(1-\theta)\)，导数为 \(\frac{1}{\theta} -
+                                \frac{1}{1-\theta}\)</p>
+                            <p>代入 MAP 通式：</p>
+                            <div class="math-block">
+                                \[
+                                \left( \frac{k}{\theta} - \frac{n-k}{1-\theta} \right)
+                                + \left( \frac{1}{\theta} - \frac{1}{1-\theta} \right) = 0
+                                \]
+                            </div>
+                            <p>合并同类项：</p>
+                            <div class="math-block">
+                                \[
+                                \frac{k+1}{\theta} - \frac{n-k+1}{1-\theta} = 0
+                                \quad\Longrightarrow\quad
+                                (k+1)(1-\theta) = (n-k+1)\theta
+                                \quad\Longrightarrow\quad
+                                \theta = \frac{k+1}{n+2}
+                                \]
+                            </div>
+                            <div class="derivation-note">
+                                <strong>✅ 完美吻合！</strong> 对于 \(n=10, k=8\)，得 \(\frac{9}{12}=0.75\)。
+                                先验给分子加了 1，分母加了 2（1 正 1 反）。
+                            </div>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第七部分：终极总结                                              -->
+                        <!-- ============================================================ -->
+                        <h2>第七部分 · 终极总结（贴在笔记本扉页）</h2>
+
+                        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                            <div class="formula-source">📖 两大核心公式</div>
+                            <table style="box-shadow:none;margin:0.6rem 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="background:#1e293b;color:white;">方法</th>
+                                        <th style="background:#1e293b;color:white;">目标函数（取对数后）</th>
+                                        <th style="background:#1e293b;color:white;">极值方程（令导数为 0）</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>MLE</strong></td>
+                                        <td>\(\displaystyle \ell(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta)\)</td>
+                                        <td>\(\displaystyle \sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) =
+                                            0\)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>MAP</strong></td>
+                                        <td>\(\displaystyle \ell_{MAP}(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta) +
+                                            \ln P(\theta)\)</td>
+                                        <td>\(\displaystyle \sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) +
+                                            \frac{d}{d\theta} \ln P(\theta) = 0\)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="note-box">
+                            <strong>🎯 操作口诀：</strong><br>
+                            遇见数据多，先写似然乘积；<br>
+                            取对数变求和，求导令零解方程。<br>
+                            MLE 解数据，MAP 多加个先验导。
+                        </div>
+
+                        <div
+                            style="background:#f0f7ff;padding:1.5rem 2rem;border-radius:20px;border:1px solid #dbeafe;margin-top:1.5rem;">
+                            <h4 style="margin-top:0;">📌 什么场景用什么？</h4>
+                            <ul style="font-size:1.05rem;line-height:2.2;margin-left:1.2rem;">
+                                <li><strong>有大量可靠数据</strong> → 用 <strong>MLE</strong>（简单直接，数据会淹没先验）。</li>
+                                <li><strong>数据很少</strong> 或 <strong>先验非常强</strong>（如物理定律） → 用 <strong>MAP</strong>（更稳健）。
+                                </li>
+                                <li><strong>数据量极大时</strong>，MLE 和 MAP 结果 <strong>趋同</strong>（先验被稀释）。</li>
+                            </ul>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <h2>第八部分 · 多个事件（A、B、C 三类结果）</h2>
+                        <p>当一次试验有 <strong>3 种互斥结果</strong>（如抽奖分红、黄、蓝），记为 A、B、C，对应概率 \(\theta_A, \theta_B, \theta_C\)，且
+                            \(\theta_A+\theta_B+\theta_C=1\)。</p>
+                        <p>重复 \(N\) 次，观察到 \(n_A, n_B, n_C\) 次，\(n_A+n_B+n_C=N\)。</p>
+
+                        <h3>8.1 MLE 结果</h3>
+                        <div class="math-block">
+                            \[
+                            \hat{\theta}_A^{MLE} = \frac{n_A}{N},\quad
+                            \hat{\theta}_B^{MLE} = \frac{n_B}{N},\quad
+                            \hat{\theta}_C^{MLE} = \frac{n_C}{N}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>推导思路：</strong> 似然函数为 \(\theta_A^{n_A}\theta_B^{n_B}\theta_C^{n_C}\)，
+                            在约束 \(\theta_A+\theta_B+\theta_C=1\) 下求偏导，得到频率比例。
+                        </div>
+
+                        <h3>8.2 MAP 结果（先验 \(\theta_A\theta_B\theta_C\)）</h3>
+                        <div class="math-block">
+                            \[
+                            \hat{\theta}_A^{MAP} = \frac{n_A+1}{N+3},\quad
+                            \hat{\theta}_B^{MAP} = \frac{n_B+1}{N+3},\quad
+                            \hat{\theta}_C^{MAP} = \frac{n_C+1}{N+3}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【规律】</strong> 每个类别的分子加 1，分母加 3（共 3 个类别）。
+                            这就是「虚拟数据」——提前看到 A、B、C 各一次。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <div class="footer-meta">
+                            📐 使用 KaTeX 渲染 &nbsp;|&nbsp; 从零推导 &nbsp;|&nbsp; 最大似然估计 · 最大后验估计
+                        </div>
+
+                </div>
+</body>
+
+</html>
