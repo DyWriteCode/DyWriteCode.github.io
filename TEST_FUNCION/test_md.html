@@ -6,18 +6,18 @@
     <title>Markdown 编辑器 · 仿 Typora</title>
 
     <!-- ========== 外部依赖 ========== -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260818112604"
     integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" />
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css?v=20260818112604" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260818112604"
     integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
 </script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260818112604"
 integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js">
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20260818112604">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js?v=20260818112604">
 </script>
 
 <style>
@@ -628,25 +628,25 @@ integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE
         <!-- 工具栏 -->
         <div class="toolbar" id="toolbar">
             <span class="label">格式</span>
-            <button data-action="bold" title="加粗">B <span class="shortcut-hint">⌘B</span></button>
-            <button data-action="italic" title="斜体">I <span class="shortcut-hint">⌘I</span></button>
-            <button data-action="strikethrough" title="删除线">S</button>
+            <button data-action="bold?v=20260818112604" title="加粗">B <span class="shortcut-hint">⌘B</span></button>
+            <button data-action="italic?v=20260818112604" title="斜体">I <span class="shortcut-hint">⌘I</span></button>
+            <button data-action="strikethrough?v=20260818112604" title="删除线">S</button>
             <span class="sep"></span>
-            <button data-action="h1" title="一级标题">H1</button>
-            <button data-action="h2" title="二级标题">H2</button>
-            <button data-action="h3" title="三级标题">H3</button>
+            <button data-action="h1?v=20260818112604" title="一级标题">H1</button>
+            <button data-action="h2?v=20260818112604" title="二级标题">H2</button>
+            <button data-action="h3?v=20260818112604" title="三级标题">H3</button>
             <span class="sep"></span>
-            <button data-action="codeblock" title="代码块">〈/〉 <span class="shortcut-hint">⌘⇧C</span></button>
-            <button data-action="table" title="表格">▦ <span class="shortcut-hint">⌘⇧T</span></button>
-            <button data-action="mathblock" title="数学公式">∑ <span class="shortcut-hint">⌘⇧M</span></button>
-            <button data-action="mathinline" title="行内公式">∫</button>
+            <button data-action="codeblock?v=20260818112604" title="代码块">〈/〉 <span class="shortcut-hint">⌘⇧C</span></button>
+            <button data-action="table?v=20260818112604" title="表格">▦ <span class="shortcut-hint">⌘⇧T</span></button>
+            <button data-action="mathblock?v=20260818112604" title="数学公式">∑ <span class="shortcut-hint">⌘⇧M</span></button>
+            <button data-action="mathinline?v=20260818112604" title="行内公式">∫</button>
             <span class="sep"></span>
-            <button data-action="ul" title="无序列表">•</button>
-            <button data-action="ol" title="有序列表">1.</button>
-            <button data-action="quote" title="引用">“</button>
-            <button data-action="hr" title="分割线">—</button>
+            <button data-action="ul?v=20260818112604" title="无序列表">•</button>
+            <button data-action="ol?v=20260818112604" title="有序列表">1.</button>
+            <button data-action="quote?v=20260818112604" title="引用">“</button>
+            <button data-action="hr?v=20260818112604" title="分割线">—</button>
             <span class="sep"></span>
-            <button data-action="clear" title="清空内容" style="color:#e74c3c;">✕ 清空</button>
+            <button data-action="clear?v=20260818112604" title="清空内容" style="color:#e74c3c;">✕ 清空</button>
         </div>
 
         <!-- 主体 -->
@@ -678,21 +678,21 @@ integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE
 
     <!-- ========== 右键菜单 ========== -->
     <div class="context-menu" id="contextMenu">
-        <button class="menu-item" data-action="h1"><span class="icon">#</span> 一级标题</button>
-        <button class="menu-item" data-action="h2"><span class="icon">##</span> 二级标题</button>
-        <button class="menu-item" data-action="h3"><span class="icon">###</span> 三级标题</button>
+        <button class="menu-item" data-action="h1?v=20260818112604"><span class="icon">#</span> 一级标题</button>
+        <button class="menu-item" data-action="h2?v=20260818112604"><span class="icon">##</span> 二级标题</button>
+        <button class="menu-item" data-action="h3?v=20260818112604"><span class="icon">###</span> 三级标题</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="codeblock"><span class="icon">〈/〉</span> 代码块 <span class="shortcut">⌘⇧C</span></button>
-        <button class="menu-item" data-action="table"><span class="icon">▦</span> 表格 <span class="shortcut">⌘⇧T</span></button>
-        <button class="menu-item" data-action="mathblock"><span class="icon">∑</span> 块级公式 <span class="shortcut">⌘⇧M</span></button>
-        <button class="menu-item" data-action="mathinline"><span class="icon">∫</span> 行内公式 <span class="shortcut">⌘M</span></button>
+        <button class="menu-item" data-action="codeblock?v=20260818112604"><span class="icon">〈/〉</span> 代码块 <span class="shortcut">⌘⇧C</span></button>
+        <button class="menu-item" data-action="table?v=20260818112604"><span class="icon">▦</span> 表格 <span class="shortcut">⌘⇧T</span></button>
+        <button class="menu-item" data-action="mathblock?v=20260818112604"><span class="icon">∑</span> 块级公式 <span class="shortcut">⌘⇧M</span></button>
+        <button class="menu-item" data-action="mathinline?v=20260818112604"><span class="icon">∫</span> 行内公式 <span class="shortcut">⌘M</span></button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="ul"><span class="icon">•</span> 无序列表</button>
-        <button class="menu-item" data-action="ol"><span class="icon">1.</span> 有序列表</button>
-        <button class="menu-item" data-action="quote"><span class="icon">“</span> 引用</button>
-        <button class="menu-item" data-action="hr"><span class="icon">—</span> 分割线</button>
+        <button class="menu-item" data-action="ul?v=20260818112604"><span class="icon">•</span> 无序列表</button>
+        <button class="menu-item" data-action="ol?v=20260818112604"><span class="icon">1.</span> 有序列表</button>
+        <button class="menu-item" data-action="quote?v=20260818112604"><span class="icon">“</span> 引用</button>
+        <button class="menu-item" data-action="hr?v=20260818112604"><span class="icon">—</span> 分割线</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="clear" style="color:#e74c3c;"><span class="icon">✕</span> 清空内容</button>
+        <button class="menu-item" data-action="clear?v=20260818112604" style="color:#e74c3c;"><span class="icon">✕</span> 清空内容</button>
     </div>
 
     <!-- ========== 导出遮罩 ========== -->
@@ -753,7 +753,7 @@ integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE
             // 拦截图片，添加样式
             renderer.image = function(href, title, text) {
                 const alt = text || '';
-                return `<img src="${href}" alt="${alt}" title="${title || ''}" loading="lazy" />`;
+                return `<img src="${href}?v=20260818112604" alt="${alt}" title="${title || ''}" loading="lazy" />`;
             };
 
             marked.setOptions({
@@ -1081,8 +1081,8 @@ integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>导出的文档</title>
-            <link rel="stylesheet" href="${katexCSS}" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />
-            <link rel="stylesheet" href="${highlightCSS}" />
+            <link rel="stylesheet" href="${katexCSS}?v=20260818112604" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />
+            <link rel="stylesheet" href="${highlightCSS}?v=20260818112604" />
             <style>
                 * { margin:0; padding:0; box-sizing:border-box; }
                 body {
@@ -1132,10 +1132,10 @@ integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE
                 </div>
                 <div class="footer-meta">📄 导出时间: ${new Date().toLocaleString()} · 由 Markdown 编辑器生成</div>
             </div>
-            <script src="${markedJS}"><\/script>
-            <script src="${katexJS}" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"><\/script>
-            <script src="${katexAuto}" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"><\/script>
-            <script src="${highlightJS}"><\/script>
+            <script src="${markedJS}?v=20260818112604"><\/script>
+            <script src="${katexJS}?v=20260818112604" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"><\/script>
+            <script src="${katexAuto}?v=20260818112604" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"><\/script>
+            <script src="${highlightJS}?v=20260818112604"><\/script>
             <script>
                 // 渲染 KaTeX
                 if (document.querySelector('.markdown-body')) {
