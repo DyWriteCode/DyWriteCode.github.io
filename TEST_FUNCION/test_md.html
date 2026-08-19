@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>终极 MD 编辑器 · Judge0 CE 中文修复</title>
+    <title>终极 MD 编辑器 · 中文输出修复</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
@@ -634,7 +634,7 @@
 
     <div class="app">
         <header class="app-header">
-            <div class="logo">📝 <span>MD</span>编辑器 <small>· 中文支持</small></div>
+            <div class="logo">📝 <span>MD</span>编辑器 <small>· 中文修复</small></div>
             <div class="actions">
                 <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
                 <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
@@ -808,7 +808,7 @@
         let suggestMode = '';
 
         // =====================================================================
-        // 3. Judge0 CE 语言 ID 映射（经过验证）
+        // 3. Judge0 CE 语言 ID 映射
         // =====================================================================
         const LANGUAGE_IDS = {
             'bash': 46,
@@ -1204,7 +1204,7 @@
         }
 
         // =====================================================================
-        // 8. 代码运行（Judge0 CE 支持中文 UTF-8）
+        // 8. 代码运行（支持中文输出，每次刷新）
         // =====================================================================
         async function runCode(btn, encodedCode) {
             const code = decodeURIComponent(encodedCode);
@@ -1212,9 +1212,11 @@
             if (!pre) return;
             const lang = pre.dataset.lang || '';
 
-            let output = pre.querySelector('.code-output');
-            if (output) output.remove();
-            output = document.createElement('div');
+            // 清除旧的输出（确保完全刷新）
+            let oldOutput = pre.querySelector('.code-output');
+            if (oldOutput) oldOutput.remove();
+
+            let output = document.createElement('div');
             output.className = 'code-output';
             pre.after(output);
             output.textContent = '⏳ 提交到 Judge0 ...';
@@ -1227,10 +1229,9 @@
                     return;
                 }
 
-                // 将源代码进行 Base64 编码（支持中文）
+                // Base64 编码源代码（支持中文）
                 const encodedSource = btoa(unescape(encodeURIComponent(code)));
 
-                // 使用 wait=true 和 base64_encoded=true
                 const url = `https://ce.judge0.com/submissions?wait=true&base64_encoded=true`;
                 const body = {
                     source_code: encodedSource,
@@ -1255,24 +1256,38 @@
                     throw new Error(data.error);
                 }
 
-                // 输出结果（API 会自动解码 stdout/stderr）
+                // 解码返回的 stdout/stderr（因为是 base64 编码）
+                const decodeBase64 = (str) => {
+                    if (!str) return '';
+                    try {
+                        // 标准 Base64 解码 -> 二进制字符串 -> 转 UTF-8
+                        return decodeURIComponent(escape(atob(str)));
+                    } catch (e) {
+                        // 如果解码失败，直接返回原字符串（可能已是文本）
+                        return str;
+                    }
+                };
+
                 let outputText = '';
-                if (data.stdout) {
-                    outputText += data.stdout;
-                }
-                if (data.stderr) {
+                const stdout = decodeBase64(data.stdout);
+                const stderr = decodeBase64(data.stderr);
+                const compile_output = decodeBase64(data.compile_output);
+                const message = data.message ? decodeBase64(data.message) : '';
+
+                if (stdout) outputText += stdout;
+                if (stderr) {
                     if (outputText) outputText += '\n--- stderr ---\n';
-                    outputText += data.stderr;
+                    outputText += stderr;
                     output.classList.add('error');
                 }
-                if (data.compile_output) {
+                if (compile_output) {
                     if (outputText) outputText += '\n--- compile ---\n';
-                    outputText += data.compile_output;
+                    outputText += compile_output;
                     output.classList.add('error');
                 }
-                if (data.message) {
+                if (message) {
                     if (outputText) outputText += '\n--- message ---\n';
-                    outputText += data.message;
+                    outputText += message;
                 }
 
                 if (!outputText) {
@@ -1289,7 +1304,7 @@
         }
 
         // =====================================================================
-        // 9. 补全系统
+        // 9. 补全系统（完整）
         // =====================================================================
         function checkSuggestForTextarea(textarea) {
             const pos = textarea.selectionStart;
@@ -1864,7 +1879,7 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
         // =====================================================================
         // 16. 初始化
         // =====================================================================
-        const defaultContent = `# ✨ 终极 MD 编辑器（中文支持）
+        const defaultContent = `# ✨ 终极 MD 编辑器（中文输出修复）
 
 **单击任意内容**进入编辑模式，修改后点击其他地方或按 Ctrl+Enter 保存。
 
@@ -1878,7 +1893,7 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
 
 ---
 
-## 💻 代码运行（支持中文）
+## 💻 代码运行（完美支持中文）
 
 \`\`\`javascript
 // 中文变量名和注释都没问题
@@ -1915,7 +1930,7 @@ public class Main {
         fullMarkdown = defaultContent;
         renderMarkdown(fullMarkdown);
 
-        console.log('✅ 中文支持版已启动！所有代码均支持 UTF-8。');
+        console.log('✅ 中文修复版已启动！输出正常显示中文，每次运行刷新结果。');
     </script>
 </body>
 
