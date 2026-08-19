@@ -4,12 +4,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>终极 MD 编辑器 · Judge0 CE 驱动</title>
+    <title>终极 MD 编辑器 · Judge0 CE 修复版</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
     <style>
-        /* ===== 基础样式 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -635,7 +634,7 @@
 
     <div class="app">
         <header class="app-header">
-            <div class="logo">📝 <span>MD</span>编辑器 <small>· Judge0 CE</small></div>
+            <div class="logo">📝 <span>MD</span>编辑器 <small>· Judge0 CE 修复</small></div>
             <div class="actions">
                 <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
                 <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
@@ -676,9 +675,8 @@
                     <option value="php">PHP (7.4.1)</option>
                     <option value="ruby">Ruby (2.7.0)</option>
                     <option value="bash">Bash (5.0.0)</option>
-                    <option value="sql">SQL</option>
-                    <option value="html">HTML</option>
-                    <option value="css">CSS</option>
+                    <option value="swift">Swift (5.2.3)</option>
+                    <option value="kotlin">Kotlin (1.3.70)</option>
                 </select>
             </div>
             <div class="group">
@@ -778,7 +776,6 @@
             if (!highlighted) {
                 highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
-            // 所有语言都支持运行（通过 Judge0 CE）
             return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="run-btn" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">▶ 运行</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
         };
         renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
@@ -811,32 +808,27 @@
         let suggestMode = '';
 
         // =====================================================================
-        // 3. Judge0 CE 语言 ID 映射表
-        // 基于 https://ce.judge0.com/languages/ 的响应
+        // 3. Judge0 CE 语言 ID 映射（经过验证，只保留确定有效的）
+        // 根据官方 /languages 端点返回的数据
         // =====================================================================
         const LANGUAGE_IDS = {
-            'bash': 46,          // Bash (5.0.0)[reference:2]
-            'c': 50,             // C (GCC 9.2.0)[reference:3]
-            'cpp': 54,           // C++ (GCC 9.2.0)[reference:4]
-            'csharp': 51,        // C# (Mono 6.6.0.161)[reference:5]
-            'go': 60,            // Go (1.13.5)[reference:6]
-            'java': 62,          // Java (OpenJDK 13.0.1)[reference:7]
-            'javascript': 63,    // JavaScript (Node.js 12.14.0)[reference:8]
-            'php': 68,           // PHP (7.4.1)[reference:9]
-            'python': 71,        // Python (3.8.1)[reference:10]
-            'ruby': 72,          // Ruby (2.7.0)[reference:11]
-            'rust': 73,          // Rust (1.40.0)[reference:12]
-            'sql': 82,           // SQL (SQLite 3.27.2)
-            'html': 43,          // Plain Text[reference:13]
-            'css': 43,           // Plain Text[reference:14]
-            'swift': 83,         // Swift (5.2.3)
-            'kotlin': 84,        // Kotlin (1.3.70)
-            'typescript': 74,    // TypeScript (3.7.4)[reference:15]
-            'go': 60,            // Go (1.13.5)[reference:16]
+            'bash': 46,
+            'c': 50,
+            'cpp': 54,
+            'csharp': 51,
+            'go': 60,
+            'java': 62,
+            'javascript': 63,
+            'php': 68,
+            'python': 71,
+            'ruby': 72,
+            'rust': 73,
+            'swift': 83,
+            'kotlin': 84,
         };
 
         // =====================================================================
-        // 4. 补全数据（完整）
+        // 4. 补全数据（略，保持原有）
         // =====================================================================
         const codeKeywords = {
             javascript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'super', 'import', 'export', 'default', 'async', 'await', 'yield', 'console', 'log', 'debug', 'error', 'map', 'filter', 'reduce', 'forEach', 'Promise', 'then', 'catch', 'finally'],
@@ -851,7 +843,6 @@
             swift: ['import', 'class', 'struct', 'enum', 'protocol', 'extension', 'func', 'var', 'let', 'return', 'if', 'else', 'switch', 'case', 'for', 'while', 'repeat', 'break', 'continue', 'guard', 'defer', 'throw', 'throws', 'catch', 'try'],
             kotlin: ['fun', 'val', 'var', 'class', 'interface', 'object', 'if', 'else', 'when', 'for', 'while', 'do', 'return', 'break', 'continue', 'throw', 'try', 'catch', 'finally', 'import', 'package', 'public', 'private', 'protected', 'internal'],
             bash: ['echo', 'read', 'if', 'then', 'else', 'elif', 'fi', 'for', 'while', 'do', 'done', 'case', 'esac', 'function', 'return', 'export', 'source', 'alias', 'unset', 'set', 'shopt'],
-            sql: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN'],
         };
         const mathSymbols = [
             { sym: '\\alpha', desc: 'α' }, { sym: '\\beta', desc: 'β' }, { sym: '\\gamma', desc: 'γ' },
@@ -905,7 +896,7 @@
             attachClickListeners();
             updateStatus();
             allBlocks = Array.from(preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table'));
-            // 为每个 pre 添加语言选择器（编辑时显示）
+            // 为每个 pre 添加语言选择器
             preview.querySelectorAll('pre').forEach(pre => {
                 const lang = pre.dataset.lang || '';
                 const selector = document.createElement('div');
@@ -917,7 +908,7 @@
         }
 
         function getLangOptions(selected) {
-            const langs = ['javascript', 'python', 'java', 'cpp', 'c', 'csharp', 'go', 'rust', 'php', 'ruby', 'bash', 'sql', 'html', 'css', 'swift', 'kotlin', 'typescript'];
+            const langs = Object.keys(LANGUAGE_IDS);
             return langs.map(l => `<option value="${l}" ${l === selected ? 'selected' : ''}>${l}</option>`).join('');
         }
 
@@ -1214,10 +1205,8 @@
         }
 
         // =====================================================================
-        // 8. 代码运行（Judge0 CE API）
+        // 8. 代码运行（Judge0 CE 修复版 - 使用 wait=true 一次性提交）
         // =====================================================================
-        const JUDGE0_API_BASE = 'https://ce.judge0.com';
-
         async function runCode(btn, encodedCode) {
             const code = decodeURIComponent(encodedCode);
             const pre = btn.closest('pre');
@@ -1232,7 +1221,6 @@
             output.textContent = '⏳ 提交到 Judge0 ...';
 
             try {
-                // 获取语言 ID
                 const languageId = LANGUAGE_IDS[lang];
                 if (!languageId) {
                     output.textContent = `❌ 不支持的语言: ${lang}`;
@@ -1240,80 +1228,55 @@
                     return;
                 }
 
-                // 1. 创建提交 (Create Submission)[reference:17]
-                const createUrl = `${JUDGE0_API_BASE}/submissions/?base64_encoded=false&wait=false`;
-                const createBody = {
+                // 使用 wait=true 直接等待执行结果，避免轮询
+                const url = `https://ce.judge0.com/submissions?wait=true&base64_encoded=false`;
+                const body = {
                     source_code: code,
                     language_id: languageId,
                     stdin: '',
                 };
 
-                const createResponse = await fetch(createUrl, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(createBody)
+                    body: JSON.stringify(body)
                 });
 
-                if (!createResponse.ok) {
-                    const errData = await createResponse.json();
-                    throw new Error(`创建提交失败 (HTTP ${createResponse.status}): ${JSON.stringify(errData)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // 提取服务器返回的详细错误信息
+                    const errMsg = data.message || data.error || JSON.stringify(data);
+                    throw new Error(`HTTP ${response.status}: ${errMsg}`);
                 }
 
-                const createData = await createResponse.json();
-                const token = createData.token;
-                if (!token) {
-                    throw new Error('未获得提交 token');
+                // 检查是否包含错误字段
+                if (data.error) {
+                    throw new Error(data.error);
                 }
 
-                output.textContent = '⏳ 正在执行...';
-
-                // 2. 获取结果 (Get Submission)[reference:18]
-                const resultUrl = `${JUDGE0_API_BASE}/submissions/${token}?base64_encoded=false`;
-                let resultData = null;
-                let attempts = 0;
-                const maxAttempts = 30;
-
-                while (attempts < maxAttempts) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    const resultResponse = await fetch(resultUrl);
-                    if (!resultResponse.ok) {
-                        throw new Error(`获取结果失败 (HTTP ${resultResponse.status})`);
-                    }
-                    resultData = await resultResponse.json();
-
-                    // status.id: 1=In Queue, 2=Processing[reference:19]
-                    if (resultData.status && resultData.status.id > 2) {
-                        break;
-                    }
-                    attempts++;
-                }
-
-                if (!resultData || (resultData.status && resultData.status.id <= 2)) {
-                    throw new Error('执行超时，请稍后重试');
-                }
-
-                // 3. 显示结果
+                // 解析执行结果
                 let outputText = '';
-                if (resultData.stdout) {
-                    outputText += resultData.stdout;
+                if (data.stdout) {
+                    outputText += data.stdout;
                 }
-                if (resultData.stderr) {
+                if (data.stderr) {
                     if (outputText) outputText += '\n--- stderr ---\n';
-                    outputText += resultData.stderr;
+                    outputText += data.stderr;
                     output.classList.add('error');
                 }
-                if (resultData.compile_output) {
+                if (data.compile_output) {
                     if (outputText) outputText += '\n--- compile ---\n';
-                    outputText += resultData.compile_output;
+                    outputText += data.compile_output;
                     output.classList.add('error');
                 }
-                if (resultData.message) {
+                if (data.message) {
                     if (outputText) outputText += '\n--- message ---\n';
-                    outputText += resultData.message;
+                    outputText += data.message;
                 }
 
                 if (!outputText) {
-                    const statusName = resultData.status ? resultData.status.description : 'Unknown';
+                    const statusName = data.status ? data.status.description : 'Unknown';
                     outputText = `✅ 执行成功 (${statusName})`;
                 }
 
@@ -1901,7 +1864,7 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
         // =====================================================================
         // 16. 初始化
         // =====================================================================
-        const defaultContent = `# ✨ 终极 MD 编辑器（Judge0 CE 驱动）
+        const defaultContent = `# ✨ 终极 MD 编辑器（Judge0 CE 修复版）
 
 **单击任意内容**进入编辑模式，修改后点击其他地方或按 Ctrl+Enter 保存。
 
@@ -1915,7 +1878,7 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
 
 ---
 
-## 💻 代码块（Judge0 CE 驱动，支持 60+ 种语言）
+## 💻 代码运行（Judge0 CE 一次性执行）
 
 \`\`\`javascript
 // JavaScript (Node.js 12.14.0)
@@ -1939,17 +1902,7 @@ public class Main {
 }
 \`\`\`
 
-\`\`\`cpp
-// C++ (GCC 9.2.0)
-#include <iostream>
-using namespace std;
-int main() {
-    cout << "Hello C++!" << endl;
-    return 0;
-}
-\`\`\`
-
-**Judge0 CE 支持 60+ 种语言**，包括 C、C++、Java、Python、JavaScript、Go、Rust、PHP、Ruby、C# 等[reference:20]。
+**支持的 13 种语言**：JavaScript、Python、Java、C++、C、C#、Go、Rust、PHP、Ruby、Bash、Swift、Kotlin
 
 ---
 
@@ -1963,7 +1916,7 @@ int main() {
         fullMarkdown = defaultContent;
         renderMarkdown(fullMarkdown);
 
-        console.log('✅ Judge0 CE 驱动版已启动！支持 60+ 种语言在线执行。');
+        console.log('✅ Judge0 CE 修复版已启动！支持一次性执行，错误信息清晰。');
     </script>
 </body>
 
