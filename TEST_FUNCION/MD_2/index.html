@@ -6,20 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MD Editor · 类 Typora</title>
 
-    <!-- ===== 第三方库 ===== -->
+    <!-- ===== 第三方库 (使用 cdnjs 确保稳定) ===== -->
     <!-- Marked: Markdown → HTML -->
-    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20260819072620">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js">
     </script>
-    <!-- highlight.js: 代码高亮 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css?v=20260819072620" />
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js?v=20260819072620">
+    <!-- highlight.js: 代码高亮 (修正路径) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
     <!-- KaTeX: 数学公式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819072620" />
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260819072620">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
     <!-- Mermaid: 图表 -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js?v=20260819072620">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js">
     </script>
 
     <style>
@@ -779,13 +779,10 @@
             marked.setOptions(markedOptions);
 
             // ---- KaTeX 渲染扩展 (marked) ----
-            // 自定义渲染: 处理 $$...$$ 和 $...$
             const renderer = new marked.Renderer();
 
-            // 保存原始 paragraph 渲染
             const originalParagraph = renderer.paragraph;
             renderer.paragraph = function (text) {
-                // 检测是否包含 $$ 块级公式
                 const blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
                 if (blockMathRegex.test(text)) {
                     text = text.replace(blockMathRegex, function (match, math) {
@@ -800,7 +797,6 @@
                         }
                     });
                 }
-                // 检测行内公式 $...$
                 const inlineMathRegex = /\$([^\$\n]+?)\$/g;
                 if (inlineMathRegex.test(text)) {
                     text = text.replace(inlineMathRegex, function (match, math) {
@@ -818,7 +814,6 @@
                 return originalParagraph.call(this, text);
             };
 
-            // 处理代码块中的 Mermaid
             const originalCode = renderer.code;
             renderer.code = function (code, lang, escaped) {
                 if (lang === 'mermaid') {
@@ -827,13 +822,11 @@
                 return originalCode.call(this, code, lang, escaped);
             };
 
-            // 处理表格 (添加 class)
             const originalTable = renderer.table;
             renderer.table = function (header, body) {
                 return `<table>${header}${body}</table>`;
             };
 
-            // 任务列表
             const originalList = renderer.list;
             renderer.list = function (body, ordered, start) {
                 const isTaskList = /<input\s+type="checkbox"/.test(body);
@@ -881,7 +874,6 @@
             function renderMarkdown(keepCursor = true) {
                 if (isRendering) return;
                 if (sourceMode) {
-                    // 源码模式: 显示原始 Markdown
                     const raw = currentMarkdown || getPlainText(editor.innerHTML);
                     if (editor.innerHTML !== raw) {
                         editor.innerHTML = raw;
@@ -892,7 +884,6 @@
 
                 isRendering = true;
 
-                // 获取当前文本内容 (如果是源码模式则用 currentMarkdown)
                 let md = currentMarkdown;
                 if (!md || sourceMode) {
                     md = getPlainText(editor.innerHTML);
@@ -910,7 +901,6 @@
                         preCaretRange.selectNodeContents(editor);
                         preCaretRange.setEnd(range.endContainer, range.endOffset);
                         offset = preCaretRange.toString().length;
-                        // 保存节点路径
                         nodePath = getNodePath(range.endContainer);
                         sel = {
                             offset: offset,
@@ -924,7 +914,6 @@
                     }
                 }
 
-                // 解析 Markdown
                 let html = '';
                 try {
                     html = marked.parse(md);
@@ -932,17 +921,15 @@
                     html = `<p>⚠️ 解析错误: ${e.message}</p>`;
                 }
 
-                // 如果内容为空，显示占位符
                 if (!html.trim()) {
                     html = `<p class="placeholder">开始书写… 支持 Markdown 语法</p>`;
                 }
 
-                // 更新编辑器
                 if (editor.innerHTML !== html) {
                     editor.innerHTML = html;
                 }
 
-                // 重新渲染 Mermaid
+                // 渲染 Mermaid
                 const mermaidElements = editor.querySelectorAll('.mermaid');
                 if (mermaidElements.length > 0) {
                     mermaidElements.forEach((el, index) => {
@@ -962,7 +949,6 @@
                     try {
                         restoreCursor(sel);
                     } catch (e) {
-                        // 如果恢复失败，将光标放在末尾
                         try {
                             const range = document.createRange();
                             const last = editor.lastChild || editor;
@@ -974,7 +960,6 @@
                         } catch (_) { }
                     }
                 } else {
-                    // 没有保存光标，放到末尾
                     try {
                         const range = document.createRange();
                         const last = editor.lastChild || editor;
@@ -986,13 +971,8 @@
                     } catch (_) { }
                 }
 
-                // 更新 currentMarkdown
                 currentMarkdown = md;
-
-                // 更新统计
                 updateStats();
-
-                // 更新大纲
                 updateOutline(md);
 
                 isRendering = false;
@@ -1021,7 +1001,6 @@
                 const selection = window.getSelection();
                 selection.removeAllRanges();
 
-                // 尝试通过路径找到节点
                 let node = editor;
                 const path = sel.nodePath || [];
                 for (let i = 0; i < path.length; i++) {
@@ -1030,7 +1009,6 @@
                     if (idx < children.length) {
                         node = children[idx];
                     } else {
-                        // 路径失效，使用最后一个子节点
                         if (children.length > 0) {
                             node = children[children.length - 1];
                         }
@@ -1038,18 +1016,15 @@
                     }
                 }
 
-                // 如果节点是文本节点，计算偏移
                 let textLen = 0;
                 if (node.nodeType === Node.TEXT_NODE) {
                     textLen = node.textContent.length;
                 } else {
-                    // 元素节点，尝试找文本
                     const textNode = node.firstChild;
                     if (textNode && textNode.nodeType === Node.TEXT_NODE) {
                         node = textNode;
                         textLen = node.textContent.length;
                     } else {
-                        // 没有文本节点，使用元素内容长度
                         textLen = node.textContent ? node.textContent.length : 0;
                     }
                 }
@@ -1062,7 +1037,6 @@
                     range.collapse(true);
                     selection.addRange(range);
                 } catch (e) {
-                    // 降级: 放到末尾
                     const range = document.createRange();
                     const last = editor.lastChild || editor;
                     range.setStart(last, last.textContent ? last.textContent.length : 0);
@@ -1073,7 +1047,6 @@
 
             // ---- 更新大纲 ----
             function updateOutline(md) {
-                // 提取标题
                 const headingRegex = /^(#{1,6})\s+(.+)$/gm;
                 const headings = [];
                 let match;
@@ -1099,20 +1072,16 @@
                 });
                 outlineTree.innerHTML = html;
 
-                // 点击跳转
                 outlineTree.querySelectorAll('.outline-item').forEach((el) => {
                     el.addEventListener('click', function () {
                         const idx = parseInt(this.dataset.index, 10);
                         if (!isNaN(idx) && idx < headings.length) {
-                            // 在源码中查找标题位置并滚动到附近
                             const target = headings[idx];
                             const text = target.text;
-                            // 简单查找: 在 editor 中找包含该文本的标题元素
                             const headers = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
                             for (const h of headers) {
                                 if (h.textContent.trim() === text) {
                                     h.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    // 高亮一下
                                     h.style.transition = 'background 0.3s';
                                     h.style.background = 'var(--selection)';
                                     setTimeout(() => { h.style.background = ''; }, 600);
@@ -1124,34 +1093,23 @@
                 });
             }
 
-            // ---- 简易 HTML 转义 ----
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
             }
 
-            // ---- 从编辑器提取 Markdown (逆向) ----
-            function extractMarkdownFromDOM() {
-                // 简单实现: 从 innerHTML 提取纯文本
-                // 但对于复杂内容，我们直接使用 currentMarkdown
-                return currentMarkdown || getPlainText(editor.innerHTML);
-            }
-
             // ---- 切换源码模式 ----
             function toggleSourceMode() {
                 sourceMode = !sourceMode;
                 if (sourceMode) {
-                    // 进入源码模式: 显示原始 Markdown
                     const md = currentMarkdown || getPlainText(editor.innerHTML);
                     editor.innerHTML = md;
                     statMode.textContent = '源码';
                     btnSource.classList.add('active');
                 } else {
-                    // 退出源码模式: 渲染
                     statMode.textContent = '编辑';
                     btnSource.classList.remove('active');
-                    // 从当前内容提取 Markdown
                     currentMarkdown = getPlainText(editor.innerHTML);
                     renderMarkdown(true);
                 }
@@ -1162,7 +1120,6 @@
                 darkTheme = !darkTheme;
                 document.documentElement.setAttribute('data-theme', darkTheme ? 'dark' : 'light');
                 statTheme.textContent = darkTheme ? '🌙' : '🌞';
-                // 重新渲染 Mermaid 主题
                 const mermaidEls = editor.querySelectorAll('.mermaid-container');
                 if (mermaidEls.length > 0) {
                     mermaid.initialize({
@@ -1180,19 +1137,16 @@
                 editor.classList.toggle('focus-mode', focusMode);
                 btnFocus.classList.toggle('active', focusMode);
                 if (focusMode) {
-                    // 高亮当前行
                     updateFocusLine();
                 }
             }
 
-            // ---- 更新专注模式高亮行 ----
             function updateFocusLine() {
                 if (!focusMode) return;
                 const sel = window.getSelection();
                 if (sel && sel.rangeCount > 0) {
                     const range = sel.getRangeAt(0);
                     let node = range.startContainer;
-                    // 找到最近的块级元素
                     while (node && node !== editor) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             const tag = node.tagName;
@@ -1203,7 +1157,6 @@
                         }
                         node = node.parentNode;
                     }
-                    // 移除所有 focus-line
                     editor.querySelectorAll('.focus-line').forEach(el => el.classList.remove('focus-line'));
                     if (node && node !== editor) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
@@ -1225,7 +1178,6 @@
                 }
             }
 
-            // ---- 打字机滚动 ----
             function scrollToCaret() {
                 if (!typewriterMode) return;
                 const sel = window.getSelection();
@@ -1243,18 +1195,15 @@
             // ---- 处理输入事件 (防抖渲染) ----
             function onEditorInput() {
                 if (sourceMode) {
-                    // 源码模式: 更新 currentMarkdown
                     currentMarkdown = editor.innerText || editor.textContent || '';
                     updateStats();
                     updateOutline(currentMarkdown);
                     return;
                 }
 
-                // 更新 currentMarkdown
                 const raw = getPlainText(editor.innerHTML);
                 currentMarkdown = raw;
 
-                // 防抖渲染
                 clearTimeout(renderTimer);
                 renderTimer = setTimeout(() => {
                     renderMarkdown(true);
@@ -1262,7 +1211,6 @@
                     if (typewriterMode) scrollToCaret();
                 }, 200);
 
-                // 立即更新统计和大纲 (轻量)
                 updateStats();
                 updateOutline(raw);
                 if (focusMode) updateFocusLine();
@@ -1272,49 +1220,42 @@
             function onEditorKeydown(e) {
                 const ctrl = e.ctrlKey || e.metaKey;
 
-                // Ctrl+/ 切换源码模式
                 if (ctrl && e.key === '/') {
                     e.preventDefault();
                     toggleSourceMode();
                     return;
                 }
 
-                // Ctrl+Shift+L 切换侧栏
                 if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
                     e.preventDefault();
                     toggleSidebar();
                     return;
                 }
 
-                // F8 专注模式
                 if (e.key === 'F8') {
                     e.preventDefault();
                     toggleFocus();
                     return;
                 }
 
-                // F9 打字机模式
                 if (e.key === 'F9') {
                     e.preventDefault();
                     toggleTypewriter();
                     return;
                 }
 
-                // Ctrl+B 粗体
                 if (ctrl && e.key === 'b') {
                     e.preventDefault();
                     wrapSelection('**', '**');
                     return;
                 }
 
-                // Ctrl+I 斜体
                 if (ctrl && e.key === 'i') {
                     e.preventDefault();
                     wrapSelection('*', '*');
                     return;
                 }
 
-                // Ctrl+1~6 标题
                 if (ctrl && e.key >= '1' && e.key <= '6') {
                     e.preventDefault();
                     const level = parseInt(e.key, 10);
@@ -1322,36 +1263,29 @@
                     return;
                 }
 
-                // Ctrl+T 表格
                 if (ctrl && e.key === 't') {
                     e.preventDefault();
                     insertTable();
                     return;
                 }
 
-                // Enter 键: 处理列表延续
                 if (e.key === 'Enter' && !e.shiftKey && !ctrl) {
-                    // 延迟处理，让浏览器先插入换行
                     setTimeout(() => {
                         handleListContinuation();
                     }, 10);
                 }
 
-                // Tab 键: 缩进列表
                 if (e.key === 'Tab' && !e.shiftKey) {
-                    // 简单处理: 插入 4 个空格
                     e.preventDefault();
                     document.execCommand('insertText', false, '    ');
                 }
             }
 
-            // ---- 处理列表延续 ----
             function handleListContinuation() {
                 const sel = window.getSelection();
                 if (!sel || sel.rangeCount === 0) return;
                 const range = sel.getRangeAt(0);
                 let node = range.startContainer;
-                // 找到当前段落
                 while (node && node !== editor) {
                     if (node.nodeType === Node.ELEMENT_NODE) {
                         const tag = node.tagName;
@@ -1362,18 +1296,14 @@
                 if (!node || node === editor) return;
 
                 const text = node.textContent || '';
-                // 检测是否以列表标记开头
                 const ulMatch = text.match(/^[\s]*[-*]\s+/);
                 const olMatch = text.match(/^[\s]*(\d+)\.\s+/);
                 if (ulMatch || olMatch) {
-                    // 如果当前行只有列表标记，移除它 (结束列表)
                     const stripped = text.replace(/^[\s]*[-*]\s+/, '').replace(/^[\s]*\d+\.\s+/, '').trim();
                     if (!stripped) {
-                        // 空列表项: 转换为普通段落
                         const p = document.createElement('p');
                         p.textContent = '';
                         node.parentNode.replaceChild(p, node);
-                        // 将光标放入新段落
                         const newRange = document.createRange();
                         newRange.setStart(p, 0);
                         newRange.collapse(true);
@@ -1384,7 +1314,6 @@
                     }
                 }
 
-                // 检测引用
                 const quoteMatch = text.match(/^[\s]*>\s+/);
                 if (quoteMatch) {
                     const stripped = text.replace(/^[\s]*>\s+/, '').trim();
@@ -1402,10 +1331,8 @@
                     }
                 }
 
-                // 检测标题
                 const headingMatch = text.match(/^(#{1,6})\s+/);
                 if (headingMatch) {
-                    // 标题后按回车: 创建普通段落
                     const p = document.createElement('p');
                     p.textContent = '';
                     if (node.parentNode) {
@@ -1420,16 +1347,13 @@
                 }
             }
 
-            // ---- 包裹选中文本 (粗体/斜体) ----
             function wrapSelection(prefix, suffix) {
                 const sel = window.getSelection();
                 if (!sel || sel.rangeCount === 0) return;
                 const range = sel.getRangeAt(0);
                 if (range.collapsed) {
-                    // 没有选中文本，插入标记并让光标在中间
                     const text = prefix + suffix;
                     document.execCommand('insertText', false, text);
-                    // 移动光标到中间
                     const newRange = document.createRange();
                     const node = range.startContainer;
                     const offset = range.startOffset + prefix.length;
@@ -1444,21 +1368,17 @@
                 range.deleteContents();
                 const textNode = document.createTextNode(wrapped);
                 range.insertNode(textNode);
-                // 选中包裹后的内容
                 const newRange = document.createRange();
                 newRange.setStart(textNode, prefix.length);
                 newRange.setEnd(textNode, prefix.length + text.length);
                 sel.removeAllRanges();
                 sel.addRange(newRange);
-                // 触发渲染
                 onEditorInput();
             }
 
-            // ---- 插入标题 ----
             function insertHeading(level) {
                 const prefix = '#'.repeat(level) + ' ';
                 document.execCommand('insertText', false, prefix);
-                // 光标在空格后
                 const sel = window.getSelection();
                 if (sel && sel.rangeCount > 0) {
                     const range = sel.getRangeAt(0);
@@ -1471,11 +1391,9 @@
                     sel.removeAllRanges();
                     sel.addRange(newRange);
                 }
-                // 触发渲染
                 setTimeout(() => onEditorInput(), 10);
             }
 
-            // ---- 插入表格 ----
             function insertTable() {
                 const tableMarkdown = `
             | 列1 | 列2 | 列3 |
@@ -1487,13 +1405,11 @@
                 setTimeout(() => onEditorInput(), 10);
             }
 
-            // ---- 切换侧栏 ----
             function toggleSidebar() {
                 isSidebarOpen = !isSidebarOpen;
                 sidebar.classList.toggle('collapsed', !isSidebarOpen);
             }
 
-            // ---- 导出 HTML ----
             function exportHTML() {
                 const content = editor.innerHTML;
                 const style = document.querySelector('style').innerHTML;
@@ -1508,12 +1424,10 @@
                 downloadFile(html, 'document.html', 'text/html');
             }
 
-            // ---- 导出 PDF (通过打印) ----
             function exportPDF() {
                 window.print();
             }
 
-            // ---- 下载文件 ----
             function downloadFile(content, filename, mime) {
                 const blob = new Blob([content], { type: mime });
                 const url = URL.createObjectURL(blob);
@@ -1526,7 +1440,6 @@
                 URL.revokeObjectURL(url);
             }
 
-            // ---- 清空文档 ----
             function clearDocument() {
                 if (confirm('确定要清空所有内容吗？')) {
                     currentMarkdown = '';
@@ -1537,7 +1450,6 @@
                 }
             }
 
-            // ---- 粘贴图片支持 ----
             function onPaste(e) {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 for (const item of items) {
@@ -1557,7 +1469,6 @@
                 }
             }
 
-            // ---- 拖拽图片支持 ----
             function onDrop(e) {
                 e.preventDefault();
                 const files = e.dataTransfer.files;
@@ -1578,7 +1489,6 @@
 
             // ---- 初始化 ----
             function init() {
-                // 设置初始内容
                 const initialMD = `# 欢迎使用 MD Editor
 
         这是一个 **类 Typora** 的所见即所得 Markdown 编辑器。
@@ -1630,25 +1540,21 @@
                 currentMarkdown = initialMD;
                 renderMarkdown(false);
 
-                // 事件绑定
                 editor.addEventListener('input', onEditorInput);
                 editor.addEventListener('keydown', onEditorKeydown);
                 editor.addEventListener('paste', onPaste);
                 editor.addEventListener('drop', onDrop);
                 editor.addEventListener('dragover', (e) => e.preventDefault());
 
-                // 选区变化: 更新专注行
                 document.addEventListener('selectionchange', () => {
                     if (focusMode) updateFocusLine();
                     if (typewriterMode) scrollToCaret();
                 });
 
-                // 滚动时更新打字机
                 editor.addEventListener('scroll', () => {
                     if (typewriterMode) scrollToCaret();
                 });
 
-                // 按钮事件
                 btnSidebar.addEventListener('click', toggleSidebar);
                 btnSidebarClose.addEventListener('click', toggleSidebar);
                 btnSource.addEventListener('click', toggleSourceMode);
@@ -1659,7 +1565,6 @@
                 btnExportPDF.addEventListener('click', exportPDF);
                 btnClear.addEventListener('click', clearDocument);
 
-                // 全局快捷键
                 document.addEventListener('keydown', (e) => {
                     const ctrl = e.ctrlKey || e.metaKey;
                     if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
@@ -1676,7 +1581,6 @@
                     }
                 });
 
-                // 更新状态
                 statMode.textContent = '编辑';
                 statTheme.textContent = '🌞';
                 updateStats();
@@ -1684,7 +1588,6 @@
                 console.log('📝 MD Editor 已启动');
             }
 
-            // ---- 页面加载完成后初始化 ----
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
