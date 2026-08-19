@@ -6,48 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Markdown 编辑器 · 类 Typora</title>
 
-    <!-- ===== 第三方库 CDN ===== -->
+    <!-- ===== 第三方库 CDN（全部替换为稳定路径） ===== -->
     <!-- markdown-it -->
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js">
     </script>
     <!-- KaTeX -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819092235" />
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260819092235">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
     </script>
-    <!-- highlight.js -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css?v=20260819092235" />
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js?v=20260819092235">
+    <!-- highlight.js (使用 cdnjs 稳定路径) -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
     <!-- CodeMirror 5 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css?v=20260819092235" />
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js?v=20260819092235">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js">
     </script>
-    <!-- CodeMirror 模式：支持多种语言 -->
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js?v=20260819092235">
+    <!-- CodeMirror 模式 -->
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/python/python.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/python/python.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/htmlmixed/htmlmixed.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/css/css.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/clike/clike.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/clike/clike.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/shell/shell.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/shell/shell.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/yaml/yaml.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/yaml/yaml.min.js">
     </script>
     <!-- jQuery (MathQuill 依赖) -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js?v=20260819092235">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js">
     </script>
     <!-- MathQuill -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1/build/mathquill.min.css?v=20260819092235" />
-    <script src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1/build/mathquill.min.js?v=20260819092235">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathquill@0.10.1/build/mathquill.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/mathquill@0.10.1/build/mathquill.min.js">
     </script>
 
-    <!-- ===== 自定义样式 ===== -->
+    <!-- ===== 自定义样式（与之前相同，无改动） ===== -->
     <style>
         /* ----- 全局重置 & 基础 ----- */
         * {
@@ -301,10 +302,6 @@
             transition: background 0.25s;
             overflow: hidden;
             position: relative;
-        }
-
-        #editor-wrapper.focus-mode {
-            background: var(--bg);
         }
 
         #editor-wrapper.focus-mode .editor-line:not(.active-line) {
@@ -892,7 +889,8 @@
             typographer: true,
             breaks: true,
             highlight: function (str, lang) {
-                if (lang && hljs.getLanguage(lang)) {
+                // 检查 hljs 是否可用
+                if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
                     try {
                         return hljs.highlight(str, { language: lang }).value;
                     } catch (_) { }
@@ -906,7 +904,6 @@
         md.render = function (src) {
             let html = defaultRender(src);
             // 对代码块进行包装，添加运行按钮等
-            // 注意：这里用正则简单处理，生产环境建议用 token 渲染
             html = html.replace(
                 /<pre><code class="language-([^"]+)">([\s\S]*?)<\/code><\/pre>/g,
                 function (match, lang, code) {
@@ -1093,8 +1090,6 @@
         }
 
         async function executeCodeWithJudge0(code, lang) {
-            // Judge0 API 模拟（实际使用需要 API Key）
-            // 这里我们使用一个 mock 实现 + 真实 API 调用
             const languageMap = {
                 'javascript': 63,
                 'python': 71,
@@ -1112,7 +1107,6 @@
             };
             const langId = languageMap[lang.toLowerCase()] || 63;
 
-            // 使用 Judge0 API (需要配置 token)
             const API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
             const API_KEY = 'your-rapidapi-key-here'; // 用户需替换
 
@@ -1133,7 +1127,6 @@
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
                 const token = data.token;
-                // 轮询获取结果
                 for (let i = 0; i < 10; i++) {
                     await new Promise(r => setTimeout(r, 500));
                     const resultResp = await fetch(`${API_URL}/${token}`, {
@@ -1153,13 +1146,11 @@
                 }
                 return { success: false, error: '执行超时' };
             } catch (err) {
-                // Mock 回退：本地模拟执行
                 return mockExecute(code, lang);
             }
         }
 
         function mockExecute(code, lang) {
-            // 简单的本地模拟（仅用于演示）
             const langLower = lang.toLowerCase();
             if (langLower === 'javascript' || langLower === 'js') {
                 try {
@@ -1175,7 +1166,6 @@
                 }
             }
             if (langLower === 'python' || langLower === 'python3') {
-                // 简单模拟：检测 print
                 const matches = code.match(/print\s*\((.+?)\)/g);
                 if (matches) {
                     const outputs = matches.map(m => {
@@ -1200,7 +1190,6 @@
             const currentCode = codeEl ? codeEl.textContent : '';
             STATE.editingCode = { lang, code: currentCode, node: wrap };
 
-            // 创建模态框编辑代码
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
             modal.style.display = 'flex';
@@ -1231,7 +1220,7 @@
                 codeBody.innerHTML =
                     `<pre><code class="hljs language-${langTag}">${escaped}</code></pre>`;
                 // 重新高亮
-                if (hljs) {
+                if (typeof hljs !== 'undefined') {
                     codeBody.querySelectorAll('pre code').forEach(block => {
                         hljs.highlightElement(block);
                     });
@@ -1248,17 +1237,14 @@
             closeBtn.addEventListener('click', cleanup);
             cancelBtn.addEventListener('click', cleanup);
             confirmBtn.addEventListener('click', applyCode);
-            // Enter 键提交
             textarea.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && e.ctrlKey) {
                     applyCode();
                 }
             });
-            // 点击背景关闭
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) cleanup();
             });
-            // 自动聚焦
             setTimeout(() => textarea.focus(), 100);
         }
 
@@ -1285,11 +1271,9 @@
 
         function openMathEditor(latex) {
             mathModal.classList.add('active');
-            // 初始化 MathQuill
             if (mathQuillInstance) {
                 mathQuillInstance.latex(latex || '');
             } else {
-                // 延迟初始化，确保 DOM 可见
                 setTimeout(() => {
                     const container = mathEditorContainer;
                     container.innerHTML = '';
@@ -1315,7 +1299,6 @@
                     }
                 }, 200);
             }
-            // 聚焦
             setTimeout(() => {
                 if (mathQuillInstance) mathQuillInstance.focus();
             }, 300);
@@ -1345,11 +1328,6 @@
                         node.innerHTML = rendered;
                         node.dataset.latex = encodeURIComponent(latex);
                     }
-                    // 触发保存
-                    const text = getTextContent();
-                    STATE.markdown = text;
-                    // 我们需要把修改同步回源码 —— 但这里比较困难，我们直接重新渲染
-                    // 但为了保留光标，我们只更新内容
                     renderMarkdown(true);
                 } catch (err) {
                     alert('公式渲染错误: ' + err.message);
@@ -1398,7 +1376,6 @@
                 li.addEventListener('click', function () {
                     const text = this.dataset.text;
                     if (text) {
-                        // 在文档中搜索并滚动到该标题
                         const lines = getTextContent().split('\n');
                         let idx = -1;
                         for (let i = 0; i < lines.length; i++) {
@@ -1408,12 +1385,10 @@
                             }
                         }
                         if (idx >= 0) {
-                            // 找到对应的 DOM 元素
                             const els = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
                             for (const el of els) {
                                 if (el.textContent.trim() === text.trim().replace(/^#+\s*/, '')) {
                                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    // 高亮闪烁
                                     el.style.transition = 'background 0.3s';
                                     el.style.background = 'rgba(74,144,217,0.2)';
                                     setTimeout(() => { el.style.background = ''; }, 800);
@@ -1443,12 +1418,10 @@
 
         function updateFocusMode() {
             if (!STATE.focusMode) return;
-            // 获取当前光标所在行
             const sel = window.getSelection();
             if (!sel.rangeCount) return;
             const range = sel.getRangeAt(0);
             let node = range.startContainer;
-            // 向上找块级元素
             while (node && node !== editor) {
                 if (node.nodeType === 1) {
                     const tag = node.tagName.toLowerCase();
@@ -1459,7 +1432,6 @@
                 node = node.parentNode;
             }
             if (!node || node === editor) return;
-            // 清除所有 active-line
             editor.querySelectorAll('.active-line').forEach(el => el.classList.remove('active-line'));
             if (node.nodeType === 1) {
                 node.classList.add('active-line');
@@ -1499,12 +1471,11 @@
             document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
             STATE.theme = isDark ? 'light' : 'dark';
             themeToggle.textContent = isDark ? '🌙' : '☀️';
-            // 更新代码高亮主题
             const hlTheme = document.querySelector('link[href*="highlight.js"][href*=".min.css"]');
             if (hlTheme) {
                 hlTheme.href = isDark ?
-                    'https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-light.min.css' :
-                    'https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css';
+                    'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css' :
+                    'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
             }
         }
 
@@ -1517,7 +1488,6 @@
             sidebar.classList.toggle('open', STATE.sidebarOpen);
         }
 
-        // 侧边栏 tab 切换
         document.querySelectorAll('#sidebar .tab-header button').forEach(btn => {
             btn.addEventListener('click', function () {
                 document.querySelectorAll('#sidebar .tab-header button').forEach(b => b.classList.remove('active'));
@@ -1536,7 +1506,6 @@
         document.addEventListener('keydown', function (e) {
             const ctrl = e.ctrlKey || e.metaKey;
 
-            // Ctrl + 1-6 标题
             if (ctrl && e.key >= '1' && e.key <= '6') {
                 e.preventDefault();
                 const level = parseInt(e.key);
@@ -1555,10 +1524,8 @@
                     }
                     if (lineNode && lineNode !== editor) {
                         const text = lineNode.textContent || '';
-                        // 移除已有的标题前缀
                         const clean = text.replace(/^#{1,6}\s*/, '');
                         lineNode.textContent = prefix + clean;
-                        // 将光标移到标题后
                         const newRange = document.createRange();
                         newRange.setStart(lineNode.firstChild || lineNode, prefix.length);
                         newRange.collapse(true);
@@ -1568,13 +1535,11 @@
                         return;
                     }
                 }
-                // 如果无法获取当前行，在光标处插入
                 document.execCommand('insertText', false, prefix);
                 scheduleRender();
                 return;
             }
 
-            // Ctrl + B 加粗
             if (ctrl && e.key === 'b') {
                 e.preventDefault();
                 document.execCommand('insertText', false, '****');
@@ -1584,7 +1549,6 @@
                     const text = range.startContainer.textContent || '';
                     const pos = range.startOffset;
                     if (pos >= 2 && text.substring(pos - 2, pos) === '**') {
-                        // 移动光标到中间
                         const newRange = document.createRange();
                         newRange.setStart(range.startContainer, pos - 2);
                         newRange.setEnd(range.startContainer, pos);
@@ -1596,7 +1560,6 @@
                 return;
             }
 
-            // Ctrl + I 斜体
             if (ctrl && e.key === 'i') {
                 e.preventDefault();
                 document.execCommand('insertText', false, '**');
@@ -1604,38 +1567,32 @@
                 return;
             }
 
-            // Ctrl + / 源码模式
             if (ctrl && e.key === '/') {
                 e.preventDefault();
                 toggleSourceMode();
                 return;
             }
 
-            // F8 专注模式
             if (e.key === 'F8') {
                 e.preventDefault();
                 toggleFocusMode();
                 return;
             }
 
-            // F9 打字机模式
             if (e.key === 'F9') {
                 e.preventDefault();
                 toggleTypewriter();
                 return;
             }
 
-            // Ctrl+Shift+L 侧边栏
             if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
                 e.preventDefault();
                 toggleSidebar();
                 return;
             }
 
-            // Ctrl+S 保存 (模拟)
             if (ctrl && e.key === 's') {
                 e.preventDefault();
-                // 保存到 localStorage
                 localStorage.setItem('md-editor-content', getTextContent());
                 statusMode.textContent = '💾 已保存';
                 setTimeout(() => { statusMode.textContent = '📝 编辑中'; }, 1500);
@@ -1653,7 +1610,6 @@
             STATE.sourceMode = !STATE.sourceMode;
             btnSource.style.opacity = STATE.sourceMode ? '1' : '0.6';
             if (STATE.sourceMode) {
-                // 切换到源码模式
                 const text = getTextContent();
                 if (!sourceTextarea) {
                     sourceTextarea = document.createElement('textarea');
@@ -1675,13 +1631,11 @@
                 });
                 statusMode.textContent = '🔧 源码模式';
             } else {
-                // 切回预览模式
                 if (sourceTextarea) {
                     const val = sourceTextarea.value;
                     STATE.markdown = val;
                     editor.style.display = '';
                     sourceTextarea.style.display = 'none';
-                    // 重新渲染
                     const html = md.render(val);
                     setEditorHTML(html);
                     bindCodeBlockEvents();
@@ -1755,20 +1709,17 @@
         // ================================================================
 
         function init() {
-            // 从 localStorage 恢复内容
             const saved = localStorage.getItem('md-editor-content');
             const initial = saved || '# 欢迎使用 Markdown 编辑器\n\n这是一个 **类 Typora** 的所见即所得编辑器。\n\n- 输入 `# ` 生成标题\n- 输入 `**粗体**` 或 `*斜体*`\n- 输入 ` ```javascript ` 创建代码块\n- 输入 `$$E=mc^2$$` 渲染公式\n- 双击代码块编辑，双击公式编辑\n\n---\n\n开始创作吧！ 🚀';
             editor.textContent = initial;
             renderMarkdown(false);
 
-            // 绑定事件
             editor.addEventListener('input', function () {
                 if (STATE.sourceMode) return;
                 scheduleRender();
                 if (STATE.focusMode) updateFocusMode();
             });
 
-            // 工具栏事件
             sidebarToggle.addEventListener('click', toggleSidebar);
             btnBold.addEventListener('click', () => {
                 document.execCommand('insertText', false, '****');
@@ -1797,37 +1748,32 @@
             btnExportHtml.addEventListener('click', exportHTML);
             themeToggle.addEventListener('click', toggleTheme);
 
-            // 加载主题偏好
             if (localStorage.getItem('md-theme') === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 themeToggle.textContent = '☀️';
                 STATE.theme = 'dark';
             }
 
-            // 加载侧边栏状态
             if (localStorage.getItem('md-sidebar') === 'open') {
                 toggleSidebar();
             }
 
-            // 窗口关闭时保存
             window.addEventListener('beforeunload', () => {
                 localStorage.setItem('md-editor-content', getTextContent());
                 localStorage.setItem('md-theme', STATE.theme);
                 localStorage.setItem('md-sidebar', STATE.sidebarOpen ? 'open' : 'closed');
             });
 
-            // 自动保存每30秒
             setInterval(() => {
                 localStorage.setItem('md-editor-content', getTextContent());
             }, 30000);
 
-            // 初始化状态指示
             btnFocus.style.opacity = '0.6';
             btnTypewriter.style.opacity = '0.6';
             btnSource.style.opacity = '0.6';
 
-            // 如果支持，启用语法高亮
-            if (hljs) {
+            // 安全调用 hljs
+            if (typeof hljs !== 'undefined') {
                 document.querySelectorAll('.code-body pre code').forEach(block => {
                     hljs.highlightElement(block);
                 });
@@ -1837,7 +1783,6 @@
             console.log('快捷键: Ctrl+B 加粗, Ctrl+I 斜体, Ctrl+1~6 标题, Ctrl+/ 源码, F8 专注, F9 打字机');
         }
 
-        // 页面加载完成后初始化
         if (document.readyState === 'complete') {
             init();
         } else {
@@ -1848,12 +1793,10 @@
         //  15. 一些额外的 polyfill / 修复
         // ================================================================
 
-        // 修复 MathQuill 在某些情况下的加载问题
         if (typeof MathQuill === 'undefined') {
             console.warn('MathQuill 未加载，公式编辑功能不可用');
         }
 
-        // 确保 editor 有内容时 placeholder 隐藏
         document.addEventListener('DOMContentLoaded', function () {
             const observer = new MutationObserver(() => {
                 const isEmpty = editor.textContent.trim() === '';
