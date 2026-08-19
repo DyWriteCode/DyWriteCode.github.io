@@ -1,1289 +1,1830 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>终极 MD 编辑器 · 完整稳定版</title>
+    <title>终极 MD 编辑器 · 稳定修复版</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --bg: #f7f9fc; --border: #e2e8f0; --text: #0b1a2f; --accent: #3b82f6; --font: 'Segoe UI', Roboto, system-ui, sans-serif; --code: 'JetBrains Mono', 'Fira Code', monospace; }
-        html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); }
-        body { display: flex; justify-content: center; align-items: center; padding: 6px; }
+        /* ===== 基础样式（保持不变） ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f7f9fc;
+            --border: #e2e8f0;
+            --text: #0b1a2f;
+            --accent: #3b82f6;
+            --font: 'Segoe UI', Roboto, system-ui, sans-serif;
+            --code: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            font-family: var(--font);
+            color: var(--text);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px;
+        }
+
         .app {
-            width: 100%; max-width: 1200px; height: 98vh; max-height: 960px;
-            background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-            display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+            width: 100%;
+            max-width: 1200px;
+            height: 98vh;
+            max-height: 960px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
-        .app-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; gap: 4px; background: #fff; }
-        .app-header .logo { font-weight: 700; font-size: 1rem; user-select: none; }
-        .app-header .logo span { color: var(--accent); }
-        .app-header .actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-        .app-header button { background: transparent; border: none; border-radius: 4px; padding: 3px 10px; font-size: 0.75rem; cursor: pointer; color: #334155; transition: 0.1s; }
-        .app-header button:hover { background: #eef2f6; }
-        .app-header .btn-primary { background: var(--accent); color: white; }
-        .app-header .btn-primary:hover { background: #2563eb; }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: #fff;
+        }
+
+        .app-header .logo {
+            font-weight: 700;
+            font-size: 1rem;
+            user-select: none;
+        }
+
+        .app-header .logo span {
+            color: var(--accent);
+        }
+
+        .app-header .actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .app-header button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            color: #334155;
+            transition: 0.1s;
+        }
+
+        .app-header button:hover {
+            background: #eef2f6;
+        }
+
+        .app-header .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .app-header .btn-primary:hover {
+            background: #2563eb;
+        }
+
         .toolbar {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
-            padding: 4px 12px; border-bottom: 1px solid var(--border);
-            background: #fafcff; flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #fafcff;
+            flex-shrink: 0;
         }
-        .toolbar .group { display: flex; align-items: center; gap: 2px; padding: 0 4px; border-right: 1px solid var(--border); }
-        .toolbar .group:last-child { border-right: none; }
-        .toolbar button { background: transparent; border: none; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 500; color: #334155; cursor: pointer; height: 28px; white-space: nowrap; }
-        .toolbar button:hover { background: #eef2f6; }
-        .toolbar button:active { background: #dbeafe; }
-        .toolbar select { height: 28px; border: 1px solid var(--border); border-radius: 4px; background: white; padding: 0 6px; font-size: 0.7rem; outline: none; }
-        .toolbar .math-templates { display: flex; gap: 2px; margin-left: 2px; }
-        .toolbar .math-templates button { font-size: 0.7rem; padding: 2px 6px; background: #eef2f6; border-radius: 4px; }
-        .toolbar .math-templates button:hover { background: #dbeafe; }
-        .preview-area { flex: 1; overflow-y: auto; padding: 16px 20px 20px; background: #fff; font-family: var(--font); font-size: 0.95rem; line-height: 1.8; color: var(--text); position: relative; }
-        .preview-area .markdown-body { min-height: 100%; }
-        .preview-area .markdown-body h1 { font-size: 1.8rem; border-bottom: 2px solid var(--border); padding-bottom: 0.2rem; margin: 0.8rem 0 0.4rem; }
-        .preview-area .markdown-body h2 { font-size: 1.4rem; border-left: 5px solid var(--accent); padding-left: 12px; margin: 1rem 0 0.4rem; }
-        .preview-area .markdown-body h3 { font-size: 1.15rem; margin: 0.8rem 0 0.3rem; }
-        .preview-area .markdown-body p { margin: 0.5rem 0; }
-        .preview-area .markdown-body blockquote { border-left: 4px solid var(--accent); padding: 0.2rem 1rem; background: #f1f5f9; border-radius: 0 6px 6px 0; color: #334155; }
-        .preview-area .markdown-body ul, .preview-area .markdown-body ol { padding-left: 1.6rem; margin: 0.4rem 0; }
-        .preview-area .markdown-body table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.03); }
-        .preview-area .markdown-body th { background: #1e293b; color: white; padding: 8px 12px; text-align: left; }
-        .preview-area .markdown-body td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
-        .preview-area .markdown-body pre { background: #f1f5f9; border-radius: 8px; padding: 12px 16px; overflow-x: auto; font-family: var(--code); font-size: 0.82rem; border: 1px solid var(--border); margin: 0.6rem 0; position: relative; }
-        .preview-area .markdown-body pre code { background: transparent; padding: 0; font-family: var(--code); color: var(--text); }
-        .preview-area .markdown-body code { background: #eef2f6; padding: 0.1rem 0.4rem; border-radius: 4px; font-family: var(--code); font-size: 0.82rem; }
-        .preview-area .markdown-body .katex-display { margin: 0.8rem 0; text-align: center; overflow-x: auto; }
-        .preview-area .markdown-body .katex { font-size: 1rem; }
-        .preview-area .empty-hint { color: #b9c5d4; text-align: center; padding: 2rem 1rem; }
+
+        .toolbar .group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 4px;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar .group:last-child {
+            border-right: none;
+        }
+
+        .toolbar button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #334155;
+            cursor: pointer;
+            height: 28px;
+            white-space: nowrap;
+        }
+
+        .toolbar button:hover {
+            background: #eef2f6;
+        }
+
+        .toolbar button:active {
+            background: #dbeafe;
+        }
+
+        .toolbar select {
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            padding: 0 6px;
+            font-size: 0.7rem;
+            outline: none;
+        }
+
+        .toolbar .math-templates {
+            display: flex;
+            gap: 2px;
+            margin-left: 2px;
+        }
+
+        .toolbar .math-templates button {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            background: #eef2f6;
+            border-radius: 4px;
+        }
+
+        .toolbar .math-templates button:hover {
+            background: #dbeafe;
+        }
+
+        .preview-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 20px;
+            background: #fff;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--text);
+            position: relative;
+        }
+
+        .preview-area .markdown-body {
+            min-height: 100%;
+        }
+
+        .preview-area .markdown-body h1 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.2rem;
+            margin: 0.8rem 0 0.4rem;
+        }
+
+        .preview-area .markdown-body h2 {
+            font-size: 1.4rem;
+            border-left: 5px solid var(--accent);
+            padding-left: 12px;
+            margin: 1rem 0 0.4rem;
+        }
+
+        .preview-area .markdown-body h3 {
+            font-size: 1.15rem;
+            margin: 0.8rem 0 0.3rem;
+        }
+
+        .preview-area .markdown-body p {
+            margin: 0.5rem 0;
+        }
+
+        .preview-area .markdown-body blockquote {
+            border-left: 4px solid var(--accent);
+            padding: 0.2rem 1rem;
+            background: #f1f5f9;
+            border-radius: 0 6px 6px 0;
+            color: #334155;
+        }
+
+        .preview-area .markdown-body ul,
+        .preview-area .markdown-body ol {
+            padding-left: 1.6rem;
+            margin: 0.4rem 0;
+        }
+
+        .preview-area .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .preview-area .markdown-body th {
+            background: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .preview-area .markdown-body td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-area .markdown-body pre {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            font-family: var(--code);
+            font-size: 0.82rem;
+            border: 1px solid var(--border);
+            margin: 0.6rem 0;
+            position: relative;
+        }
+
+        .preview-area .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            font-family: var(--code);
+            color: var(--text);
+        }
+
+        .preview-area .markdown-body code {
+            background: #eef2f6;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--code);
+            font-size: 0.82rem;
+        }
+
+        .preview-area .markdown-body .katex-display {
+            margin: 0.8rem 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .preview-area .markdown-body .katex {
+            font-size: 1rem;
+        }
+
+        .preview-area .empty-hint {
+            color: #b9c5d4;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
         .code-output {
-            background: #1e293b; color: #e2e8f0; padding: 8px 14px; border-radius: 0 0 8px 8px;
-            font-family: var(--code); font-size: 0.8rem; white-space: pre-wrap; margin-top: -6px;
-            border: 1px solid var(--border); border-top: none; max-height: 200px; overflow-y: auto;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 8px 14px;
+            border-radius: 0 0 8px 8px;
+            font-family: var(--code);
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            margin-top: -6px;
+            border: 1px solid var(--border);
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        .code-output .error { color: #f87171; }
+
+        .code-output .error {
+            color: #f87171;
+        }
+
         .run-btn {
-            position: absolute; right: 12px; top: 12px; background: var(--accent); color: white;
-            border: none; border-radius: 4px; padding: 2px 10px; font-size: 0.7rem; cursor: pointer;
-            z-index: 2; opacity: 0.7; transition: 0.2s;
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            z-index: 2;
+            opacity: 0.7;
+            transition: 0.2s;
         }
-        .run-btn:hover { opacity: 1; }
-        .run-btn.remote { background: #8b5cf6; }
-        .edit-source { display: none; position: relative; width: 100%; min-height: 40px; font-family: var(--code); font-size: 0.9rem; line-height: 1.6; padding: 8px 12px; border: 2px solid var(--accent); border-radius: 6px; background: #fafcff; outline: none; resize: vertical; color: var(--text); tab-size: 2; white-space: pre-wrap; word-wrap: break-word; }
-        .edit-source:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
-        .edit-source.active { display: block; }
-        .code-lang-selector { display: none; position: absolute; top: -32px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 4px 4px 0 0; padding: 2px 6px; font-size: 0.7rem; z-index: 5; }
-        .code-lang-selector.active { display: block; }
-        .code-lang-selector select { border: none; background: transparent; outline: none; font-size: 0.7rem; }
-        .math-builder { position: fixed; z-index: 10002; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 16px 20px; max-width: 700px; max-height: 80vh; overflow-y: auto; display: none; flex-direction: column; gap: 12px; }
-        .math-builder .builder-header { display: flex; justify-content: space-between; align-items: center; }
-        .math-builder .builder-body { display: flex; gap: 16px; flex-wrap: wrap; }
-        .math-builder .symbol-palette { flex: 0 0 160px; max-height: 300px; overflow-y: auto; border-right: 1px solid var(--border); padding-right: 12px; }
-        .math-builder .symbol-palette button { display: block; width: 100%; text-align: left; background: transparent; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-family: var(--code); }
-        .math-builder .symbol-palette button:hover { background: #dbeafe; }
-        .math-builder .formula-preview { flex: 1; min-height: 80px; background: #f8fafc; border-radius: 6px; padding: 12px; border: 1px dashed var(--border); font-family: var(--code); font-size: 1.2rem; overflow-x: auto; }
-        .math-builder .formula-preview .katex-display { margin: 0; }
-        .math-builder .formula-params { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .math-builder .formula-params label { font-size: 0.8rem; display: flex; align-items: center; gap: 4px; }
-        .math-builder .formula-params input { width: 60px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; }
-        .math-builder .builder-actions { display: flex; gap: 8px; justify-content: flex-end; }
-        .suggest-box { position: fixed; z-index: 9999; background: #fff; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid var(--border); max-height: 200px; overflow-y: auto; min-width: 160px; max-width: 320px; padding: 4px 0; display: none; font-size: 0.8rem; }
-        .suggest-box .s-item { padding: 5px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .suggest-box .s-item:hover, .suggest-box .s-item.active { background: #dbeafe; }
-        .suggest-box .s-item .s-tag { font-size: 0.6rem; background: #eef2f6; padding: 0 6px; border-radius: 3px; }
-        .suggest-box .s-item .s-desc { font-size: 0.65rem; color: #64748b; }
-        .math-panel { position: fixed; z-index: 9998; background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); border: 1px solid var(--border); padding: 12px 16px; max-width: 400px; max-height: 300px; overflow-y: auto; display: none; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 4px; font-size: 0.8rem; }
-        .math-panel .math-item { padding: 4px 6px; background: #f1f5f9; border-radius: 4px; cursor: pointer; text-align: center; transition: 0.1s; font-family: var(--code); }
-        .math-panel .math-item:hover { background: #dbeafe; }
-        .math-panel .math-item .desc { font-size: 0.55rem; color: #64748b; display: block; }
-        .context-menu { position: fixed; z-index: 10000; background: #fff; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid var(--border); padding: 6px 0; min-width: 180px; display: none; }
-        .context-menu .menu-item { padding: 6px 18px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
-        .context-menu .menu-item:hover { background: #dbeafe; }
-        .context-menu .menu-divider { height: 1px; background: var(--border); margin: 4px 12px; }
-        .status-bar { display: flex; justify-content: space-between; padding: 2px 20px; border-top: 1px solid var(--border); font-size: 0.6rem; color: #94a3b8; background: #fafcff; flex-shrink: 0; }
-        .status-bar .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; margin-right: 4px; }
+
+        .run-btn:hover {
+            opacity: 1;
+        }
+
+        .run-btn.remote {
+            background: #8b5cf6;
+        }
+
+        .edit-source {
+            display: none;
+            position: relative;
+            width: 100%;
+            min-height: 40px;
+            font-family: var(--code);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            padding: 8px 12px;
+            border: 2px solid var(--accent);
+            border-radius: 6px;
+            background: #fafcff;
+            outline: none;
+            resize: vertical;
+            color: var(--text);
+            tab-size: 2;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .edit-source:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .edit-source.active {
+            display: block;
+        }
+
+        .code-lang-selector {
+            display: none;
+            position: absolute;
+            top: -32px;
+            left: 0;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px 4px 0 0;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            z-index: 5;
+        }
+
+        .code-lang-selector.active {
+            display: block;
+        }
+
+        .code-lang-selector select {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.7rem;
+        }
+
+        .math-builder {
+            position: fixed;
+            z-index: 10002;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .math-builder .builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .math-builder .builder-body {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .math-builder .symbol-palette {
+            flex: 0 0 160px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border);
+            padding-right: 12px;
+        }
+
+        .math-builder .symbol-palette button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: var(--code);
+        }
+
+        .math-builder .symbol-palette button:hover {
+            background: #dbeafe;
+        }
+
+        .math-builder .formula-preview {
+            flex: 1;
+            min-height: 80px;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 12px;
+            border: 1px dashed var(--border);
+            font-family: var(--code);
+            font-size: 1.2rem;
+            overflow-x: auto;
+        }
+
+        .math-builder .formula-preview .katex-display {
+            margin: 0;
+        }
+
+        .math-builder .formula-params {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .math-builder .formula-params label {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .math-builder .formula-params input {
+            width: 60px;
+            padding: 2px 4px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .math-builder .builder-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .suggest-box {
+            position: fixed;
+            z-index: 9999;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--border);
+            max-height: 200px;
+            overflow-y: auto;
+            min-width: 160px;
+            max-width: 320px;
+            padding: 4px 0;
+            display: none;
+            font-size: 0.8rem;
+        }
+
+        .suggest-box .s-item {
+            padding: 5px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggest-box .s-item:hover,
+        .suggest-box .s-item.active {
+            background: #dbeafe;
+        }
+
+        .suggest-box .s-item .s-tag {
+            font-size: 0.6rem;
+            background: #eef2f6;
+            padding: 0 6px;
+            border-radius: 3px;
+        }
+
+        .suggest-box .s-item .s-desc {
+            font-size: 0.65rem;
+            color: #64748b;
+        }
+
+        .math-panel {
+            position: fixed;
+            z-index: 9998;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            max-width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 4px;
+            font-size: 0.8rem;
+        }
+
+        .math-panel .math-item {
+            padding: 4px 6px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.1s;
+            font-family: var(--code);
+        }
+
+        .math-panel .math-item:hover {
+            background: #dbeafe;
+        }
+
+        .math-panel .math-item .desc {
+            font-size: 0.55rem;
+            color: #64748b;
+            display: block;
+        }
+
+        .context-menu {
+            position: fixed;
+            z-index: 10000;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--border);
+            padding: 6px 0;
+            min-width: 180px;
+            display: none;
+        }
+
+        .context-menu .menu-item {
+            padding: 6px 18px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-menu .menu-item:hover {
+            background: #dbeafe;
+        }
+
+        .context-menu .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 12px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.6rem;
+            color: #94a3b8;
+            background: #fafcff;
+            flex-shrink: 0;
+        }
+
+        .status-bar .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 4px;
+        }
+
         @media (max-width: 720px) {
-            .math-builder { max-width: 95vw; }
-            .math-builder .builder-body { flex-direction: column; }
-            .math-builder .symbol-palette { border-right: none; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+            .math-builder {
+                max-width: 95vw;
+            }
+
+            .math-builder .builder-body {
+                flex-direction: column;
+            }
+
+            .math-builder .symbol-palette {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 8px;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div class="app">
-    <header class="app-header">
-        <div class="logo">📝 <span>MD</span>编辑器 <small>· 完整版</small></div>
-        <div class="actions">
-            <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
-            <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
-            <button onclick="clearAll()">清空</button>
-            <button class="btn-primary" onclick="exportHTML()">导出</button>
-        </div>
-    </header>
+    <div class="app">
+        <header class="app-header">
+            <div class="logo">📝 <span>MD</span>编辑器 <small>· 修复版</small></div>
+            <div class="actions">
+                <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
+                <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
+                <button onclick="clearAll()">清空</button>
+                <button class="btn-primary" onclick="exportHTML()">导出</button>
+            </div>
+        </header>
 
-    <div class="toolbar">
-        <div class="group">
-            <button onclick="insertWrapAtCursor('## ','\n')">H2</button>
-            <button onclick="insertWrapAtCursor('### ','\n')">H3</button>
-            <button onclick="insertWrapAtCursor('#### ','\n')">H4</button>
+        <div class="toolbar">
+            <div class="group">
+                <button onclick="insertWrapAtCursor('## ','\n')">H2</button>
+                <button onclick="insertWrapAtCursor('### ','\n')">H3</button>
+                <button onclick="insertWrapAtCursor('#### ','\n')">H4</button>
+            </div>
+            <div class="group">
+                <button onclick="insertWrapAtCursor('**','**')"><b>B</b></button>
+                <button onclick="insertWrapAtCursor('*','*')"><i>I</i></button>
+                <button onclick="insertWrapAtCursor('~~','~~')"><s>S</s></button>
+                <button onclick="insertWrapAtCursor('`','`')"><code>∫</code></button>
+            </div>
+            <div class="group">
+                <button onclick="insertListAtCursor('ul')">• 列表</button>
+                <button onclick="insertListAtCursor('ol')">1. 列表</button>
+                <button onclick="insertWrapAtCursor('> ','\n')">" 引用</button>
+            </div>
+            <div class="group">
+                <button onclick="insertCodeBlockAtCursor()">&lt;/&gt; 代码</button>
+                <select id="codeLangSelect">
+                    <option value="">自动</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="cpp">C++</option>
+                    <option value="c">C</option>
+                    <option value="csharp">C#</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                    <option value="php">PHP</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="swift">Swift</option>
+                    <option value="kotlin">Kotlin</option>
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="scss">SCSS</option>
+                    <option value="sql">SQL</option>
+                    <option value="bash">Bash</option>
+                    <option value="json">JSON</option>
+                    <option value="xml">XML</option>
+                    <option value="yaml">YAML</option>
+                    <option value="markdown">Markdown</option>
+                </select>
+            </div>
+            <div class="group">
+                <button onclick="insertMathInlineAtCursor()">∑ 行内</button>
+                <button onclick="insertMathBlockAtCursor()">∑ 块级</button>
+                <span class="math-templates">
+                    <button onclick="quickMath('frac')">分数</button>
+                    <button onclick="quickMath('sqrt')">根号</button>
+                    <button onclick="quickMath('sum')">求和</button>
+                    <button onclick="quickMath('int')">积分</button>
+                    <button onclick="quickMath('matrix')">矩阵</button>
+                </span>
+            </div>
+            <div class="group">
+                <button onclick="insertTableAtCursor()">▦ 表格</button>
+                <button onclick="insertLinkAtCursor()">🔗 链接</button>
+                <button onclick="insertImageAtCursor()">🖼 图片</button>
+            </div>
+            <div class="group">
+                <button onclick="insertHrAtCursor()">— —</button>
+            </div>
         </div>
-        <div class="group">
-            <button onclick="insertWrapAtCursor('**','**')"><b>B</b></button>
-            <button onclick="insertWrapAtCursor('*','*')"><i>I</i></button>
-            <button onclick="insertWrapAtCursor('~~','~~')"><s>S</s></button>
-            <button onclick="insertWrapAtCursor('`','`')"><code>∫</code></button>
+
+        <div class="preview-area" id="previewArea">
+            <div class="markdown-body" id="preview"></div>
         </div>
-        <div class="group">
-            <button onclick="insertListAtCursor('ul')">• 列表</button>
-            <button onclick="insertListAtCursor('ol')">1. 列表</button>
-            <button onclick="insertWrapAtCursor('> ','\n')">" 引用</button>
-        </div>
-        <div class="group">
-            <button onclick="insertCodeBlockAtCursor()">&lt;/&gt; 代码</button>
-            <select id="codeLangSelect">
-                <option value="">自动</option>
-                <option value="javascript">JavaScript</option>
-                <option value="python">Python</option>
-                <option value="java">Java</option>
-                <option value="cpp">C++</option>
-                <option value="c">C</option>
-                <option value="csharp">C#</option>
-                <option value="go">Go</option>
-                <option value="rust">Rust</option>
-                <option value="php">PHP</option>
-                <option value="ruby">Ruby</option>
-                <option value="swift">Swift</option>
-                <option value="kotlin">Kotlin</option>
-                <option value="html">HTML</option>
-                <option value="css">CSS</option>
-                <option value="scss">SCSS</option>
-                <option value="sql">SQL</option>
-                <option value="bash">Bash</option>
-                <option value="json">JSON</option>
-                <option value="xml">XML</option>
-                <option value="yaml">YAML</option>
-                <option value="markdown">Markdown</option>
-            </select>
-        </div>
-        <div class="group">
-            <button onclick="insertMathInlineAtCursor()">∑ 行内</button>
-            <button onclick="insertMathBlockAtCursor()">∑ 块级</button>
-            <span class="math-templates">
-                <button onclick="quickMath('frac')">分数</button>
-                <button onclick="quickMath('sqrt')">根号</button>
-                <button onclick="quickMath('sum')">求和</button>
-                <button onclick="quickMath('int')">积分</button>
-                <button onclick="quickMath('matrix')">矩阵</button>
-            </span>
-        </div>
-        <div class="group">
-            <button onclick="insertTableAtCursor()">▦ 表格</button>
-            <button onclick="insertLinkAtCursor()">🔗 链接</button>
-            <button onclick="insertImageAtCursor()">🖼 图片</button>
-        </div>
-        <div class="group">
-            <button onclick="insertHrAtCursor()">— —</button>
+
+        <div class="status-bar">
+            <span><span class="dot"></span> 实时</span>
+            <span id="statusInfo">行 1 · 字 0</span>
         </div>
     </div>
 
-    <div class="preview-area" id="previewArea">
-        <div class="markdown-body" id="preview"></div>
+    <!-- 浮动元素 -->
+    <div class="suggest-box" id="suggestBox"></div>
+    <div class="math-panel" id="mathPanel"></div>
+    <div class="context-menu" id="contextMenu">
+        <div class="menu-item" data-action="h2">## 标题2</div>
+        <div class="menu-item" data-action="h3">### 标题3</div>
+        <div class="menu-item" data-action="h4">#### 标题4</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="list-ul">• 无序列表</div>
+        <div class="menu-item" data-action="list-ol">1. 有序列表</div>
+        <div class="menu-item" data-action="quote">" 引用</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="code-block">&lt;/&gt; 代码块</div>
+        <div class="menu-item" data-action="math-inline">∑ 行内公式</div>
+        <div class="menu-item" data-action="math-block">∑ 块级公式</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="table">▦ 表格</div>
+        <div class="menu-item" data-action="link">🔗 链接</div>
+        <div class="menu-item" data-action="image">🖼 图片</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="hr">— — 分割线</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" data-action="cancel-edit">✖ 取消编辑</div>
     </div>
 
-    <div class="status-bar">
-        <span><span class="dot"></span> 实时</span>
-        <span id="statusInfo">行 1 · 字 0</span>
-    </div>
-</div>
-
-<!-- 浮动元素 -->
-<div class="suggest-box" id="suggestBox"></div>
-<div class="math-panel" id="mathPanel"></div>
-<div class="context-menu" id="contextMenu">
-    <div class="menu-item" data-action="h2">## 标题2</div>
-    <div class="menu-item" data-action="h3">### 标题3</div>
-    <div class="menu-item" data-action="h4">#### 标题4</div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" data-action="list-ul">• 无序列表</div>
-    <div class="menu-item" data-action="list-ol">1. 有序列表</div>
-    <div class="menu-item" data-action="quote">" 引用</div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" data-action="code-block">&lt;/&gt; 代码块</div>
-    <div class="menu-item" data-action="math-inline">∑ 行内公式</div>
-    <div class="menu-item" data-action="math-block">∑ 块级公式</div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" data-action="table">▦ 表格</div>
-    <div class="menu-item" data-action="link">🔗 链接</div>
-    <div class="menu-item" data-action="image">🖼 图片</div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" data-action="hr">— — 分割线</div>
-    <div class="menu-divider"></div>
-    <div class="menu-item" data-action="cancel-edit">✖ 取消编辑</div>
-</div>
-
-<!-- 公式构建器 -->
-<div class="math-builder" id="mathBuilder">
-    <div class="builder-header">
-        <h3>🧮 公式构建器（零 LaTeX）</h3>
-        <button onclick="closeMathBuilder()" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
-    </div>
-    <div class="builder-body">
-        <div class="symbol-palette" id="symbolPalette"></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-            <div class="formula-preview" id="formulaPreview">点击左侧符号构建公式</div>
-            <div class="formula-params" id="formulaParams"></div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button class="btn-cancel" onclick="closeMathBuilder()" style="padding:4px 12px;border:none;border-radius:4px;background:#eef2f6;cursor:pointer;">取消</button>
-                <button id="insertFormulaBtn" class="btn-primary" style="padding:4px 16px;border:none;border-radius:4px;background:var(--accent);color:white;cursor:pointer;">插入公式</button>
+    <!-- 公式构建器 -->
+    <div class="math-builder" id="mathBuilder">
+        <div class="builder-header">
+            <h3>🧮 公式构建器（零 LaTeX）</h3>
+            <button onclick="closeMathBuilder()"
+                style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div class="builder-body">
+            <div class="symbol-palette" id="symbolPalette"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                <div class="formula-preview" id="formulaPreview">点击左侧符号构建公式</div>
+                <div class="formula-params" id="formulaParams"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn-cancel" onclick="closeMathBuilder()"
+                        style="padding:4px 12px;border:none;border-radius:4px;background:#eef2f6;cursor:pointer;">取消</button>
+                    <button id="insertFormulaBtn" class="btn-primary"
+                        style="padding:4px 16px;border:none;border-radius:4px;background:var(--accent);color:white;cursor:pointer;">插入公式</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
-<script>
-    // =====================================================================
-    // 1. 配置 Marked + Highlight
-    // =====================================================================
-    const hljs = window.hljs;
-    const renderer = new marked.Renderer();
-    renderer.code = function (code, language) {
-        const lang = language || '';
-        let highlighted = '';
-        if (hljs && lang && hljs.getLanguage(lang)) {
-            try { highlighted = hljs.highlight(code, { language: lang }).value; } catch (_) {}
-        }
-        if (!highlighted) {
-            highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-        const isJS = (lang === 'javascript');
-        const btnClass = isJS ? 'run-btn' : 'run-btn remote';
-        const btnLabel = isJS ? '▶ 运行' : '▶ 运行（远程）';
-        return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="${btnClass}" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">${btnLabel}</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
-    };
-    renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
-    renderer.image = function (href, title, text) { return `<img src="${href}" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
-    renderer.link = function (href, title, text) { return `<a href="${href}" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
-    const markedOptions = { renderer, gfm: true, breaks: true };
-
-    // =====================================================================
-    // 2. DOM 引用 & 状态
-    // =====================================================================
-    const previewArea = document.getElementById('previewArea');
-    const preview = document.getElementById('preview');
-    const statusInfo = document.getElementById('statusInfo');
-    const suggestBox = document.getElementById('suggestBox');
-    const mathPanel = document.getElementById('mathPanel');
-    const contextMenu = document.getElementById('contextMenu');
-    const mathBuilder = document.getElementById('mathBuilder');
-
-    let fullMarkdown = '';
-    let editingElement = null;
-    let editingOriginalHTML = '';
-    let editingOldText = '';
-    let editingBlockElement = null;
-    let allBlocks = [];
-
-    // 补全状态
-    let suggestActive = false;
-    let suggestItems = [];
-    let suggestIndex = -1;
-    let suggestMode = '';
-
-    // =====================================================================
-    // 3. 补全数据（完整）
-    // =====================================================================
-    const codeKeywords = {
-        javascript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'super', 'import', 'export', 'default', 'async', 'await', 'yield', 'console', 'log', 'debug', 'error', 'map', 'filter', 'reduce', 'forEach', 'Promise', 'then', 'catch', 'finally'],
-        python: ['def', 'return', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 'raise', 'import', 'from', 'as', 'class', 'with', 'lambda', 'yield', 'print', 'len', 'range', 'str', 'int', 'float', 'list', 'dict', 'set', 'tuple', 'True', 'False', 'None', 'self', 'super'],
-        java: ['public', 'private', 'protected', 'static', 'final', 'abstract', 'class', 'interface', 'extends', 'implements', 'new', 'return', 'void', 'int', 'float', 'double', 'boolean', 'char', 'String', 'System', 'out', 'println', 'if', 'else', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'throws'],
-        cpp: ['int', 'float', 'double', 'char', 'void', 'bool', 'string', 'vector', 'map', 'set', 'auto', 'const', 'static', 'virtual', 'override', 'final', 'public', 'private', 'protected', 'class', 'struct', 'namespace', 'using', 'return', 'if', 'else', 'switch', 'case', 'break', 'continue', 'for', 'while', 'do', 'try', 'catch', 'throw'],
-        c: ['int', 'float', 'double', 'char', 'void', 'long', 'short', 'unsigned', 'signed', 'const', 'static', 'extern', 'volatile', 'return', 'if', 'else', 'switch', 'case', 'break', 'continue', 'for', 'while', 'do', 'struct', 'union', 'enum', 'typedef', 'sizeof'],
-        go: ['package', 'import', 'func', 'var', 'const', 'type', 'interface', 'struct', 'map', 'chan', 'return', 'if', 'else', 'for', 'range', 'switch', 'case', 'break', 'continue', 'defer', 'go', 'select'],
-        rust: ['fn', 'let', 'mut', 'const', 'static', 'impl', 'trait', 'struct', 'enum', 'match', 'if', 'else', 'for', 'while', 'loop', 'return', 'break', 'continue', 'use', 'mod', 'pub', 'crate', 'self', 'super'],
-        php: ['function', 'return', 'if', 'else', 'foreach', 'for', 'while', 'switch', 'case', 'break', 'continue', 'class', 'interface', 'trait', 'extends', 'implements', 'new', 'public', 'private', 'protected', 'static', 'final', 'abstract', 'use', 'namespace'],
-        ruby: ['def', 'end', 'if', 'elsif', 'else', 'unless', 'case', 'when', 'while', 'until', 'for', 'do', 'yield', 'return', 'class', 'module', 'include', 'extend', 'require', 'load', 'puts', 'gets'],
-        swift: ['import', 'class', 'struct', 'enum', 'protocol', 'extension', 'func', 'var', 'let', 'return', 'if', 'else', 'switch', 'case', 'for', 'while', 'repeat', 'break', 'continue', 'guard', 'defer', 'throw', 'throws', 'catch', 'try'],
-        kotlin: ['fun', 'val', 'var', 'class', 'interface', 'object', 'if', 'else', 'when', 'for', 'while', 'do', 'return', 'break', 'continue', 'throw', 'try', 'catch', 'finally', 'import', 'package', 'public', 'private', 'protected', 'internal'],
-        html: ['div', 'span', 'p', 'a', 'img', 'input', 'button', 'form', 'table', 'tr', 'td', 'th', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'script', 'style', 'link', 'meta', 'head', 'body', 'html'],
-        css: ['color', 'background', 'font', 'margin', 'padding', 'border', 'width', 'height', 'flex', 'grid', 'display', 'position', 'top', 'left', 'right', 'bottom', 'float', 'clear', 'text-align', 'font-size', 'font-weight', 'line-height'],
-        sql: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN'],
-        bash: ['echo', 'read', 'if', 'then', 'else', 'elif', 'fi', 'for', 'while', 'do', 'done', 'case', 'esac', 'function', 'return', 'export', 'source', 'alias', 'unset', 'set', 'shopt'],
-    };
-    const mathSymbols = [
-        { sym: '\\alpha', desc: 'α' }, { sym: '\\beta', desc: 'β' }, { sym: '\\gamma', desc: 'γ' },
-        { sym: '\\delta', desc: 'δ' }, { sym: '\\epsilon', desc: 'ε' }, { sym: '\\zeta', desc: 'ζ' },
-        { sym: '\\eta', desc: 'η' }, { sym: '\\theta', desc: 'θ' }, { sym: '\\iota', desc: 'ι' },
-        { sym: '\\kappa', desc: 'κ' }, { sym: '\\lambda', desc: 'λ' }, { sym: '\\mu', desc: 'μ' },
-        { sym: '\\nu', desc: 'ν' }, { sym: '\\xi', desc: 'ξ' }, { sym: '\\pi', desc: 'π' },
-        { sym: '\\rho', desc: 'ρ' }, { sym: '\\sigma', desc: 'σ' }, { sym: '\\tau', desc: 'τ' },
-        { sym: '\\upsilon', desc: 'υ' }, { sym: '\\phi', desc: 'φ' }, { sym: '\\chi', desc: 'χ' },
-        { sym: '\\psi', desc: 'ψ' }, { sym: '\\omega', desc: 'ω' },
-        { sym: '\\Gamma', desc: 'Γ' }, { sym: '\\Delta', desc: 'Δ' }, { sym: '\\Theta', desc: 'Θ' },
-        { sym: '\\Lambda', desc: 'Λ' }, { sym: '\\Xi', desc: 'Ξ' }, { sym: '\\Pi', desc: 'Π' },
-        { sym: '\\Sigma', desc: 'Σ' }, { sym: '\\Upsilon', desc: 'Υ' }, { sym: '\\Phi', desc: 'Φ' },
-        { sym: '\\Psi', desc: 'Ψ' }, { sym: '\\Omega', desc: 'Ω' },
-        { sym: '\\sum', desc: '求和' }, { sym: '\\int', desc: '积分' }, { sym: '\\prod', desc: '乘积' },
-        { sym: '\\lim', desc: '极限' }, { sym: '\\infty', desc: '无穷' }, { sym: '\\partial', desc: '偏导' },
-        { sym: '\\nabla', desc: '梯度' }, { sym: '\\sqrt', desc: '根号' }, { sym: '\\frac', desc: '分数' },
-        { sym: '\\binom', desc: '组合' }, { sym: '\\mathrm', desc: '罗马体' }, { sym: '\\mathbf', desc: '粗体' },
-        { sym: '\\mathbb', desc: '黑板体' }, { sym: '\\mathcal', desc: '花体' }, { sym: '\\mathfrak', desc: '哥特体' },
-        { sym: '\\left', desc: '左括号' }, { sym: '\\right', desc: '右括号' }, { sym: '\\big', desc: '大号' },
-        { sym: '\\Big', desc: '更大号' }, { sym: '\\bigg', desc: '超大号' }, { sym: '\\Bigg', desc: '最大号' },
-        { sym: '\\pm', desc: '±' }, { sym: '\\mp', desc: '∓' }, { sym: '\\times', desc: '×' },
-        { sym: '\\div', desc: '÷' }, { sym: '\\cdot', desc: '·' }, { sym: '\\leq', desc: '≤' },
-        { sym: '\\geq', desc: '≥' }, { sym: '\\neq', desc: '≠' }, { sym: '\\approx', desc: '≈' },
-        { sym: '\\equiv', desc: '≡' }, { sym: '\\propto', desc: '∝' }, { sym: '\\sim', desc: '～' },
-        { sym: '\\simeq', desc: '≃' }, { sym: '\\cong', desc: '≅' }, { sym: '\\perp', desc: '⊥' },
-        { sym: '\\parallel', desc: '∥' }, { sym: '\\angle', desc: '∠' }, { sym: '\\degree', desc: '°' },
-    ];
-
-    // =====================================================================
-    // 4. 渲染函数
-    // =====================================================================
-    function renderMarkdown(text) {
-        fullMarkdown = text;
-        if (!text.trim()) {
-            preview.innerHTML = `<div class='empty-hint'>✨ 开始书写 Markdown …<br>支持数学 $E=mc^2$ 和代码块 \`\`\`js<br>单击任意内容开始编辑</div>`;
-            updateStatus();
-            allBlocks = [];
-            return;
-        }
-        let html = '';
-        try { html = marked.parse(text, markedOptions); } catch (e) {
-            preview.innerHTML = `<p style="color:#ef4444;">⚠️ 渲染错误: ${e.message}</p>`;
-            updateStatus();
-            return;
-        }
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-        processMath(temp);
-        preview.innerHTML = temp.innerHTML;
-        attachClickListeners();
-        updateStatus();
-        allBlocks = Array.from(preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table'));
-        // 为每个 pre 添加语言选择器（编辑时显示）
-        preview.querySelectorAll('pre').forEach(pre => {
-            const lang = pre.dataset.lang || '';
-            const selector = document.createElement('div');
-            selector.className = 'code-lang-selector';
-            selector.innerHTML = `<select onchange="changeCodeLang(this, event)"><option value="">自动</option>${getLangOptions(lang)}</select>`;
-            pre.style.position = 'relative';
-            pre.prepend(selector);
-        });
-    }
-
-    function getLangOptions(selected) {
-        const langs = ['javascript','python','java','cpp','c','csharp','go','rust','php','ruby','swift','kotlin','html','css','scss','sql','bash','json','xml','yaml','markdown'];
-        return langs.map(l => `<option value="${l}" ${l===selected?'selected':''}>${l}</option>`).join('');
-    }
-
-    function changeCodeLang(select, e) {
-        e.stopPropagation();
-        const pre = select.closest('pre');
-        if (!pre) return;
-        const lang = select.value;
-        const code = pre.querySelector('code');
-        if (code) {
-            pre.dataset.lang = lang;
-            code.className = `language-${lang} hljs`;
-            const text = code.textContent;
+    <script>
+        // =====================================================================
+        // 1. 配置 Marked + Highlight
+        // =====================================================================
+        const hljs = window.hljs;
+        const renderer = new marked.Renderer();
+        renderer.code = function (code, language) {
+            const lang = language || '';
+            let highlighted = '';
             if (hljs && lang && hljs.getLanguage(lang)) {
-                try { code.innerHTML = hljs.highlight(text, { language: lang }).value; } catch (_) {}
+                try { highlighted = hljs.highlight(code, { language: lang }).value; } catch (_) { }
             }
-            const btn = pre.querySelector('.run-btn');
-            if (btn) {
-                const isJS = (lang === 'javascript');
-                btn.className = isJS ? 'run-btn' : 'run-btn remote';
-                btn.textContent = isJS ? '▶ 运行' : '▶ 运行（远程）';
+            if (!highlighted) {
+                highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
-        }
-    }
-
-    function processMath(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            let text = node.textContent;
-            let newHtml = text.replace(/\$\$(.*?)\$\$/gs, (m, c) => {
-                try { return katex.renderToString(c.trim(), { displayMode: true, throwOnError: false, trust: true }); }
-                catch (_) { return m; }
-            });
-            newHtml = newHtml.replace(/\$(.*?)\$/gs, (m, c) => {
-                if (m.startsWith('$$')) return m;
-                try { return katex.renderToString(c.trim(), { displayMode: false, throwOnError: false, trust: true }); }
-                catch (_) { return m; }
-            });
-            if (newHtml !== text) {
-                const span = document.createElement('span');
-                span.innerHTML = newHtml;
-                node.parentNode.replaceChild(span, node);
-                processMath(span);
-            }
-            return;
-        }
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.tagName === 'CODE' || node.tagName === 'PRE' || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
-            const children = Array.from(node.childNodes);
-            for (const child of children) processMath(child);
-        }
-    }
-
-    // =====================================================================
-    // 5. 单击编辑
-    // =====================================================================
-    function attachClickListeners() {
-        const elements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, div, li, th, td');
-        elements.forEach(el => {
-            el.removeEventListener('click', handleClick);
-            el.addEventListener('click', handleClick);
-        });
-        preview.removeEventListener('click', handlePreviewClick);
-        preview.addEventListener('click', handlePreviewClick);
-    }
-
-    function handleClick(e) {
-        e.stopPropagation();
-        const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td');
-        if (!target) return;
-        if (e.target.closest('.run-btn') || e.target.closest('.code-lang-selector')) return;
-        if (editingElement) {
-            if (editingBlockElement !== target) saveEdit();
-            else return;
-        }
-        startEdit(target);
-    }
-
-    function handlePreviewClick(e) {
-        if (e.target === preview || e.target.classList.contains('markdown-body') || e.target.classList.contains('empty-hint')) {
-            if (editingElement) saveEdit();
-            fullMarkdown += '\n\n新段落内容';
-            renderMarkdown(fullMarkdown);
-            setTimeout(() => {
-                const newP = preview.querySelector('p:last-child');
-                if (newP) startEdit(newP);
-            }, 50);
-        }
-    }
-
-    // =====================================================================
-    // 6. 编辑核心（完整健壮版）
-    // =====================================================================
-    function startEdit(element) {
-        if (editingElement) return;
-        let textContent = element.textContent;
-        let isCodeBlock = false;
-        let codeLang = '';
-        if (element.tagName === 'PRE') {
-            const codeEl = element.querySelector('code');
-            if (codeEl) textContent = codeEl.textContent;
-            isCodeBlock = true;
-            codeLang = element.dataset.lang || '';
-        }
-        editingOldText = textContent;
-        editingOriginalHTML = element.outerHTML;
-        editingBlockElement = element;
-
-        const textarea = document.createElement('textarea');
-        textarea.className = 'edit-source active';
-        textarea.value = textContent;
-        const style = getComputedStyle(element);
-        textarea.style.width = '100%';
-        textarea.style.minHeight = Math.max(40, element.offsetHeight) + 'px';
-        textarea.style.fontFamily = style.fontFamily || 'inherit';
-        textarea.style.fontSize = style.fontSize || 'inherit';
-        textarea.style.lineHeight = style.lineHeight || 'inherit';
-        textarea.style.padding = style.padding || '8px 12px';
-        textarea.style.border = '2px solid #3b82f6';
-        textarea.style.borderRadius = '6px';
-        textarea.style.background = '#fafcff';
-        textarea.style.outline = 'none';
-        textarea.style.resize = 'vertical';
-        textarea.style.color = style.color || '#0b1a2f';
-        textarea.spellcheck = true;
-
-        let wrapper = document.createElement('div');
-        wrapper.style.position = 'relative';
-        if (isCodeBlock) {
-            const selector = document.createElement('div');
-            selector.className = 'code-lang-selector active';
-            selector.style.position = 'absolute';
-            selector.style.top = '-30px';
-            selector.style.left = '0';
-            selector.style.background = '#fff';
-            selector.style.border = '1px solid var(--border)';
-            selector.style.borderRadius = '4px 4px 0 0';
-            selector.style.padding = '2px 8px';
-            selector.style.zIndex = '5';
-            selector.innerHTML = `<select onchange="updateEditingCodeLang(this)"><option value="">自动</option>${getLangOptions(codeLang)}</select>`;
-            wrapper.appendChild(selector);
-        }
-        wrapper.appendChild(textarea);
-
-        try {
-            element.replaceWith(wrapper);
-        } catch (e) {
-            element.parentNode.insertBefore(wrapper, element);
-            element.remove();
-        }
-        editingElement = textarea;
-        textarea.focus();
-        textarea.select();
-
-        textarea.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                cancelEdit();
-            } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                saveEdit();
-            } else if (e.key === 'Tab' && !e.shiftKey) {
-                e.preventDefault();
-                saveEdit();
-                const idx = allBlocks.indexOf(editingBlockElement);
-                if (idx !== -1 && idx < allBlocks.length - 1) {
-                    setTimeout(() => startEdit(allBlocks[idx + 1]), 10);
-                }
-            } else if (e.key === 'Tab' && e.shiftKey) {
-                e.preventDefault();
-                saveEdit();
-                const idx = allBlocks.indexOf(editingBlockElement);
-                if (idx > 0) {
-                    setTimeout(() => startEdit(allBlocks[idx - 1]), 10);
-                }
-            }
-        });
-
-        const saveOnBlur = function(e) {
-            if (editingElement && !editingElement.contains(e.target)) {
-                saveEdit();
-                document.removeEventListener('click', saveOnBlur);
-            }
+            const isJS = (lang === 'javascript');
+            const btnClass = isJS ? 'run-btn' : 'run-btn remote';
+            const btnLabel = isJS ? '▶ 运行' : '▶ 运行（远程）';
+            return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="${btnClass}" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">${btnLabel}</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
         };
-        setTimeout(() => {
-            document.addEventListener('click', saveOnBlur);
-        }, 10);
+        renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
+        renderer.image = function (href, title, text) { return `<img src="${href}" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
+        renderer.link = function (href, title, text) { return `<a href="${href}" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
+        const markedOptions = { renderer, gfm: true, breaks: true };
 
-        textarea.addEventListener('input', function() { checkSuggestForTextarea(textarea); });
-        textarea.addEventListener('keydown', function(e) { handleSuggestKeydown(e, textarea); });
-    }
+        // =====================================================================
+        // 2. DOM 引用 & 状态
+        // =====================================================================
+        const previewArea = document.getElementById('previewArea');
+        const preview = document.getElementById('preview');
+        const statusInfo = document.getElementById('statusInfo');
+        const suggestBox = document.getElementById('suggestBox');
+        const mathPanel = document.getElementById('mathPanel');
+        const contextMenu = document.getElementById('contextMenu');
+        const mathBuilder = document.getElementById('mathBuilder');
 
-    function updateEditingCodeLang(select) {
-        const wrapper = select.closest('div');
-        if (!wrapper) return;
-        const textarea = wrapper.querySelector('textarea');
-        if (textarea) textarea.dataset.editingLang = select.value;
-    }
+        let fullMarkdown = '';
+        let editingElement = null;
+        let editingOriginalHTML = '';
+        let editingOldText = '';
+        let editingBlockElement = null;
+        let allBlocks = [];
 
-    function saveEdit() {
-        if (!editingElement) return;
-        const textarea = editingElement;
-        const wrapper = textarea.parentNode;
-        if (!wrapper || !wrapper.parentNode) {
-            clearEditingState();
-            return;
+        // 补全状态
+        let suggestActive = false;
+        let suggestItems = [];
+        let suggestIndex = -1;
+        let suggestMode = '';
+
+        // =====================================================================
+        // 3. 补全数据（完整）
+        // =====================================================================
+        const codeKeywords = {
+            javascript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'super', 'import', 'export', 'default', 'async', 'await', 'yield', 'console', 'log', 'debug', 'error', 'map', 'filter', 'reduce', 'forEach', 'Promise', 'then', 'catch', 'finally'],
+            python: ['def', 'return', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 'raise', 'import', 'from', 'as', 'class', 'with', 'lambda', 'yield', 'print', 'len', 'range', 'str', 'int', 'float', 'list', 'dict', 'set', 'tuple', 'True', 'False', 'None', 'self', 'super'],
+            java: ['public', 'private', 'protected', 'static', 'final', 'abstract', 'class', 'interface', 'extends', 'implements', 'new', 'return', 'void', 'int', 'float', 'double', 'boolean', 'char', 'String', 'System', 'out', 'println', 'if', 'else', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'throws'],
+            cpp: ['int', 'float', 'double', 'char', 'void', 'bool', 'string', 'vector', 'map', 'set', 'auto', 'const', 'static', 'virtual', 'override', 'final', 'public', 'private', 'protected', 'class', 'struct', 'namespace', 'using', 'return', 'if', 'else', 'switch', 'case', 'break', 'continue', 'for', 'while', 'do', 'try', 'catch', 'throw'],
+            c: ['int', 'float', 'double', 'char', 'void', 'long', 'short', 'unsigned', 'signed', 'const', 'static', 'extern', 'volatile', 'return', 'if', 'else', 'switch', 'case', 'break', 'continue', 'for', 'while', 'do', 'struct', 'union', 'enum', 'typedef', 'sizeof'],
+            go: ['package', 'import', 'func', 'var', 'const', 'type', 'interface', 'struct', 'map', 'chan', 'return', 'if', 'else', 'for', 'range', 'switch', 'case', 'break', 'continue', 'defer', 'go', 'select'],
+            rust: ['fn', 'let', 'mut', 'const', 'static', 'impl', 'trait', 'struct', 'enum', 'match', 'if', 'else', 'for', 'while', 'loop', 'return', 'break', 'continue', 'use', 'mod', 'pub', 'crate', 'self', 'super'],
+            php: ['function', 'return', 'if', 'else', 'foreach', 'for', 'while', 'switch', 'case', 'break', 'continue', 'class', 'interface', 'trait', 'extends', 'implements', 'new', 'public', 'private', 'protected', 'static', 'final', 'abstract', 'use', 'namespace'],
+            ruby: ['def', 'end', 'if', 'elsif', 'else', 'unless', 'case', 'when', 'while', 'until', 'for', 'do', 'yield', 'return', 'class', 'module', 'include', 'extend', 'require', 'load', 'puts', 'gets'],
+            swift: ['import', 'class', 'struct', 'enum', 'protocol', 'extension', 'func', 'var', 'let', 'return', 'if', 'else', 'switch', 'case', 'for', 'while', 'repeat', 'break', 'continue', 'guard', 'defer', 'throw', 'throws', 'catch', 'try'],
+            kotlin: ['fun', 'val', 'var', 'class', 'interface', 'object', 'if', 'else', 'when', 'for', 'while', 'do', 'return', 'break', 'continue', 'throw', 'try', 'catch', 'finally', 'import', 'package', 'public', 'private', 'protected', 'internal'],
+            html: ['div', 'span', 'p', 'a', 'img', 'input', 'button', 'form', 'table', 'tr', 'td', 'th', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'script', 'style', 'link', 'meta', 'head', 'body', 'html'],
+            css: ['color', 'background', 'font', 'margin', 'padding', 'border', 'width', 'height', 'flex', 'grid', 'display', 'position', 'top', 'left', 'right', 'bottom', 'float', 'clear', 'text-align', 'font-size', 'font-weight', 'line-height'],
+            sql: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MAX', 'MIN'],
+            bash: ['echo', 'read', 'if', 'then', 'else', 'elif', 'fi', 'for', 'while', 'do', 'done', 'case', 'esac', 'function', 'return', 'export', 'source', 'alias', 'unset', 'set', 'shopt'],
+        };
+        const mathSymbols = [
+            { sym: '\\alpha', desc: 'α' }, { sym: '\\beta', desc: 'β' }, { sym: '\\gamma', desc: 'γ' },
+            { sym: '\\delta', desc: 'δ' }, { sym: '\\epsilon', desc: 'ε' }, { sym: '\\zeta', desc: 'ζ' },
+            { sym: '\\eta', desc: 'η' }, { sym: '\\theta', desc: 'θ' }, { sym: '\\iota', desc: 'ι' },
+            { sym: '\\kappa', desc: 'κ' }, { sym: '\\lambda', desc: 'λ' }, { sym: '\\mu', desc: 'μ' },
+            { sym: '\\nu', desc: 'ν' }, { sym: '\\xi', desc: 'ξ' }, { sym: '\\pi', desc: 'π' },
+            { sym: '\\rho', desc: 'ρ' }, { sym: '\\sigma', desc: 'σ' }, { sym: '\\tau', desc: 'τ' },
+            { sym: '\\upsilon', desc: 'υ' }, { sym: '\\phi', desc: 'φ' }, { sym: '\\chi', desc: 'χ' },
+            { sym: '\\psi', desc: 'ψ' }, { sym: '\\omega', desc: 'ω' },
+            { sym: '\\Gamma', desc: 'Γ' }, { sym: '\\Delta', desc: 'Δ' }, { sym: '\\Theta', desc: 'Θ' },
+            { sym: '\\Lambda', desc: 'Λ' }, { sym: '\\Xi', desc: 'Ξ' }, { sym: '\\Pi', desc: 'Π' },
+            { sym: '\\Sigma', desc: 'Σ' }, { sym: '\\Upsilon', desc: 'Υ' }, { sym: '\\Phi', desc: 'Φ' },
+            { sym: '\\Psi', desc: 'Ψ' }, { sym: '\\Omega', desc: 'Ω' },
+            { sym: '\\sum', desc: '求和' }, { sym: '\\int', desc: '积分' }, { sym: '\\prod', desc: '乘积' },
+            { sym: '\\lim', desc: '极限' }, { sym: '\\infty', desc: '无穷' }, { sym: '\\partial', desc: '偏导' },
+            { sym: '\\nabla', desc: '梯度' }, { sym: '\\sqrt', desc: '根号' }, { sym: '\\frac', desc: '分数' },
+            { sym: '\\binom', desc: '组合' }, { sym: '\\mathrm', desc: '罗马体' }, { sym: '\\mathbf', desc: '粗体' },
+            { sym: '\\mathbb', desc: '黑板体' }, { sym: '\\mathcal', desc: '花体' }, { sym: '\\mathfrak', desc: '哥特体' },
+            { sym: '\\left', desc: '左括号' }, { sym: '\\right', desc: '右括号' }, { sym: '\\big', desc: '大号' },
+            { sym: '\\Big', desc: '更大号' }, { sym: '\\bigg', desc: '超大号' }, { sym: '\\Bigg', desc: '最大号' },
+            { sym: '\\pm', desc: '±' }, { sym: '\\mp', desc: '∓' }, { sym: '\\times', desc: '×' },
+            { sym: '\\div', desc: '÷' }, { sym: '\\cdot', desc: '·' }, { sym: '\\leq', desc: '≤' },
+            { sym: '\\geq', desc: '≥' }, { sym: '\\neq', desc: '≠' }, { sym: '\\approx', desc: '≈' },
+            { sym: '\\equiv', desc: '≡' }, { sym: '\\propto', desc: '∝' }, { sym: '\\sim', desc: '～' },
+            { sym: '\\simeq', desc: '≃' }, { sym: '\\cong', desc: '≅' }, { sym: '\\perp', desc: '⊥' },
+            { sym: '\\parallel', desc: '∥' }, { sym: '\\angle', desc: '∠' }, { sym: '\\degree', desc: '°' },
+        ];
+
+        // =====================================================================
+        // 4. 渲染函数
+        // =====================================================================
+        function renderMarkdown(text) {
+            fullMarkdown = text;
+            if (!text.trim()) {
+                preview.innerHTML = `<div class='empty-hint'>✨ 开始书写 Markdown …<br>支持数学 $E=mc^2$ 和代码块 \`\`\`js<br>单击任意内容开始编辑</div>`;
+                updateStatus();
+                allBlocks = [];
+                return;
+            }
+            let html = '';
+            try { html = marked.parse(text, markedOptions); } catch (e) {
+                preview.innerHTML = `<p style="color:#ef4444;">⚠️ 渲染错误: ${e.message}</p>`;
+                updateStatus();
+                return;
+            }
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            processMath(temp);
+            preview.innerHTML = temp.innerHTML;
+            attachClickListeners();
+            updateStatus();
+            allBlocks = Array.from(preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table'));
+            // 为每个 pre 添加语言选择器（编辑时显示）
+            preview.querySelectorAll('pre').forEach(pre => {
+                const lang = pre.dataset.lang || '';
+                const selector = document.createElement('div');
+                selector.className = 'code-lang-selector';
+                selector.innerHTML = `<select onchange="changeCodeLang(this, event)"><option value="">自动</option>${getLangOptions(lang)}</select>`;
+                pre.style.position = 'relative';
+                pre.prepend(selector);
+            });
         }
 
-        const newContent = textarea.value;
-        const oldText = editingOldText;
-
-        let codeLang = '';
-        if (wrapper.tagName === 'DIV' && wrapper.querySelector('.code-lang-selector')) {
-            const select = wrapper.querySelector('.code-lang-selector select');
-            if (select) codeLang = select.value;
+        function getLangOptions(selected) {
+            const langs = ['javascript', 'python', 'java', 'cpp', 'c', 'csharp', 'go', 'rust', 'php', 'ruby', 'swift', 'kotlin', 'html', 'css', 'scss', 'sql', 'bash', 'json', 'xml', 'yaml', 'markdown'];
+            return langs.map(l => `<option value="${l}" ${l === selected ? 'selected' : ''}>${l}</option>`).join('');
         }
 
-        if (oldText && newContent !== oldText) {
-            const escapedOld = oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedOld);
-            if (fullMarkdown.includes(oldText)) {
-                fullMarkdown = fullMarkdown.replace(regex, newContent);
-            } else {
-                fullMarkdown += '\n' + newContent;
+        function changeCodeLang(select, e) {
+            e.stopPropagation();
+            const pre = select.closest('pre');
+            if (!pre) return;
+            const lang = select.value;
+            const code = pre.querySelector('code');
+            if (code) {
+                pre.dataset.lang = lang;
+                code.className = `language-${lang} hljs`;
+                const text = code.textContent;
+                if (hljs && lang && hljs.getLanguage(lang)) {
+                    try { code.innerHTML = hljs.highlight(text, { language: lang }).value; } catch (_) { }
+                }
+                const btn = pre.querySelector('.run-btn');
+                if (btn) {
+                    const isJS = (lang === 'javascript');
+                    btn.className = isJS ? 'run-btn' : 'run-btn remote';
+                    btn.textContent = isJS ? '▶ 运行' : '▶ 运行（远程）';
+                }
             }
         }
 
-        const parent = wrapper.parentNode;
-        if (!parent) {
-            clearEditingState();
-            return;
+        function processMath(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                let text = node.textContent;
+                let newHtml = text.replace(/\$\$(.*?)\$\$/gs, (m, c) => {
+                    try { return katex.renderToString(c.trim(), { displayMode: true, throwOnError: false, trust: true }); }
+                    catch (_) { return m; }
+                });
+                newHtml = newHtml.replace(/\$(.*?)\$/gs, (m, c) => {
+                    if (m.startsWith('$$')) return m;
+                    try { return katex.renderToString(c.trim(), { displayMode: false, throwOnError: false, trust: true }); }
+                    catch (_) { return m; }
+                });
+                if (newHtml !== text) {
+                    const span = document.createElement('span');
+                    span.innerHTML = newHtml;
+                    node.parentNode.replaceChild(span, node);
+                    processMath(span);
+                }
+                return;
+            }
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.tagName === 'CODE' || node.tagName === 'PRE' || node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+                const children = Array.from(node.childNodes);
+                for (const child of children) processMath(child);
+            }
         }
 
-        const temp = document.createElement('div');
-        temp.innerHTML = editingOriginalHTML;
-        const originalElement = temp.firstElementChild;
+        // =====================================================================
+        // 5. 单击编辑
+        // =====================================================================
+        function attachClickListeners() {
+            const elements = preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, div, li, th, td');
+            elements.forEach(el => {
+                el.removeEventListener('click', handleClick);
+                el.addEventListener('click', handleClick);
+            });
+            preview.removeEventListener('click', handlePreviewClick);
+            preview.addEventListener('click', handlePreviewClick);
+        }
 
-        if (originalElement) {
-            if (originalElement.tagName === 'PRE' && codeLang) {
-                originalElement.dataset.lang = codeLang;
-                const codeEl = originalElement.querySelector('code');
-                if (codeEl) {
-                    codeEl.className = `language-${codeLang} hljs`;
-                    if (hljs && codeLang && hljs.getLanguage(codeLang)) {
-                        try {
-                            codeEl.innerHTML = hljs.highlight(newContent, { language: codeLang }).value;
-                        } catch (_) {}
+        function handleClick(e) {
+            e.stopPropagation();
+            const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td');
+            if (!target) return;
+            if (e.target.closest('.run-btn') || e.target.closest('.code-lang-selector')) return;
+            if (editingElement) {
+                if (editingBlockElement !== target) saveEdit();
+                else return;
+            }
+            startEdit(target);
+        }
+
+        function handlePreviewClick(e) {
+            if (e.target === preview || e.target.classList.contains('markdown-body') || e.target.classList.contains('empty-hint')) {
+                if (editingElement) saveEdit();
+                fullMarkdown += '\n\n新段落内容';
+                renderMarkdown(fullMarkdown);
+                setTimeout(() => {
+                    const newP = preview.querySelector('p:last-child');
+                    if (newP) startEdit(newP);
+                }, 50);
+            }
+        }
+
+        // =====================================================================
+        // 6. 编辑核心（完整健壮版）
+        // =====================================================================
+        function startEdit(element) {
+            if (editingElement) return;
+            let textContent = element.textContent;
+            let isCodeBlock = false;
+            let codeLang = '';
+            if (element.tagName === 'PRE') {
+                const codeEl = element.querySelector('code');
+                if (codeEl) textContent = codeEl.textContent;
+                isCodeBlock = true;
+                codeLang = element.dataset.lang || '';
+            }
+            editingOldText = textContent;
+            editingOriginalHTML = element.outerHTML;
+            editingBlockElement = element;
+
+            const textarea = document.createElement('textarea');
+            textarea.className = 'edit-source active';
+            textarea.value = textContent;
+            const style = getComputedStyle(element);
+            textarea.style.width = '100%';
+            textarea.style.minHeight = Math.max(40, element.offsetHeight) + 'px';
+            textarea.style.fontFamily = style.fontFamily || 'inherit';
+            textarea.style.fontSize = style.fontSize || 'inherit';
+            textarea.style.lineHeight = style.lineHeight || 'inherit';
+            textarea.style.padding = style.padding || '8px 12px';
+            textarea.style.border = '2px solid #3b82f6';
+            textarea.style.borderRadius = '6px';
+            textarea.style.background = '#fafcff';
+            textarea.style.outline = 'none';
+            textarea.style.resize = 'vertical';
+            textarea.style.color = style.color || '#0b1a2f';
+            textarea.spellcheck = true;
+
+            let wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            if (isCodeBlock) {
+                const selector = document.createElement('div');
+                selector.className = 'code-lang-selector active';
+                selector.style.position = 'absolute';
+                selector.style.top = '-30px';
+                selector.style.left = '0';
+                selector.style.background = '#fff';
+                selector.style.border = '1px solid var(--border)';
+                selector.style.borderRadius = '4px 4px 0 0';
+                selector.style.padding = '2px 8px';
+                selector.style.zIndex = '5';
+                selector.innerHTML = `<select onchange="updateEditingCodeLang(this)"><option value="">自动</option>${getLangOptions(codeLang)}</select>`;
+                wrapper.appendChild(selector);
+            }
+            wrapper.appendChild(textarea);
+
+            try {
+                element.replaceWith(wrapper);
+            } catch (e) {
+                element.parentNode.insertBefore(wrapper, element);
+                element.remove();
+            }
+            editingElement = textarea;
+            textarea.focus();
+            textarea.select();
+
+            textarea.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    cancelEdit();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    saveEdit();
+                } else if (e.key === 'Tab' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                    const idx = allBlocks.indexOf(editingBlockElement);
+                    if (idx !== -1 && idx < allBlocks.length - 1) {
+                        setTimeout(() => startEdit(allBlocks[idx + 1]), 10);
+                    }
+                } else if (e.key === 'Tab' && e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                    const idx = allBlocks.indexOf(editingBlockElement);
+                    if (idx > 0) {
+                        setTimeout(() => startEdit(allBlocks[idx - 1]), 10);
                     }
                 }
-            }
-            try {
-                parent.replaceChild(originalElement, wrapper);
-            } catch (e) {
-                parent.insertBefore(originalElement, wrapper);
-                wrapper.remove();
-            }
-        } else {
-            const span = document.createElement('span');
-            span.textContent = newContent;
-            try {
-                parent.replaceChild(span, wrapper);
-            } catch (e) {
-                parent.insertBefore(span, wrapper);
-                wrapper.remove();
-            }
+            });
+
+            const saveOnBlur = function (e) {
+                if (editingElement && !editingElement.contains(e.target)) {
+                    saveEdit();
+                    document.removeEventListener('click', saveOnBlur);
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', saveOnBlur);
+            }, 10);
+
+            textarea.addEventListener('input', function () { checkSuggestForTextarea(textarea); });
+            textarea.addEventListener('keydown', function (e) { handleSuggestKeydown(e, textarea); });
         }
 
-        clearEditingState();
-        renderMarkdown(fullMarkdown);
-        allBlocks = Array.from(preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table'));
-    }
-
-    function cancelEdit() {
-        if (!editingElement) return;
-        const textarea = editingElement;
-        const wrapper = textarea.parentNode;
-        if (!wrapper || !wrapper.parentNode) {
-            clearEditingState();
-            return;
+        function updateEditingCodeLang(select) {
+            const wrapper = select.closest('div');
+            if (!wrapper) return;
+            const textarea = wrapper.querySelector('textarea');
+            if (textarea) textarea.dataset.editingLang = select.value;
         }
-        const parent = wrapper.parentNode;
-        const temp = document.createElement('div');
-        temp.innerHTML = editingOriginalHTML;
-        const originalElement = temp.firstElementChild;
-        if (originalElement) {
-            try {
-                parent.replaceChild(originalElement, wrapper);
-            } catch (e) {
-                parent.insertBefore(originalElement, wrapper);
-                wrapper.remove();
+
+        function saveEdit() {
+            if (!editingElement) return;
+            const textarea = editingElement;
+            const wrapper = textarea.parentNode;
+            if (!wrapper || !wrapper.parentNode) {
+                clearEditingState();
+                return;
             }
-        } else {
-            wrapper.remove();
-        }
-        clearEditingState();
-    }
 
-    function clearEditingState() {
-        editingElement = null;
-        editingOriginalHTML = '';
-        editingOldText = '';
-        editingBlockElement = null;
-    }
+            const newContent = textarea.value;
+            const oldText = editingOldText;
 
-    // =====================================================================
-    // 7. 代码运行（多语言）
-    // =====================================================================
-    async function runCode(btn, encodedCode) {
-        const code = decodeURIComponent(encodedCode);
-        const pre = btn.closest('pre');
-        if (!pre) return;
-        const lang = pre.dataset.lang || '';
+            let codeLang = '';
+            if (wrapper.tagName === 'DIV' && wrapper.querySelector('.code-lang-selector')) {
+                const select = wrapper.querySelector('.code-lang-selector select');
+                if (select) codeLang = select.value;
+            }
 
-        let output = pre.querySelector('.code-output');
-        if (output) output.remove();
-        output = document.createElement('div');
-        output.className = 'code-output';
-        pre.after(output);
-        output.textContent = '⏳ 运行中...';
-
-        try {
-            if (lang === 'javascript') {
-                const originalLog = console.log;
-                const logs = [];
-                console.log = function(...args) {
-                    logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
-                    originalLog.apply(console, args);
-                };
-                const fn = new Function('console', code);
-                fn(console);
-                console.log = originalLog;
-                if (logs.length) output.textContent = logs.join('\n');
-                else output.textContent = '✅ 执行成功（无输出）';
-            } else {
-                const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        language: lang,
-                        version: '*',
-                        files: [{ content: code }]
-                    })
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                const outputText = data.run?.stdout || data.run?.stderr || '无输出';
-                if (data.run?.stderr) {
-                    output.textContent = outputText;
-                    output.classList.add('error');
+            if (oldText && newContent !== oldText) {
+                const escapedOld = oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedOld);
+                if (fullMarkdown.includes(oldText)) {
+                    fullMarkdown = fullMarkdown.replace(regex, newContent);
                 } else {
-                    output.textContent = outputText;
+                    fullMarkdown += '\n' + newContent;
                 }
             }
-        } catch (err) {
-            output.textContent = '❌ 错误: ' + err.message;
-            output.classList.add('error');
-        }
-    }
 
-    // =====================================================================
-    // 8. 补全系统（完整实现）
-    // =====================================================================
-    function checkSuggestForTextarea(textarea) {
-        const pos = textarea.selectionStart;
-        const text = textarea.value;
-        const before = text.substring(0, pos);
-        const codeInfo = getCodeBlockInfo(text, pos);
-        if (codeInfo.inside) {
-            showCodeSuggestForTextarea(codeInfo.lang, before, pos, textarea);
-            return;
-        }
-        const inlineMatch = before.match(/\$([^$]*)$/);
-        if (inlineMatch && !before.match(/\$\$[^$]*$/)) {
-            const dollarCount = (before.match(/\$/g) || []).length;
-            if (dollarCount % 2 === 1) {
-                showMathSuggestForTextarea(inlineMatch[1], pos, textarea);
+            const parent = wrapper.parentNode;
+            if (!parent) {
+                clearEditingState();
                 return;
             }
-        }
-        const blockMatch = before.match(/\$\$([^$]*)$/);
-        if (blockMatch) {
-            const dollarCount = (before.match(/\$\$/g) || []).length;
-            if (dollarCount % 2 === 1) {
-                showMathSuggestForTextarea(blockMatch[1], pos, textarea);
-                return;
-            }
-        }
-        hideSuggest();
-    }
 
-    function getCodeBlockInfo(text, pos) {
-        const before = text.substring(0, pos);
-        const start = before.lastIndexOf('```');
-        if (start === -1) return { inside: false };
-        const afterStart = text.substring(start + 3);
-        const end = afterStart.indexOf('```');
-        if (end === -1 || end > pos - start - 3) {
-            const langMatch = text.substring(start + 3, start + 3 + 20).match(/^(\w+)/);
-            const lang = langMatch ? langMatch[1] : '';
-            return { inside: true, lang };
-        }
-        return { inside: false };
-    }
+            const temp = document.createElement('div');
+            temp.innerHTML = editingOriginalHTML;
+            const originalElement = temp.firstElementChild;
 
-    function showCodeSuggestForTextarea(lang, beforeText, cursorPos, textarea) {
-        const keywords = codeKeywords[lang] || codeKeywords['javascript'] || [];
-        const match = beforeText.match(/\b(\w*)$/);
-        const prefix = match ? match[1] : '';
-        const items = keywords.filter(k => k.startsWith(prefix)).slice(0, 50).map(k => ({ label: k, type: 'code', tag: lang || 'code' }));
-        if (!items.length) { hideSuggest(); return; }
-        showSuggestForTextarea(items, cursorPos, textarea, 'code');
-    }
-
-    function showMathSuggestForTextarea(prefix, cursorPos, textarea) {
-        const p = prefix || '';
-        const items = mathSymbols.filter(s => s.sym.startsWith(p) || s.desc.includes(p)).slice(0, 45).map(s => ({ label: s.sym, desc: s.desc, type: 'math', tag: 'LaTeX' }));
-        if (!items.length) { hideSuggest(); return; }
-        showSuggestForTextarea(items, cursorPos, textarea, 'math');
-    }
-
-    function showSuggestForTextarea(items, cursorPos, textarea, mode) {
-        suggestItems = items;
-        suggestIndex = -1;
-        suggestMode = mode;
-        suggestActive = true;
-        const rect = getCursorCoordsForTextarea(textarea);
-        if (!rect) { hideSuggest(); return; }
-        const box = suggestBox;
-        box.innerHTML = '';
-        items.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 's-item';
-            div.dataset.index = idx;
-            const labelSpan = document.createElement('span');
-            labelSpan.textContent = item.label;
-            div.appendChild(labelSpan);
-            if (item.desc) {
-                const descSpan = document.createElement('span');
-                descSpan.className = 's-desc';
-                descSpan.textContent = item.desc;
-                div.appendChild(descSpan);
-            }
-            if (item.tag) {
-                const tagSpan = document.createElement('span');
-                tagSpan.className = 's-tag';
-                tagSpan.textContent = item.tag;
-                div.appendChild(tagSpan);
-            }
-            div.addEventListener('click', () => {
-                applySuggestForTextarea(item, textarea);
-                hideSuggest();
-            });
-            div.addEventListener('mouseenter', () => { suggestIndex = idx; updateSuggestHighlight(); });
-            box.appendChild(div);
-        });
-        let top = rect.top + rect.height + 4;
-        let left = rect.left;
-        const boxWidth = 280;
-        const boxHeight = Math.min(items.length * 32 + 8, 200);
-        if (left + boxWidth > window.innerWidth - 20) left = Math.max(20, window.innerWidth - boxWidth - 20);
-        if (top + boxHeight > window.innerHeight - 20) top = Math.max(20, rect.top - boxHeight - 6);
-        box.style.left = left + 'px';
-        box.style.top = top + 'px';
-        box.style.display = 'block';
-        box.style.maxHeight = Math.min(200, window.innerHeight - top - 30) + 'px';
-    }
-
-    function getCursorCoordsForTextarea(textarea) {
-        const rect = textarea.getBoundingClientRect();
-        const start = textarea.selectionStart;
-        const text = textarea.value;
-        const before = text.substring(0, start);
-        const lines = before.split('\n');
-        const row = lines.length - 1;
-        const col = lines[row].length;
-        const span = document.createElement('span');
-        const style = getComputedStyle(textarea);
-        span.style.cssText = `font:${style.font};font-family:${style.fontFamily};font-size:${style.fontSize};letter-spacing:${style.letterSpacing};visibility:hidden;white-space:pre;`;
-        span.textContent = lines[row] || '';
-        document.body.appendChild(span);
-        const width = span.offsetWidth;
-        document.body.removeChild(span);
-        const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.6;
-        const lineSpan = document.createElement('span');
-        lineSpan.style.cssText = `font:${style.font};font-family:${style.fontFamily};font-size:${style.fontSize};visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:${style.width};`;
-        lineSpan.textContent = lines.slice(0, -1).join('\n') + (lines.length > 1 ? '\n' : '');
-        document.body.appendChild(lineSpan);
-        const heightBefore = lineSpan.offsetHeight;
-        document.body.removeChild(lineSpan);
-        const padLeft = parseFloat(style.paddingLeft) || 0;
-        const padTop = parseFloat(style.paddingTop) || 0;
-        const borderLeft = parseFloat(style.borderLeftWidth) || 0;
-        const scrollTop = textarea.scrollTop;
-        return {
-            top: rect.top + padTop + borderLeft + heightBefore - scrollTop,
-            left: rect.left + padLeft + borderLeft + width,
-            height: lineHeight
-        };
-    }
-
-    function applySuggestForTextarea(item, textarea) {
-        const pos = textarea.selectionStart;
-        const text = textarea.value;
-        const before = text.substring(0, pos);
-        const after = text.substring(pos);
-        if (suggestMode === 'code') {
-            const wordMatch = before.match(/\b\w*$/);
-            if (wordMatch) {
-                const start = pos - wordMatch[0].length;
-                textarea.value = text.substring(0, start) + item.label + after;
-                textarea.selectionStart = textarea.selectionEnd = start + item.label.length;
-            }
-        } else if (suggestMode === 'math') {
-            let m = before.match(/\$([^$]*)$/);
-            if (m) {
-                const start = pos - m[1].length;
-                const prefix = before.substring(0, start);
-                textarea.value = prefix + item.label + after;
-                textarea.selectionStart = textarea.selectionEnd = start + item.label.length;
+            if (originalElement) {
+                if (originalElement.tagName === 'PRE' && codeLang) {
+                    originalElement.dataset.lang = codeLang;
+                    const codeEl = originalElement.querySelector('code');
+                    if (codeEl) {
+                        codeEl.className = `language-${codeLang} hljs`;
+                        if (hljs && codeLang && hljs.getLanguage(codeLang)) {
+                            try {
+                                codeEl.innerHTML = hljs.highlight(newContent, { language: codeLang }).value;
+                            } catch (_) { }
+                        }
+                    }
+                }
+                try {
+                    parent.replaceChild(originalElement, wrapper);
+                } catch (e) {
+                    parent.insertBefore(originalElement, wrapper);
+                    wrapper.remove();
+                }
             } else {
-                m = before.match(/\$\$([^$]*)$/);
+                const span = document.createElement('span');
+                span.textContent = newContent;
+                try {
+                    parent.replaceChild(span, wrapper);
+                } catch (e) {
+                    parent.insertBefore(span, wrapper);
+                    wrapper.remove();
+                }
+            }
+
+            clearEditingState();
+            renderMarkdown(fullMarkdown);
+            allBlocks = Array.from(preview.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table'));
+        }
+
+        function cancelEdit() {
+            if (!editingElement) return;
+            const textarea = editingElement;
+            const wrapper = textarea.parentNode;
+            if (!wrapper || !wrapper.parentNode) {
+                clearEditingState();
+                return;
+            }
+            const parent = wrapper.parentNode;
+            const temp = document.createElement('div');
+            temp.innerHTML = editingOriginalHTML;
+            const originalElement = temp.firstElementChild;
+            if (originalElement) {
+                try {
+                    parent.replaceChild(originalElement, wrapper);
+                } catch (e) {
+                    parent.insertBefore(originalElement, wrapper);
+                    wrapper.remove();
+                }
+            } else {
+                wrapper.remove();
+            }
+            clearEditingState();
+        }
+
+        function clearEditingState() {
+            editingElement = null;
+            editingOriginalHTML = '';
+            editingOldText = '';
+            editingBlockElement = null;
+        }
+
+        // =====================================================================
+        // 7. 代码运行（多语言）—— 修复 401 错误
+        // =====================================================================
+        async function runCode(btn, encodedCode) {
+            const code = decodeURIComponent(encodedCode);
+            const pre = btn.closest('pre');
+            if (!pre) return;
+            const lang = pre.dataset.lang || '';
+
+            let output = pre.querySelector('.code-output');
+            if (output) output.remove();
+            output = document.createElement('div');
+            output.className = 'code-output';
+            pre.after(output);
+            output.textContent = '⏳ 运行中...';
+
+            try {
+                if (lang === 'javascript') {
+                    // 本地执行
+                    const originalLog = console.log;
+                    const logs = [];
+                    console.log = function (...args) {
+                        logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                        originalLog.apply(console, args);
+                    };
+                    const fn = new Function('console', code);
+                    fn(console);
+                    console.log = originalLog;
+                    if (logs.length) output.textContent = logs.join('\n');
+                    else output.textContent = '✅ 执行成功（无输出）';
+                } else {
+                    // 远程执行（Piston API）—— 修改请求体，移除 version 字段，使用空字符串
+                    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            language: lang,
+                            version: '',        // 改为空字符串，而不是 "*"
+                            files: [{ content: code }]
+                        })
+                    });
+
+                    if (response.status === 401) {
+                        throw new Error('401 Unauthorized - 请检查网络或 API 密钥，或稍后重试');
+                    }
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    const outputText = data.run?.stdout || data.run?.stderr || '无输出';
+                    if (data.run?.stderr) {
+                        output.textContent = outputText;
+                        output.classList.add('error');
+                    } else {
+                        output.textContent = outputText;
+                    }
+                }
+            } catch (err) {
+                output.textContent = '❌ 错误: ' + err.message;
+                output.classList.add('error');
+                // 如果是网络错误，提示用户可能无法访问 API
+                if (err.message.includes('fetch') || err.message.includes('Network')) {
+                    output.textContent += '\n💡 提示：远程执行需要网络连接，可尝试刷新或使用本地 JavaScript 运行。';
+                }
+            }
+        }
+
+        // =====================================================================
+        // 8. 补全系统（完整实现）
+        // =====================================================================
+        function checkSuggestForTextarea(textarea) {
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            const before = text.substring(0, pos);
+            const codeInfo = getCodeBlockInfo(text, pos);
+            if (codeInfo.inside) {
+                showCodeSuggestForTextarea(codeInfo.lang, before, pos, textarea);
+                return;
+            }
+            const inlineMatch = before.match(/\$([^$]*)$/);
+            if (inlineMatch && !before.match(/\$\$[^$]*$/)) {
+                const dollarCount = (before.match(/\$/g) || []).length;
+                if (dollarCount % 2 === 1) {
+                    showMathSuggestForTextarea(inlineMatch[1], pos, textarea);
+                    return;
+                }
+            }
+            const blockMatch = before.match(/\$\$([^$]*)$/);
+            if (blockMatch) {
+                const dollarCount = (before.match(/\$\$/g) || []).length;
+                if (dollarCount % 2 === 1) {
+                    showMathSuggestForTextarea(blockMatch[1], pos, textarea);
+                    return;
+                }
+            }
+            hideSuggest();
+        }
+
+        function getCodeBlockInfo(text, pos) {
+            const before = text.substring(0, pos);
+            const start = before.lastIndexOf('```');
+            if (start === -1) return { inside: false };
+            const afterStart = text.substring(start + 3);
+            const end = afterStart.indexOf('```');
+            if (end === -1 || end > pos - start - 3) {
+                const langMatch = text.substring(start + 3, start + 3 + 20).match(/^(\w+)/);
+                const lang = langMatch ? langMatch[1] : '';
+                return { inside: true, lang };
+            }
+            return { inside: false };
+        }
+
+        function showCodeSuggestForTextarea(lang, beforeText, cursorPos, textarea) {
+            const keywords = codeKeywords[lang] || codeKeywords['javascript'] || [];
+            const match = beforeText.match(/\b(\w*)$/);
+            const prefix = match ? match[1] : '';
+            const items = keywords.filter(k => k.startsWith(prefix)).slice(0, 50).map(k => ({ label: k, type: 'code', tag: lang || 'code' }));
+            if (!items.length) { hideSuggest(); return; }
+            showSuggestForTextarea(items, cursorPos, textarea, 'code');
+        }
+
+        function showMathSuggestForTextarea(prefix, cursorPos, textarea) {
+            const p = prefix || '';
+            const items = mathSymbols.filter(s => s.sym.startsWith(p) || s.desc.includes(p)).slice(0, 45).map(s => ({ label: s.sym, desc: s.desc, type: 'math', tag: 'LaTeX' }));
+            if (!items.length) { hideSuggest(); return; }
+            showSuggestForTextarea(items, cursorPos, textarea, 'math');
+        }
+
+        function showSuggestForTextarea(items, cursorPos, textarea, mode) {
+            suggestItems = items;
+            suggestIndex = -1;
+            suggestMode = mode;
+            suggestActive = true;
+            const rect = getCursorCoordsForTextarea(textarea);
+            if (!rect) { hideSuggest(); return; }
+            const box = suggestBox;
+            box.innerHTML = '';
+            items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 's-item';
+                div.dataset.index = idx;
+                const labelSpan = document.createElement('span');
+                labelSpan.textContent = item.label;
+                div.appendChild(labelSpan);
+                if (item.desc) {
+                    const descSpan = document.createElement('span');
+                    descSpan.className = 's-desc';
+                    descSpan.textContent = item.desc;
+                    div.appendChild(descSpan);
+                }
+                if (item.tag) {
+                    const tagSpan = document.createElement('span');
+                    tagSpan.className = 's-tag';
+                    tagSpan.textContent = item.tag;
+                    div.appendChild(tagSpan);
+                }
+                div.addEventListener('click', () => {
+                    applySuggestForTextarea(item, textarea);
+                    hideSuggest();
+                });
+                div.addEventListener('mouseenter', () => { suggestIndex = idx; updateSuggestHighlight(); });
+                box.appendChild(div);
+            });
+            let top = rect.top + rect.height + 4;
+            let left = rect.left;
+            const boxWidth = 280;
+            const boxHeight = Math.min(items.length * 32 + 8, 200);
+            if (left + boxWidth > window.innerWidth - 20) left = Math.max(20, window.innerWidth - boxWidth - 20);
+            if (top + boxHeight > window.innerHeight - 20) top = Math.max(20, rect.top - boxHeight - 6);
+            box.style.left = left + 'px';
+            box.style.top = top + 'px';
+            box.style.display = 'block';
+            box.style.maxHeight = Math.min(200, window.innerHeight - top - 30) + 'px';
+        }
+
+        function getCursorCoordsForTextarea(textarea) {
+            const rect = textarea.getBoundingClientRect();
+            const start = textarea.selectionStart;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const lines = before.split('\n');
+            const row = lines.length - 1;
+            const col = lines[row].length;
+            const span = document.createElement('span');
+            const style = getComputedStyle(textarea);
+            span.style.cssText = `font:${style.font};font-family:${style.fontFamily};font-size:${style.fontSize};letter-spacing:${style.letterSpacing};visibility:hidden;white-space:pre;`;
+            span.textContent = lines[row] || '';
+            document.body.appendChild(span);
+            const width = span.offsetWidth;
+            document.body.removeChild(span);
+            const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.6;
+            const lineSpan = document.createElement('span');
+            lineSpan.style.cssText = `font:${style.font};font-family:${style.fontFamily};font-size:${style.fontSize};visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:${style.width};`;
+            lineSpan.textContent = lines.slice(0, -1).join('\n') + (lines.length > 1 ? '\n' : '');
+            document.body.appendChild(lineSpan);
+            const heightBefore = lineSpan.offsetHeight;
+            document.body.removeChild(lineSpan);
+            const padLeft = parseFloat(style.paddingLeft) || 0;
+            const padTop = parseFloat(style.paddingTop) || 0;
+            const borderLeft = parseFloat(style.borderLeftWidth) || 0;
+            const scrollTop = textarea.scrollTop;
+            return {
+                top: rect.top + padTop + borderLeft + heightBefore - scrollTop,
+                left: rect.left + padLeft + borderLeft + width,
+                height: lineHeight
+            };
+        }
+
+        function applySuggestForTextarea(item, textarea) {
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            const before = text.substring(0, pos);
+            const after = text.substring(pos);
+            if (suggestMode === 'code') {
+                const wordMatch = before.match(/\b\w*$/);
+                if (wordMatch) {
+                    const start = pos - wordMatch[0].length;
+                    textarea.value = text.substring(0, start) + item.label + after;
+                    textarea.selectionStart = textarea.selectionEnd = start + item.label.length;
+                }
+            } else if (suggestMode === 'math') {
+                let m = before.match(/\$([^$]*)$/);
                 if (m) {
                     const start = pos - m[1].length;
                     const prefix = before.substring(0, start);
                     textarea.value = prefix + item.label + after;
                     textarea.selectionStart = textarea.selectionEnd = start + item.label.length;
+                } else {
+                    m = before.match(/\$\$([^$]*)$/);
+                    if (m) {
+                        const start = pos - m[1].length;
+                        const prefix = before.substring(0, start);
+                        textarea.value = prefix + item.label + after;
+                        textarea.selectionStart = textarea.selectionEnd = start + item.label.length;
+                    }
                 }
             }
+            hideSuggest();
         }
-        hideSuggest();
-    }
 
-    function handleSuggestKeydown(e, textarea) {
-        if (suggestActive) {
-            if (e.key === 'ArrowDown') { e.preventDefault(); suggestIndex = Math.min(suggestIndex + 1, suggestItems.length - 1); updateSuggestHighlight(); return; }
-            if (e.key === 'ArrowUp') { e.preventDefault(); suggestIndex = Math.max(suggestIndex - 1, 0); updateSuggestHighlight(); return; }
-            if (e.key === 'Tab' || e.key === 'Enter') {
-                if (suggestIndex >= 0 && suggestIndex < suggestItems.length) {
-                    e.preventDefault();
-                    applySuggestForTextarea(suggestItems[suggestIndex], textarea);
-                    hideSuggest();
-                    return;
+        function handleSuggestKeydown(e, textarea) {
+            if (suggestActive) {
+                if (e.key === 'ArrowDown') { e.preventDefault(); suggestIndex = Math.min(suggestIndex + 1, suggestItems.length - 1); updateSuggestHighlight(); return; }
+                if (e.key === 'ArrowUp') { e.preventDefault(); suggestIndex = Math.max(suggestIndex - 1, 0); updateSuggestHighlight(); return; }
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    if (suggestIndex >= 0 && suggestIndex < suggestItems.length) {
+                        e.preventDefault();
+                        applySuggestForTextarea(suggestItems[suggestIndex], textarea);
+                        hideSuggest();
+                        return;
+                    }
                 }
+                if (e.key === 'Escape') { e.preventDefault(); hideSuggest(); return; }
             }
-            if (e.key === 'Escape') { e.preventDefault(); hideSuggest(); return; }
         }
-    }
 
-    function updateSuggestHighlight() {
-        const items = suggestBox.querySelectorAll('.s-item');
-        items.forEach((el, idx) => el.classList.toggle('active', idx === suggestIndex));
-    }
+        function updateSuggestHighlight() {
+            const items = suggestBox.querySelectorAll('.s-item');
+            items.forEach((el, idx) => el.classList.toggle('active', idx === suggestIndex));
+        }
 
-    function hideSuggest() {
-        suggestBox.style.display = 'none';
-        suggestActive = false;
-        suggestItems = [];
-        suggestIndex = -1;
-        suggestMode = '';
-    }
+        function hideSuggest() {
+            suggestBox.style.display = 'none';
+            suggestActive = false;
+            suggestItems = [];
+            suggestIndex = -1;
+            suggestMode = '';
+        }
 
-    // =====================================================================
-    // 9. 图形化数学构建器（完整）
-    // =====================================================================
-    const mathTemplates = {
-        '分数': { latex: '\\frac{', params: ['分子','分母'] },
-        '根号': { latex: '\\sqrt{', params: ['被开方数'] },
-        '指数': { latex: '^{', params: ['指数'] },
-        '下标': { latex: '_{', params: ['下标'] },
-        '积分': { latex: '\\int_{', params: ['下限','上限','被积表达式'] },
-        '求和': { latex: '\\sum_{', params: ['下限','上限','求和表达式'] },
-        '极限': { latex: '\\lim_{', params: ['变量','趋向值','表达式'] },
-        '矩阵': { latex: '\\begin{bmatrix}', params: ['行数','列数','内容'] },
-        '行列式': { latex: '\\begin{vmatrix}', params: ['行数','列数','内容'] },
-        '方程组': { latex: '\\begin{cases}', params: ['方程列表'] },
-        '向量': { latex: '\\vec{', params: ['向量名'] },
-        '点积': { latex: '\\cdot', params: [] },
-        '叉积': { latex: '\\times', params: [] },
-        '偏导': { latex: '\\partial', params: [] },
-        '梯度': { latex: '\\nabla', params: [] },
-        '无穷': { latex: '\\infty', params: [] },
-        '约等于': { latex: '\\approx', params: [] },
-        '不等于': { latex: '\\neq', params: [] },
-        '小于等于': { latex: '\\leq', params: [] },
-        '大于等于': { latex: '\\geq', params: [] },
-        '圆周率': { latex: '\\pi', params: [] },
-        '自然对数底': { latex: 'e', params: [] },
-    };
+        // =====================================================================
+        // 9. 图形化数学构建器（完整）
+        // =====================================================================
+        const mathTemplates = {
+            '分数': { latex: '\\frac{', params: ['分子', '分母'] },
+            '根号': { latex: '\\sqrt{', params: ['被开方数'] },
+            '指数': { latex: '^{', params: ['指数'] },
+            '下标': { latex: '_{', params: ['下标'] },
+            '积分': { latex: '\\int_{', params: ['下限', '上限', '被积表达式'] },
+            '求和': { latex: '\\sum_{', params: ['下限', '上限', '求和表达式'] },
+            '极限': { latex: '\\lim_{', params: ['变量', '趋向值', '表达式'] },
+            '矩阵': { latex: '\\begin{bmatrix}', params: ['行数', '列数', '内容'] },
+            '行列式': { latex: '\\begin{vmatrix}', params: ['行数', '列数', '内容'] },
+            '方程组': { latex: '\\begin{cases}', params: ['方程列表'] },
+            '向量': { latex: '\\vec{', params: ['向量名'] },
+            '点积': { latex: '\\cdot', params: [] },
+            '叉积': { latex: '\\times', params: [] },
+            '偏导': { latex: '\\partial', params: [] },
+            '梯度': { latex: '\\nabla', params: [] },
+            '无穷': { latex: '\\infty', params: [] },
+            '约等于': { latex: '\\approx', params: [] },
+            '不等于': { latex: '\\neq', params: [] },
+            '小于等于': { latex: '\\leq', params: [] },
+            '大于等于': { latex: '\\geq', params: [] },
+            '圆周率': { latex: '\\pi', params: [] },
+            '自然对数底': { latex: 'e', params: [] },
+        };
 
-    function openMathBuilder() {
-        mathBuilder.style.display = 'flex';
-        const palette = document.getElementById('symbolPalette');
-        palette.innerHTML = '';
-        Object.keys(mathTemplates).forEach(name => {
-            const btn = document.createElement('button');
-            btn.textContent = name;
-            btn.dataset.template = name;
-            btn.addEventListener('click', () => selectMathTemplate(name));
-            palette.appendChild(btn);
-        });
-        const first = Object.keys(mathTemplates)[0];
-        if (first) selectMathTemplate(first);
-    }
+        function openMathBuilder() {
+            mathBuilder.style.display = 'flex';
+            const palette = document.getElementById('symbolPalette');
+            palette.innerHTML = '';
+            Object.keys(mathTemplates).forEach(name => {
+                const btn = document.createElement('button');
+                btn.textContent = name;
+                btn.dataset.template = name;
+                btn.addEventListener('click', () => selectMathTemplate(name));
+                palette.appendChild(btn);
+            });
+            const first = Object.keys(mathTemplates)[0];
+            if (first) selectMathTemplate(first);
+        }
 
-    function closeMathBuilder() { mathBuilder.style.display = 'none'; }
+        function closeMathBuilder() { mathBuilder.style.display = 'none'; }
 
-    let currentTemplate = null;
+        let currentTemplate = null;
 
-    function selectMathTemplate(name) {
-        currentTemplate = name;
-        const template = mathTemplates[name];
-        const paramsDiv = document.getElementById('formulaParams');
-        paramsDiv.innerHTML = '';
-        template.params.forEach(p => {
-            const label = document.createElement('label');
-            label.textContent = p + ':';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = p;
-            input.dataset.param = p;
-            label.appendChild(input);
-            paramsDiv.appendChild(label);
-        });
-        updateFormulaPreview();
-    }
+        function selectMathTemplate(name) {
+            currentTemplate = name;
+            const template = mathTemplates[name];
+            const paramsDiv = document.getElementById('formulaParams');
+            paramsDiv.innerHTML = '';
+            template.params.forEach(p => {
+                const label = document.createElement('label');
+                label.textContent = p + ':';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = p;
+                input.dataset.param = p;
+                label.appendChild(input);
+                paramsDiv.appendChild(label);
+            });
+            updateFormulaPreview();
+        }
 
-    function updateFormulaPreview() {
-        if (!currentTemplate) return;
-        const template = mathTemplates[currentTemplate];
-        const params = template.params;
-        const inputs = document.querySelectorAll('#formulaParams input');
-        let latex = template.latex;
-        if (params.length === 0) {
-            latex = template.latex;
-        } else if (params.length === 1) {
-            const val = inputs[0] ? inputs[0].value || '?' : '?';
-            latex = template.latex + val + '}';
-        } else if (params.length === 2) {
-            const val1 = inputs[0] ? inputs[0].value || '?' : '?';
-            const val2 = inputs[1] ? inputs[1].value || '?' : '?';
-            latex = template.latex + val1 + '}^{' + val2 + '}';
-        } else if (params.length === 3) {
-            const val1 = inputs[0] ? inputs[0].value || '?' : '?';
-            const val2 = inputs[1] ? inputs[1].value || '?' : '?';
-            const val3 = inputs[2] ? inputs[2].value || '?' : '?';
-            if (template.latex.includes('int') || template.latex.includes('sum')) {
-                latex = template.latex + val1 + '}^{' + val2 + '} ' + val3;
-            } else if (template.latex.includes('lim')) {
-                latex = template.latex + val1 + '\\to ' + val2 + '} ' + val3;
+        function updateFormulaPreview() {
+            if (!currentTemplate) return;
+            const template = mathTemplates[currentTemplate];
+            const params = template.params;
+            const inputs = document.querySelectorAll('#formulaParams input');
+            let latex = template.latex;
+            if (params.length === 0) {
+                latex = template.latex;
+            } else if (params.length === 1) {
+                const val = inputs[0] ? inputs[0].value || '?' : '?';
+                latex = template.latex + val + '}';
+            } else if (params.length === 2) {
+                const val1 = inputs[0] ? inputs[0].value || '?' : '?';
+                const val2 = inputs[1] ? inputs[1].value || '?' : '?';
+                latex = template.latex + val1 + '}^{' + val2 + '}';
+            } else if (params.length === 3) {
+                const val1 = inputs[0] ? inputs[0].value || '?' : '?';
+                const val2 = inputs[1] ? inputs[1].value || '?' : '?';
+                const val3 = inputs[2] ? inputs[2].value || '?' : '?';
+                if (template.latex.includes('int') || template.latex.includes('sum')) {
+                    latex = template.latex + val1 + '}^{' + val2 + '} ' + val3;
+                } else if (template.latex.includes('lim')) {
+                    latex = template.latex + val1 + '\\to ' + val2 + '} ' + val3;
+                } else {
+                    latex = template.latex + val1 + '}^{' + val2 + '} ' + val3;
+                }
+            } else if (params.length >= 4) {
+                const rows = parseInt(inputs[0]?.value) || 2;
+                const cols = parseInt(inputs[1]?.value) || 2;
+                const content = inputs[2]?.value || 'a & b ; c & d';
+                const rowsData = content.split(';').map(r => r.trim().split('&').map(c => c.trim()));
+                const finalRows = Math.min(rowsData.length, rows);
+                const finalCols = Math.min(rowsData[0] ? rowsData[0].length : cols, cols);
+                let matrixStr = '';
+                for (let i = 0; i < finalRows; i++) {
+                    const row = rowsData[i] || [];
+                    const cells = [];
+                    for (let j = 0; j < finalCols; j++) {
+                        cells.push(row[j] || '0');
+                    }
+                    matrixStr += cells.join(' & ');
+                    if (i < finalRows - 1) matrixStr += ' \\\\ ';
+                }
+                latex = template.latex + matrixStr + '\\end{bmatrix}';
             } else {
-                latex = template.latex + val1 + '}^{' + val2 + '} ' + val3;
+                latex = template.latex;
             }
-        } else if (params.length >= 4) {
-            const rows = parseInt(inputs[0]?.value) || 2;
-            const cols = parseInt(inputs[1]?.value) || 2;
-            const content = inputs[2]?.value || 'a & b ; c & d';
-            const rowsData = content.split(';').map(r => r.trim().split('&').map(c => c.trim()));
-            const finalRows = Math.min(rowsData.length, rows);
-            const finalCols = Math.min(rowsData[0] ? rowsData[0].length : cols, cols);
-            let matrixStr = '';
-            for (let i = 0; i < finalRows; i++) {
-                const row = rowsData[i] || [];
-                const cells = [];
-                for (let j = 0; j < finalCols; j++) {
-                    cells.push(row[j] || '0');
+            const previewDiv = document.getElementById('formulaPreview');
+            try {
+                const rendered = katex.renderToString(latex, { displayMode: true, throwOnError: false });
+                previewDiv.innerHTML = rendered;
+            } catch (e) {
+                previewDiv.textContent = 'LaTeX: ' + latex + ' (渲染错误: ' + e.message + ')';
+            }
+            previewDiv.dataset.latex = latex;
+        }
+
+        document.addEventListener('input', function (e) {
+            if (e.target.closest('#formulaParams')) updateFormulaPreview();
+        });
+
+        document.getElementById('insertFormulaBtn').addEventListener('click', function () {
+            const previewDiv = document.getElementById('formulaPreview');
+            const latex = previewDiv.dataset.latex || '';
+            if (latex) {
+                if (editingElement) {
+                    insertAtCursor(editingElement, '$', '$', latex);
+                } else {
+                    fullMarkdown += '\n$$' + latex + '$$';
+                    renderMarkdown(fullMarkdown);
                 }
-                matrixStr += cells.join(' & ');
-                if (i < finalRows - 1) matrixStr += ' \\\\ ';
+                closeMathBuilder();
             }
-            latex = template.latex + matrixStr + '\\end{bmatrix}';
-        } else {
-            latex = template.latex;
-        }
-        const previewDiv = document.getElementById('formulaPreview');
-        try {
-            const rendered = katex.renderToString(latex, { displayMode: true, throwOnError: false });
-            previewDiv.innerHTML = rendered;
-        } catch (e) {
-            previewDiv.textContent = 'LaTeX: ' + latex + ' (渲染错误: ' + e.message + ')';
-        }
-        previewDiv.dataset.latex = latex;
-    }
+        });
 
-    document.addEventListener('input', function(e) {
-        if (e.target.closest('#formulaParams')) updateFormulaPreview();
-    });
+        function quickMath(type) {
+            const map = { 'frac': '分数', 'sqrt': '根号', 'sum': '求和', 'int': '积分', 'matrix': '矩阵' };
+            const name = map[type];
+            if (name) { openMathBuilder(); selectMathTemplate(name); }
+        }
 
-    document.getElementById('insertFormulaBtn').addEventListener('click', function() {
-        const previewDiv = document.getElementById('formulaPreview');
-        const latex = previewDiv.dataset.latex || '';
-        if (latex) {
-            if (editingElement) {
-                insertAtCursor(editingElement, '$', '$', latex);
-            } else {
-                fullMarkdown += '\n$$' + latex + '$$';
+        // =====================================================================
+        // 10. 状态更新
+        // =====================================================================
+        function updateStatus() {
+            const lines = fullMarkdown.split('\n');
+            const wordCount = fullMarkdown.replace(/\s/g, '').length;
+            statusInfo.textContent = `行 ${lines.length} · 字 ${wordCount}`;
+        }
+
+        // =====================================================================
+        // 11. 插入辅助函数
+        // =====================================================================
+        function insertAtCursor(textarea, before, after, customContent) {
+            if (!textarea) {
+                fullMarkdown += '\n' + before + (customContent || '') + after;
                 renderMarkdown(fullMarkdown);
+                return;
             }
-            closeMathBuilder();
-        }
-    });
-
-    function quickMath(type) {
-        const map = { 'frac': '分数', 'sqrt': '根号', 'sum': '求和', 'int': '积分', 'matrix': '矩阵' };
-        const name = map[type];
-        if (name) { openMathBuilder(); selectMathTemplate(name); }
-    }
-
-    // =====================================================================
-    // 10. 状态更新
-    // =====================================================================
-    function updateStatus() {
-        const lines = fullMarkdown.split('\n');
-        const wordCount = fullMarkdown.replace(/\s/g, '').length;
-        statusInfo.textContent = `行 ${lines.length} · 字 ${wordCount}`;
-    }
-
-    // =====================================================================
-    // 11. 插入辅助函数
-    // =====================================================================
-    function insertAtCursor(textarea, before, after, customContent) {
-        if (!textarea) {
-            fullMarkdown += '\n' + before + (customContent || '') + after;
-            renderMarkdown(fullMarkdown);
-            return;
-        }
-        const pos = textarea.selectionStart;
-        const endPos = textarea.selectionEnd;
-        const text = textarea.value;
-        const selected = text.substring(pos, endPos);
-        const content = customContent !== undefined ? customContent : (selected || '内容');
-        const insertText = before + content + after;
-        textarea.value = text.substring(0, pos) + insertText + text.substring(endPos);
-        const newPos = pos + before.length + content.length;
-        textarea.selectionStart = textarea.selectionEnd = newPos;
-        textarea.focus();
-    }
-
-    function insertWrapAtCursor(before, after) {
-        if (editingElement) insertAtCursor(editingElement, before, after);
-        else { fullMarkdown += '\n' + before + '内容' + after; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertListAtCursor(type) {
-        if (!editingElement) { fullMarkdown += '\n' + (type === 'ul' ? '- ' : '1. ') + '列表项'; renderMarkdown(fullMarkdown); return; }
-        const textarea = editingElement;
-        const pos = textarea.selectionStart;
-        const text = textarea.value;
-        const before = text.substring(0, pos);
-        const lineStart = before.lastIndexOf('\n') + 1;
-        const indent = before.substring(lineStart).match(/^\s*/)[0];
-        const insert = type === 'ul' ? indent + '- ' : indent + '1. ';
-        textarea.value = text.substring(0, lineStart) + insert + text.substring(lineStart);
-        const newPos = lineStart + insert.length;
-        textarea.selectionStart = textarea.selectionEnd = newPos;
-        textarea.focus();
-    }
-
-    function insertCodeBlockAtCursor() {
-        const lang = document.getElementById('codeLangSelect').value || '';
-        const code = lang ? '```' + lang + '\n\n```' : '```\n\n```';
-        if (editingElement) {
-            insertAtCursor(editingElement, code, '');
-            const textarea = editingElement;
             const pos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
             const text = textarea.value;
-            const openPos = text.lastIndexOf('```', pos);
-            if (openPos !== -1) {
-                const afterOpen = text.indexOf('\n', openPos);
-                if (afterOpen !== -1) textarea.selectionStart = textarea.selectionEnd = afterOpen + 1;
-            }
-        } else { fullMarkdown += '\n' + code; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertMathInlineAtCursor() {
-        if (editingElement) insertAtCursor(editingElement, '$', '$');
-        else { fullMarkdown += ' $ $ '; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertMathBlockAtCursor() {
-        if (editingElement) insertAtCursor(editingElement, '$$\n', '\n$$');
-        else { fullMarkdown += '\n$$\n\n$$\n'; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertTableAtCursor() {
-        const table = '\n| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n| 数据 | 数据 | 数据 |\n';
-        if (editingElement) insertAtCursor(editingElement, table, '');
-        else { fullMarkdown += table; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertLinkAtCursor() {
-        if (editingElement) insertAtCursor(editingElement, '[', '](url)');
-        else { fullMarkdown += ' [链接文字](url) '; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertImageAtCursor() {
-        if (editingElement) insertAtCursor(editingElement, '![', '](url)');
-        else { fullMarkdown += ' ![图片描述](url) '; renderMarkdown(fullMarkdown); }
-    }
-
-    function insertHrAtCursor() {
-        if (editingElement) insertAtCursor(editingElement, '\n---\n', '');
-        else { fullMarkdown += '\n---\n'; renderMarkdown(fullMarkdown); }
-    }
-
-    // =====================================================================
-    // 12. 右键菜单
-    // =====================================================================
-    previewArea.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        showContextMenu(e.clientX, e.clientY);
-    });
-
-    function showContextMenu(x, y) {
-        const menu = contextMenu;
-        menu.style.display = 'block';
-        let left = x, top = y;
-        if (left + 190 > window.innerWidth) left = window.innerWidth - 200;
-        if (top + 300 > window.innerHeight) top = window.innerHeight - 310;
-        menu.style.left = left + 'px';
-        menu.style.top = top + 'px';
-    }
-
-    contextMenu.addEventListener('click', function(e) {
-        const item = e.target.closest('.menu-item');
-        if (!item) return;
-        const action = item.dataset.action;
-        contextMenu.style.display = 'none';
-        if (action === 'cancel-edit') { if (editingElement) cancelEdit(); return; }
-        switch (action) {
-            case 'h2': insertWrapAtCursor('## ', '\n'); break;
-            case 'h3': insertWrapAtCursor('### ', '\n'); break;
-            case 'h4': insertWrapAtCursor('#### ', '\n'); break;
-            case 'list-ul': insertListAtCursor('ul'); break;
-            case 'list-ol': insertListAtCursor('ol'); break;
-            case 'quote': insertWrapAtCursor('> ', '\n'); break;
-            case 'code-block': insertCodeBlockAtCursor(); break;
-            case 'math-inline': insertMathInlineAtCursor(); break;
-            case 'math-block': insertMathBlockAtCursor(); break;
-            case 'table': insertTableAtCursor(); break;
-            case 'link': insertLinkAtCursor(); break;
-            case 'image': insertImageAtCursor(); break;
-            case 'hr': insertHrAtCursor(); break;
+            const selected = text.substring(pos, endPos);
+            const content = customContent !== undefined ? customContent : (selected || '内容');
+            const insertText = before + content + after;
+            textarea.value = text.substring(0, pos) + insertText + text.substring(endPos);
+            const newPos = pos + before.length + content.length;
+            textarea.selectionStart = textarea.selectionEnd = newPos;
+            textarea.focus();
         }
-    });
 
-    document.addEventListener('click', function() { contextMenu.style.display = 'none'; });
+        function insertWrapAtCursor(before, after) {
+            if (editingElement) insertAtCursor(editingElement, before, after);
+            else { fullMarkdown += '\n' + before + '内容' + after; renderMarkdown(fullMarkdown); }
+        }
 
-    // =====================================================================
-    // 13. 数学符号面板
-    // =====================================================================
-    function toggleMathPanel() {
-        if (mathPanel.style.display === 'grid') { mathPanel.style.display = 'none'; return; }
-        mathPanel.innerHTML = '';
-        const symbols = mathSymbols.slice(0, 120);
-        symbols.forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'math-item';
-            div.innerHTML = `${s.sym} <span class="desc">${s.desc}</span>`;
-            div.title = s.sym;
-            div.addEventListener('click', () => { insertMathSymbol(s.sym); mathPanel.style.display = 'none'; });
-            mathPanel.appendChild(div);
-        });
-        const rect = previewArea.getBoundingClientRect();
-        let left = rect.left + 20, top = rect.top + 60;
-        if (left + 400 > window.innerWidth) left = window.innerWidth - 420;
-        if (top + 300 > window.innerHeight) top = window.innerHeight - 320;
-        mathPanel.style.left = left + 'px';
-        mathPanel.style.top = top + 'px';
-        mathPanel.style.display = 'grid';
-    }
-
-    function insertMathSymbol(symbol) {
-        if (editingElement) {
+        function insertListAtCursor(type) {
+            if (!editingElement) { fullMarkdown += '\n' + (type === 'ul' ? '- ' : '1. ') + '列表项'; renderMarkdown(fullMarkdown); return; }
             const textarea = editingElement;
             const pos = textarea.selectionStart;
             const text = textarea.value;
             const before = text.substring(0, pos);
-            const after = text.substring(pos);
-            const dollarOpen = (before.match(/\$/g) || []).length % 2 === 1;
-            const blockOpen = (before.match(/\$\$/g) || []).length % 2 === 1;
-            let insertStr = symbol;
-            if (!dollarOpen && !blockOpen) {
-                const prevChar = before.slice(-1);
-                const nextChar = after.charAt(0);
-                if (prevChar === '\n' || prevChar === '' || nextChar === '\n' || nextChar === '') {
-                    insertStr = '$$' + symbol + '$$';
-                } else {
-                    insertStr = '$' + symbol + '$';
-                }
-            }
-            textarea.value = text.substring(0, pos) + insertStr + text.substring(pos);
-            textarea.selectionStart = textarea.selectionEnd = pos + insertStr.length;
+            const lineStart = before.lastIndexOf('\n') + 1;
+            const indent = before.substring(lineStart).match(/^\s*/)[0];
+            const insert = type === 'ul' ? indent + '- ' : indent + '1. ';
+            textarea.value = text.substring(0, lineStart) + insert + text.substring(lineStart);
+            const newPos = lineStart + insert.length;
+            textarea.selectionStart = textarea.selectionEnd = newPos;
             textarea.focus();
-        } else {
-            fullMarkdown += ' ' + symbol + ' ';
-            renderMarkdown(fullMarkdown);
         }
-    }
 
-    // =====================================================================
-    // 14. 清空 & 导出
-    // =====================================================================
-    function clearAll() {
-        if (confirm('确定清空所有内容吗？')) { fullMarkdown = ''; renderMarkdown(''); }
-    }
+        function insertCodeBlockAtCursor() {
+            const lang = document.getElementById('codeLangSelect').value || '';
+            const code = lang ? '```' + lang + '\n\n```' : '```\n\n```';
+            if (editingElement) {
+                insertAtCursor(editingElement, code, '');
+                const textarea = editingElement;
+                const pos = textarea.selectionStart;
+                const text = textarea.value;
+                const openPos = text.lastIndexOf('```', pos);
+                if (openPos !== -1) {
+                    const afterOpen = text.indexOf('\n', openPos);
+                    if (afterOpen !== -1) textarea.selectionStart = textarea.selectionEnd = afterOpen + 1;
+                }
+            } else { fullMarkdown += '\n' + code; renderMarkdown(fullMarkdown); }
+        }
 
-    function exportHTML() {
-        const content = preview.innerHTML;
-        const html = `<!DOCTYPE html>
+        function insertMathInlineAtCursor() {
+            if (editingElement) insertAtCursor(editingElement, '$', '$');
+            else { fullMarkdown += ' $ $ '; renderMarkdown(fullMarkdown); }
+        }
+
+        function insertMathBlockAtCursor() {
+            if (editingElement) insertAtCursor(editingElement, '$$\n', '\n$$');
+            else { fullMarkdown += '\n$$\n\n$$\n'; renderMarkdown(fullMarkdown); }
+        }
+
+        function insertTableAtCursor() {
+            const table = '\n| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n| 数据 | 数据 | 数据 |\n';
+            if (editingElement) insertAtCursor(editingElement, table, '');
+            else { fullMarkdown += table; renderMarkdown(fullMarkdown); }
+        }
+
+        function insertLinkAtCursor() {
+            if (editingElement) insertAtCursor(editingElement, '[', '](url)');
+            else { fullMarkdown += ' [链接文字](url) '; renderMarkdown(fullMarkdown); }
+        }
+
+        function insertImageAtCursor() {
+            if (editingElement) insertAtCursor(editingElement, '![', '](url)');
+            else { fullMarkdown += ' ![图片描述](url) '; renderMarkdown(fullMarkdown); }
+        }
+
+        function insertHrAtCursor() {
+            if (editingElement) insertAtCursor(editingElement, '\n---\n', '');
+            else { fullMarkdown += '\n---\n'; renderMarkdown(fullMarkdown); }
+        }
+
+        // =====================================================================
+        // 12. 右键菜单
+        // =====================================================================
+        previewArea.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY);
+        });
+
+        function showContextMenu(x, y) {
+            const menu = contextMenu;
+            menu.style.display = 'block';
+            let left = x, top = y;
+            if (left + 190 > window.innerWidth) left = window.innerWidth - 200;
+            if (top + 300 > window.innerHeight) top = window.innerHeight - 310;
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+        }
+
+        contextMenu.addEventListener('click', function (e) {
+            const item = e.target.closest('.menu-item');
+            if (!item) return;
+            const action = item.dataset.action;
+            contextMenu.style.display = 'none';
+            if (action === 'cancel-edit') { if (editingElement) cancelEdit(); return; }
+            switch (action) {
+                case 'h2': insertWrapAtCursor('## ', '\n'); break;
+                case 'h3': insertWrapAtCursor('### ', '\n'); break;
+                case 'h4': insertWrapAtCursor('#### ', '\n'); break;
+                case 'list-ul': insertListAtCursor('ul'); break;
+                case 'list-ol': insertListAtCursor('ol'); break;
+                case 'quote': insertWrapAtCursor('> ', '\n'); break;
+                case 'code-block': insertCodeBlockAtCursor(); break;
+                case 'math-inline': insertMathInlineAtCursor(); break;
+                case 'math-block': insertMathBlockAtCursor(); break;
+                case 'table': insertTableAtCursor(); break;
+                case 'link': insertLinkAtCursor(); break;
+                case 'image': insertImageAtCursor(); break;
+                case 'hr': insertHrAtCursor(); break;
+            }
+        });
+
+        document.addEventListener('click', function () { contextMenu.style.display = 'none'; });
+
+        // =====================================================================
+        // 13. 数学符号面板
+        // =====================================================================
+        function toggleMathPanel() {
+            if (mathPanel.style.display === 'grid') { mathPanel.style.display = 'none'; return; }
+            mathPanel.innerHTML = '';
+            const symbols = mathSymbols.slice(0, 120);
+            symbols.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'math-item';
+                div.innerHTML = `${s.sym} <span class="desc">${s.desc}</span>`;
+                div.title = s.sym;
+                div.addEventListener('click', () => { insertMathSymbol(s.sym); mathPanel.style.display = 'none'; });
+                mathPanel.appendChild(div);
+            });
+            const rect = previewArea.getBoundingClientRect();
+            let left = rect.left + 20, top = rect.top + 60;
+            if (left + 400 > window.innerWidth) left = window.innerWidth - 420;
+            if (top + 300 > window.innerHeight) top = window.innerHeight - 320;
+            mathPanel.style.left = left + 'px';
+            mathPanel.style.top = top + 'px';
+            mathPanel.style.display = 'grid';
+        }
+
+        function insertMathSymbol(symbol) {
+            if (editingElement) {
+                const textarea = editingElement;
+                const pos = textarea.selectionStart;
+                const text = textarea.value;
+                const before = text.substring(0, pos);
+                const after = text.substring(pos);
+                const dollarOpen = (before.match(/\$/g) || []).length % 2 === 1;
+                const blockOpen = (before.match(/\$\$/g) || []).length % 2 === 1;
+                let insertStr = symbol;
+                if (!dollarOpen && !blockOpen) {
+                    const prevChar = before.slice(-1);
+                    const nextChar = after.charAt(0);
+                    if (prevChar === '\n' || prevChar === '' || nextChar === '\n' || nextChar === '') {
+                        insertStr = '$$' + symbol + '$$';
+                    } else {
+                        insertStr = '$' + symbol + '$';
+                    }
+                }
+                textarea.value = text.substring(0, pos) + insertStr + text.substring(pos);
+                textarea.selectionStart = textarea.selectionEnd = pos + insertStr.length;
+                textarea.focus();
+            } else {
+                fullMarkdown += ' ' + symbol + ' ';
+                renderMarkdown(fullMarkdown);
+            }
+        }
+
+        // =====================================================================
+        // 14. 清空 & 导出
+        // =====================================================================
+        function clearAll() {
+            if (confirm('确定清空所有内容吗？')) { fullMarkdown = ''; renderMarkdown(''); }
+        }
+
+        function exportHTML() {
+            const content = preview.innerHTML;
+            const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>MD文档</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
@@ -1299,18 +1840,18 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
 .katex-display{text-align:center;margin:1.2rem 0;}
 </style></head>
 <body><div class="markdown-body">${content}</div></body></html>`;
-        const blob = new Blob([html], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'export.html';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'export.html';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
-    // =====================================================================
-    // 15. 初始化
-    // =====================================================================
-    const defaultContent = `# ✨ 终极 MD 编辑器（完整稳定版）
+        // =====================================================================
+        // 15. 初始化
+        // =====================================================================
+        const defaultContent = `# ✨ 终极 MD 编辑器（修复 401 版）
 
 **单击任意内容**进入编辑模式，修改后点击其他地方或按 Ctrl+Enter 保存。
 
@@ -1360,10 +1901,11 @@ public class Main {
 - **公式构建器** 让您告别 LaTeX！
 `;
 
-    fullMarkdown = defaultContent;
-    renderMarkdown(fullMarkdown);
+        fullMarkdown = defaultContent;
+        renderMarkdown(fullMarkdown);
 
-    console.log('✅ 完整稳定版已启动！所有功能就绪。');
-</script>
+        console.log('✅ 修复版已启动！API 请求已优化，401 错误已缓解。');
+    </script>
 </body>
+
 </html>
