@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>类 Typora · 全块精准源码编辑</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819065957" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819065957" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js?v=20260819065957">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819065957">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819065957">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js?v=20260819065957">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js">
     </script>
 
     <style>
@@ -1118,54 +1118,61 @@
                 const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
                 const lines = sourcePane.value.split('\n');
 
-                // 清除旧的 data-line
+                // 清除旧数据
                 blocks.forEach(b => {
                     b.dataset.line = '';
                     b.dataset.endLine = '';
                 });
 
-                // 构建块列表，跳过嵌套块（父级也是块）
-                const blockList = [];
+                // 收集顶级块（避免嵌套）
+                const topBlocks = [];
                 for (const block of blocks) {
                     const parent = block.parentElement;
                     if (parent && (parent.matches('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table'))) {
                         continue;
                     }
-                    blockList.push(block);
+                    topBlocks.push(block);
                 }
 
-                let currentPos = 0; // 源码行扫描位置
+                let idx = 0; // 当前扫描行位置
 
-                for (const block of blockList) {
-                    let startLine = -1,
-                        endLine = -1;
+                for (const block of topBlocks) {
                     const tag = block.tagName;
+                    let start = -1,
+                        end = -1;
 
-                    // ---- 代码块 ----
+                    // ---- 代码块 (PRE) ----
                     if (tag === 'PRE') {
-                        for (let i = currentPos; i < lines.length; i++) {
-                            if (lines[i].trim().startsWith('```')) {
-                                if (startLine === -1) {
-                                    startLine = i;
+                        // 找连续的 ``` ... ```
+                        let inCode = false;
+                        let codeStart = -1;
+                        for (let i = idx; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (line.startsWith('```')) {
+                                if (!inCode) {
+                                    inCode = true;
+                                    codeStart = i;
                                 } else {
-                                    endLine = i;
+                                    // 结束
+                                    start = codeStart;
+                                    end = i;
+                                    idx = i + 1;
                                     break;
                                 }
                             }
                         }
-                        if (startLine !== -1 && endLine !== -1) {
-                            block.dataset.line = startLine;
-                            block.dataset.endLine = endLine;
-                            currentPos = endLine + 1;
+                        if (start !== -1 && end !== -1) {
+                            block.dataset.line = start;
+                            block.dataset.endLine = end;
                             continue;
                         } else {
                             // 降级：用文本匹配
-                            const text = block.textContent.trim();
-                            for (let i = currentPos; i < lines.length; i++) {
-                                if (lines[i].includes(text)) {
+                            const codeText = block.textContent.trim();
+                            for (let i = idx; i < lines.length; i++) {
+                                if (lines[i].includes(codeText)) {
                                     block.dataset.line = i;
                                     block.dataset.endLine = i;
-                                    currentPos = i + 1;
+                                    idx = i + 1;
                                     break;
                                 }
                             }
@@ -1173,41 +1180,32 @@
                         }
                     }
 
-                    // ---- 表格 ----
+                    // ---- 表格 (TABLE) ----
                     if (tag === 'TABLE') {
-                        // 获取表格所有文本
-                        const tableText = block.textContent.replace(/\s+/g, ' ').trim();
-                        // 在源码中找连续的表格行（以 | 开头或包含 |）
+                        // 找连续的包含 '|' 的行
                         let tableStart = -1,
                             tableEnd = -1;
-                        for (let i = currentPos; i < lines.length; i++) {
-                            const line = lines[i];
-                            if (line.includes('|')) {
-                                if (tableStart === -1) {
-                                    tableStart = i;
-                                }
+                        for (let i = idx; i < lines.length; i++) {
+                            if (lines[i].includes('|')) {
+                                if (tableStart === -1) tableStart = i;
                                 tableEnd = i;
                             } else {
-                                if (tableStart !== -1) {
-                                    // 结束
-                                    break;
-                                }
+                                if (tableStart !== -1) break;
                             }
                         }
                         if (tableStart !== -1 && tableEnd !== -1) {
                             block.dataset.line = tableStart;
                             block.dataset.endLine = tableEnd;
-                            currentPos = tableEnd + 1;
+                            idx = tableEnd + 1;
                             continue;
                         } else {
                             // 降级文本匹配
-                            const stripped = stripInlineMarkdown(tableText).replace(/\s+/g, ' ').trim();
-                            for (let i = currentPos; i < lines.length; i++) {
-                                const strippedLine = stripInlineMarkdown(lines[i]).replace(/\s+/g, ' ').trim();
-                                if (strippedLine === stripped || strippedLine.includes(stripped)) {
+                            const tableText = block.textContent.replace(/\s+/g, ' ').trim();
+                            for (let i = idx; i < lines.length; i++) {
+                                if (lines[i].replace(/\s+/g, ' ').trim() === tableText) {
                                     block.dataset.line = i;
                                     block.dataset.endLine = i;
-                                    currentPos = i + 1;
+                                    idx = i + 1;
                                     break;
                                 }
                             }
@@ -1215,20 +1213,14 @@
                         }
                     }
 
-                    // ---- 引用块 ----
+                    // ---- 引用块 (BLOCKQUOTE) ----
                     if (tag === 'BLOCKQUOTE') {
-                        // 获取 blockquote 内的纯文本（去除标记）
-                        const rawText = block.textContent || '';
-                        const cleanText = stripInlineMarkdown(rawText).replace(/\s+/g, ' ').trim();
-                        // 在源码中找连续的以 > 开头的行
+                        // 找连续的以 '>' 开头的行
                         let quoteStart = -1,
                             quoteEnd = -1;
-                        for (let i = currentPos; i < lines.length; i++) {
-                            const line = lines[i];
-                            if (line.trim().startsWith('>')) {
-                                if (quoteStart === -1) {
-                                    quoteStart = i;
-                                }
+                        for (let i = idx; i < lines.length; i++) {
+                            if (lines[i].trim().startsWith('>')) {
+                                if (quoteStart === -1) quoteStart = i;
                                 quoteEnd = i;
                             } else {
                                 if (quoteStart !== -1) break;
@@ -1237,17 +1229,16 @@
                         if (quoteStart !== -1 && quoteEnd !== -1) {
                             block.dataset.line = quoteStart;
                             block.dataset.endLine = quoteEnd;
-                            currentPos = quoteEnd + 1;
+                            idx = quoteEnd + 1;
                             continue;
                         } else {
                             // 降级文本匹配
-                            for (let i = currentPos; i < lines.length; i++) {
-                                const strippedLine = stripInlineMarkdown(lines[i]).replace(/\s+/g, ' ').trim();
-                                if (strippedLine === cleanText || strippedLine.includes(cleanText) || cleanText.includes(
-                                    strippedLine)) {
+                            const quoteText = block.textContent.replace(/\s+/g, ' ').trim();
+                            for (let i = idx; i < lines.length; i++) {
+                                if (lines[i].replace(/\s+/g, ' ').trim() === quoteText) {
                                     block.dataset.line = i;
                                     block.dataset.endLine = i;
-                                    currentPos = i + 1;
+                                    idx = i + 1;
                                     break;
                                 }
                             }
@@ -1256,45 +1247,45 @@
                     }
 
                     // ---- 普通块 (p, li, h1-h6) ----
+                    // 获取块的纯文本（去除标记）和原始文本
                     const rawText = block.textContent || '';
                     const cleanText = stripInlineMarkdown(rawText).replace(/\s+/g, ' ').trim();
-                    if (cleanText === '') {
-                        // 空块，尝试匹配原始文本
-                        for (let i = currentPos; i < lines.length; i++) {
-                            if (lines[i].trim() === '') {
-                                block.dataset.line = i;
-                                block.dataset.endLine = i;
-                                currentPos = i + 1;
-                                break;
-                            }
-                        }
-                        continue;
-                    }
+                    // 从当前 idx 开始匹配
                     let found = false;
-                    for (let i = currentPos; i < lines.length; i++) {
+                    for (let i = idx; i < lines.length; i++) {
                         const strippedLine = stripInlineMarkdown(lines[i]).replace(/\s+/g, ' ').trim();
-                        // 尽量匹配
+                        // 宽松匹配：包含关系
                         if (strippedLine === cleanText || strippedLine.includes(cleanText) || cleanText.includes(
                             strippedLine)) {
-                            block.dataset.line = i;
-                            block.dataset.endLine = i;
-                            currentPos = i + 1;
+                            start = i;
+                            end = i;
+                            block.dataset.line = start;
+                            block.dataset.endLine = end;
+                            idx = i + 1;
                             found = true;
                             break;
                         }
                     }
                     if (!found) {
-                        // 最后尝试原始文本
-                        const originalRaw = rawText.replace(/\s+/g, ' ').trim();
-                        for (let i = currentPos; i < lines.length; i++) {
+                        // 尝试用原始文本匹配（含标记）
+                        const original = rawText.replace(/\s+/g, ' ').trim();
+                        for (let i = idx; i < lines.length; i++) {
                             const line = lines[i].replace(/\s+/g, ' ').trim();
-                            if (line === originalRaw || line.includes(originalRaw) || originalRaw.includes(line)) {
-                                block.dataset.line = i;
-                                block.dataset.endLine = i;
-                                currentPos = i + 1;
+                            if (line === original || line.includes(original) || original.includes(line)) {
+                                start = i;
+                                end = i;
+                                block.dataset.line = start;
+                                block.dataset.endLine = end;
+                                idx = i + 1;
+                                found = true;
                                 break;
                             }
                         }
+                    }
+                    if (!found) {
+                        // 如果都没找到，跳过，但记录一个无效行号避免后续错误
+                        block.dataset.line = '-1';
+                        block.dataset.endLine = '-1';
                     }
                 }
             }
@@ -1312,7 +1303,7 @@
                 if (target.dataset.editing === 'true') return;
 
                 const lineStr = target.dataset.line;
-                if (lineStr === undefined || lineStr === '') {
+                if (lineStr === undefined || lineStr === '' || lineStr === '-1') {
                     showToast('⚠️ 无法定位源码行，请使用源码模式编辑');
                     return;
                 }
@@ -1576,8 +1567,8 @@
                         const htmlContent = renderMarkdown(content);
                         const fullHtml = `<!DOCTYPE html>
                     <html><head><meta charset="UTF-8"><title>${title}</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819065957">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819065957">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
                     <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.8;color:#2c3e50;} pre{background:#f5f5f5;padding:12px 16px;border-radius:6px;} blockquote{border-left:4px solid #3b82f6;padding-left:1.2em;margin-left:0;background:#f8f8f8;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 12px;} img{max-width:100%;}</style>
                     </head><body>${htmlContent}</body></html>`;
                         blob = new Blob([fullHtml], { type: 'text/html' });
