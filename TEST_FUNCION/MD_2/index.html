@@ -2,20 +2,28 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MD Editor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js?v=20260819074545">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>类 Typora Markdown 编辑器</title>
+
+    <!-- ========== 外部库 CDN ========== -->
+    <!-- Marked: Markdown 解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.0/marked.min.js">
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css?v=20260819074545">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819074545">
+    <!-- Highlight.js: 代码高亮 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819074545">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819074545">
+    <!-- KaTeX: 数学公式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js?v=20260819074545">
+    <!-- Mermaid: 图表 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.0/dist/mermaid.min.js">
     </script>
+
     <style>
+        /* ========== 全局重置 & 变量 ========== */
         * {
             margin: 0;
             padding: 0;
@@ -23,323 +31,270 @@
         }
 
         :root {
-            --bg: #ffffff;
-            --text: #333333;
-            --text-secondary: #888888;
-            --border: #e0e0e0;
-            --hover: #f5f5f5;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --hover-color: #f0f0f0;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --sidebar-bg: #f8f8f8;
             --code-bg: #f6f8fa;
             --blockquote-border: #dfe2e5;
-            --header-bg: #fafafa;
-            --caret: #000000;
-            --selection: #b4d5fe;
-            --sidebar-bg: #f8f9fa;
-            --sidebar-border: #e9ecef;
-            --focus-ring: #2d7aff;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             --radius: 8px;
-            --font: 'Segoe UI', 'SF Pro Text', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-            --mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --mono-font: "JetBrains Mono", "Fira Code", monospace;
+            --editor-padding: 40px 60px;
             --transition: 0.2s ease;
         }
 
+        /* 暗色主题 */
         [data-theme="dark"] {
-            --bg: #1e1e1e;
-            --text: #d4d4d4;
-            --text-secondary: #888888;
-            --border: #3d3d3d;
-            --hover: #2d2d2d;
-            --code-bg: #2d2d2d;
-            --blockquote-border: #555555;
-            --header-bg: #252525;
-            --caret: #d4d4d4;
-            --selection: #264f78;
+            --bg-color: #1e1e1e;
+            --text-color: #d4d4d4;
+            --border-color: #3d3d3d;
+            --hover-color: #2d2d2d;
             --sidebar-bg: #252525;
-            --sidebar-border: #3d3d3d;
-            --focus-ring: #4d8aff;
+            --code-bg: #2d2d2d;
+            --blockquote-border: #4a4a4a;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        html,
+        /* ========== 通用样式 ========== */
         body {
-            height: 100%;
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
             overflow: hidden;
-            background: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 16px;
-            line-height: 1.7;
+            display: flex;
+            flex-direction: column;
             transition: background var(--transition), color var(--transition);
         }
 
-        #app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100vw;
-            background: var(--bg);
-        }
-
-        #toolbar {
+        /* ========== 标题栏 ========== */
+        .titlebar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 18px;
-            background: var(--header-bg);
-            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
-            height: 44px;
             user-select: none;
-            transition: background var(--transition), border var(--transition);
+            min-height: 44px;
+            transition: background var(--transition), border-color var(--transition);
         }
 
-        #toolbar .left,
-        #toolbar .right {
+        .titlebar .brand {
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        #toolbar .brand {
+            gap: 10px;
             font-weight: 600;
             font-size: 15px;
-            letter-spacing: 0.3px;
-            color: var(--text);
-            opacity: 0.8;
         }
 
-        #toolbar .brand span {
-            color: var(--focus-ring);
+        .titlebar .brand svg {
+            width: 20px;
+            height: 20px;
         }
 
-        .tb-btn {
-            background: transparent;
+        .titlebar .actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .titlebar .actions button {
+            background: none;
             border: none;
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
-            color: var(--text-secondary);
-            transition: background var(--transition), color var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            color: var(--text-color);
+            transition: background var(--transition);
         }
 
-        .tb-btn:hover {
-            background: var(--hover);
-            color: var(--text);
+        .titlebar .actions button:hover {
+            background: var(--hover-color);
         }
 
-        .tb-btn.active {
-            color: var(--focus-ring);
-            background: rgba(45, 122, 255, 0.10);
+        .titlebar .actions button.active {
+            background: var(--accent-color);
+            color: #fff;
         }
 
-        .tb-btn svg {
-            width: 16px;
-            height: 16px;
-            fill: currentColor;
-        }
-
-        .tb-sep {
+        .titlebar .actions .sep {
             width: 1px;
             height: 24px;
-            background: var(--border);
+            background: var(--border-color);
             margin: 0 4px;
         }
 
-        #main {
+        /* ========== 主体布局 ========== */
+        .main {
             display: flex;
             flex: 1;
             overflow: hidden;
-            background: var(--bg);
-            transition: background var(--transition);
         }
 
-        #sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: 0;
             overflow: hidden;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             flex-shrink: 0;
+            transition: width 0.25s ease, background var(--transition), border-color var(--transition);
             display: flex;
             flex-direction: column;
-            transition: width 0.25s ease, background var(--transition), border var(--transition);
         }
 
-        #sidebar.collapsed {
-            width: 0;
-            border-right: none;
+        .sidebar.open {
+            width: 260px;
         }
 
-        #sidebar .s-header {
-            padding: 12px 16px 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
+        .sidebar .tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
         }
 
-        #sidebar .s-header .close-btn {
+        .sidebar .tabs button {
+            flex: 1;
+            padding: 10px 0;
             background: none;
             border: none;
-            color: var(--text-secondary);
+            font-size: 13px;
             cursor: pointer;
-            font-size: 18px;
-            line-height: 1;
-            padding: 0 4px;
+            color: var(--text-color);
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition);
         }
 
-        #sidebar .s-header .close-btn:hover {
-            color: var(--text);
+        .sidebar .tabs button.active {
+            border-bottom-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 500;
         }
 
-        #sidebar .s-body {
+        .sidebar .panel {
             flex: 1;
             overflow-y: auto;
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 12px 16px;
         }
 
-        .outline-item {
-            padding: 3px 8px;
+        .sidebar .panel.hidden {
+            display: none;
+        }
+
+        .sidebar .panel .item {
+            padding: 4px 0;
             cursor: pointer;
             border-radius: 4px;
-            transition: background 0.15s;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 13px;
-        }
-
-        .outline-item:hover {
-            background: var(--hover);
-        }
-
-        .outline-item.h1 {
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        .outline-item.h2 {
-            font-weight: 600;
+            padding-left: 8px;
             font-size: 14px;
-            padding-left: 18px;
-        }
-
-        .outline-item.h3 {
-            font-weight: 500;
-            font-size: 13px;
-            padding-left: 32px;
-        }
-
-        .outline-item.h4 {
-            font-weight: 400;
-            font-size: 13px;
-            padding-left: 46px;
-        }
-
-        .outline-item.h5 {
-            font-weight: 400;
-            font-size: 12px;
-            padding-left: 60px;
-            opacity: 0.8;
-        }
-
-        .outline-item.h6 {
-            font-weight: 400;
-            font-size: 12px;
-            padding-left: 74px;
-            opacity: 0.7;
-        }
-
-        .outline-item .level-badge {
-            display: inline-block;
-            width: 18px;
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 400;
-        }
-
-        #editor-wrap {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-            background: var(--bg);
             transition: background var(--transition);
         }
 
-        #editor {
-            width: 100%;
-            height: 100%;
-            padding: 40px 60px 120px;
+        .sidebar .panel .item:hover {
+            background: var(--hover-color);
+        }
+
+        .sidebar .panel .item .h1 {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .sidebar .panel .item .h2 {
+            font-weight: 600;
+            padding-left: 16px;
+        }
+
+        .sidebar .panel .item .h3 {
+            padding-left: 32px;
+            font-weight: 500;
+        }
+
+        .sidebar .panel .item .h4 {
+            padding-left: 48px;
+        }
+
+        .sidebar .panel .file-item {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .sidebar .panel .file-item:hover {
+            background: var(--hover-color);
+        }
+
+        /* ========== 编辑器容器 ========== */
+        .editor-wrapper {
+            flex: 1;
             overflow-y: auto;
+            padding: 0;
+            background: var(--bg-color);
+            transition: background var(--transition);
+            position: relative;
+        }
+
+        /* 编辑器主体 */
+        #editor {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--editor-padding);
+            min-height: 100%;
             outline: none;
-            background: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
             font-size: 16px;
             line-height: 1.8;
+            color: var(--text-color);
+            transition: color var(--transition);
             word-wrap: break-word;
-            transition: background var(--transition), color var(--transition);
-            caret-color: var(--caret);
-            tab-size: 4;
         }
 
-        #editor:focus {
-            box-shadow: none;
-        }
-
-        #editor ::selection {
-            background: var(--selection);
-        }
-
-        #editor h1,
-        #editor h2,
-        #editor h3,
-        #editor h4,
-        #editor h5,
-        #editor h6 {
-            margin: 1.2em 0 0.4em 0;
-            font-weight: 600;
-            line-height: 1.3;
-            letter-spacing: -0.01em;
-            color: var(--text);
-        }
-
+        /* ========== Markdown 渲染样式 ========== */
         #editor h1 {
-            font-size: 2.0em;
-            border-bottom: 1px solid var(--border);
+            font-size: 2.2em;
+            font-weight: 700;
+            margin: 1.2em 0 0.4em 0;
             padding-bottom: 0.2em;
+            border-bottom: 1px solid var(--border-color);
         }
 
         #editor h2 {
-            font-size: 1.6em;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.15em;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 1em 0 0.3em 0;
         }
 
         #editor h3 {
-            font-size: 1.3em;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 0.8em 0 0.3em 0;
         }
 
         #editor h4 {
-            font-size: 1.1em;
+            font-size: 1.25em;
+            font-weight: 600;
+            margin: 0.6em 0 0.2em 0;
         }
 
         #editor h5 {
-            font-size: 1.0em;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0.5em 0 0.2em 0;
         }
 
         #editor h6 {
-            font-size: 0.9em;
-            color: var(--text-secondary);
+            font-size: 1em;
+            font-weight: 600;
+            margin: 0.4em 0 0.2em 0;
+            color: #888;
         }
 
         #editor p {
@@ -347,18 +302,40 @@
         }
 
         #editor blockquote {
-            border-left: 4px solid var(--blockquote-border);
-            padding-left: 1em;
             margin: 0.8em 0;
-            color: var(--text-secondary);
+            padding: 0.4em 1em;
+            border-left: 4px solid var(--blockquote-border);
             background: var(--code-bg);
-            padding: 0.6em 1em;
-            border-radius: 0 var(--radius) var(--radius) 0;
+            border-radius: 0 4px 4px 0;
+            color: #666;
+        }
+
+        #editor code {
+            font-family: var(--mono-font);
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        #editor pre {
+            background: var(--code-bg);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.8em 0;
+        }
+
+        #editor pre code {
+            background: none;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
         #editor ul,
         #editor ol {
-            padding-left: 1.8em;
+            padding-left: 2em;
             margin: 0.4em 0;
         }
 
@@ -368,41 +345,16 @@
 
         #editor li.task-list-item {
             list-style: none;
-            margin-left: -1.4em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         #editor li.task-list-item input[type="checkbox"] {
-            margin-right: 0.5em;
-            accent-color: var(--focus-ring);
+            width: 16px;
+            height: 16px;
             cursor: pointer;
-        }
-
-        #editor code {
-            background: var(--code-bg);
-            padding: 0.15em 0.4em;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-family: var(--mono);
-            color: #d63384;
-        }
-
-        #editor pre {
-            background: var(--code-bg);
-            padding: 1em 1.2em;
-            border-radius: var(--radius);
-            overflow-x: auto;
-            margin: 0.8em 0;
-            border: 1px solid var(--border);
-            font-family: var(--mono);
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        #editor pre code {
-            background: transparent;
-            padding: 0;
-            color: inherit;
-            font-size: inherit;
+            accent-color: var(--accent-color);
         }
 
         #editor table {
@@ -414,8 +366,8 @@
 
         #editor table th,
         #editor table td {
-            border: 1px solid var(--border);
-            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
             text-align: left;
         }
 
@@ -424,542 +376,728 @@
             font-weight: 600;
         }
 
-        #editor table tr:nth-child(even) {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
         #editor hr {
             border: none;
-            border-top: 2px solid var(--border);
+            border-top: 2px solid var(--border-color);
             margin: 1.5em 0;
+        }
+
+        #editor a {
+            color: var(--accent-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color var(--transition);
+        }
+
+        #editor a:hover {
+            border-bottom-color: var(--accent-color);
         }
 
         #editor img {
             max-width: 100%;
-            border-radius: 4px;
+            border-radius: 6px;
             margin: 0.4em 0;
         }
 
-        #editor a {
-            color: var(--focus-ring);
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            transition: border 0.15s;
+        #editor .footnote-ref {
+            font-size: 0.8em;
+            vertical-align: super;
+            color: var(--accent-color);
         }
 
-        #editor a:hover {
-            border-bottom-color: var(--focus-ring);
+        #editor .footnote-backref {
+            color: var(--accent-color);
         }
 
-        #editor .math-block {
-            text-align: center;
-            padding: 0.6em 0;
-            font-size: 1.1em;
-            background: var(--code-bg);
-            border-radius: var(--radius);
-            margin: 0.6em 0;
-        }
-
-        #editor .math-inline {
-            display: inline-block;
-            padding: 0 0.1em;
-        }
-
-        #editor .mermaid-container {
-            background: var(--bg);
-            padding: 0.8em;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            margin: 0.6em 0;
-            text-align: center;
-        }
-
-        #editor .mermaid-container svg {
-            max-width: 100%;
-        }
-
-        #statusbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 4px 18px;
-            height: 30px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            background: var(--header-bg);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-            transition: background var(--transition), border var(--transition);
-            user-select: none;
-        }
-
-        #statusbar .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        #statusbar .stat-item span {
-            opacity: 0.7;
-        }
-
-        #statusbar .stat-item .badge {
-            background: var(--code-bg);
-            padding: 0 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            opacity: 0.8;
-        }
-
-        #editor::-webkit-scrollbar,
-        .s-body::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        #editor::-webkit-scrollbar-track,
-        .s-body::-webkit-scrollbar-track {
+        /* 代码块行号 (hljs 增强) */
+        #editor pre .hljs {
             background: transparent;
         }
 
-        #editor::-webkit-scrollbar-thumb,
-        .s-body::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 10px;
-        }
-
-        #editor::-webkit-scrollbar-thumb:hover,
-        .s-body::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
-
-        @media (max-width: 768px) {
-            #editor {
-                padding: 20px 24px 80px;
-                font-size: 15px;
-            }
-
-            #sidebar {
-                width: 200px;
-            }
-
-            #sidebar.collapsed {
-                width: 0;
-            }
-
-            #toolbar .brand {
-                font-size: 13px;
-            }
-
-            .tb-btn span.label {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #editor {
-                padding: 16px 16px 60px;
-                font-size: 14px;
-            }
-
-            #sidebar {
-                width: 160px;
-            }
-
-            #toolbar {
-                padding: 4px 10px;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-            }
-
-            .tb-btn {
-                padding: 2px 6px;
-                font-size: 12px;
-            }
-
-            #statusbar {
-                font-size: 11px;
-                padding: 2px 10px;
-            }
-        }
-
-        #editor.focus-mode p:not(.focus-line),
-        #editor.focus-mode div:not(.focus-line),
-        #editor.focus-mode h1:not(.focus-line),
-        #editor.focus-mode h2:not(.focus-line),
-        #editor.focus-mode h3:not(.focus-line),
-        #editor.focus-mode h4:not(.focus-line),
-        #editor.focus-mode h5:not(.focus-line),
-        #editor.focus-mode h6:not(.focus-line),
-        #editor.focus-mode blockquote:not(.focus-line),
-        #editor.focus-mode ul:not(.focus-line),
-        #editor.focus-mode ol:not(.focus-line),
-        #editor.focus-mode pre:not(.focus-line),
-        #editor.focus-mode table:not(.focus-line) {
+        /* ========== 专注模式 ========== */
+        .focus-mode #editor>*:not(.focus-line) {
             opacity: 0.3;
             transition: opacity 0.3s ease;
         }
 
-        #editor.focus-mode .focus-line {
-            opacity: 1 !important;
+        .focus-mode #editor>.focus-line {
+            opacity: 1;
         }
 
-        #editor.typewriter-mode {
-            scroll-behavior: smooth;
+        /* ========== 打字机模式 ========== */
+        .typewriter-mode #editor {
+            padding-top: 50vh;
+            padding-bottom: 50vh;
         }
 
-        #editor .placeholder {
-            color: var(--text-secondary);
-            opacity: 0.5;
-            font-style: italic;
-            pointer-events: none;
+        /* ========== 源码模式 ========== */
+        .source-mode #editor {
+            font-family: var(--mono-font);
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .source-mode #editor .source-line {
+            display: block;
+        }
+
+        /* ========== 底部状态栏 ========== */
+        .statusbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 20px;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid var(--border-color);
+            background: var(--sidebar-bg);
+            flex-shrink: 0;
+            transition: background var(--transition), border-color var(--transition);
+            user-select: none;
+        }
+
+        .statusbar span {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .statusbar .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ========== 滚动条美化 ========== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            :root {
+                --editor-padding: 20px 24px;
+            }
+
+            .sidebar.open {
+                width: 200px;
+            }
+
+            .titlebar .brand span {
+                display: none;
+            }
+
+            #editor {
+                font-size: 15px;
+            }
+        }
+
+        /* ========== 临时高亮 ========== */
+        .temp-highlight {
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 4px;
+        }
+
+        /* ========== 导出对话框 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 32px;
+            min-width: 320px;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+        }
+
+        .modal .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .modal .btn-group button {
+            padding: 8px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all var(--transition);
+            font-size: 13px;
+        }
+
+        .modal .btn-group button:hover {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .modal .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal .close-btn:hover {
+            color: var(--text-color);
         }
     </style>
 </head>
 
 <body>
-    <div id="app">
-        <div id="toolbar">
-            <div class="left">
-                <span class="brand">⌨ <span>MD</span> Editor</span>
-                <span class="tb-sep"></span>
-                <button class="tb-btn" id="btnSidebar" title="切换侧栏 (Ctrl+Shift+L)">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M3 4h18v16H3V4zm2 2v12h14V6H5z" />
-                    </svg>
-                    <span class="label">大纲</span>
-                </button>
-                <span class="tb-sep"></span>
-                <button class="tb-btn" id="btnSource" title="源码模式 (Ctrl+/)">
-                    <svg viewBox="0 0 24 24">
-                        <path
-                            d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 18H6V4h7v5h5v11zM8 10h8v2H8v-2zm0 4h8v2H8v-2zm0 4h5v2H8v-2z" />
-                    </svg>
-                    <span class="label">源码</span>
-                </button>
-                <span class="tb-sep"></span>
-                <button class="tb-btn" id="btnFocus" title="专注模式 (F8)">◎</button>
-                <button class="tb-btn" id="btnTypewriter" title="打字机模式 (F9)">◉</button>
-                <span class="tb-sep"></span>
-                <button class="tb-btn" id="btnTheme" title="切换主题">🌓</button>
-            </div>
-            <div class="right">
-                <button class="tb-btn" id="btnExportHTML" title="导出 HTML">📄</button>
-                <button class="tb-btn" id="btnExportPDF" title="导出 PDF (打印)">📎</button>
-                <button class="tb-btn" id="btnClear" title="清空">🗑</button>
-            </div>
+
+    <!-- ========== 标题栏 ========== -->
+    <header class="titlebar">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+            </svg>
+            <span>Markdown 编辑器</span>
         </div>
-        <div id="main">
-            <div id="sidebar">
-                <div class="s-header">
-                    <span>📑 大纲</span>
-                    <button class="close-btn" id="btnSidebarClose">✕</button>
-                </div>
-                <div class="s-body" id="outlineTree"></div>
-            </div>
-            <div id="editor-wrap">
-                <div id="editor" contenteditable="true" spellcheck="true">
-                    <p class="placeholder">开始书写… 支持 Markdown 语法</p>
-                </div>
-            </div>
+        <div class="actions">
+            <button id="btnSidebar" title="侧边栏 (Ctrl+Shift+L)">📋</button>
+            <button id="btnSource" title="源码模式 (Ctrl+/)">源码</button>
+            <button id="btnFocus" title="专注模式 (F8)">专注</button>
+            <button id="btnTypewriter" title="打字机模式 (F9)">打字机</button>
+            <button id="btnTheme" title="切换主题">🌓</button>
+            <span class="sep"></span>
+            <button id="btnExport" title="导出">📤 导出</button>
         </div>
-        <div id="statusbar">
-            <div class="stat-item">
-                <span id="statWords">0 字</span>
-                <span id="statLines">0 行</span>
-                <span id="statMode" class="badge">编辑</span>
+    </header>
+
+    <!-- ========== 主体 ========== -->
+    <div class="main">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="tabs">
+                <button class="active" data-tab="outline">大纲</button>
+                <button data-tab="files">文件</button>
             </div>
-            <div class="stat-item">
-                <span id="statTheme">🌞</span>
+            <div class="panel" id="panelOutline">
+                <div id="outlineTree"></div>
+            </div>
+            <div class="panel hidden" id="panelFiles">
+                <div id="fileTree"></div>
+            </div>
+        </aside>
+
+        <!-- 编辑器 -->
+        <div class="editor-wrapper" id="editorWrapper">
+            <div id="editor" contenteditable="true" spellcheck="true"></div>
+        </div>
+    </div>
+
+    <!-- ========== 状态栏 ========== -->
+    <footer class="statusbar">
+        <span>
+            <span class="stat-item" id="statWords">字数: 0</span>
+            <span class="stat-item" id="statChars">字符: 0</span>
+            <span class="stat-item" id="statLines">行: 0</span>
+        </span>
+        <span>
+            <span class="stat-item" id="statMode">📝 编辑</span>
+        </span>
+    </footer>
+
+    <!-- ========== 导出模态框 ========== -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <button class="close-btn" id="modalClose">&times;</button>
+            <h3>📤 导出文档</h3>
+            <p style="color:#888;font-size:14px;margin-bottom:12px;">选择导出格式</p>
+            <div class="btn-group">
+                <button data-format="html">HTML</button>
+                <button data-format="pdf">PDF (打印)</button>
+                <button data-format="markdown">Markdown 源码</button>
+                <button data-format="text">纯文本</button>
             </div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- ========== JavaScript ========== -->
     <script>
         (function () {
             'use strict';
-            var editor = document.getElementById('editor');
-            var outlineTree = document.getElementById('outlineTree');
-            var statWords = document.getElementById('statWords');
-            var statLines = document.getElementById('statLines');
-            var statMode = document.getElementById('statMode');
-            var statTheme = document.getElementById('statTheme');
-            var btnSidebar = document.getElementById('btnSidebar');
-            var btnSidebarClose = document.getElementById('btnSidebarClose');
-            var sidebar = document.getElementById('sidebar');
-            var btnSource = document.getElementById('btnSource');
-            var btnFocus = document.getElementById('btnFocus');
-            var btnTypewriter = document.getElementById('btnTypewriter');
-            var btnTheme = document.getElementById('btnTheme');
-            var btnExportHTML = document.getElementById('btnExportHTML');
-            var btnExportPDF = document.getElementById('btnExportPDF');
-            var btnClear = document.getElementById('btnClear');
 
-            var sourceMode = false;
-            var focusMode = false;
-            var typewriterMode = false;
-            var darkTheme = false;
-            var isSidebarOpen = true;
-            var currentMarkdown = '';
-            var renderTimer = null;
-            var isRendering = false;
+            // ============================================================
+            //  1. 配置
+            // ============================================================
+            const CONFIG = {
+                theme: 'light', // 'light' | 'dark'
+                sourceMode: false,
+                focusMode: false,
+                typewriterMode: false,
+                sidebarOpen: false,
+                currentTab: 'outline',
+            };
 
-            var markedOptions = {
-                gfm: true,
-                breaks: true,
-                pedantic: false,
-                highlight: function (code, lang) {
-                    if (lang && hljs.getLanguage(lang)) {
-                        try { return hljs.highlight(code, { language: lang }).value; } catch (_) { }
-                    }
-                    return hljs.highlightAuto(code).value;
-                }
-            };
-            marked.setOptions(markedOptions);
+            // ============================================================
+            //  2. DOM 引用
+            // ============================================================
+            const editor = document.getElementById('editor');
+            const wrapper = document.getElementById('editorWrapper');
+            const sidebar = document.getElementById('sidebar');
+            const outlineTree = document.getElementById('outlineTree');
+            const fileTree = document.getElementById('fileTree');
+            const panelOutline = document.getElementById('panelOutline');
+            const panelFiles = document.getElementById('panelFiles');
+            const statWords = document.getElementById('statWords');
+            const statChars = document.getElementById('statChars');
+            const statLines = document.getElementById('statLines');
+            const statMode = document.getElementById('statMode');
+            const exportModal = document.getElementById('exportModal');
 
-            var renderer = new marked.Renderer();
-            var originalParagraph = renderer.paragraph;
-            renderer.paragraph = function (text) {
-                var blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
-                if (blockMathRegex.test(text)) {
-                    text = text.replace(blockMathRegex, function (match, math) {
-                        try {
-                            return katex.renderToString(math.trim(), {
-                                displayMode: true, throwOnError: false,
-                                trust: true
-                            });
-                        } catch (_) { return match; }
-                    });
-                }
-                var inlineMathRegex = /\$([^\$\n]+?)\$/g;
-                if (inlineMathRegex.test(text)) {
-                    text = text.replace(inlineMathRegex, function (match, math) {
-                        try {
-                            return katex.renderToString(math.trim(), {
-                                displayMode: false, throwOnError: false,
-                                trust: true
-                            });
-                        } catch (_) { return match; }
-                    });
-                }
-                return originalParagraph.call(this, text);
-            };
-            var originalCode = renderer.code;
-            renderer.code = function (code, lang, escaped) {
-                if (lang === 'mermaid') {
-                    return '<div class="mermaid-container"><div class="mermaid">' + code + '</div></div>';
-                }
-                return originalCode.call(this, code, lang, escaped);
-            };
-            renderer.table = function (header, body) {
-                return '<table>' + header + body + '</table>';
-            };
-            var originalList = renderer.list;
-            renderer.list = function (body, ordered, start) {
-                if (/<input\s+type="checkbox"/.test(body)) {
-                    return '<ul class="task-list">' + body + '</ul>';
-                }
-                return originalList.call(this, body, ordered, start);
-            };
-            var originalListItem = renderer.listitem;
-            renderer.listitem = function (text, task, checked) {
-                if (task) {
-                    var checkbox = '<input type="checkbox" ' + (checked ? 'checked' : '') + ' disabled />';
-                    return '<li class="task-list-item">' + checkbox + ' ' + text + '</li>';
-                }
-                return originalListItem.call(this, text, task, checked);
-            };
-            marked.use({ renderer });
+            // 按钮
+            const btnSidebar = document.getElementById('btnSidebar');
+            const btnSource = document.getElementById('btnSource');
+            const btnFocus = document.getElementById('btnFocus');
+            const btnTypewriter = document.getElementById('btnTypewriter');
+            const btnTheme = document.getElementById('btnTheme');
+            const btnExport = document.getElementById('btnExport');
+            const modalClose = document.getElementById('modalClose');
 
-            mermaid.initialize({
-                startOnLoad: false,
-                theme: darkTheme ? 'dark' : 'default',
-                securityLevel: 'loose',
-            });
+            // 侧边栏 tabs
+            const tabButtons = document.querySelectorAll('.sidebar .tabs button');
 
-            function getPlainText(html) {
-                var tmp = document.createElement('div');
-                tmp.innerHTML = html;
-                return tmp.textContent || '';
+            // ============================================================
+            //  3. 状态
+            // ============================================================
+            let markdownSource = ''; // 当前 Markdown 源码
+            let isRendering = false;
+            let pendingRender = false;
+            let savedSelection = null; // 用于恢复光标
+
+            // ============================================================
+            //  4. 工具函数
+            // ============================================================
+            function getTextContent() {
+                return editor.innerText || '';
             }
 
-            function updateStats() {
-                var plain = getPlainText(editor.innerHTML);
-                var words = plain.replace(/\s/g, '').length;
-                var lines = plain.split('\n').length;
-                statWords.textContent = words + ' 字';
-                statLines.textContent = lines + ' 行';
+            function getHtmlContent() {
+                return editor.innerHTML || '';
             }
 
-            function escapeHtml(text) {
-                var div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
+            function countWords(text) {
+                const clean = text.replace(/\s+/g, ' ').trim();
+                return clean ? clean.split(/\s+/).length : 0;
             }
 
-            function saveCursorPosition() {
-                var sel = window.getSelection();
-                if (!sel || sel.rangeCount === 0) return null;
-                var range = sel.getRangeAt(0);
-                var preRange = document.createRange();
-                preRange.selectNodeContents(editor);
-                preRange.setEnd(range.startContainer, range.startOffset);
-                var startOffset = preRange.toString().length;
-                var endOffset = range.collapsed ? startOffset : startOffset + range.toString().length;
-                return { start: startOffset, end: endOffset };
+            function countChars(text) {
+                return text.length;
             }
 
-            function restoreCursorPosition(pos) {
-                if (!pos) return;
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                var charIndex = 0;
-                var startNode = null,
-                    startOff = 0,
-                    endNode = null,
-                    endOff = 0;
-                var walker = document.createTreeWalker(
-                    editor,
-                    NodeFilter.SHOW_TEXT,
-                    null,
-                    false
-                );
-                var foundStart = false,
-                    foundEnd = false;
-                var node = walker.nextNode();
-                while (node) {
-                    var text = node.textContent;
-                    var len = text.length;
-                    if (!foundStart && charIndex + len >= pos.start) {
-                        startNode = node;
-                        startOff = pos.start - charIndex;
-                        foundStart = true;
-                    }
-                    if (!foundEnd && charIndex + len >= pos.end) {
-                        endNode = node;
-                        endOff = pos.end - charIndex;
-                        foundEnd = true;
-                    }
-                    if (foundStart && foundEnd) break;
-                    charIndex += len;
-                    node = walker.nextNode();
-                }
-                if (!startNode) startNode = editor.lastChild || editor;
-                if (!endNode) endNode = startNode;
-                try {
-                    var range = document.createRange();
-                    range.setStart(startNode, Math.min(startOff, startNode.textContent.length));
-                    range.setEnd(endNode, Math.min(endOff, endNode.textContent.length));
-                    sel.addRange(range);
-                } catch (e) {
-                    var range2 = document.createRange();
-                    var last = editor.lastChild || editor;
-                    range2.setStart(last, last.textContent ? last.textContent.length : 0);
-                    range2.collapse(true);
-                    sel.addRange(range2);
-                }
+            function countLines(text) {
+                return text.split('\n').length;
             }
 
-            function renderMarkdown(keepCursor) {
-                if (isRendering) return;
-                if (sourceMode) {
-                    var raw = currentMarkdown || getPlainText(editor.innerHTML);
-                    if (editor.innerHTML !== raw) {
-                        editor.innerHTML = raw;
-                    }
-                    updateStats();
+            // 更新状态栏
+            function updateStatus() {
+                const text = getTextContent();
+                statWords.textContent = '字数: ' + countWords(text);
+                statChars.textContent = '字符: ' + countChars(text);
+                statLines.textContent = '行: ' + countLines(text);
+                const mode = CONFIG.sourceMode ? '源码' : '预览';
+                statMode.textContent = '📝 ' + mode;
+            }
+
+            // ============================================================
+            //  5. Markdown 渲染核心
+            // ============================================================
+            function renderMarkdown() {
+                if (isRendering) {
+                    pendingRender = true;
                     return;
                 }
                 isRendering = true;
-                var md = currentMarkdown;
-                if (!md) md = getPlainText(editor.innerHTML);
-                var cursorPos = null;
-                if (keepCursor !== false) {
-                    cursorPos = saveCursorPosition();
-                }
-                var html = '';
+
                 try {
-                    html = marked.parse(md);
-                } catch (e) {
-                    html = '<p>⚠️ 解析错误: ' + e.message + '</p>';
-                }
-                if (!html.trim()) {
-                    html = '<p class="placeholder">开始书写… 支持 Markdown 语法</p>';
-                }
-                var inputHandler = editor._inputHandler;
-                if (inputHandler) {
-                    editor.removeEventListener('input', inputHandler);
-                }
-                if (editor.innerHTML !== html) {
-                    editor.innerHTML = html;
-                }
-                if (inputHandler) {
-                    editor.addEventListener('input', inputHandler);
-                }
-                var mermaidElements = editor.querySelectorAll('.mermaid');
-                if (mermaidElements.length > 0) {
-                    mermaidElements.forEach(function (el, index) {
-                        var code = el.textContent;
-                        try {
-                            var id = 'mermaid-' + Date.now() + '-' + index;
-                            el.id = id;
-                            mermaid.render(id, code).then(function (_a) {
-                                var svg = _a.svg;
-                                el.innerHTML = svg;
-                            }).catch(function () { });
-                        } catch (_) { }
+                    // 保存光标位置 (基于文本偏移)
+                    const sel = window.getSelection();
+                    let cursorOffset = 0;
+                    let hasSelection = false;
+
+                    if (sel && sel.rangeCount > 0) {
+                        const range = sel.getRangeAt(0);
+                        const text = editor.innerText || '';
+                        // 计算光标在文本中的偏移
+                        const preRange = document.createRange();
+                        preRange.setStart(editor, 0);
+                        preRange.setEnd(range.startContainer, range.startOffset);
+                        cursorOffset = preRange.toString().length;
+                        hasSelection = true;
+                    }
+
+                    // 获取当前文本内容
+                    const rawText = editor.innerText || '';
+
+                    // 如果文本为空，清空编辑器
+                    if (!rawText.trim() && !CONFIG.sourceMode) {
+                        editor.innerHTML = '<p><br></p>';
+                        updateStatus();
+                        isRendering = false;
+                        if (pendingRender) {
+                            pendingRender = false;
+                            renderMarkdown();
+                        }
+                        return;
+                    }
+
+                    // 如果是源码模式，直接显示纯文本
+                    if (CONFIG.sourceMode) {
+                        editor.innerHTML = rawText.split('\n').map(line =>
+                            '<span class="source-line">' + escapeHtml(line) + '</span>'
+                        ).join('');
+                        updateStatus();
+                        isRendering = false;
+                        if (pendingRender) {
+                            pendingRender = false;
+                            renderMarkdown();
+                        }
+                        return;
+                    }
+
+                    // 解析 Markdown
+                    const parsed = parseMarkdown(rawText);
+                    editor.innerHTML = parsed;
+
+                    // 高亮代码块
+                    editor.querySelectorAll('pre code').forEach((block) => {
+                        if (typeof hljs !== 'undefined') {
+                            hljs.highlightElement(block);
+                        }
                     });
+
+                    // 渲染 KaTeX
+                    if (typeof katex !== 'undefined') {
+                        editor.querySelectorAll('.math-inline, .math-block').forEach((el) => {
+                            try {
+                                const isBlock = el.classList.contains('math-block');
+                                const tex = el.textContent.trim();
+                                katex.render(tex, el, {
+                                    throwOnError: false,
+                                    displayMode: isBlock,
+                                    trust: true,
+                                });
+                            } catch (e) { /* ignore */ }
+                        });
+                    }
+
+                    // 渲染 Mermaid
+                    if (typeof mermaid !== 'undefined') {
+                        editor.querySelectorAll('.mermaid').forEach((el) => {
+                            try {
+                                const code = el.textContent.trim();
+                                const id = 'mermaid-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+                                const container = document.createElement('div');
+                                container.id = id;
+                                el.parentNode.replaceChild(container, el);
+                                mermaid.render(id, code).then((result) => {
+                                    container.innerHTML = result.svg;
+                                }).catch(() => { });
+                            } catch (e) { /* ignore */ }
+                        });
+                    }
+
+                    // 恢复光标位置
+                    if (hasSelection && editor.childNodes.length > 0) {
+                        restoreCursor(cursorOffset);
+                    }
+
+                    // 更新大纲
+                    updateOutline(rawText);
+                    updateStatus();
+
+                } catch (e) {
+                    console.warn('渲染错误:', e);
+                    // 降级: 显示纯文本
+                    if (!CONFIG.sourceMode) {
+                        editor.innerHTML = '<pre>' + escapeHtml(editor.innerText || '') + '</pre>';
+                    }
                 }
-                if (keepCursor !== false && cursorPos) {
-                    restoreCursorPosition(cursorPos);
-                } else {
-                    try {
-                        var range = document.createRange();
-                        var last = editor.lastChild || editor;
-                        range.setStart(last, last.textContent ? last.textContent.length : 0);
-                        range.collapse(true);
-                        var sel = window.getSelection();
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    } catch (_) { }
-                }
-                currentMarkdown = md;
-                updateStats();
-                updateOutline(md);
+
                 isRendering = false;
+                if (pendingRender) {
+                    pendingRender = false;
+                    renderMarkdown();
+                }
             }
 
-            function updateOutline(md) {
-                var headingRegex = /^(#{1,6})\s+(.+)$/gm;
-                var headings = [];
-                var match;
-                while ((match = headingRegex.exec(md)) !== null) {
-                    headings.push({ level: match[1].length, text: match[2].trim() });
+            // Markdown 解析 (使用 marked + 自定义扩展)
+            function parseMarkdown(text) {
+                // 预处理: 提取数学公式块 ($$...$$) 和行内 ($...$)
+                // 使用 marked 的扩展
+                const renderer = new marked.Renderer();
+
+                // 自定义代码块: 支持 mermaid
+                const originalCode = renderer.code.bind(renderer);
+                renderer.code = function (code, lang, escaped) {
+                    if (lang === 'mermaid') {
+                        return '<div class="mermaid">' + code + '</div>';
+                    }
+                    if (lang === 'math' || lang === 'latex') {
+                        return '<div class="math-block">' + code + '</div>';
+                    }
+                    return originalCode(code, lang, escaped);
+                };
+
+                // 自定义行内代码: 检测数学
+                const originalCodespan = renderer.codespan.bind(renderer);
+                renderer.codespan = function (code) {
+                    if (code.startsWith('$') && code.endsWith('$') && code.length > 2) {
+                        const inner = code.slice(1, -1);
+                        return '<span class="math-inline">' + inner + '</span>';
+                    }
+                    return originalCodespan(code);
+                };
+
+                // 自定义链接: 自动链接
+                const originalLink = renderer.link.bind(renderer);
+                renderer.link = function (href, title, text) {
+                    if (href.startsWith('http://') || href.startsWith('https://')) {
+                        return originalLink(href, title, text);
+                    }
+                    return originalLink(href, title, text);
+                };
+
+                // 任务列表
+                const originalList = renderer.list.bind(renderer);
+                renderer.list = function (body, ordered, start) {
+                    if (body.includes('task-list-item')) {
+                        return '<ul class="task-list">' + body + '</ul>';
+                    }
+                    return originalList(body, ordered, start);
+                };
+
+                const originalListItem = renderer.listitem.bind(renderer);
+                renderer.listitem = function (text, task, checked) {
+                    if (task) {
+                        const checkedAttr = checked ? 'checked' : '';
+                        return '<li class="task-list-item"><input type="checkbox" ' + checkedAttr +
+                            ' disabled> ' + text + '</li>';
+                    }
+                    return originalListItem(text, task, checked);
+                };
+
+                // 脚注
+                const footnotes = [];
+                const originalText = renderer.text.bind(renderer);
+                renderer.text = function (text) {
+                    // 检测脚注 [^1]
+                    const footnoteRegex = /\[\^(\d+)\]/g;
+                    let match;
+                    let result = text;
+                    while ((match = footnoteRegex.exec(text)) !== null) {
+                        const id = match[1];
+                        const ref = '<sup class="footnote-ref" id="fnref-' + id + '"><a href="#fn-' + id +
+                            '">' + id + '</a></sup>';
+                        result = result.replace(match[0], ref);
+                    }
+                    return result;
+                };
+
+                const options = {
+                    renderer: renderer,
+                    gfm: true,
+                    breaks: true,
+                    pedantic: false,
+                    smartLists: true,
+                    smartypants: true,
+                };
+
+                try {
+                    // 使用 marked 解析
+                    let html = marked.parse(text, options);
+
+                    // 后处理: 处理脚注定义
+                    const footnoteDefRegex = /\[\^(\d+)\]:\s*(.*?)(?=\n\n|$)/gs;
+                    let footnotesHtml = '';
+                    let match;
+                    const defs = [];
+                    while ((match = footnoteDefRegex.exec(text)) !== null) {
+                        defs.push({ id: match[1], content: match[2] });
+                    }
+                    if (defs.length > 0) {
+                        footnotesHtml = '<div class="footnotes"><hr><ol>';
+                        defs.forEach((def) => {
+                            footnotesHtml += '<li id="fn-' + def.id + '">' + def.content +
+                                ' <a href="#fnref-' + def.id + '" class="footnote-backref">↩</a></li>';
+                        });
+                        footnotesHtml += '</ol></div>';
+                        // 移除脚注定义文本 (已经提取)
+                        defs.forEach((def) => {
+                            const pattern = new RegExp('\\[\\^' + def.id + '\\]:\\s*.*?(?=\\n\\n|$)', 'gs');
+                            html = html.replace(pattern, '');
+                        });
+                        html += footnotesHtml;
+                    }
+
+                    return html;
+                } catch (e) {
+                    console.warn('Marked 解析失败:', e);
+                    return '<pre>' + escapeHtml(text) + '</pre>';
                 }
+            }
+
+            // 简单的 HTML 转义
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ============================================================
+            //  6. 光标恢复
+            // ============================================================
+            function restoreCursor(offset) {
+                try {
+                    const node = editor;
+                    if (!node || !node.childNodes.length) return;
+
+                    // 遍历文本节点，找到 offset 对应的位置
+                    const walker = document.createTreeWalker(
+                        node,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                    );
+                    let charCount = 0;
+                    let targetNode = null;
+                    let targetOffset = 0;
+
+                    let current = walker.nextNode();
+                    while (current) {
+                        const text = current.textContent || '';
+                        if (charCount + text.length >= offset) {
+                            targetNode = current;
+                            targetOffset = offset - charCount;
+                            break;
+                        }
+                        charCount += text.length;
+                        current = walker.nextNode();
+                    }
+
+                    if (targetNode) {
+                        const range = document.createRange();
+                        range.setStart(targetNode, Math.min(targetOffset, targetNode.textContent.length));
+                        range.collapse(true);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        // 滚动到光标位置
+                        targetNode.parentElement?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+                    } else {
+                        // 如果找不到，把光标放在最后
+                        const range = document.createRange();
+                        const last = node.lastChild;
+                        if (last) {
+                            if (last.nodeType === Node.TEXT_NODE) {
+                                range.setStart(last, last.textContent.length);
+                            } else {
+                                range.setStartAfter(last);
+                            }
+                            range.collapse(true);
+                            const sel = window.getSelection();
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('光标恢复失败:', e);
+                }
+            }
+
+            // ============================================================
+            //  7. 大纲生成
+            // ============================================================
+            function updateOutline(text) {
+                const headings = [];
+                const lines = text.split('\n');
+                lines.forEach((line) => {
+                    const match = line.match(/^(#{1,6})\s+(.*)$/);
+                    if (match) {
+                        const level = match[1].length;
+                        const title = match[2].trim();
+                        headings.push({ level, title });
+                    }
+                });
+
                 if (headings.length === 0) {
-                    outlineTree.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:8px;">无标题</div>';
+                    outlineTree.innerHTML = '<div style="color:#999;font-size:13px;padding:8px 0;">无标题</div>';
                     return;
                 }
-                var html = '';
-                headings.forEach(function (h, index) {
-                    var cls = 'outline-item h' + h.level;
-                    html += '<div class="' + cls + '" data-index="' + index + '">' +
-                        '<span class="level-badge">H' + h.level + '</span>' +
-                        escapeHtml(h.text) +
-                        '</div>';
+
+                let html = '';
+                headings.forEach((h) => {
+                    const cls = 'h' + h.level;
+                    html += '<div class="item ' + cls + '" data-level="' + h.level + '">' +
+                        escapeHtml(h.title) + '</div>';
                 });
                 outlineTree.innerHTML = html;
-                outlineTree.querySelectorAll('.outline-item').forEach(function (el) {
-                    el.addEventListener('click', function () {
-                        var idx = parseInt(this.dataset.index, 10);
-                        if (!isNaN(idx) && idx < headings.length) {
-                            var text = headings[idx].text;
-                            var headers = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
-                            for (var i = 0; i < headers.length; i++) {
-                                var h = headers[i];
-                                if (h.textContent.trim() === text) {
-                                    h.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    h.style.background = 'var(--selection)';
-                                    setTimeout(function () { h.style.background = ''; }, 600);
+
+                // 点击跳转
+                outlineTree.querySelectorAll('.item').forEach((el, idx) => {
+                    el.addEventListener('click', () => {
+                        const heading = headings[idx];
+                        if (heading) {
+                            // 在编辑器中查找并滚动到对应标题
+                            const text = heading.title;
+                            const nodes = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
+                            for (const node of nodes) {
+                                if (node.textContent.trim() === text) {
+                                    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    // 高亮
+                                    node.style.transition = 'background 0.3s';
+                                    node.style.background = 'rgba(59,130,246,0.2)';
+                                    setTimeout(() => { node.style.background = ''; }, 1500);
                                     break;
                                 }
                             }
@@ -968,271 +1106,387 @@
                 });
             }
 
+            // ============================================================
+            //  8. 文件树 (模拟)
+            // ============================================================
+            function updateFileTree() {
+                // 模拟文件树: 当前文档 + 一些示例
+                const files = [
+                    { name: 'README.md', active: true },
+                    { name: 'docs/guide.md', active: false },
+                    { name: 'docs/api.md', active: false },
+                    { name: 'examples/demo.md', active: false },
+                ];
+                let html = '';
+                files.forEach((f) => {
+                    const active = f.active ? ' style="background:var(--hover-color);font-weight:500;"' : '';
+                    html += '<div class="file-item"' + active + '>📄 ' + escapeHtml(f.name) + '</div>';
+                });
+                fileTree.innerHTML = html;
+                fileTree.querySelectorAll('.file-item').forEach((el) => {
+                    el.addEventListener('click', () => {
+                        // 模拟加载
+                        const name = el.textContent.trim();
+                        if (name === 'README.md') {
+                            editor.innerText = '# 欢迎使用 Markdown 编辑器\n\n这是一个类 Typora 的所见即所得编辑器。\n\n## 功能特性\n\n- 实时渲染\n- 光标同步\n- 多主题支持\n- 导出功能';
+                            renderMarkdown();
+                        } else {
+                            editor.innerText = '# ' + name + '\n\n内容加载中...';
+                            renderMarkdown();
+                        }
+                    });
+                });
+            }
+
+            // ============================================================
+            //  9. 编辑器事件
+            // ============================================================
             function onEditorInput() {
-                if (isRendering) return;
-                if (sourceMode) {
-                    currentMarkdown = editor.innerText || editor.textContent || '';
-                    updateStats();
-                    updateOutline(currentMarkdown);
+                // 在源码模式下，直接存储文本
+                if (CONFIG.sourceMode) {
+                    // 源码模式由 renderMarkdown 处理
+                    renderMarkdown();
                     return;
                 }
-                currentMarkdown = getPlainText(editor.innerHTML);
-                updateStats();
-                updateOutline(currentMarkdown);
-                clearTimeout(renderTimer);
-                renderTimer = setTimeout(function () {
-                    renderMarkdown(true);
-                    if (focusMode) updateFocusLine();
-                    if (typewriterMode) scrollToCaret();
-                }, 300);
+
+                // 普通模式: 获取文本内容，重新渲染
+                renderMarkdown();
             }
 
-            function toggleSourceMode() {
-                sourceMode = !sourceMode;
-                if (sourceMode) {
-                    var md = currentMarkdown || getPlainText(editor.innerHTML);
-                    editor.innerHTML = md;
-                    statMode.textContent = '源码';
-                    btnSource.classList.add('active');
-                } else {
-                    statMode.textContent = '编辑';
-                    btnSource.classList.remove('active');
-                    currentMarkdown = getPlainText(editor.innerHTML);
-                    renderMarkdown(true);
-                }
-            }
+            // 监听输入
+            editor.addEventListener('input', onEditorInput);
 
-            function toggleTheme() {
-                darkTheme = !darkTheme;
-                document.documentElement.setAttribute('data-theme', darkTheme ? 'dark' : 'light');
-                statTheme.textContent = darkTheme ? '🌙' : '🌞';
-                mermaid.initialize({
-                    startOnLoad: false,
-                    theme: darkTheme ? 'dark' : 'default',
-                    securityLevel: 'loose',
-                });
-                renderMarkdown(true);
-            }
+            // 监听粘贴
+            editor.addEventListener('paste', (e) => {
+                // 允许粘贴图片等
+                // 由 input 事件触发渲染
+            });
 
-            function toggleFocus() {
-                focusMode = !focusMode;
-                editor.classList.toggle('focus-mode', focusMode);
-                btnFocus.classList.toggle('active', focusMode);
-                if (focusMode) updateFocusLine();
-            }
-
-            function updateFocusLine() {
-                if (!focusMode) return;
-                var sel = window.getSelection();
-                if (sel && sel.rangeCount > 0) {
-                    var node = sel.getRangeAt(0).startContainer;
-                    while (node && node !== editor) {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            var tag = node.tagName;
-                            if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'UL', 'OL', 'PRE', 'TABLE', 'DIV']
-                                .indexOf(tag) !== -1) break;
-                        }
-                        node = node.parentNode;
-                    }
-                    editor.querySelectorAll('.focus-line').forEach(function (el) { el.classList.remove('focus-line'); });
-                    if (node && node !== editor) {
-                        if (node.nodeType === Node.ELEMENT_NODE) node.classList.add('focus-line');
-                        else if (node.parentNode) node.parentNode.classList.add('focus-line');
+            // 拖拽图片
+            editor.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                for (const file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            const dataUrl = ev.target.result;
+                            const imgMarkdown = '![](' + dataUrl + ')';
+                            document.execCommand('insertText', false, imgMarkdown);
+                            renderMarkdown();
+                        };
+                        reader.readAsDataURL(file);
                     }
                 }
-            }
+            });
 
-            function toggleTypewriter() {
-                typewriterMode = !typewriterMode;
-                editor.classList.toggle('typewriter-mode', typewriterMode);
-                btnTypewriter.classList.toggle('active', typewriterMode);
-                if (typewriterMode) scrollToCaret();
-            }
+            editor.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
 
-            function scrollToCaret() {
-                if (!typewriterMode) return;
-                var sel = window.getSelection();
-                if (sel && sel.rangeCount > 0) {
-                    var rect = sel.getRangeAt(0).getClientRects()[0];
-                    if (rect) {
-                        var editorRect = editor.getBoundingClientRect();
-                        var targetY = rect.top - editorRect.top - editor.clientHeight / 2 + 40;
-                        editor.scrollTop += targetY;
-                    }
-                }
-            }
+            // ============================================================
+            //  10. 快捷键
+            // ============================================================
+            document.addEventListener('keydown', (e) => {
+                const ctrl = e.ctrlKey || e.metaKey;
+                const shift = e.shiftKey;
 
-            function onEditorKeydown(e) {
-                var ctrl = e.ctrlKey || e.metaKey;
+                // Ctrl + / : 源码模式
                 if (ctrl && e.key === '/') {
                     e.preventDefault();
-                    toggleSourceMode(); return;
-                }
-                if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
-                    e.preventDefault();
-                    toggleSidebar(); return;
-                }
-                if (e.key === 'F8') {
-                    e.preventDefault();
-                    toggleFocus(); return;
-                }
-                if (e.key === 'F9') {
-                    e.preventDefault();
-                    toggleTypewriter(); return;
-                }
-                if (ctrl && e.key === 'b') {
-                    e.preventDefault();
-                    wrapSelection('**', '**'); return;
-                }
-                if (ctrl && e.key === 'i') {
-                    e.preventDefault();
-                    wrapSelection('*', '*'); return;
-                }
-                if (ctrl && e.key >= '1' && e.key <= '6') {
-                    e.preventDefault();
-                    insertHeading(parseInt(e.key, 10)); return;
-                }
-                if (ctrl && e.key === 't') {
-                    e.preventDefault();
-                    insertTable(); return;
-                }
-                if (e.key === 'Enter' && !e.shiftKey && !ctrl) {
-                    setTimeout(handleListContinuation, 10);
-                }
-                if (e.key === 'Tab' && !e.shiftKey) {
-                    e.preventDefault();
-                    document.execCommand('insertText', false, '    ');
-                }
-            }
-
-            function wrapSelection(prefix, suffix) {
-                var sel = window.getSelection();
-                if (!sel || sel.rangeCount === 0) return;
-                var range = sel.getRangeAt(0);
-                if (range.collapsed) {
-                    var text = prefix + suffix;
-                    document.execCommand('insertText', false, text);
-                    var newRange = document.createRange();
-                    var node = range.startContainer;
-                    var offset = range.startOffset + prefix.length;
-                    newRange.setStart(node, offset);
-                    newRange.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(newRange);
+                    toggleSourceMode();
                     return;
                 }
-                var selectedText = range.toString();
-                var wrapped = prefix + selectedText + suffix;
-                range.deleteContents();
-                var textNode = document.createTextNode(wrapped);
-                range.insertNode(textNode);
-                var newRange = document.createRange();
-                newRange.setStart(textNode, prefix.length);
-                newRange.setEnd(textNode, prefix.length + selectedText.length);
+
+                // Ctrl + Shift + L : 侧边栏
+                if (ctrl && shift && e.key === 'l') {
+                    e.preventDefault();
+                    toggleSidebar();
+                    return;
+                }
+
+                // F8 : 专注模式
+                if (e.key === 'F8') {
+                    e.preventDefault();
+                    toggleFocusMode();
+                    return;
+                }
+
+                // F9 : 打字机模式
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    toggleTypewriterMode();
+                    return;
+                }
+
+                // Ctrl + B : 加粗
+                if (ctrl && e.key === 'b') {
+                    e.preventDefault();
+                    wrapSelection('**', '**');
+                    return;
+                }
+
+                // Ctrl + I : 斜体
+                if (ctrl && e.key === 'i') {
+                    e.preventDefault();
+                    wrapSelection('*', '*');
+                    return;
+                }
+
+                // Ctrl + 1-6 : 标题
+                if (ctrl && e.key >= '1' && e.key <= '6') {
+                    e.preventDefault();
+                    const level = parseInt(e.key);
+                    insertHeading(level);
+                    return;
+                }
+
+                // Ctrl + T : 表格
+                if (ctrl && e.key === 't') {
+                    e.preventDefault();
+                    insertTable();
+                    return;
+                }
+
+                // Ctrl + N : 新建
+                if (ctrl && e.key === 'n') {
+                    e.preventDefault();
+                    if (confirm('新建文档将清空当前内容，确定吗？')) {
+                        editor.innerText = '';
+                        renderMarkdown();
+                    }
+                    return;
+                }
+
+                // Ctrl + P : 快速打开
+                if (ctrl && e.key === 'p') {
+                    e.preventDefault();
+                    const name = prompt('输入文件名:', 'new-doc.md');
+                    if (name) {
+                        editor.innerText = '# ' + name + '\n\n';
+                        renderMarkdown();
+                    }
+                    return;
+                }
+            });
+
+            // 包装选中文本
+            function wrapSelection(before, after) {
+                const sel = window.getSelection();
+                if (!sel || !sel.rangeCount) return;
+                const range = sel.getRangeAt(0);
+                const text = range.toString();
+                if (text) {
+                    document.execCommand('insertText', false, before + text + after);
+                    renderMarkdown();
+                }
+            }
+
+            // 插入标题
+            function insertHeading(level) {
+                const sel = window.getSelection();
+                if (!sel || !sel.rangeCount) return;
+                const range = sel.getRangeAt(0);
+                const line = getCurrentLine(range);
+                if (line !== null) {
+                    const newLine = '#'.repeat(level) + ' ' + line.trim();
+                    replaceCurrentLine(range, newLine);
+                    renderMarkdown();
+                } else {
+                    const text = '#'.repeat(level) + ' ';
+                    document.execCommand('insertText', false, text);
+                    renderMarkdown();
+                }
+            }
+
+            function getCurrentLine(range) {
+                const node = range.startContainer;
+                if (!node || node.nodeType !== Node.TEXT_NODE) return null;
+                const text = node.textContent || '';
+                const offset = range.startOffset;
+                // 找到行首和行尾
+                let start = 0,
+                    end = text.length;
+                for (let i = offset - 1; i >= 0; i--) {
+                    if (text[i] === '\n') { start = i + 1; break; }
+                }
+                for (let i = offset; i < text.length; i++) {
+                    if (text[i] === '\n') { end = i; break; }
+                }
+                return text.substring(start, end);
+            }
+
+            function replaceCurrentLine(range, newLine) {
+                const node = range.startContainer;
+                if (!node || node.nodeType !== Node.TEXT_NODE) return;
+                const text = node.textContent || '';
+                const offset = range.startOffset;
+                let start = 0,
+                    end = text.length;
+                for (let i = offset - 1; i >= 0; i--) {
+                    if (text[i] === '\n') { start = i + 1; break; }
+                }
+                for (let i = offset; i < text.length; i++) {
+                    if (text[i] === '\n') { end = i; break; }
+                }
+                const before = text.substring(0, start);
+                const after = text.substring(end);
+                node.textContent = before + newLine + after;
+                // 移动光标到新行末尾
+                const newRange = document.createRange();
+                newRange.setStart(node, start + newLine.length);
+                newRange.collapse(true);
+                const sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(newRange);
-                onEditorInput();
             }
 
-            function insertHeading(level) {
-                var prefix = '#'.repeat(level) + ' ';
-                document.execCommand('insertText', false, prefix);
-                setTimeout(onEditorInput, 10);
-            }
-
+            // 插入表格
             function insertTable() {
-                var tableMarkdown =
-                    '\n            | 列1 | 列2 | 列3 |\n            |-----|-----|-----|\n            | 单元格 | 单元格 | 单元格 |\n            | 单元格 | 单元格 | 单元格 |\n            ';
-                document.execCommand('insertText', false, tableMarkdown);
-                setTimeout(onEditorInput, 10);
+                const table = '| 列1 | 列2 | 列3 |\n|------|------|------|\n| 内容 | 内容 | 内容 |\n';
+                document.execCommand('insertText', false, table);
+                renderMarkdown();
             }
 
-            function handleListContinuation() {
-                var sel = window.getSelection();
-                if (!sel || sel.rangeCount === 0) return;
-                var range = sel.getRangeAt(0);
-                var node = range.startContainer;
-                while (node && node !== editor) {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        var tag = node.tagName;
-                        if (['P', 'LI', 'BLOCKQUOTE'].indexOf(tag) !== -1) break;
-                    }
-                    node = node.parentNode;
+            // ============================================================
+            //  11. 模式切换
+            // ============================================================
+            function toggleSourceMode() {
+                CONFIG.sourceMode = !CONFIG.sourceMode;
+                btnSource.classList.toggle('active', CONFIG.sourceMode);
+                editor.classList.toggle('source-mode', CONFIG.sourceMode);
+                if (CONFIG.sourceMode) {
+                    // 显示源码
+                    const text = editor.innerText || '';
+                    editor.innerHTML = text.split('\n').map(line =>
+                        '<span class="source-line">' + escapeHtml(line) + '</span>'
+                    ).join('');
+                } else {
+                    renderMarkdown();
                 }
-                if (!node || node === editor) return;
-                var text = node.textContent || '';
-                var ulMatch = text.match(/^[\s]*[-*]\s+/);
-                var olMatch = text.match(/^[\s]*(\d+)\.\s+/);
-                if (ulMatch || olMatch) {
-                    var stripped = text.replace(/^[\s]*[-*]\s+/, '').replace(/^[\s]*\d+\.\s+/, '').trim();
-                    if (!stripped) {
-                        var p = document.createElement('p');
-                        p.textContent = '';
-                        node.parentNode.replaceChild(p, node);
-                        var newRange = document.createRange();
-                        newRange.setStart(p, 0);
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        renderMarkdown(true);
-                        return;
-                    }
+                updateStatus();
+            }
+
+            function toggleFocusMode() {
+                CONFIG.focusMode = !CONFIG.focusMode;
+                btnFocus.classList.toggle('active', CONFIG.focusMode);
+                wrapper.classList.toggle('focus-mode', CONFIG.focusMode);
+                if (CONFIG.focusMode) {
+                    highlightCurrentLine();
                 }
-                var quoteMatch = text.match(/^[\s]*>\s+/);
-                if (quoteMatch) {
-                    var stripped2 = text.replace(/^[\s]*>\s+/, '').trim();
-                    if (!stripped2) {
-                        var p2 = document.createElement('p');
-                        p2.textContent = '';
-                        node.parentNode.replaceChild(p2, node);
-                        var newRange2 = document.createRange();
-                        newRange2.setStart(p2, 0);
-                        newRange2.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange2);
-                        renderMarkdown(true);
-                        return;
-                    }
-                }
-                var headingMatch = text.match(/^(#{1,6})\s+/);
-                if (headingMatch) {
-                    var p3 = document.createElement('p');
-                    p3.textContent = '';
-                    if (node.parentNode) {
-                        node.parentNode.insertBefore(p3, node.nextSibling);
-                        var newRange3 = document.createRange();
-                        newRange3.setStart(p3, 0);
-                        newRange3.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange3);
-                        renderMarkdown(true);
-                    }
+            }
+
+            function toggleTypewriterMode() {
+                CONFIG.typewriterMode = !CONFIG.typewriterMode;
+                btnTypewriter.classList.toggle('active', CONFIG.typewriterMode);
+                wrapper.classList.toggle('typewriter-mode', CONFIG.typewriterMode);
+                if (CONFIG.typewriterMode) {
+                    scrollToCenter();
                 }
             }
 
             function toggleSidebar() {
-                isSidebarOpen = !isSidebarOpen;
-                sidebar.classList.toggle('collapsed', !isSidebarOpen);
+                CONFIG.sidebarOpen = !CONFIG.sidebarOpen;
+                sidebar.classList.toggle('open', CONFIG.sidebarOpen);
+                btnSidebar.classList.toggle('active', CONFIG.sidebarOpen);
             }
 
-            function exportHTML() {
-                var content = editor.innerHTML;
-                var style = document.querySelector('style').innerHTML;
-                var html =
-                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>导出的文档</title><style>' +
-                    style +
-                    '</style><style>body{max-width:900px;margin:40px auto;padding:0 20px;}</style></head><body>' +
-                    content +
-                    '</body></html>';
-                downloadFile(html, 'document.html', 'text/html');
+            function toggleTheme() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                CONFIG.theme = isDark ? 'light' : 'dark';
+                // 更新代码高亮主题
+                const hljsLink = document.querySelector('link[href*="highlight.js"][href*=".min.css"]');
+                if (hljsLink) {
+                    hljsLink.href = isDark ?
+                        'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css' :
+                        'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+                }
             }
 
-            function exportPDF() { window.print(); }
+            // 高亮当前行 (专注模式)
+            function highlightCurrentLine() {
+                // 由滚动和点击事件触发
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0) {
+                    const range = sel.getRangeAt(0);
+                    const node = range.startContainer;
+                    if (node) {
+                        // 找到所在块级元素
+                        let block = node;
+                        while (block && block !== editor && !isBlockElement(block)) {
+                            block = block.parentElement;
+                        }
+                        if (block && block !== editor) {
+                            // 移除所有 focus-line
+                            editor.querySelectorAll('.focus-line').forEach(el => el.classList.remove('focus-line'));
+                            block.classList.add('focus-line');
+                        }
+                    }
+                }
+            }
 
-            function downloadFile(content, filename, mime) {
-                var blob = new Blob([content], { type: mime });
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
+            function isBlockElement(el) {
+                if (!el) return false;
+                const tags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE', 'UL', 'OL', 'TABLE', 'HR', 'DIV'];
+                return tags.includes(el.tagName);
+            }
+
+            // 滚动到中心 (打字机模式)
+            function scrollToCenter() {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0) {
+                    const range = sel.getRangeAt(0);
+                    const node = range.startContainer;
+                    if (node) {
+                        let target = node;
+                        if (target.nodeType === Node.TEXT_NODE) {
+                            target = target.parentElement;
+                        }
+                        if (target) {
+                            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        }
+                    }
+                }
+            }
+
+            // ============================================================
+            //  12. 导出功能
+            // ============================================================
+            function exportDocument(format) {
+                const text = editor.innerText || '';
+                const html = editor.innerHTML || '';
+
+                switch (format) {
+                    case 'html': {
+                        const doc = `<!DOCTYPE html>
+                            <html><head><meta charset="UTF-8"><title>导出文档</title>
+                            <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:system-ui,sans-serif;line-height:1.8;}</style>
+                            </head><body>${html}</body></html>`;
+                        downloadFile('document.html', doc);
+                        break;
+                    }
+                    case 'pdf': {
+                        window.print();
+                        break;
+                    }
+                    case 'markdown': {
+                        downloadFile('document.md', text);
+                        break;
+                    }
+                    case 'text': {
+                        downloadFile('document.txt', text);
+                        break;
+                    }
+                    default:
+                        alert('不支持的格式');
+                }
+            }
+
+            function downloadFile(filename, content) {
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
                 a.href = url;
                 a.download = filename;
                 document.body.appendChild(a);
@@ -1241,112 +1495,90 @@
                 URL.revokeObjectURL(url);
             }
 
-            function clearDocument() {
-                if (confirm('确定要清空所有内容吗？')) {
-                    currentMarkdown = '';
-                    editor.innerHTML = '<p class="placeholder">开始书写… 支持 Markdown 语法</p>';
-                    updateStats();
-                    updateOutline('');
-                    renderMarkdown(true);
-                }
-            }
-
-            function onPaste(e) {
-                var items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                for (var i = 0; i < items.length; i++) {
-                    var item = items[i];
-                    if (item.type.startsWith('image/')) {
-                        e.preventDefault();
-                        var file = item.getAsFile();
-                        var reader = new FileReader();
-                        reader.onload = function (ev) {
-                            var dataUrl = ev.target.result;
-                            document.execCommand('insertText', false, '![粘贴图片](' + dataUrl + ')');
-                            setTimeout(onEditorInput, 10);
-                        };
-                        reader.readAsDataURL(file);
-                        break;
-                    }
-                }
-            }
-
-            function onDrop(e) {
-                e.preventDefault();
-                var files = e.dataTransfer.files;
-                for (var i = 0; i < files.length; i++) {
-                    var file = files[i];
-                    if (file.type.startsWith('image/')) {
-                        var reader = new FileReader();
-                        reader.onload = function (ev) {
-                            var dataUrl = ev.target.result;
-                            document.execCommand('insertText', false, '![拖拽图片](' + dataUrl + ')');
-                            setTimeout(onEditorInput, 10);
-                        };
-                        reader.readAsDataURL(file);
-                        break;
-                    }
-                }
-            }
-
-            function init() {
-            initialMD = "# 欢迎使用 MD Editor/n这是一个简洁的 Markdown 编辑器，支持实时预览、语法高亮、LaTeX 数学公式、Mermaid 流程图、任务列表等功能。"
-            currentMarkdown = initialMD;
-            renderMarkdown(false);
-
-            var inputHandler = onEditorInput;
-            editor._inputHandler = inputHandler;
-            editor.addEventListener('input', inputHandler);
-            editor.addEventListener('keydown', onEditorKeydown);
-            editor.addEventListener('paste', onPaste);
-            editor.addEventListener('drop', onDrop);
-            editor.addEventListener('dragover', function (e) { e.preventDefault(); });
-
-            document.addEventListener('selectionchange', function () {
-                if (focusMode) updateFocusLine();
-                if (typewriterMode) scrollToCaret();
-            });
-            editor.addEventListener('scroll', function () {
-                if (typewriterMode) scrollToCaret();
+            // ============================================================
+            //  13. 事件绑定
+            // ============================================================
+            // 侧边栏 tab
+            tabButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tab = btn.dataset.tab;
+                    CONFIG.currentTab = tab;
+                    panelOutline.classList.toggle('hidden', tab !== 'outline');
+                    panelFiles.classList.toggle('hidden', tab !== 'files');
+                    if (tab === 'files') updateFileTree();
+                });
             });
 
+            // 按钮
             btnSidebar.addEventListener('click', toggleSidebar);
-            btnSidebarClose.addEventListener('click', toggleSidebar);
             btnSource.addEventListener('click', toggleSourceMode);
-            btnFocus.addEventListener('click', toggleFocus);
-            btnTypewriter.addEventListener('click', toggleTypewriter);
+            btnFocus.addEventListener('click', toggleFocusMode);
+            btnTypewriter.addEventListener('click', toggleTypewriterMode);
             btnTheme.addEventListener('click', toggleTheme);
-            btnExportHTML.addEventListener('click', exportHTML);
-            btnExportPDF.addEventListener('click', exportPDF);
-            btnClear.addEventListener('click', clearDocument);
+            btnExport.addEventListener('click', () => {
+                exportModal.classList.add('open');
+            });
+            modalClose.addEventListener('click', () => {
+                exportModal.classList.remove('open');
+            });
+            exportModal.addEventListener('click', (e) => {
+                if (e.target === exportModal) exportModal.classList.remove('open');
+            });
+            exportModal.querySelectorAll('[data-format]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const format = btn.dataset.format;
+                    exportModal.classList.remove('open');
+                    exportDocument(format);
+                });
+            });
 
-            document.addEventListener('keydown', function (e) {
-                var ctrl = e.ctrlKey || e.metaKey;
-                if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
-                    e.preventDefault();
-                    toggleSidebar();
+            // 编辑器选择变化 (专注模式高亮)
+            document.addEventListener('selectionchange', () => {
+                if (CONFIG.focusMode) {
+                    highlightCurrentLine();
                 }
-                if (e.key === 'F8' && !ctrl) {
-                    e.preventDefault();
-                    toggleFocus();
-                }
-                if (e.key === 'F9' && !ctrl) {
-                    e.preventDefault();
-                    toggleTypewriter();
+                if (CONFIG.typewriterMode) {
+                    scrollToCenter();
                 }
             });
 
-            statMode.textContent = '编辑';
-            statTheme.textContent = '🌞';
-            updateStats();
-        }
+            // 窗口打印
+            window.addEventListener('beforeprint', () => {
+                // 打印前切换为预览模式
+            });
 
-            if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
+            // ============================================================
+            //  14. 初始化
+            // ============================================================
+            function init() {
+                // 默认内容
+                const defaultContent =
+                    '# 欢迎使用 Markdown 编辑器\n\n这是一个类 **Typora** 的所见即所得编辑器。\n\n## 快速开始\n\n- 输入 `#` 加空格创建标题\n- 输入 `**文本**` 加粗\n- 输入 `*文本*` 斜体\n- 输入 `- ` 创建列表\n- 输入 `1. ` 创建有序列表\n- 输入 `>` 创建引用\n- 输入 ` ``` ` 创建代码块\n\n## 数学公式\n\n行内公式: $E = mc^2$\n\n块级公式:\n\n$$\n\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}\n$$\n\n## 图表 (Mermaid)\n\n```mermaid\ngraph TD\n    A[开始] --> B[处理]\n    B --> C{判断}\n    C -->|是| D[结束]\n    C -->|否| B\n```\n\n## 任务列表\n\n- [x] 完成需求分析\n- [ ] 实现编辑器\n- [ ] 测试功能\n\n## 表格\n\n| 功能 | 状态 |\n|------|------|\n| 实时渲染 | ✅ |\n| 光标同步 | ✅ |\n| 导出 | ✅ |\n\n---\n\n> 享受写作！ 📝\n';
+
+                editor.innerText = defaultContent;
+                renderMarkdown();
+
+                // 设置默认主题
+                document.documentElement.setAttribute('data-theme', 'light');
+
+                // 状态栏
+                updateStatus();
+
+                // 文件树
+                updateFileTree();
+
+                console.log('📝 Markdown 编辑器已初始化');
+                console.log('💡 快捷键: Ctrl+/ 源码模式, F8 专注, F9 打字机, Ctrl+Shift+L 侧边栏');
+            }
+
+            // 启动
             init();
-        }
-        }) ();
+
+        })();
     </script>
+
 </body>
 
 </html>
