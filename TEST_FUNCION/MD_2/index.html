@@ -2,30 +2,20 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MD Editor · 类 Typora</title>
-
-    <!-- ===== 第三方库 (使用 cdnjs 确保稳定) ===== -->
-    <!-- Marked: Markdown → HTML -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js?v=20260819073151">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js">
     </script>
-    <!-- highlight.js: 代码高亮 (修正路径) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css?v=20260819073151" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819073151">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <!-- KaTeX: 数学公式 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819073151" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819073151">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <!-- Mermaid: 图表 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js?v=20260819073151">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js">
     </script>
-
     <style>
-        /* ============================================================
-                   GLOBAL RESET & TYPOGRAPHY
-                   ============================================================ */
         * {
             margin: 0;
             padding: 0;
@@ -40,7 +30,6 @@
             --hover: #f5f5f5;
             --code-bg: #f6f8fa;
             --blockquote-border: #dfe2e5;
-            --shadow: rgba(0, 0, 0, 0.08);
             --header-bg: #fafafa;
             --caret: #000000;
             --selection: #b4d5fe;
@@ -61,7 +50,6 @@
             --hover: #2d2d2d;
             --code-bg: #2d2d2d;
             --blockquote-border: #555555;
-            --shadow: rgba(0, 0, 0, 0.4);
             --header-bg: #252525;
             --caret: #d4d4d4;
             --selection: #264f78;
@@ -82,9 +70,6 @@
             transition: background var(--transition), color var(--transition);
         }
 
-        /* ============================================================
-                   LAYOUT
-                   ============================================================ */
         #app {
             display: flex;
             flex-direction: column;
@@ -93,7 +78,6 @@
             background: var(--bg);
         }
 
-        /* ---- 顶栏 ---- */
         #toolbar {
             display: flex;
             align-items: center;
@@ -164,7 +148,6 @@
             margin: 0 4px;
         }
 
-        /* ---- 主体 (侧栏 + 编辑器) ---- */
         #main {
             display: flex;
             flex: 1;
@@ -173,7 +156,6 @@
             transition: background var(--transition);
         }
 
-        /* ---- 侧栏 ---- */
         #sidebar {
             width: 260px;
             background: var(--sidebar-bg);
@@ -224,7 +206,6 @@
             font-size: 14px;
         }
 
-        /* 大纲树 */
         .outline-item {
             padding: 3px 8px;
             cursor: pointer;
@@ -286,7 +267,6 @@
             font-weight: 400;
         }
 
-        /* ---- 编辑器容器 ---- */
         #editor-wrap {
             flex: 1;
             overflow: hidden;
@@ -295,7 +275,6 @@
             transition: background var(--transition);
         }
 
-        /* ---- 编辑区域 (contenteditable) ---- */
         #editor {
             width: 100%;
             height: 100%;
@@ -317,12 +296,10 @@
             box-shadow: none;
         }
 
-        /* 选中样式 */
         #editor ::selection {
             background: var(--selection);
         }
 
-        /* ---- 编辑器内部样式 (渲染后的 Markdown) ---- */
         #editor h1,
         #editor h2,
         #editor h3,
@@ -474,7 +451,6 @@
             border-bottom-color: var(--focus-ring);
         }
 
-        /* 数学公式块 */
         #editor .math-block {
             text-align: center;
             padding: 0.6em 0;
@@ -489,7 +465,6 @@
             padding: 0 0.1em;
         }
 
-        /* Mermaid 图表 */
         #editor .mermaid-container {
             background: var(--bg);
             padding: 0.8em;
@@ -503,7 +478,6 @@
             max-width: 100%;
         }
 
-        /* ---- 状态栏 ---- */
         #statusbar {
             display: flex;
             align-items: center;
@@ -537,7 +511,6 @@
             opacity: 0.8;
         }
 
-        /* ---- 滚动条美化 ---- */
         #editor::-webkit-scrollbar,
         .s-body::-webkit-scrollbar {
             width: 5px;
@@ -560,7 +533,6 @@
             background: var(--text-secondary);
         }
 
-        /* ---- 响应式 ---- */
         @media (max-width: 768px) {
             #editor {
                 padding: 20px 24px 80px;
@@ -611,7 +583,6 @@
             }
         }
 
-        /* ---- 专注模式 / 打字机模式 (由JS控制类) ---- */
         #editor.focus-mode p:not(.focus-line),
         #editor.focus-mode div:not(.focus-line),
         #editor.focus-mode h1:not(.focus-line),
@@ -637,7 +608,6 @@
             scroll-behavior: smooth;
         }
 
-        /* ---- 空状态占位 ---- */
         #editor .placeholder {
             color: var(--text-secondary);
             opacity: 0.5;
@@ -648,10 +618,7 @@
 </head>
 
 <body>
-
     <div id="app">
-
-        <!-- ====== 工具栏 ====== -->
         <div id="toolbar">
             <div class="left">
                 <span class="brand">⌨ <span>MD</span> Editor</span>
@@ -682,11 +649,7 @@
                 <button class="tb-btn" id="btnClear" title="清空">🗑</button>
             </div>
         </div>
-
-        <!-- ====== 主体 ====== -->
         <div id="main">
-
-            <!-- 侧栏 -->
             <div id="sidebar">
                 <div class="s-header">
                     <span>📑 大纲</span>
@@ -694,17 +657,12 @@
                 </div>
                 <div class="s-body" id="outlineTree"></div>
             </div>
-
-            <!-- 编辑器 -->
             <div id="editor-wrap">
                 <div id="editor" contenteditable="true" spellcheck="true">
                     <p class="placeholder">开始书写… 支持 Markdown 语法</p>
                 </div>
             </div>
-
         </div>
-
-        <!-- ====== 状态栏 ====== -->
         <div id="statusbar">
             <div class="stat-item">
                 <span id="statWords">0 字</span>
@@ -715,376 +673,293 @@
                 <span id="statTheme">🌞</span>
             </div>
         </div>
-
     </div>
-
     <script>
-        // ================================================================
-        //  MD Editor — 类 Typora 所见即所得
-        //  技术: contenteditable + marked.js + 光标恢复 + 增量渲染
-        // ================================================================
-
         (function () {
             'use strict';
+            var editor = document.getElementById('editor');
+            var outlineTree = document.getElementById('outlineTree');
+            var statWords = document.getElementById('statWords');
+            var statLines = document.getElementById('statLines');
+            var statMode = document.getElementById('statMode');
+            var statTheme = document.getElementById('statTheme');
+            var btnSidebar = document.getElementById('btnSidebar');
+            var btnSidebarClose = document.getElementById('btnSidebarClose');
+            var sidebar = document.getElementById('sidebar');
+            var btnSource = document.getElementById('btnSource');
+            var btnFocus = document.getElementById('btnFocus');
+            var btnTypewriter = document.getElementById('btnTypewriter');
+            var btnTheme = document.getElementById('btnTheme');
+            var btnExportHTML = document.getElementById('btnExportHTML');
+            var btnExportPDF = document.getElementById('btnExportPDF');
+            var btnClear = document.getElementById('btnClear');
 
-            // ---- DOM refs ----
-            const editor = document.getElementById('editor');
-            const outlineTree = document.getElementById('outlineTree');
-            const statWords = document.getElementById('statWords');
-            const statLines = document.getElementById('statLines');
-            const statMode = document.getElementById('statMode');
-            const statTheme = document.getElementById('statTheme');
+            var sourceMode = false;
+            var focusMode = false;
+            var typewriterMode = false;
+            var darkTheme = false;
+            var isSidebarOpen = true;
+            var currentMarkdown = '';
+            var renderTimer = null;
+            var isRendering = false;
 
-            const btnSidebar = document.getElementById('btnSidebar');
-            const btnSidebarClose = document.getElementById('btnSidebarClose');
-            const sidebar = document.getElementById('sidebar');
-            const btnSource = document.getElementById('btnSource');
-            const btnFocus = document.getElementById('btnFocus');
-            const btnTypewriter = document.getElementById('btnTypewriter');
-            const btnTheme = document.getElementById('btnTheme');
-            const btnExportHTML = document.getElementById('btnExportHTML');
-            const btnExportPDF = document.getElementById('btnExportPDF');
-            const btnClear = document.getElementById('btnClear');
-
-            // ---- 状态 ----
-            let sourceMode = false;
-            let focusMode = false;
-            let typewriterMode = false;
-            let darkTheme = false;
-            let isSidebarOpen = true;
-
-            // 当前文档的 Markdown 源码 (用于源码模式)
-            let currentMarkdown = '';
-
-            // 防抖计时器
-            let renderTimer = null;
-
-            // 是否正在渲染 (防止循环)
-            let isRendering = false;
-
-            // ---- 配置 marked ----
-            const markedOptions = {
+            var markedOptions = {
                 gfm: true,
                 breaks: true,
                 pedantic: false,
                 highlight: function (code, lang) {
                     if (lang && hljs.getLanguage(lang)) {
-                        try {
-                            return hljs.highlight(code, { language: lang }).value;
-                        } catch (_) { }
+                        try { return hljs.highlight(code, { language: lang }).value; } catch (_) { }
                     }
                     return hljs.highlightAuto(code).value;
                 }
             };
             marked.setOptions(markedOptions);
 
-            // ---- KaTeX 渲染扩展 (marked) ----
-            const renderer = new marked.Renderer();
-
-            const originalParagraph = renderer.paragraph;
+            var renderer = new marked.Renderer();
+            var originalParagraph = renderer.paragraph;
             renderer.paragraph = function (text) {
-                const blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
+                var blockMathRegex = /\$\$([\s\S]+?)\$\$/g;
                 if (blockMathRegex.test(text)) {
                     text = text.replace(blockMathRegex, function (match, math) {
                         try {
                             return katex.renderToString(math.trim(), {
-                                displayMode: true,
-                                throwOnError: false,
+                                displayMode: true, throwOnError: false,
                                 trust: true
                             });
-                        } catch (_) {
-                            return match;
-                        }
+                        } catch (_) { return match; }
                     });
                 }
-                const inlineMathRegex = /\$([^\$\n]+?)\$/g;
+                var inlineMathRegex = /\$([^\$\n]+?)\$/g;
                 if (inlineMathRegex.test(text)) {
                     text = text.replace(inlineMathRegex, function (match, math) {
                         try {
                             return katex.renderToString(math.trim(), {
-                                displayMode: false,
-                                throwOnError: false,
+                                displayMode: false, throwOnError: false,
                                 trust: true
                             });
-                        } catch (_) {
-                            return match;
-                        }
+                        } catch (_) { return match; }
                     });
                 }
                 return originalParagraph.call(this, text);
             };
-
-            const originalCode = renderer.code;
+            var originalCode = renderer.code;
             renderer.code = function (code, lang, escaped) {
                 if (lang === 'mermaid') {
-                    return `<div class="mermaid-container"><div class="mermaid">${code}</div></div>`;
+                    return '<div class="mermaid-container"><div class="mermaid">' + code + '</div></div>';
                 }
                 return originalCode.call(this, code, lang, escaped);
             };
-
-            const originalTable = renderer.table;
             renderer.table = function (header, body) {
-                return `<table>${header}${body}</table>`;
+                return '<table>' + header + body + '</table>';
             };
-
-            const originalList = renderer.list;
+            var originalList = renderer.list;
             renderer.list = function (body, ordered, start) {
-                const isTaskList = /<input\s+type="checkbox"/.test(body);
-                if (isTaskList) {
-                    return `<ul class="task-list">${body}</ul>`;
+                if (/<input\s+type="checkbox"/.test(body)) {
+                    return '<ul class="task-list">' + body + '</ul>';
                 }
                 return originalList.call(this, body, ordered, start);
             };
-
-            const originalListItem = renderer.listitem;
+            var originalListItem = renderer.listitem;
             renderer.listitem = function (text, task, checked) {
                 if (task) {
-                    const checkbox = `<input type="checkbox" ${checked ? 'checked' : ''} disabled />`;
-                    return `<li class="task-list-item">${checkbox} ${text}</li>`;
+                    var checkbox = '<input type="checkbox" ' + (checked ? 'checked' : '') + ' disabled />';
+                    return '<li class="task-list-item">' + checkbox + ' ' + text + '</li>';
                 }
                 return originalListItem.call(this, text, task, checked);
             };
-
             marked.use({ renderer });
 
-            // ---- Mermaid 初始化 ----
             mermaid.initialize({
                 startOnLoad: false,
                 theme: darkTheme ? 'dark' : 'default',
                 securityLevel: 'loose',
             });
 
-            // ---- 工具: 获取纯文本内容 (去除 HTML 标签) ----
             function getPlainText(html) {
-                const tmp = document.createElement('div');
+                var tmp = document.createElement('div');
                 tmp.innerHTML = html;
                 return tmp.textContent || '';
             }
 
-            // ---- 工具: 统计字数/行数 ----
             function updateStats() {
-                const plain = getPlainText(editor.innerHTML);
-                const words = plain.replace(/\s/g, '').length;
-                const lines = plain.split('\n').length;
+                var plain = getPlainText(editor.innerHTML);
+                var words = plain.replace(/\s/g, '').length;
+                var lines = plain.split('\n').length;
                 statWords.textContent = words + ' 字';
                 statLines.textContent = lines + ' 行';
             }
 
-            // ---- 核心: 渲染 Markdown → HTML (保留光标) ----
-            function renderMarkdown(keepCursor = true) {
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function saveCursorPosition() {
+                var sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return null;
+                var range = sel.getRangeAt(0);
+                var preRange = document.createRange();
+                preRange.selectNodeContents(editor);
+                preRange.setEnd(range.startContainer, range.startOffset);
+                var startOffset = preRange.toString().length;
+                var endOffset = range.collapsed ? startOffset : startOffset + range.toString().length;
+                return { start: startOffset, end: endOffset };
+            }
+
+            function restoreCursorPosition(pos) {
+                if (!pos) return;
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                var charIndex = 0;
+                var startNode = null,
+                    startOff = 0,
+                    endNode = null,
+                    endOff = 0;
+                var walker = document.createTreeWalker(
+                    editor,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                );
+                var foundStart = false,
+                    foundEnd = false;
+                var node = walker.nextNode();
+                while (node) {
+                    var text = node.textContent;
+                    var len = text.length;
+                    if (!foundStart && charIndex + len >= pos.start) {
+                        startNode = node;
+                        startOff = pos.start - charIndex;
+                        foundStart = true;
+                    }
+                    if (!foundEnd && charIndex + len >= pos.end) {
+                        endNode = node;
+                        endOff = pos.end - charIndex;
+                        foundEnd = true;
+                    }
+                    if (foundStart && foundEnd) break;
+                    charIndex += len;
+                    node = walker.nextNode();
+                }
+                if (!startNode) startNode = editor.lastChild || editor;
+                if (!endNode) endNode = startNode;
+                try {
+                    var range = document.createRange();
+                    range.setStart(startNode, Math.min(startOff, startNode.textContent.length));
+                    range.setEnd(endNode, Math.min(endOff, endNode.textContent.length));
+                    sel.addRange(range);
+                } catch (e) {
+                    var range2 = document.createRange();
+                    var last = editor.lastChild || editor;
+                    range2.setStart(last, last.textContent ? last.textContent.length : 0);
+                    range2.collapse(true);
+                    sel.addRange(range2);
+                }
+            }
+
+            function renderMarkdown(keepCursor) {
                 if (isRendering) return;
                 if (sourceMode) {
-                    const raw = currentMarkdown || getPlainText(editor.innerHTML);
+                    var raw = currentMarkdown || getPlainText(editor.innerHTML);
                     if (editor.innerHTML !== raw) {
                         editor.innerHTML = raw;
                     }
                     updateStats();
                     return;
                 }
-
                 isRendering = true;
-
-                let md = currentMarkdown;
-                if (!md || sourceMode) {
-                    md = getPlainText(editor.innerHTML);
+                var md = currentMarkdown;
+                if (!md) md = getPlainText(editor.innerHTML);
+                var cursorPos = null;
+                if (keepCursor !== false) {
+                    cursorPos = saveCursorPosition();
                 }
-
-                // 保存光标位置
-                let sel = null;
-                let offset = 0;
-                let nodePath = null;
-                if (keepCursor) {
-                    const selection = window.getSelection();
-                    if (selection && selection.rangeCount > 0) {
-                        const range = selection.getRangeAt(0);
-                        const preCaretRange = range.cloneRange();
-                        preCaretRange.selectNodeContents(editor);
-                        preCaretRange.setEnd(range.endContainer, range.endOffset);
-                        offset = preCaretRange.toString().length;
-                        nodePath = getNodePath(range.endContainer);
-                        sel = {
-                            offset: offset,
-                            nodePath: nodePath,
-                            startContainer: range.startContainer,
-                            startOffset: range.startOffset,
-                            endContainer: range.endContainer,
-                            endOffset: range.endOffset,
-                            collapsed: range.collapsed
-                        };
-                    }
-                }
-
-                let html = '';
+                var html = '';
                 try {
                     html = marked.parse(md);
                 } catch (e) {
-                    html = `<p>⚠️ 解析错误: ${e.message}</p>`;
+                    html = '<p>⚠️ 解析错误: ' + e.message + '</p>';
                 }
-
                 if (!html.trim()) {
-                    html = `<p class="placeholder">开始书写… 支持 Markdown 语法</p>`;
+                    html = '<p class="placeholder">开始书写… 支持 Markdown 语法</p>';
                 }
-
+                var inputHandler = editor._inputHandler;
+                if (inputHandler) {
+                    editor.removeEventListener('input', inputHandler);
+                }
                 if (editor.innerHTML !== html) {
                     editor.innerHTML = html;
                 }
-
-                // 渲染 Mermaid
-                const mermaidElements = editor.querySelectorAll('.mermaid');
+                if (inputHandler) {
+                    editor.addEventListener('input', inputHandler);
+                }
+                var mermaidElements = editor.querySelectorAll('.mermaid');
                 if (mermaidElements.length > 0) {
-                    mermaidElements.forEach((el, index) => {
-                        const code = el.textContent;
+                    mermaidElements.forEach(function (el, index) {
+                        var code = el.textContent;
                         try {
-                            const id = `mermaid-${Date.now()}-${index}`;
+                            var id = 'mermaid-' + Date.now() + '-' + index;
                             el.id = id;
-                            mermaid.render(id, code).then(({ svg }) => {
+                            mermaid.render(id, code).then(function (_a) {
+                                var svg = _a.svg;
                                 el.innerHTML = svg;
-                            }).catch(() => { });
+                            }).catch(function () { });
                         } catch (_) { }
                     });
                 }
-
-                // 恢复光标
-                if (keepCursor && sel) {
-                    try {
-                        restoreCursor(sel);
-                    } catch (e) {
-                        try {
-                            const range = document.createRange();
-                            const last = editor.lastChild || editor;
-                            range.setStart(last, last.textContent ? last.textContent.length : 0);
-                            range.collapse(true);
-                            const selection = window.getSelection();
-                            selection.removeAllRanges();
-                            selection.addRange(range);
-                        } catch (_) { }
-                    }
+                if (keepCursor !== false && cursorPos) {
+                    restoreCursorPosition(cursorPos);
                 } else {
                     try {
-                        const range = document.createRange();
-                        const last = editor.lastChild || editor;
+                        var range = document.createRange();
+                        var last = editor.lastChild || editor;
                         range.setStart(last, last.textContent ? last.textContent.length : 0);
                         range.collapse(true);
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(range);
+                        var sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
                     } catch (_) { }
                 }
-
                 currentMarkdown = md;
                 updateStats();
                 updateOutline(md);
-
                 isRendering = false;
             }
 
-            // ---- 获取节点路径 ----
-            function getNodePath(node) {
-                const path = [];
-                let current = node;
-                while (current && current !== editor) {
-                    let index = 0;
-                    let sibling = current;
-                    while (sibling && sibling.previousSibling) {
-                        sibling = sibling.previousSibling;
-                        index++;
-                    }
-                    path.push(index);
-                    current = current.parentNode;
-                }
-                return path.reverse();
-            }
-
-            // ---- 根据路径恢复光标 ----
-            function restoreCursor(sel) {
-                if (!sel) return;
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-
-                let node = editor;
-                const path = sel.nodePath || [];
-                for (let i = 0; i < path.length; i++) {
-                    const idx = path[i];
-                    const children = node.childNodes;
-                    if (idx < children.length) {
-                        node = children[idx];
-                    } else {
-                        if (children.length > 0) {
-                            node = children[children.length - 1];
-                        }
-                        break;
-                    }
-                }
-
-                let textLen = 0;
-                if (node.nodeType === Node.TEXT_NODE) {
-                    textLen = node.textContent.length;
-                } else {
-                    const textNode = node.firstChild;
-                    if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-                        node = textNode;
-                        textLen = node.textContent.length;
-                    } else {
-                        textLen = node.textContent ? node.textContent.length : 0;
-                    }
-                }
-
-                const offset = Math.min(sel.offset || 0, textLen);
-
-                try {
-                    const range = document.createRange();
-                    range.setStart(node, offset);
-                    range.collapse(true);
-                    selection.addRange(range);
-                } catch (e) {
-                    const range = document.createRange();
-                    const last = editor.lastChild || editor;
-                    range.setStart(last, last.textContent ? last.textContent.length : 0);
-                    range.collapse(true);
-                    selection.addRange(range);
-                }
-            }
-
-            // ---- 更新大纲 ----
             function updateOutline(md) {
-                const headingRegex = /^(#{1,6})\s+(.+)$/gm;
-                const headings = [];
-                let match;
+                var headingRegex = /^(#{1,6})\s+(.+)$/gm;
+                var headings = [];
+                var match;
                 while ((match = headingRegex.exec(md)) !== null) {
-                    const level = match[1].length;
-                    const text = match[2].trim();
-                    headings.push({ level, text });
+                    headings.push({ level: match[1].length, text: match[2].trim() });
                 }
-
                 if (headings.length === 0) {
-                    outlineTree.innerHTML = `<div style="color:var(--text-secondary);font-size:13px;padding:8px;">无标题</div>`;
+                    outlineTree.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;padding:8px;">无标题</div>';
                     return;
                 }
-
-                let html = '';
-                headings.forEach((h, index) => {
-                    const cls = `outline-item h${h.level}`;
-                    const badge = `H${h.level}`;
-                    html += `<div class="${cls}" data-index="${index}">
-                                <span class="level-badge">${badge}</span>
-                                ${escapeHtml(h.text)}
-                            </div>`;
+                var html = '';
+                headings.forEach(function (h, index) {
+                    var cls = 'outline-item h' + h.level;
+                    html += '<div class="' + cls + '" data-index="' + index + '">' +
+                        '<span class="level-badge">H' + h.level + '</span>' +
+                        escapeHtml(h.text) +
+                        '</div>';
                 });
                 outlineTree.innerHTML = html;
-
-                outlineTree.querySelectorAll('.outline-item').forEach((el) => {
+                outlineTree.querySelectorAll('.outline-item').forEach(function (el) {
                     el.addEventListener('click', function () {
-                        const idx = parseInt(this.dataset.index, 10);
+                        var idx = parseInt(this.dataset.index, 10);
                         if (!isNaN(idx) && idx < headings.length) {
-                            const target = headings[idx];
-                            const text = target.text;
-                            const headers = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
-                            for (const h of headers) {
+                            var text = headings[idx].text;
+                            var headers = editor.querySelectorAll('h1,h2,h3,h4,h5,h6');
+                            for (var i = 0; i < headers.length; i++) {
+                                var h = headers[i];
                                 if (h.textContent.trim() === text) {
                                     h.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    h.style.transition = 'background 0.3s';
                                     h.style.background = 'var(--selection)';
-                                    setTimeout(() => { h.style.background = ''; }, 600);
+                                    setTimeout(function () { h.style.background = ''; }, 600);
                                     break;
                                 }
                             }
@@ -1093,17 +968,29 @@
                 });
             }
 
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
+            function onEditorInput() {
+                if (isRendering) return;
+                if (sourceMode) {
+                    currentMarkdown = editor.innerText || editor.textContent || '';
+                    updateStats();
+                    updateOutline(currentMarkdown);
+                    return;
+                }
+                currentMarkdown = getPlainText(editor.innerHTML);
+                updateStats();
+                updateOutline(currentMarkdown);
+                clearTimeout(renderTimer);
+                renderTimer = setTimeout(function () {
+                    renderMarkdown(true);
+                    if (focusMode) updateFocusLine();
+                    if (typewriterMode) scrollToCaret();
+                }, 300);
             }
 
-            // ---- 切换源码模式 ----
             function toggleSourceMode() {
                 sourceMode = !sourceMode;
                 if (sourceMode) {
-                    const md = currentMarkdown || getPlainText(editor.innerHTML);
+                    var md = currentMarkdown || getPlainText(editor.innerHTML);
                     editor.innerHTML = md;
                     statMode.textContent = '源码';
                     btnSource.classList.add('active');
@@ -1115,294 +1002,212 @@
                 }
             }
 
-            // ---- 切换主题 ----
             function toggleTheme() {
                 darkTheme = !darkTheme;
                 document.documentElement.setAttribute('data-theme', darkTheme ? 'dark' : 'light');
                 statTheme.textContent = darkTheme ? '🌙' : '🌞';
-                const mermaidEls = editor.querySelectorAll('.mermaid-container');
-                if (mermaidEls.length > 0) {
-                    mermaid.initialize({
-                        startOnLoad: false,
-                        theme: darkTheme ? 'dark' : 'default',
-                        securityLevel: 'loose',
-                    });
-                    renderMarkdown(true);
-                }
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: darkTheme ? 'dark' : 'default',
+                    securityLevel: 'loose',
+                });
+                renderMarkdown(true);
             }
 
-            // ---- 切换专注模式 ----
             function toggleFocus() {
                 focusMode = !focusMode;
                 editor.classList.toggle('focus-mode', focusMode);
                 btnFocus.classList.toggle('active', focusMode);
-                if (focusMode) {
-                    updateFocusLine();
-                }
+                if (focusMode) updateFocusLine();
             }
 
             function updateFocusLine() {
                 if (!focusMode) return;
-                const sel = window.getSelection();
+                var sel = window.getSelection();
                 if (sel && sel.rangeCount > 0) {
-                    const range = sel.getRangeAt(0);
-                    let node = range.startContainer;
+                    var node = sel.getRangeAt(0).startContainer;
                     while (node && node !== editor) {
                         if (node.nodeType === Node.ELEMENT_NODE) {
-                            const tag = node.tagName;
+                            var tag = node.tagName;
                             if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'UL', 'OL', 'PRE', 'TABLE', 'DIV']
-                                .includes(tag)) {
-                                break;
-                            }
+                                .indexOf(tag) !== -1) break;
                         }
                         node = node.parentNode;
                     }
-                    editor.querySelectorAll('.focus-line').forEach(el => el.classList.remove('focus-line'));
+                    editor.querySelectorAll('.focus-line').forEach(function (el) { el.classList.remove('focus-line'); });
                     if (node && node !== editor) {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            node.classList.add('focus-line');
-                        } else if (node.parentNode) {
-                            node.parentNode.classList.add('focus-line');
-                        }
+                        if (node.nodeType === Node.ELEMENT_NODE) node.classList.add('focus-line');
+                        else if (node.parentNode) node.parentNode.classList.add('focus-line');
                     }
                 }
             }
 
-            // ---- 切换打字机模式 ----
             function toggleTypewriter() {
                 typewriterMode = !typewriterMode;
                 editor.classList.toggle('typewriter-mode', typewriterMode);
                 btnTypewriter.classList.toggle('active', typewriterMode);
-                if (typewriterMode) {
-                    scrollToCaret();
-                }
+                if (typewriterMode) scrollToCaret();
             }
 
             function scrollToCaret() {
                 if (!typewriterMode) return;
-                const sel = window.getSelection();
+                var sel = window.getSelection();
                 if (sel && sel.rangeCount > 0) {
-                    const range = sel.getRangeAt(0);
-                    const rect = range.getClientRects()[0];
+                    var rect = sel.getRangeAt(0).getClientRects()[0];
                     if (rect) {
-                        const editorRect = editor.getBoundingClientRect();
-                        const targetY = rect.top - editorRect.top - editor.clientHeight / 2 + 40;
+                        var editorRect = editor.getBoundingClientRect();
+                        var targetY = rect.top - editorRect.top - editor.clientHeight / 2 + 40;
                         editor.scrollTop += targetY;
                     }
                 }
             }
 
-            // ---- 处理输入事件 (防抖渲染) ----
-            function onEditorInput() {
-                if (sourceMode) {
-                    currentMarkdown = editor.innerText || editor.textContent || '';
-                    updateStats();
-                    updateOutline(currentMarkdown);
-                    return;
-                }
-
-                const raw = getPlainText(editor.innerHTML);
-                currentMarkdown = raw;
-
-                clearTimeout(renderTimer);
-                renderTimer = setTimeout(() => {
-                    renderMarkdown(true);
-                    if (focusMode) updateFocusLine();
-                    if (typewriterMode) scrollToCaret();
-                }, 200);
-
-                updateStats();
-                updateOutline(raw);
-                if (focusMode) updateFocusLine();
-            }
-
-            // ---- 处理键盘事件 (快捷键) ----
             function onEditorKeydown(e) {
-                const ctrl = e.ctrlKey || e.metaKey;
-
+                var ctrl = e.ctrlKey || e.metaKey;
                 if (ctrl && e.key === '/') {
                     e.preventDefault();
-                    toggleSourceMode();
-                    return;
+                    toggleSourceMode(); return;
                 }
-
                 if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
                     e.preventDefault();
-                    toggleSidebar();
-                    return;
+                    toggleSidebar(); return;
                 }
-
                 if (e.key === 'F8') {
                     e.preventDefault();
-                    toggleFocus();
-                    return;
+                    toggleFocus(); return;
                 }
-
                 if (e.key === 'F9') {
                     e.preventDefault();
-                    toggleTypewriter();
-                    return;
+                    toggleTypewriter(); return;
                 }
-
                 if (ctrl && e.key === 'b') {
                     e.preventDefault();
-                    wrapSelection('**', '**');
-                    return;
+                    wrapSelection('**', '**'); return;
                 }
-
                 if (ctrl && e.key === 'i') {
                     e.preventDefault();
-                    wrapSelection('*', '*');
-                    return;
+                    wrapSelection('*', '*'); return;
                 }
-
                 if (ctrl && e.key >= '1' && e.key <= '6') {
                     e.preventDefault();
-                    const level = parseInt(e.key, 10);
-                    insertHeading(level);
-                    return;
+                    insertHeading(parseInt(e.key, 10)); return;
                 }
-
                 if (ctrl && e.key === 't') {
                     e.preventDefault();
-                    insertTable();
-                    return;
+                    insertTable(); return;
                 }
-
                 if (e.key === 'Enter' && !e.shiftKey && !ctrl) {
-                    setTimeout(() => {
-                        handleListContinuation();
-                    }, 10);
+                    setTimeout(handleListContinuation, 10);
                 }
-
                 if (e.key === 'Tab' && !e.shiftKey) {
                     e.preventDefault();
                     document.execCommand('insertText', false, '    ');
                 }
             }
 
-            function handleListContinuation() {
-                const sel = window.getSelection();
-                if (!sel || sel.rangeCount === 0) return;
-                const range = sel.getRangeAt(0);
-                let node = range.startContainer;
-                while (node && node !== editor) {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        const tag = node.tagName;
-                        if (['P', 'LI', 'BLOCKQUOTE'].includes(tag)) break;
-                    }
-                    node = node.parentNode;
-                }
-                if (!node || node === editor) return;
-
-                const text = node.textContent || '';
-                const ulMatch = text.match(/^[\s]*[-*]\s+/);
-                const olMatch = text.match(/^[\s]*(\d+)\.\s+/);
-                if (ulMatch || olMatch) {
-                    const stripped = text.replace(/^[\s]*[-*]\s+/, '').replace(/^[\s]*\d+\.\s+/, '').trim();
-                    if (!stripped) {
-                        const p = document.createElement('p');
-                        p.textContent = '';
-                        node.parentNode.replaceChild(p, node);
-                        const newRange = document.createRange();
-                        newRange.setStart(p, 0);
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        renderMarkdown(true);
-                        return;
-                    }
-                }
-
-                const quoteMatch = text.match(/^[\s]*>\s+/);
-                if (quoteMatch) {
-                    const stripped = text.replace(/^[\s]*>\s+/, '').trim();
-                    if (!stripped) {
-                        const p = document.createElement('p');
-                        p.textContent = '';
-                        node.parentNode.replaceChild(p, node);
-                        const newRange = document.createRange();
-                        newRange.setStart(p, 0);
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        renderMarkdown(true);
-                        return;
-                    }
-                }
-
-                const headingMatch = text.match(/^(#{1,6})\s+/);
-                if (headingMatch) {
-                    const p = document.createElement('p');
-                    p.textContent = '';
-                    if (node.parentNode) {
-                        node.parentNode.insertBefore(p, node.nextSibling);
-                        const newRange = document.createRange();
-                        newRange.setStart(p, 0);
-                        newRange.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
-                        renderMarkdown(true);
-                    }
-                }
-            }
-
             function wrapSelection(prefix, suffix) {
-                const sel = window.getSelection();
+                var sel = window.getSelection();
                 if (!sel || sel.rangeCount === 0) return;
-                const range = sel.getRangeAt(0);
+                var range = sel.getRangeAt(0);
                 if (range.collapsed) {
-                    const text = prefix + suffix;
+                    var text = prefix + suffix;
                     document.execCommand('insertText', false, text);
-                    const newRange = document.createRange();
-                    const node = range.startContainer;
-                    const offset = range.startOffset + prefix.length;
+                    var newRange = document.createRange();
+                    var node = range.startContainer;
+                    var offset = range.startOffset + prefix.length;
                     newRange.setStart(node, offset);
                     newRange.collapse(true);
                     sel.removeAllRanges();
                     sel.addRange(newRange);
                     return;
                 }
-                const text = range.toString();
-                const wrapped = prefix + text + suffix;
+                var selectedText = range.toString();
+                var wrapped = prefix + selectedText + suffix;
                 range.deleteContents();
-                const textNode = document.createTextNode(wrapped);
+                var textNode = document.createTextNode(wrapped);
                 range.insertNode(textNode);
-                const newRange = document.createRange();
+                var newRange = document.createRange();
                 newRange.setStart(textNode, prefix.length);
-                newRange.setEnd(textNode, prefix.length + text.length);
+                newRange.setEnd(textNode, prefix.length + selectedText.length);
                 sel.removeAllRanges();
                 sel.addRange(newRange);
                 onEditorInput();
             }
 
             function insertHeading(level) {
-                const prefix = '#'.repeat(level) + ' ';
+                var prefix = '#'.repeat(level) + ' ';
                 document.execCommand('insertText', false, prefix);
-                const sel = window.getSelection();
-                if (sel && sel.rangeCount > 0) {
-                    const range = sel.getRangeAt(0);
-                    const node = range.startContainer;
-                    const offset = range.startOffset;
-                    const newOffset = offset;
-                    const newRange = document.createRange();
-                    newRange.setStart(node, newOffset);
-                    newRange.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(newRange);
-                }
-                setTimeout(() => onEditorInput(), 10);
+                setTimeout(onEditorInput, 10);
             }
 
             function insertTable() {
-                const tableMarkdown = `
-            | 列1 | 列2 | 列3 |
-            |-----|-----|-----|
-            | 单元格 | 单元格 | 单元格 |
-            | 单元格 | 单元格 | 单元格 |
-            `;
+                var tableMarkdown =
+                    '\n            | 列1 | 列2 | 列3 |\n            |-----|-----|-----|\n            | 单元格 | 单元格 | 单元格 |\n            | 单元格 | 单元格 | 单元格 |\n            ';
                 document.execCommand('insertText', false, tableMarkdown);
-                setTimeout(() => onEditorInput(), 10);
+                setTimeout(onEditorInput, 10);
+            }
+
+            function handleListContinuation() {
+                var sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return;
+                var range = sel.getRangeAt(0);
+                var node = range.startContainer;
+                while (node && node !== editor) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        var tag = node.tagName;
+                        if (['P', 'LI', 'BLOCKQUOTE'].indexOf(tag) !== -1) break;
+                    }
+                    node = node.parentNode;
+                }
+                if (!node || node === editor) return;
+                var text = node.textContent || '';
+                var ulMatch = text.match(/^[\s]*[-*]\s+/);
+                var olMatch = text.match(/^[\s]*(\d+)\.\s+/);
+                if (ulMatch || olMatch) {
+                    var stripped = text.replace(/^[\s]*[-*]\s+/, '').replace(/^[\s]*\d+\.\s+/, '').trim();
+                    if (!stripped) {
+                        var p = document.createElement('p');
+                        p.textContent = '';
+                        node.parentNode.replaceChild(p, node);
+                        var newRange = document.createRange();
+                        newRange.setStart(p, 0);
+                        newRange.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+                        renderMarkdown(true);
+                        return;
+                    }
+                }
+                var quoteMatch = text.match(/^[\s]*>\s+/);
+                if (quoteMatch) {
+                    var stripped2 = text.replace(/^[\s]*>\s+/, '').trim();
+                    if (!stripped2) {
+                        var p2 = document.createElement('p');
+                        p2.textContent = '';
+                        node.parentNode.replaceChild(p2, node);
+                        var newRange2 = document.createRange();
+                        newRange2.setStart(p2, 0);
+                        newRange2.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(newRange2);
+                        renderMarkdown(true);
+                        return;
+                    }
+                }
+                var headingMatch = text.match(/^(#{1,6})\s+/);
+                if (headingMatch) {
+                    var p3 = document.createElement('p');
+                    p3.textContent = '';
+                    if (node.parentNode) {
+                        node.parentNode.insertBefore(p3, node.nextSibling);
+                        var newRange3 = document.createRange();
+                        newRange3.setStart(p3, 0);
+                        newRange3.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(newRange3);
+                        renderMarkdown(true);
+                    }
+                }
             }
 
             function toggleSidebar() {
@@ -1411,27 +1216,23 @@
             }
 
             function exportHTML() {
-                const content = editor.innerHTML;
-                const style = document.querySelector('style').innerHTML;
-                const html = `<!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"><title>导出的文档</title>
-            <style>${style}</style>
-            <style>body{max-width:900px;margin:40px auto;padding:0 20px;}</style>
-            </head>
-            <body>${content}</body>
-            </html>`;
+                var content = editor.innerHTML;
+                var style = document.querySelector('style').innerHTML;
+                var html =
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>导出的文档</title><style>' +
+                    style +
+                    '</style><style>body{max-width:900px;margin:40px auto;padding:0 20px;}</style></head><body>' +
+                    content +
+                    '</body></html>';
                 downloadFile(html, 'document.html', 'text/html');
             }
 
-            function exportPDF() {
-                window.print();
-            }
+            function exportPDF() { window.print(); }
 
             function downloadFile(content, filename, mime) {
-                const blob = new Blob([content], { type: mime });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
+                var blob = new Blob([content], { type: mime });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
                 a.href = url;
                 a.download = filename;
                 document.body.appendChild(a);
@@ -1451,17 +1252,17 @@
             }
 
             function onPaste(e) {
-                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-                for (const item of items) {
+                var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i];
                     if (item.type.startsWith('image/')) {
                         e.preventDefault();
-                        const file = item.getAsFile();
-                        const reader = new FileReader();
+                        var file = item.getAsFile();
+                        var reader = new FileReader();
                         reader.onload = function (ev) {
-                            const dataUrl = ev.target.result;
-                            const imgMarkdown = `![粘贴图片](${dataUrl})`;
-                            document.execCommand('insertText', false, imgMarkdown);
-                            setTimeout(() => onEditorInput(), 10);
+                            var dataUrl = ev.target.result;
+                            document.execCommand('insertText', false, '![粘贴图片](' + dataUrl + ')');
+                            setTimeout(onEditorInput, 10);
                         };
                         reader.readAsDataURL(file);
                         break;
@@ -1471,15 +1272,15 @@
 
             function onDrop(e) {
                 e.preventDefault();
-                const files = e.dataTransfer.files;
-                for (const file of files) {
+                var files = e.dataTransfer.files;
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
                     if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
+                        var reader = new FileReader();
                         reader.onload = function (ev) {
-                            const dataUrl = ev.target.result;
-                            const imgMarkdown = `![拖拽图片](${dataUrl})`;
-                            document.execCommand('insertText', false, imgMarkdown);
-                            setTimeout(() => onEditorInput(), 10);
+                            var dataUrl = ev.target.result;
+                            document.execCommand('insertText', false, '![拖拽图片](' + dataUrl + ')');
+                            setTimeout(onEditorInput, 10);
                         };
                         reader.readAsDataURL(file);
                         break;
@@ -1487,114 +1288,67 @@
                 }
             }
 
-            // ---- 初始化 ----
             function init() {
-                const initialMD = `# 欢迎使用 MD Editor
+                var initialMD =
+                    '# 欢迎使用 MD Editor\n\n        这是一个 **类 Typora** 的所见即所得 Markdown 编辑器。\n\n        ## 功能特性\n\n        - 实时渲染 · 光标保持\n        - 标题 (Ctrl+1~6)\n        - **粗体** (Ctrl+B) 和 *斜体* (Ctrl+I)\n        - 有序列表 和 无序列表\n        - > 引用块\n        - ` + '`' +
+                    '行内代码` 和 代码块\n\n        ```javascript\n        console.log(\'Hello, MD Editor!\');\n        ```\n\n        ## 数学公式\n\n        行内公式: $E = mc ^ 2$\n\n        块级公式: \n\n        $$\n        \\\\int_{ -\\\\infty }^ { \\\\infty } e ^ {- x ^ 2
+            } dx = \\\\sqrt{ \\\\pi } \n        $$\n\n        ## 表格\n\n | 语言 | 用途 |\n | --------| ----------|\n | HTML | 结构 |\n | CSS | 样式 |\n | JavaScript | 交互 |\n\n        ## Mermaid 图表\n\n```mermaid\n        graph TD\n            A[开始] --> B{判断}\n            B -->|是| C[执行]\n            B -->|否| D[结束]\n        ```\n\n-- -\n\n ** 快捷键 **: Ctrl + / 源码切换 · Ctrl+B/I · Ctrl + 1~6 · F8 专注 · F9 打字机\n        ';
+            currentMarkdown = initialMD;
+            renderMarkdown(false);
 
-        这是一个 **类 Typora** 的所见即所得 Markdown 编辑器。
+            var inputHandler = onEditorInput;
+            editor._inputHandler = inputHandler;
+            editor.addEventListener('input', inputHandler);
+            editor.addEventListener('keydown', onEditorKeydown);
+            editor.addEventListener('paste', onPaste);
+            editor.addEventListener('drop', onDrop);
+            editor.addEventListener('dragover', function (e) { e.preventDefault(); });
 
-        ## 功能特性
+            document.addEventListener('selectionchange', function () {
+                if (focusMode) updateFocusLine();
+                if (typewriterMode) scrollToCaret();
+            });
+            editor.addEventListener('scroll', function () {
+                if (typewriterMode) scrollToCaret();
+            });
 
-        - 实时渲染 · 光标保持
-        - 标题 (Ctrl+1~6)
-        - **粗体** (Ctrl+B) 和 *斜体* (Ctrl+I)
-        - 有序列表 和 无序列表
-        - > 引用块
-        - \`行内代码\` 和 代码块
+            btnSidebar.addEventListener('click', toggleSidebar);
+            btnSidebarClose.addEventListener('click', toggleSidebar);
+            btnSource.addEventListener('click', toggleSourceMode);
+            btnFocus.addEventListener('click', toggleFocus);
+            btnTypewriter.addEventListener('click', toggleTypewriter);
+            btnTheme.addEventListener('click', toggleTheme);
+            btnExportHTML.addEventListener('click', exportHTML);
+            btnExportPDF.addEventListener('click', exportPDF);
+            btnClear.addEventListener('click', clearDocument);
 
-        \`\`\`javascript
-        console.log('Hello, MD Editor!');
-        \`\`\`
+            document.addEventListener('keydown', function (e) {
+                var ctrl = e.ctrlKey || e.metaKey;
+                if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+                    e.preventDefault();
+                    toggleSidebar();
+                }
+                if (e.key === 'F8' && !ctrl) {
+                    e.preventDefault();
+                    toggleFocus();
+                }
+                if (e.key === 'F9' && !ctrl) {
+                    e.preventDefault();
+                    toggleTypewriter();
+                }
+            });
 
-        ## 数学公式
-
-        行内公式: $E = mc^2$
-
-        块级公式:
-
-        $$
-        \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
-        $$
-
-        ## 表格
-
-        | 语言   | 用途     |
-        |--------|----------|
-        | HTML   | 结构     |
-        | CSS    | 样式     |
-        | JavaScript | 交互 |
-
-        ## Mermaid 图表
-
-        \`\`\`mermaid
-        graph TD
-            A[开始] --> B{判断}
-            B -->|是| C[执行]
-            B -->|否| D[结束]
-        \`\`\`
-
-        ---
-
-        **快捷键**: Ctrl+/ 源码切换 · Ctrl+B/I · Ctrl+1~6 · F8 专注 · F9 打字机
-        `;
-                currentMarkdown = initialMD;
-                renderMarkdown(false);
-
-                editor.addEventListener('input', onEditorInput);
-                editor.addEventListener('keydown', onEditorKeydown);
-                editor.addEventListener('paste', onPaste);
-                editor.addEventListener('drop', onDrop);
-                editor.addEventListener('dragover', (e) => e.preventDefault());
-
-                document.addEventListener('selectionchange', () => {
-                    if (focusMode) updateFocusLine();
-                    if (typewriterMode) scrollToCaret();
-                });
-
-                editor.addEventListener('scroll', () => {
-                    if (typewriterMode) scrollToCaret();
-                });
-
-                btnSidebar.addEventListener('click', toggleSidebar);
-                btnSidebarClose.addEventListener('click', toggleSidebar);
-                btnSource.addEventListener('click', toggleSourceMode);
-                btnFocus.addEventListener('click', toggleFocus);
-                btnTypewriter.addEventListener('click', toggleTypewriter);
-                btnTheme.addEventListener('click', toggleTheme);
-                btnExportHTML.addEventListener('click', exportHTML);
-                btnExportPDF.addEventListener('click', exportPDF);
-                btnClear.addEventListener('click', clearDocument);
-
-                document.addEventListener('keydown', (e) => {
-                    const ctrl = e.ctrlKey || e.metaKey;
-                    if (ctrl && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
-                        e.preventDefault();
-                        toggleSidebar();
-                    }
-                    if (e.key === 'F8' && !e.ctrlKey && !e.metaKey) {
-                        e.preventDefault();
-                        toggleFocus();
-                    }
-                    if (e.key === 'F9' && !e.ctrlKey && !e.metaKey) {
-                        e.preventDefault();
-                        toggleTypewriter();
-                    }
-                });
-
-                statMode.textContent = '编辑';
-                statTheme.textContent = '🌞';
-                updateStats();
-
-                console.log('📝 MD Editor 已启动');
-            }
+            statMode.textContent = '编辑';
+            statTheme.textContent = '🌞';
+            updateStats();
+        }
 
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
-
-        })();
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        }) ();
     </script>
 </body>
 
