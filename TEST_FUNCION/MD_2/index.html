@@ -4,18 +4,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>类 Typora Markdown 编辑器</title>
+    <title>类 Typora Markdown 编辑器 · 预览可编辑</title>
 
     <!-- 第三方库 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819062539" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819062539" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js?v=20260819062539">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819062539">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819062539">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js?v=20260819062539">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js">
     </script>
 
     <style>
@@ -44,6 +44,7 @@
             --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
             --sans: -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
             --transition: 0.2s ease;
+            --edit-highlight: rgba(59, 130, 246, 0.25);
         }
 
         .dark {
@@ -59,6 +60,7 @@
             --header-color: #f0f0f5;
             --focus-highlight: rgba(107, 140, 255, 0.15);
             --status-bg: #2a2a3e;
+            --edit-highlight: rgba(107, 140, 255, 0.3);
         }
 
         html,
@@ -148,11 +150,6 @@
             height: 24px;
             background: var(--border);
             margin: 0 4px;
-        }
-
-        .topbar-icon {
-            font-size: 16px;
-            line-height: 1;
         }
 
         /* ===== 主体 ===== */
@@ -367,6 +364,21 @@
             line-height: 1.8;
             font-size: 16px;
             word-wrap: break-word;
+        }
+
+        /* 预览可编辑块样式 */
+        #preview-pane [contenteditable="true"] {
+            outline: 2px dashed var(--accent);
+            outline-offset: 2px;
+            background: var(--edit-highlight);
+            border-radius: 4px;
+            padding: 0 4px;
+            transition: background 0.1s;
+        }
+
+        #preview-pane [contenteditable="true"]:focus {
+            outline: 2px solid var(--accent);
+            background: var(--edit-highlight);
         }
 
         /* ===== 预览样式 (Typora 风格) ===== */
@@ -792,7 +804,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ===== 额外辅助 ===== */
+        /* ===== 辅助 ===== */
         .flex-center {
             display: flex;
             align-items: center;
@@ -833,7 +845,7 @@
         <!-- 顶部栏 -->
         <header id="topbar">
             <div class="brand">
-                ✍️ Markdown <span>· 类 Typora</span>
+                ✍️ Markdown <span>· 预览可编辑</span>
             </div>
             <div class="actions">
                 <button id="btnSidebar" title="切换侧边栏 (Ctrl+Shift+L)">📑</button>
@@ -889,6 +901,8 @@
                         <span id="modeLabel">预览模式</span>
                         <span style="opacity:0.3;margin:0 6px;">·</span>
                         <span id="themeLabel">亮色</span>
+                        <span style="opacity:0.3;margin:0 6px;">·</span>
+                        <span id="editHint" style="opacity:0.5;">双击文本编辑</span>
                     </div>
                 </div>
             </div>
@@ -927,6 +941,7 @@
             const charCountEl = document.getElementById('charCount');
             const modeLabel = document.getElementById('modeLabel');
             const themeLabel = document.getElementById('themeLabel');
+            const editHint = document.getElementById('editHint');
 
             const btnSidebar = document.getElementById('btnSidebar');
             const btnCollapseSidebar = document.getElementById('btnCollapseSidebar');
@@ -952,9 +967,9 @@
                 typewriterMode: false,
                 dark: false,
                 sidebarOpen: true,
+                pendingEditIndex: -1, // 用于恢复编辑位置
             };
 
-            // 防抖
             let renderTimer = null;
             let toastTimer = null;
 
@@ -994,31 +1009,20 @@
 
                     // 后处理：数学公式
                     let rendered = html;
-                    // 块级公式 $$ ... $$
                     rendered = rendered.replace(/\$\$([\s\S]*?)\$\$/g, function (match, content) {
                         try {
                             return katex.renderToString(content.trim(), { displayMode: true, throwOnError: false });
                         } catch (_) { return match; }
                     });
-                    // 行内公式 $ ... $
                     rendered = rendered.replace(/\$([^\$\n]+?)\$/g, function (match, content) {
                         try {
                             return katex.renderToString(content.trim(), { displayMode: false, throwOnError: false });
                         } catch (_) { return match; }
                     });
 
-                    // Mermaid 渲染 (由 mermaid.run 处理)
-                    // 先保留 mermaid 代码块标记，之后用 mermaid 库渲染
-
-                    // 组装
                     let finalHtml = yamlBlock + rendered;
-
-                    // 提取标题生成大纲
                     generateOutline(markdown);
-
-                    // 更新字数
                     updateStats(markdown);
-
                     return finalHtml;
                 } catch (err) {
                     console.error('渲染错误:', err);
@@ -1026,7 +1030,6 @@
                 }
             }
 
-            // 转义 HTML
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
@@ -1041,12 +1044,9 @@
                 for (let i = 0; i < lines.length; i++) {
                     const m = lines[i].match(headingRegex);
                     if (m) {
-                        const level = m[1].length;
-                        const text = m[2].trim();
-                        headings.push({ level, text, line: i });
+                        headings.push({ level: m[1].length, text: m[2].trim(), line: i });
                     }
                 }
-                // 渲染大纲
                 if (headings.length === 0) {
                     outlineEl.innerHTML = '<div style="padding:16px;opacity:0.4;font-size:13px;">暂无标题</div>';
                     return;
@@ -1054,17 +1054,13 @@
                 let html = '';
                 for (const h of headings) {
                     const cls = `outline-item level-${h.level}`;
-                    const id = `heading-${h.line}`;
-                    html += `<div class="${cls}" data-line="${h.line}" data-id="${id}">${escapeHtml(h.text)}</div>`;
+                    html += `<div class="${cls}" data-line="${h.line}">${escapeHtml(h.text)}</div>`;
                 }
                 outlineEl.innerHTML = html;
-
-                // 点击跳转
                 outlineEl.querySelectorAll('.outline-item').forEach(el => {
                     el.addEventListener('click', function () {
                         const line = parseInt(this.dataset.line);
                         if (!isNaN(line)) {
-                            // 在源码中跳转
                             const lines = sourcePane.value.split('\n');
                             let pos = 0;
                             for (let i = 0; i < line && i < lines.length; i++) {
@@ -1072,7 +1068,6 @@
                             }
                             sourcePane.focus();
                             sourcePane.setSelectionRange(pos, pos);
-                            // 高亮激活项
                             outlineEl.querySelectorAll('.outline-item').forEach(x => x.classList.remove('active'));
                             this.classList.add('active');
                         }
@@ -1080,7 +1075,6 @@
                 });
             }
 
-            // 更新统计
             function updateStats(markdown) {
                 const text = markdown.replace(/\s+/g, ' ').trim();
                 const charCount = text.length;
@@ -1090,7 +1084,148 @@
             }
 
             // ============================================================
-            //  4. 主渲染函数 (带防抖 & 增量更新)
+            //  4. 预览编辑功能 (核心)
+            // ============================================================
+            // 给预览块添加可编辑支持
+            function setupPreviewEditable() {
+                // 清除旧的事件绑定 (使用委托)
+                // 委托已在初始化时绑定一次，无需重复绑定
+                // 只需设置每个块的属性
+                const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                blocks.forEach((block, index) => {
+                    // 存储原始文本 (用于比较)
+                    const originalText = block.innerText;
+                    block.dataset.originalText = originalText;
+                    block.dataset.blockIndex = index;
+                    // 确保可编辑属性初始为 false
+                    if (block.contentEditable !== 'true') {
+                        block.contentEditable = 'false';
+                    }
+                    // 移除可能遗留的编辑状态
+                    block.dataset.editing = 'false';
+                });
+            }
+
+            // 处理双击进入编辑
+            function handleDblClick(e) {
+                const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                if (!target) return;
+                // 如果已经可编辑，不再重复
+                if (target.contentEditable === 'true') return;
+                // 如果是代码块或表格内部，不处理 (通过closest限制已排除)
+                // 开始编辑
+                target.contentEditable = 'true';
+                target.dataset.editing = 'true';
+                // 保存旧文本
+                target.dataset.oldText = target.innerText;
+                // 聚焦并选中全部内容
+                target.focus();
+                const range = document.createRange();
+                range.selectNodeContents(target);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                // 更新提示
+                editHint.textContent = '✏️ 编辑中...';
+                editHint.style.opacity = '0.9';
+            }
+
+            // 处理失焦 (完成编辑)
+            function handleFocusOut(e) {
+                const target = e.target;
+                if (!target.closest) return;
+                const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                if (!block) return;
+                if (block.contentEditable !== 'true') return;
+                // 检查是否真的有改变
+                const newText = block.innerText.trim();
+                const oldText = block.dataset.oldText || block.dataset.originalText || '';
+                if (newText !== oldText) {
+                    // 更新源码
+                    const markdown = sourcePane.value;
+                    // 尝试在源码中查找旧文本所在行，并替换
+                    const lines = markdown.split('\n');
+                    let foundLine = -1;
+                    let prefix = '';
+                    // 尝试匹配包含旧文本的行 (精确匹配整行?)
+                    for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].includes(oldText)) {
+                            // 提取前缀 (如 '# ', '- ', '> ')
+                            const trimmed = lines[i].trim();
+                            const match = trimmed.match(/^(#{1,6}\s+|-\s+|\d+\.\s+|>\s+|[\s]*\*?\s+)/);
+                            if (match) {
+                                prefix = match[1];
+                            } else {
+                                // 段落无前缀
+                                prefix = '';
+                            }
+                            // 如果新文本为空，保留前缀？
+                            let newLine = prefix + newText;
+                            // 如果原行有缩进或特殊格式，保持
+                            // 简单替换
+                            lines[i] = newLine;
+                            foundLine = i;
+                            break;
+                        }
+                    }
+                    if (foundLine !== -1) {
+                        const newMarkdown = lines.join('\n');
+                        sourcePane.value = newMarkdown;
+                        // 重新渲染
+                        immediateRender();
+                        // 尝试恢复编辑状态到同一个块 (通过索引)
+                        const index = parseInt(block.dataset.blockIndex);
+                        if (!isNaN(index)) {
+                            state.pendingEditIndex = index;
+                            // 在渲染完成后恢复
+                            setTimeout(() => {
+                                restoreEdit(index);
+                            }, 50);
+                        }
+                        showToast('✅ 已同步修改');
+                    } else {
+                        // 未找到匹配行，提示
+                        showToast('⚠️ 无法定位源码，请手动修改');
+                        block.contentEditable = 'false';
+                        block.dataset.editing = 'false';
+                        editHint.textContent = '双击文本编辑';
+                        editHint.style.opacity = '0.5';
+                    }
+                } else {
+                    // 无变化，关闭编辑
+                    block.contentEditable = 'false';
+                    block.dataset.editing = 'false';
+                    editHint.textContent = '双击文本编辑';
+                    editHint.style.opacity = '0.5';
+                }
+            }
+
+            // 恢复编辑状态 (在重新渲染后)
+            function restoreEdit(index) {
+                const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                if (blocks.length > index) {
+                    const block = blocks[index];
+                    if (block) {
+                        block.contentEditable = 'true';
+                        block.dataset.editing = 'true';
+                        block.focus();
+                        // 将光标移到末尾
+                        const range = document.createRange();
+                        range.setStartAfter(block.lastChild || block);
+                        range.collapse(true);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        editHint.textContent = '✏️ 编辑中...';
+                        editHint.style.opacity = '0.9';
+                        // 清除pending
+                        state.pendingEditIndex = -1;
+                    }
+                }
+            }
+
+            // ============================================================
+            //  5. 全量渲染
             // ============================================================
             function fullRender() {
                 const markdown = sourcePane.value;
@@ -1106,20 +1241,23 @@
                     });
                 } catch (_) { }
 
-                // 高亮代码块 (marked 已经高亮，但有些可能漏掉)
                 previewPane.querySelectorAll('pre code:not(.hljs)').forEach(block => {
                     hljs.highlightElement(block);
                 });
 
-                // 应用专注/打字机模式
+                // 设置预览可编辑
+                setupPreviewEditable();
+
+                // 如果存在待恢复的编辑索引
+                if (state.pendingEditIndex !== -1) {
+                    restoreEdit(state.pendingEditIndex);
+                }
+
                 applyFocusMode();
                 applyTypewriterMode();
-
-                // 更新状态栏模式标签
                 updateModeLabel();
             }
 
-            // 防抖渲染
             function scheduleRender() {
                 if (renderTimer) clearTimeout(renderTimer);
                 renderTimer = setTimeout(() => {
@@ -1128,7 +1266,6 @@
                 }, 80);
             }
 
-            // 立即渲染 (无防抖)
             function immediateRender() {
                 if (renderTimer) {
                     clearTimeout(renderTimer);
@@ -1138,15 +1275,13 @@
             }
 
             // ============================================================
-            //  5. 模式切换
+            //  6. 模式切换
             // ============================================================
             function setMode(mode) {
                 state.mode = mode;
-                // 更新标签
                 tabs.forEach(tab => {
                     tab.classList.toggle('active', tab.dataset.mode === mode);
                 });
-                // 显示/隐藏面板
                 const sourceEl = document.getElementById('source-pane');
                 const previewEl = document.getElementById('preview-pane');
                 if (mode === 'source') {
@@ -1161,7 +1296,6 @@
                     sourceEl.style.width = '50%';
                     sourceEl.style.height = '100%';
                     sourceEl.style.resize = 'horizontal';
-                    // 分栏布局
                     const container = document.getElementById('edit-area');
                     container.style.display = 'flex';
                     container.style.flexDirection = 'row';
@@ -1169,7 +1303,7 @@
                     previewEl.style.flex = '1';
                     sourceEl.style.overflow = 'auto';
                     previewEl.style.overflow = 'auto';
-                } else { // preview
+                } else {
                     sourceEl.classList.add('hidden');
                     previewEl.classList.remove('hidden');
                     sourceEl.style.width = '100%';
@@ -1179,7 +1313,6 @@
                     container.style.display = 'flex';
                     container.style.flexDirection = 'row';
                 }
-                // 强制刷新
                 setTimeout(() => { immediateRender(); }, 50);
                 updateModeLabel();
             }
@@ -1190,7 +1323,7 @@
             }
 
             // ============================================================
-            //  6. 专注模式 & 打字机模式
+            //  7. 专注 & 打字机
             // ============================================================
             function applyFocusMode() {
                 const container = document.getElementById('editor-container');
@@ -1199,7 +1332,6 @@
                 } else {
                     container.classList.remove('focus-mode');
                 }
-                // 高亮当前行 (在预览中)
                 if (state.focusMode) {
                     highlightCurrentLine();
                 } else {
@@ -1217,8 +1349,7 @@
             }
 
             function highlightCurrentLine() {
-                // 简单实现：在预览中高亮包含光标的段落
-                // 由于无法直接获取光标在预览中的位置，我们通过源码行号近似
+                // 简单实现: 在预览中高亮包含光标的段落 (基于源码光标位置)
                 const cursorPos = sourcePane.selectionStart;
                 const text = sourcePane.value;
                 const lines = text.split('\n');
@@ -1231,35 +1362,31 @@
                     }
                     charCount += lines[i].length + 1;
                 }
-                // 在预览中找对应行
                 previewPane.querySelectorAll('.focus-line').forEach(el => el.classList.remove('focus-line'));
-                const previewLines = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
-                // 简单映射：用行号近似
+                const previewLines = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
                 if (previewLines.length > lineIdx) {
                     previewLines[lineIdx]?.classList.add('focus-line');
                 }
             }
 
             // ============================================================
-            //  7. 主题切换
+            //  8. 主题切换
             // ============================================================
             function toggleTheme() {
                 state.dark = !state.dark;
                 document.documentElement.classList.toggle('dark', state.dark);
                 themeLabel.textContent = state.dark ? '暗色' : '亮色';
-                // 更新代码高亮主题
                 const hlCss = document.querySelector('link[href*="highlight.js"][href*="styles"]');
                 if (hlCss) {
                     hlCss.href = state.dark ?
                         'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css' :
                         'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css';
                 }
-                // 重新渲染
                 setTimeout(immediateRender, 100);
             }
 
             // ============================================================
-            //  8. 导出功能
+            //  9. 导出
             // ============================================================
             function exportDocument(format) {
                 const content = sourcePane.value;
@@ -1271,8 +1398,8 @@
                         const htmlContent = renderMarkdown(content);
                         const fullHtml = `<!DOCTYPE html>
                     <html><head><meta charset="UTF-8"><title>${title}</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819062539">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819062539">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
                     <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.8;color:#2c3e50;} pre{background:#f5f5f5;padding:12px 16px;border-radius:6px;} blockquote{border-left:4px solid #3b82f6;padding-left:1.2em;margin-left:0;background:#f8f8f8;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 12px;} img{max-width:100%;}</style>
                     </head><body>${htmlContent}</body></html>`;
                         blob = new Blob([fullHtml], { type: 'text/html' });
@@ -1294,7 +1421,6 @@
                         break;
                     }
                     case 'pdf': {
-                        // 使用 window.print() 导出 PDF
                         const originalTitle = document.title;
                         document.title = 'Markdown 导出';
                         window.print();
@@ -1308,7 +1434,6 @@
                     }
                 }
 
-                // 下载
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1321,7 +1446,7 @@
             }
 
             // ============================================================
-            //  9. Toast 提示
+            //  10. Toast
             // ============================================================
             function showToast(msg) {
                 toastEl.textContent = msg;
@@ -1334,43 +1459,37 @@
             }
 
             // ============================================================
-            //  10. 快捷键
+            //  11. 快捷键
             // ============================================================
             function handleKeydown(e) {
                 const ctrl = e.ctrlKey || e.metaKey;
                 const shift = e.shiftKey;
 
-                // Ctrl + / 源码模式切换
                 if (ctrl && e.key === '/') {
                     e.preventDefault();
                     toggleSourceMode();
                     return;
                 }
-                // Ctrl + Shift + L 侧边栏
                 if (ctrl && shift && e.key === 'l') {
                     e.preventDefault();
                     toggleSidebar();
                     return;
                 }
-                // F8 专注模式
                 if (e.key === 'F8') {
                     e.preventDefault();
                     toggleFocusMode();
                     return;
                 }
-                // F9 打字机模式
                 if (e.key === 'F9') {
                     e.preventDefault();
                     toggleTypewriterMode();
                     return;
                 }
-                // Ctrl + E 导出
                 if (ctrl && e.key === 'e') {
                     e.preventDefault();
                     openExportModal();
                     return;
                 }
-                // Ctrl + N 新建
                 if (ctrl && e.key === 'n') {
                     e.preventDefault();
                     if (confirm('清空当前文档?')) {
@@ -1380,34 +1499,41 @@
                     }
                     return;
                 }
-                // Ctrl + B 加粗
                 if (ctrl && e.key === 'b') {
                     e.preventDefault();
                     wrapSelection('**', '**');
                     return;
                 }
-                // Ctrl + I 斜体
                 if (ctrl && e.key === 'i') {
                     e.preventDefault();
                     wrapSelection('*', '*');
                     return;
                 }
-                // Ctrl + 1-6 标题
                 if (ctrl && e.key >= '1' && e.key <= '6') {
                     e.preventDefault();
                     const level = parseInt(e.key);
                     wrapHeading(level);
                     return;
                 }
-                // Ctrl + T 表格
                 if (ctrl && e.key === 't') {
                     e.preventDefault();
                     insertTable();
                     return;
                 }
+                // Escape 退出编辑
+                if (e.key === 'Escape') {
+                    const active = document.activeElement;
+                    if (active && active.closest && active.closest('[contenteditable="true"]')) {
+                        const block = active.closest('[contenteditable="true"]');
+                        block.contentEditable = 'false';
+                        block.dataset.editing = 'false';
+                        editHint.textContent = '双击文本编辑';
+                        editHint.style.opacity = '0.5';
+                        e.preventDefault();
+                    }
+                }
             }
 
-            // 切换源码模式
             function toggleSourceMode() {
                 if (state.mode === 'source') {
                     setMode('preview');
@@ -1417,40 +1543,35 @@
                 showToast(state.mode === 'source' ? '📄 源码模式' : '📖 预览模式');
             }
 
-            // 切换侧边栏
             function toggleSidebar() {
                 state.sidebarOpen = !state.sidebarOpen;
                 sidebar.classList.toggle('collapsed', !state.sidebarOpen);
                 showToast(state.sidebarOpen ? '📑 侧边栏已打开' : '📑 侧边栏已收起');
             }
 
-            // 切换专注模式
             function toggleFocusMode() {
                 state.focusMode = !state.focusMode;
                 applyFocusMode();
                 showToast(state.focusMode ? '🎯 专注模式开启' : '🎯 专注模式关闭');
             }
 
-            // 切换打字机模式
             function toggleTypewriterMode() {
                 state.typewriterMode = !state.typewriterMode;
                 applyTypewriterMode();
                 showToast(state.typewriterMode ? '⌨️ 打字机模式开启' : '⌨️ 打字机模式关闭');
             }
 
-            // 打开导出对话框
             function openExportModal() {
                 exportModal.classList.add('open');
             }
 
             // ============================================================
-            //  11. 文本操作辅助
+            //  12. 文本操作辅助
             // ============================================================
             function wrapSelection(before, after) {
                 const start = sourcePane.selectionStart;
                 const end = sourcePane.selectionEnd;
                 if (start === end) {
-                    // 无选中，插入占位
                     const placeholder = before + 'text' + after;
                     sourcePane.setRangeText(placeholder, start, end, 'end');
                     sourcePane.focus();
@@ -1465,7 +1586,6 @@
 
             function wrapHeading(level) {
                 const start = sourcePane.selectionStart;
-                const end = sourcePane.selectionEnd;
                 const lineStart = sourcePane.value.lastIndexOf('\n', start - 1) + 1;
                 const lineEnd = sourcePane.value.indexOf('\n', start);
                 const currentLine = sourcePane.value.substring(lineStart, lineEnd === -1 ? sourcePane.value.length : lineEnd);
@@ -1486,26 +1606,18 @@
             }
 
             // ============================================================
-            //  12. 初始化
+            //  13. 初始化
             // ============================================================
             function init() {
-                // 设置初始内容
                 sourcePane.value = state.content;
-
-                // 初始渲染
                 immediateRender();
-
-                // 设置默认模式
                 setMode('preview');
 
                 // 事件绑定
                 sourcePane.addEventListener('input', scheduleRender);
-
-                // 光标移动时更新高亮 (专注模式)
                 sourcePane.addEventListener('click', () => { if (state.focusMode) highlightCurrentLine(); });
                 sourcePane.addEventListener('keyup', () => { if (state.focusMode) highlightCurrentLine(); });
 
-                // 快捷键
                 document.addEventListener('keydown', handleKeydown);
 
                 // 侧边栏
@@ -1521,19 +1633,10 @@
                     });
                 });
 
-                // 源码按钮
                 btnSource.addEventListener('click', toggleSourceMode);
-
-                // 专注模式
                 btnFocus.addEventListener('click', toggleFocusMode);
-
-                // 打字机模式
                 btnTypewriter.addEventListener('click', toggleTypewriterMode);
-
-                // 主题切换
                 btnTheme.addEventListener('click', toggleTheme);
-
-                // 导出
                 btnExport.addEventListener('click', openExportModal);
 
                 // 导出对话框
@@ -1551,14 +1654,26 @@
                     });
                 });
 
-                // 检查暗色模式
+                // 预览编辑事件 (委托)
+                previewPane.addEventListener('dblclick', handleDblClick);
+                previewPane.addEventListener('focusout', handleFocusOut);
+
+                // 当在编辑时按回车，防止换行导致块分裂？允许换行，但会保留在块内
+                previewPane.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && e.target.closest && e.target.closest('[contenteditable="true"]')) {
+                        // 允许换行，但阻止默认行为？默认会插入<br>，我们保留
+                        // 不阻止，让用户输入多行文本
+                    }
+                });
+
+                // 检测暗色主题
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     state.dark = true;
                     document.documentElement.classList.add('dark');
                     themeLabel.textContent = '暗色';
                 }
 
-                // 窗口大小变化时重新渲染
+                // 窗口 resize
                 let resizeTimer;
                 window.addEventListener('resize', () => {
                     if (resizeTimer) clearTimeout(resizeTimer);
@@ -1570,7 +1685,6 @@
                     }, 200);
                 });
 
-                // 修改marked配置
                 marked.setOptions({
                     gfm: true,
                     breaks: true,
@@ -1580,10 +1694,10 @@
                     smartypants: true,
                 });
 
-                showToast('✨ Markdown 编辑器已加载');
+                editHint.textContent = '双击文本编辑';
+                showToast('✨ 预览中双击任意文本即可编辑');
             }
 
-            // 页面加载完成后初始化
             if (document.readyState === 'complete') {
                 init();
             } else {
