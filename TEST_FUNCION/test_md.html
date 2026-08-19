@@ -5,19 +5,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>终极 MD 编辑器 · 中文输出修复</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819021707" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819021707" />
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@f0bad9d/preview_assets/check-update.js?v=20260819021707"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@f0bad9d/preview_assets/check-update.js"
         type="module">
         </script>
-    <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@f0bad9d/preview_assets/home.ico?v=20260819021707"
+    <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@f0bad9d/preview_assets/home.ico"
         rel="icon" type="image/png" />
     <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260819021707" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260819021707" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com" rel="dns-prefetch" />
     <link href="https://cdn.jsdelivr.net" rel="preconnect" />
     <link href="https://cdn.jsdelivr.net" rel="dns-prefetch" />
     <link href="https://cdnjs.cloudflare.com" rel="preconnect" />
@@ -628,30 +627,6 @@
             margin-right: 4px;
         }
 
-        /* ---------- 新增：底部“点击添加段落”提示 ---------- */
-        .add-paragraph-trigger {
-            display: block;
-            text-align: center;
-            padding: 18px 0 6px;
-            color: #b9c5d4;
-            font-size: 0.75rem;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.2s;
-            user-select: none;
-            margin-top: 4px;
-        }
-
-        .add-paragraph-trigger:hover {
-            color: var(--accent);
-            background: #f1f5f9;
-        }
-
-        .add-paragraph-trigger .icon {
-            font-size: 1.1rem;
-            margin-right: 4px;
-        }
-
         @media (max-width: 720px) {
             .math-builder {
                 max-width: 95vw;
@@ -797,11 +772,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20260819021707">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js?v=20260819021707">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260819021707">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
     </script>
 
     <script>
@@ -822,8 +797,8 @@
             return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="run-btn" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">▶ 运行</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
         };
         renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
-        renderer.image = function (href, title, text) { return `<img src="${href}?v=20260819021707" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
-        renderer.link = function (href, title, text) { return `<a href="${href}?v=20260819021707" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
+        renderer.image = function (href, title, text) { return `<img src="${href}" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
+        renderer.link = function (href, title, text) { return `<a href="${href}" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
         const markedOptions = { renderer, gfm: true, breaks: true };
 
         // =====================================================================
@@ -844,7 +819,6 @@
         let editingBlockElement = null;
         let allBlocks = [];
 
-        // 补全状态
         let suggestActive = false;
         let suggestItems = [];
         let suggestIndex = -1;
@@ -956,7 +930,7 @@
             fullMarkdown = text;
             if (!text.trim()) {
                 preview.innerHTML =
-                    `<div class='empty-hint'>✨ 开始书写 Markdown …<br>支持数学 $E=mc^2$ 和代码块 \`\`\`js<br>单击任意内容开始编辑</div>`;
+                    `<div class='empty-hint'>✨ 开始书写 Markdown …<br>支持数学 $E=mc^2$ 和代码块 \`\`\`js<br>单击任意内容开始编辑，点击空白处新增段落</div>`;
                 updateStatus();
                 allBlocks = [];
                 return;
@@ -970,15 +944,6 @@
             const temp = document.createElement('div');
             temp.innerHTML = html;
             processMath(temp);
-            // 在末尾附加“点击添加段落”触发器
-            const trigger = document.createElement('div');
-            trigger.className = 'add-paragraph-trigger';
-            trigger.innerHTML = `<span class="icon">✏️</span> 点击此处添加新段落`;
-            trigger.addEventListener('click', function (e) {
-                e.stopPropagation();
-                createNewParagraph();
-            });
-            temp.appendChild(trigger);
             preview.innerHTML = temp.innerHTML;
             attachClickListeners();
             updateStatus();
@@ -1053,7 +1018,7 @@
         }
 
         // =====================================================================
-        // 6. 单击编辑
+        // 6. 单击编辑 —— 修复“只能运行一次”的问题
         // =====================================================================
         function attachClickListeners() {
             const elements = preview.querySelectorAll(
@@ -1066,21 +1031,22 @@
             preview.addEventListener('click', handlePreviewClick);
         }
 
-        // ========== 修复1：更健壮的 handleClick ==========
+        function ensureEditingStateValid() {
+            if (editingElement && !document.contains(editingElement)) {
+                clearEditingState();
+            }
+        }
+
         function handleClick(e) {
-            // 如果点击的是运行按钮、语言选择器或“添加段落”触发器，不处理
-            if (e.target.closest('.run-btn') || e.target.closest('.code-lang-selector') || e.target.closest(
-                '.add-paragraph-trigger')) return;
-            // 如果点击的是链接，阻止默认跳转
+            ensureEditingStateValid();
+
+            if (e.target.closest('.run-btn') || e.target.closest('.code-lang-selector')) return;
             if (e.target.closest('a')) {
                 e.preventDefault();
             }
-
-            // 尝试获取可编辑目标
             let target = e.target.closest(
                 'p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td'
             );
-            // 如果没找到，但点击的是数学公式内部，向上找父级可编辑元素
             if (!target) {
                 const mathParent = e.target.closest('.katex-display, .katex');
                 if (mathParent) {
@@ -1089,55 +1055,84 @@
                     );
                 }
             }
-            // 如果点击的是 ul/ol 但内部没有 li，尝试找父级 li
             if (target && (target.tagName === 'UL' || target.tagName === 'OL')) {
                 const parentLi = target.closest('li');
                 if (parentLi) target = parentLi;
             }
-            if (!target) {
-                // 点击的是空白区域，由 handlePreviewClick 处理
-                return;
-            }
+            if (!target) return;
 
-            // 如果已经处于编辑状态
             if (editingElement) {
-                if (editingBlockElement !== target) {
-                    // 切换到新元素：先保存当前编辑
-                    saveEdit();
-                    // 然后启动新编辑
-                    startEdit(target);
-                } else {
-                    // 点击同一个元素：聚焦到编辑框
+                if (editingBlockElement === target) {
                     editingElement.focus();
                     editingElement.select();
+                    return;
+                } else {
+                    saveEdit();
+                    setTimeout(() => startEdit(target), 10);
+                    return;
                 }
-                return;
             }
             startEdit(target);
         }
 
-        // ========== 修复2：空白区域新建段落 ==========
         function handlePreviewClick(e) {
-            // 如果点击的是可编辑元素本身，由 handleClick 处理
+            ensureEditingStateValid();
             if (e.target.closest(
-                'p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td, .add-paragraph-trigger'
+                'p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td'
             )) {
                 return;
             }
-            // 忽略按钮、菜单等
             if (e.target.closest('.run-btn') || e.target.closest('.code-lang-selector') ||
                 e.target.closest('.context-menu') || e.target.closest('.math-panel') ||
                 e.target.closest('.math-builder') || e.target.closest('.suggest-box')) {
                 return;
             }
-            // 如果点击的是预览区域空白处，新建段落
-            createNewParagraph();
+
+            const x = e.clientX,
+                y = e.clientY;
+            const elementsAtPoint = document.elementsFromPoint(x, y);
+            let block = null;
+            for (const el of elementsAtPoint) {
+                if (el.matches &&
+                    el.matches(
+                        'p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td'
+                    )) {
+                    block = el;
+                    break;
+                }
+            }
+            if (block) {
+                insertNewParagraphAfterBlock(block);
+            } else {
+                if (editingElement) saveEdit();
+                fullMarkdown += '\n\n新段落内容';
+                renderMarkdown(fullMarkdown);
+                setTimeout(() => {
+                    const allP = preview.querySelectorAll('p');
+                    const newP = allP[allP.length - 1];
+                    if (newP) startEdit(newP);
+                }, 50);
+            }
         }
 
-        // ========== 新建段落 ==========
-        function createNewParagraph() {
+        function insertNewParagraphAfterBlock(block) {
             if (editingElement) saveEdit();
-            fullMarkdown += '\n\n新段落内容';
+
+            const blockText = block.textContent;
+            let insertIndex = fullMarkdown.indexOf(blockText);
+            if (insertIndex === -1) {
+                fullMarkdown += '\n\n新段落内容';
+                renderMarkdown(fullMarkdown);
+                setTimeout(() => {
+                    const allP = preview.querySelectorAll('p');
+                    const newP = allP[allP.length - 1];
+                    if (newP) startEdit(newP);
+                }, 50);
+                return;
+            }
+            let endIndex = insertIndex + blockText.length;
+            const insertText = '\n\n新段落内容';
+            fullMarkdown = fullMarkdown.slice(0, endIndex) + insertText + fullMarkdown.slice(endIndex);
             renderMarkdown(fullMarkdown);
             setTimeout(() => {
                 const allP = preview.querySelectorAll('p');
@@ -1361,7 +1356,7 @@
         }
 
         // =====================================================================
-        // 8. 代码运行（支持中文输出，每次刷新）
+        // 8. 代码运行（修复输出框累积）
         // =====================================================================
         async function runCode(btn, encodedCode) {
             const code = decodeURIComponent(encodedCode);
@@ -1369,8 +1364,10 @@
             if (!pre) return;
             const lang = pre.dataset.lang || '';
 
-            let oldOutput = pre.querySelector('.code-output');
-            if (oldOutput) oldOutput.remove();
+            const oldOutput = pre.nextElementSibling;
+            if (oldOutput && oldOutput.classList.contains('code-output')) {
+                oldOutput.remove();
+            }
 
             let output = document.createElement('div');
             output.className = 'code-output';
@@ -1952,10 +1949,9 @@
         }
 
         // =====================================================================
-        // 13. 右键菜单 —— 修复：区分右键点击
+        // 13. 右键菜单
         // =====================================================================
         let isRightClick = false;
-
         document.addEventListener('mousedown', function (e) {
             isRightClick = (e.button === 2);
         });
@@ -1966,12 +1962,10 @@
         });
 
         document.addEventListener('click', function (e) {
-            // 如果是右键点击触发的 click，忽略
             if (isRightClick) {
                 isRightClick = false;
                 return;
             }
-            // 点击菜单内部不隐藏
             if (contextMenu.contains(e.target)) return;
             contextMenu.style.display = 'none';
         });
@@ -2106,8 +2100,8 @@
             const content = preview.innerHTML;
             const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>MD文档</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819021707">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819021707">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 <style>
 body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto,sans-serif;line-height:1.8;background:#f7f9fc;}
 .markdown-body{background:#fff;padding:40px;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,0.04);}
@@ -2139,6 +2133,8 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
 **单击任意内容**进入编辑模式，修改后点击其他地方或按 Ctrl+Enter 保存。
 
 **连续编辑**：Tab / Shift+Tab 在块间跳转。
+
+**点击空白处**（块与块之间的空隙）即可在附近新建段落，不再局限于末尾。
 
 ---
 
@@ -2185,7 +2181,7 @@ public class Main {
         fullMarkdown = defaultContent;
         renderMarkdown(fullMarkdown);
 
-        console.log('✅ 中文修复版已启动！右键菜单、列表编辑、空白新建段落均已修复。');
+        console.log('✅ 中文修复版已启动！编辑功能稳定，点击空白处可在任意位置新建段落。');
     </script>
 </body>
 
