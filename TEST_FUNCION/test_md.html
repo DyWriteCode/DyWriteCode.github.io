@@ -5,26 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>终极 MD 编辑器 · 中文输出修复</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819033949" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819033949" />
-    <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@93a4f6b/preview_assets/check-update.js?v=20260819033949"
-        type="module">
-        </script>
-    <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@93a4f6b/preview_assets/home.ico?v=20260819033949"
-        rel="icon" type="image/png" />
-    <meta content="no-referrer" name="referrer" />
-    <link href="https://cdn.jsdmirror.com?v=20260819033949" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260819033949" rel="dns-prefetch" />
-    <link href="https://cdn.jsdelivr.net?v=20260819033949" rel="preconnect" />
-    <link href="https://cdn.jsdelivr.net?v=20260819033949" rel="dns-prefetch" />
-    <link href="https://cdnjs.cloudflare.com?v=20260819033949" rel="preconnect" />
-    <link href="https://cdnjs.cloudflare.com?v=20260819033949" rel="dns-prefetch" />
-    <link href="https://ce.judge0.com/?v=20260819033949" rel="preconnect" />
-    <link href="https://ce.judge0.com/?v=20260819033949" rel="dns-prefetch" />
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
     <style>
+        /* ----- 样式完整保留，无省略 ----- */
         * {
             margin: 0;
             padding: 0;
@@ -730,25 +715,25 @@
     <div class="suggest-box" id="suggestBox"></div>
     <div class="math-panel" id="mathPanel"></div>
     <div class="context-menu" id="contextMenu">
-        <div class="menu-item" data-action="h2?v=20260819033949">## 标题2</div>
-        <div class="menu-item" data-action="h3?v=20260819033949">### 标题3</div>
-        <div class="menu-item" data-action="h4?v=20260819033949">#### 标题4</div>
+        <div class="menu-item" data-action="h2">## 标题2</div>
+        <div class="menu-item" data-action="h3">### 标题3</div>
+        <div class="menu-item" data-action="h4">#### 标题4</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="list-ul?v=20260819033949">• 无序列表</div>
-        <div class="menu-item" data-action="list-ol?v=20260819033949">1. 有序列表</div>
-        <div class="menu-item" data-action="quote?v=20260819033949">" 引用</div>
+        <div class="menu-item" data-action="list-ul">• 无序列表</div>
+        <div class="menu-item" data-action="list-ol">1. 有序列表</div>
+        <div class="menu-item" data-action="quote">" 引用</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="code-block?v=20260819033949">&lt;/&gt; 代码块</div>
-        <div class="menu-item" data-action="math-inline?v=20260819033949">∑ 行内公式</div>
-        <div class="menu-item" data-action="math-block?v=20260819033949">∑ 块级公式</div>
+        <div class="menu-item" data-action="code-block">&lt;/&gt; 代码块</div>
+        <div class="menu-item" data-action="math-inline">∑ 行内公式</div>
+        <div class="menu-item" data-action="math-block">∑ 块级公式</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="table?v=20260819033949">▦ 表格</div>
-        <div class="menu-item" data-action="link?v=20260819033949">🔗 链接</div>
-        <div class="menu-item" data-action="image?v=20260819033949">🖼 图片</div>
+        <div class="menu-item" data-action="table">▦ 表格</div>
+        <div class="menu-item" data-action="link">🔗 链接</div>
+        <div class="menu-item" data-action="image">🖼 图片</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="hr?v=20260819033949">— — 分割线</div>
+        <div class="menu-item" data-action="hr">— — 分割线</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="cancel-edit?v=20260819033949">✖ 取消编辑</div>
+        <div class="menu-item" data-action="cancel-edit">✖ 取消编辑</div>
     </div>
 
     <!-- 公式构建器 -->
@@ -773,11 +758,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20260819033949">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js?v=20260819033949">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260819033949">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
     </script>
 
     <script>
@@ -798,8 +783,8 @@
             return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="run-btn" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">▶ 运行</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
         };
         renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
-        renderer.image = function (href, title, text) { return `<img src="${href}?v=20260819033949" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
-        renderer.link = function (href, title, text) { return `<a href="${href}?v=20260819033949" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
+        renderer.image = function (href, title, text) { return `<img src="${href}" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
+        renderer.link = function (href, title, text) { return `<a href="${href}" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
         const markedOptions = { renderer, gfm: true, breaks: true };
 
         // =====================================================================
@@ -1019,7 +1004,7 @@
         }
 
         // =====================================================================
-        // 6. 单击编辑 —— 修复点击切换问题
+        // 6. 单击编辑 —— 彻底修复
         // =====================================================================
         function attachClickListeners() {
             const elements = preview.querySelectorAll(
@@ -1069,7 +1054,7 @@
                     return;
                 } else {
                     saveEdit();
-                    // 关键：保存后重新从鼠标位置获取新元素
+                    // 保存后重新获取鼠标下的新元素
                     setTimeout(() => {
                         const newTarget = document.elementFromPoint(e.clientX, e.clientY);
                         if (newTarget) {
@@ -1159,7 +1144,7 @@
         }
 
         // =====================================================================
-        // 7. 编辑核心（增加自动高度）
+        // 7. 编辑核心 —— 加强事件拦截
         // =====================================================================
         function startEdit(element) {
             if (editingElement) return;
@@ -1194,7 +1179,7 @@
             textarea.style.color = style.color || '#0b1a2f';
             textarea.spellcheck = true;
 
-            // 自动高度适应
+            // 自动高度
             textarea.style.height = 'auto';
             textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
             textarea.addEventListener('input', function () {
@@ -1202,6 +1187,38 @@
                 this.style.height = Math.min(this.scrollHeight, 300) + 'px';
             });
 
+            // ---------- 关键修复：阻止所有键盘事件冒泡 ----------
+            textarea.addEventListener('keydown', function (e) {
+                e.stopPropagation(); // 阻止冒泡
+                if (e.key === 'Escape') {
+                    cancelEdit();
+                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    saveEdit();
+                } else if (e.key === 'Tab' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                    const idx = allBlocks.indexOf(editingBlockElement);
+                    if (idx !== -1 && idx < allBlocks.length - 1) {
+                        setTimeout(() => startEdit(allBlocks[idx + 1]), 10);
+                    }
+                } else if (e.key === 'Tab' && e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                    const idx = allBlocks.indexOf(editingBlockElement);
+                    if (idx > 0) {
+                        setTimeout(() => startEdit(allBlocks[idx - 1]), 10);
+                    }
+                }
+            });
+            textarea.addEventListener('keyup', function (e) { e.stopPropagation(); });
+            textarea.addEventListener('keypress', function (e) { e.stopPropagation(); });
+
+            // ---------- 阻止鼠标事件冒泡 ----------
+            textarea.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+            textarea.addEventListener('mouseup', function (e) { e.stopPropagation(); });
+            textarea.addEventListener('click', function (e) { e.stopPropagation(); });
+
+            // 包装层
             let wrapper = document.createElement('div');
             wrapper.style.position = 'relative';
             if (isCodeBlock) {
@@ -1231,38 +1248,17 @@
             textarea.focus();
             textarea.select();
 
-            textarea.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    cancelEdit();
-                } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            // 保存失焦 —— 使用 focusout 事件更可靠
+            const saveOnFocusOut = function (e) {
+                // 如果焦点移出 textarea 且没有进入其内部（比如点击其他元素）
+                if (editingElement && !editingElement.contains(e.relatedTarget)) {
                     saveEdit();
-                } else if (e.key === 'Tab' && !e.shiftKey) {
-                    e.preventDefault();
-                    saveEdit();
-                    const idx = allBlocks.indexOf(editingBlockElement);
-                    if (idx !== -1 && idx < allBlocks.length - 1) {
-                        setTimeout(() => startEdit(allBlocks[idx + 1]), 10);
-                    }
-                } else if (e.key === 'Tab' && e.shiftKey) {
-                    e.preventDefault();
-                    saveEdit();
-                    const idx = allBlocks.indexOf(editingBlockElement);
-                    if (idx > 0) {
-                        setTimeout(() => startEdit(allBlocks[idx - 1]), 10);
-                    }
-                }
-            });
-
-            const saveOnBlur = function (e) {
-                if (editingElement && !editingElement.contains(e.target)) {
-                    saveEdit();
-                    document.removeEventListener('click', saveOnBlur);
+                    document.removeEventListener('focusout', saveOnFocusOut);
                 }
             };
-            setTimeout(() => {
-                document.addEventListener('click', saveOnBlur);
-            }, 10);
+            textarea.addEventListener('focusout', saveOnFocusOut);
 
+            // 补全功能
             textarea.addEventListener('input', function () { checkSuggestForTextarea(textarea); });
             textarea.addEventListener('keydown', function (e) { handleSuggestKeydown(e, textarea); });
         }
@@ -1381,7 +1377,7 @@
         }
 
         // =====================================================================
-        // 8. 代码运行（修复输出框累积）
+        // 8. 代码运行（保持不变）
         // =====================================================================
         async function runCode(btn, encodedCode) {
             const code = decodeURIComponent(encodedCode);
@@ -1477,7 +1473,7 @@
         }
 
         // =====================================================================
-        // 9. 补全系统（保持不变）
+        // 9. 补全系统（完整实现）
         // =====================================================================
         function checkSuggestForTextarea(textarea) {
             const pos = textarea.selectionStart;
@@ -1665,12 +1661,14 @@
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     suggestIndex = Math.min(suggestIndex + 1, suggestItems.length - 1);
-                    updateSuggestHighlight(); return;
+                    updateSuggestHighlight();
+                    return;
                 }
                 if (e.key === 'ArrowUp') {
                     e.preventDefault();
                     suggestIndex = Math.max(suggestIndex - 1, 0);
-                    updateSuggestHighlight(); return;
+                    updateSuggestHighlight();
+                    return;
                 }
                 if (e.key === 'Tab' || e.key === 'Enter') {
                     if (suggestIndex >= 0 && suggestIndex < suggestItems.length) {
@@ -1682,7 +1680,8 @@
                 }
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    hideSuggest(); return;
+                    hideSuggest();
+                    return;
                 }
             }
         }
@@ -1701,7 +1700,7 @@
         }
 
         // =====================================================================
-        // 10. 图形化数学构建器（保持不变）
+        // 10. 图形化数学构建器（完整实现）
         // =====================================================================
         const mathTemplates = {
             '分数': { latex: '\\frac{', params: ['分子', '分母'] },
@@ -1859,7 +1858,7 @@
         }
 
         // =====================================================================
-        // 12. 插入辅助函数（保持不变）
+        // 12. 插入辅助函数（完整）
         // =====================================================================
         function insertAtCursor(textarea, before, after, customContent) {
             if (!textarea) {
@@ -1890,7 +1889,8 @@
         function insertListAtCursor(type) {
             if (!editingElement) {
                 fullMarkdown += '\n' + (type === 'ul' ? '- ' : '1. ') + '列表项';
-                renderMarkdown(fullMarkdown); return;
+                renderMarkdown(fullMarkdown);
+                return;
             }
             const textarea = editingElement;
             const pos = textarea.selectionStart;
@@ -1974,7 +1974,7 @@
         }
 
         // =====================================================================
-        // 13. 右键菜单（保持不变）
+        // 13. 右键菜单（完整）
         // =====================================================================
         let isRightClick = false;
         document.addEventListener('mousedown', function (e) {
@@ -2056,7 +2056,7 @@
         });
 
         // =====================================================================
-        // 14. 数学符号面板（保持不变）
+        // 14. 数学符号面板（完整）
         // =====================================================================
         function toggleMathPanel() {
             if (mathPanel.style.display === 'grid') { mathPanel.style.display = 'none'; return; }
@@ -2112,7 +2112,7 @@
         }
 
         // =====================================================================
-        // 15. 清空 & 导出（保持不变）
+        // 15. 清空 & 导出（完整）
         // =====================================================================
         function clearAll() {
             if (confirm('确定清空所有内容吗？')) {
@@ -2125,8 +2125,8 @@
             const content = preview.innerHTML;
             const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>MD文档</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819033949">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819033949">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 <style>
 body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto,sans-serif;line-height:1.8;background:#f7f9fc;}
 .markdown-body{background:#fff;padding:40px;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,0.04);}
