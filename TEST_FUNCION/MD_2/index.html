@@ -4,18 +4,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>类 Typora Markdown 编辑器 · 预览可编辑</title>
+    <title>类 Typora · 预览编辑源码</title>
 
     <!-- 第三方库 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819063301" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819063301" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js?v=20260819063301">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819063301">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819063301">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js?v=20260819063301">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js">
     </script>
 
     <style>
@@ -44,7 +44,6 @@
             --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
             --sans: -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
             --transition: 0.2s ease;
-            --edit-highlight: rgba(59, 130, 246, 0.25);
         }
 
         .dark {
@@ -60,7 +59,6 @@
             --header-color: #f0f0f5;
             --focus-highlight: rgba(107, 140, 255, 0.15);
             --status-bg: #2a2a3e;
-            --edit-highlight: rgba(107, 140, 255, 0.3);
         }
 
         html,
@@ -364,21 +362,6 @@
             line-height: 1.8;
             font-size: 16px;
             word-wrap: break-word;
-        }
-
-        /* 预览可编辑块样式 */
-        #preview-pane [contenteditable="true"] {
-            outline: 2px dashed var(--accent);
-            outline-offset: 2px;
-            background: var(--edit-highlight);
-            border-radius: 4px;
-            padding: 0 4px;
-            transition: background 0.1s;
-        }
-
-        #preview-pane [contenteditable="true"]:focus {
-            outline: 2px solid var(--accent);
-            background: var(--edit-highlight);
         }
 
         /* ===== 预览样式 (Typora 风格) ===== */
@@ -804,6 +787,32 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* ===== 编辑时源码覆盖层 ===== */
+        .inline-source-edit {
+            position: relative;
+            width: 100%;
+            min-height: 1.2em;
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            color: inherit !important;
+            font: inherit !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            resize: none;
+            overflow: hidden;
+            box-shadow: none !important;
+            font-family: var(--mono);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .inline-source-edit:focus {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
         /* ===== 辅助 ===== */
         .flex-center {
             display: flex;
@@ -845,7 +854,7 @@
         <!-- 顶部栏 -->
         <header id="topbar">
             <div class="brand">
-                ✍️ Markdown <span>· 预览可编辑</span>
+                ✍️ Markdown <span>· 预览编辑源码</span>
             </div>
             <div class="actions">
                 <button id="btnSidebar" title="切换侧边栏 (Ctrl+Shift+L)">📑</button>
@@ -902,7 +911,7 @@
                         <span style="opacity:0.3;margin:0 6px;">·</span>
                         <span id="themeLabel">亮色</span>
                         <span style="opacity:0.3;margin:0 6px;">·</span>
-                        <span id="editHint" style="opacity:0.5;">双击文本编辑</span>
+                        <span id="editHint" style="opacity:0.5;">双击块编辑源码</span>
                     </div>
                 </div>
             </div>
@@ -962,16 +971,16 @@
             // ============================================================
             const state = {
                 content: '# 欢迎使用 Markdown 编辑器\n\n在这里开始写作吧！\n\n## 功能支持\n\n- **粗体** / *斜体* / ~~删除线~~\n- [链接](https://example.com)\n- 代码块：`console.log("hello")`\n- 列表项\n\n> 引用块\n\n---\n\n### 数学公式\n\n行内公式：$E = mc^2$\n\n块级公式：\n\n$$\n\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}\n$$\n\n### Mermaid 图表\n\n```mermaid\ngraph TD\n    A[开始] --> B{判断}\n    B -->|是| C[执行]\n    B -->|否| D[结束]\n```\n\n### 表格\n\n| 名称 | 数量 | 价格 |\n|------|------|------|\n| 苹果 | 5    | 10   |\n| 香蕉 | 3    | 6    |',
-                mode: 'preview', // 'preview' | 'split' | 'source'
+                mode: 'preview',
                 focusMode: false,
                 typewriterMode: false,
                 dark: false,
                 sidebarOpen: true,
-                pendingEditIndex: -1, // 用于恢复编辑位置
             };
 
             let renderTimer = null;
             let toastTimer = null;
+            let currentEditingBlock = null; // 当前正在编辑的块
 
             // ============================================================
             //  3. 核心渲染
@@ -980,16 +989,15 @@
                 if (!markdown) return '<p style="opacity:0.4;">开始书写你的文档 ...</p>';
 
                 try {
-                    // 预处理 YAML Front Matter
                     let yamlBlock = '';
                     let body = markdown;
                     const yamlMatch = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n/);
                     if (yamlMatch) {
-                        yamlBlock = `<div class="yaml-frontmatter">📄 YAML Front Matter\n<pre>${escapeHtml(yamlMatch[1])}</pre></div>`;
+                        yamlBlock =
+                            `<div class="yaml-frontmatter">📄 YAML Front Matter\n<pre>${escapeHtml(yamlMatch[1])}</pre></div>`;
                         body = markdown.replace(yamlMatch[0], '');
                     }
 
-                    // 使用 marked 解析
                     const html = marked.parse(body, {
                         gfm: true,
                         breaks: true,
@@ -1007,7 +1015,6 @@
                         }
                     });
 
-                    // 后处理：数学公式
                     let rendered = html;
                     rendered = rendered.replace(/\$\$([\s\S]*?)\$\$/g, function (match, content) {
                         try {
@@ -1036,7 +1043,6 @@
                 return div.innerHTML;
             }
 
-            // 生成大纲
             function generateOutline(markdown) {
                 const lines = markdown.split('\n');
                 const headings = [];
@@ -1084,144 +1090,169 @@
             }
 
             // ============================================================
-            //  4. 预览编辑功能 (核心)
+            //  4. 预览编辑 (源码内联)
             // ============================================================
-            // 给预览块添加可编辑支持
-            function setupPreviewEditable() {
-                // 清除旧的事件绑定 (使用委托)
-                // 委托已在初始化时绑定一次，无需重复绑定
-                // 只需设置每个块的属性
+            function attachBlockEditEvents() {
+                // 移除旧的事件绑定 (使用委托)
+                // 但我们需要清除之前的双击监听，用委托方式
+                // 在初始化时绑定一次
+            }
+
+            // 在fullRender中调用 setupEditableBlocks
+            function setupEditableBlocks() {
                 const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
-                blocks.forEach((block, index) => {
-                    // 存储原始文本 (用于比较)
-                    const originalText = block.innerText;
-                    block.dataset.originalText = originalText;
-                    block.dataset.blockIndex = index;
-                    // 确保可编辑属性初始为 false
-                    if (block.contentEditable !== 'true') {
-                        block.contentEditable = 'false';
-                    }
-                    // 移除可能遗留的编辑状态
-                    block.dataset.editing = 'false';
-                });
-            }
-
-            // 处理双击进入编辑
-            function handleDblClick(e) {
-                const target = e.target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote');
-                if (!target) return;
-                // 如果已经可编辑，不再重复
-                if (target.contentEditable === 'true') return;
-                // 如果是代码块或表格内部，不处理 (通过closest限制已排除)
-                // 开始编辑
-                target.contentEditable = 'true';
-                target.dataset.editing = 'true';
-                // 保存旧文本
-                target.dataset.oldText = target.innerText;
-                // 聚焦并选中全部内容
-                target.focus();
-                const range = document.createRange();
-                range.selectNodeContents(target);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                // 更新提示
-                editHint.textContent = '✏️ 编辑中...';
-                editHint.style.opacity = '0.9';
-            }
-
-            // 处理失焦 (完成编辑)
-            function handleFocusOut(e) {
-                const target = e.target;
-                if (!target.closest) return;
-                const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote');
-                if (!block) return;
-                if (block.contentEditable !== 'true') return;
-                // 检查是否真的有改变
-                const newText = block.innerText.trim();
-                const oldText = block.dataset.oldText || block.dataset.originalText || '';
-                if (newText !== oldText) {
-                    // 更新源码
-                    const markdown = sourcePane.value;
-                    // 尝试在源码中查找旧文本所在行，并替换
-                    const lines = markdown.split('\n');
-                    let foundLine = -1;
-                    let prefix = '';
-                    // 尝试匹配包含旧文本的行 (精确匹配整行?)
+                blocks.forEach(block => {
+                    // 移除已有data-line (重新计算)
+                    block.dataset.line = '';
+                    // 尝试匹配行号
+                    const text = block.innerText.trim();
+                    if (text === '') return;
+                    const lines = sourcePane.value.split('\n');
+                    let matchedLine = -1;
+                    // 优先精确匹配整行 (trim)
                     for (let i = 0; i < lines.length; i++) {
-                        if (lines[i].includes(oldText)) {
-                            // 提取前缀 (如 '# ', '- ', '> ')
-                            const trimmed = lines[i].trim();
-                            const match = trimmed.match(/^(#{1,6}\s+|-\s+|\d+\.\s+|>\s+|[\s]*\*?\s+)/);
-                            if (match) {
-                                prefix = match[1];
-                            } else {
-                                // 段落无前缀
-                                prefix = '';
-                            }
-                            // 如果新文本为空，保留前缀？
-                            let newLine = prefix + newText;
-                            // 如果原行有缩进或特殊格式，保持
-                            // 简单替换
-                            lines[i] = newLine;
-                            foundLine = i;
+                        if (lines[i].trim() === text) {
+                            matchedLine = i;
                             break;
                         }
                     }
-                    if (foundLine !== -1) {
-                        const newMarkdown = lines.join('\n');
-                        sourcePane.value = newMarkdown;
-                        // 重新渲染
-                        immediateRender();
-                        // 尝试恢复编辑状态到同一个块 (通过索引)
-                        const index = parseInt(block.dataset.blockIndex);
-                        if (!isNaN(index)) {
-                            state.pendingEditIndex = index;
-                            // 在渲染完成后恢复
-                            setTimeout(() => {
-                                restoreEdit(index);
-                            }, 50);
+                    // 如果没找到，尝试包含匹配
+                    if (matchedLine === -1) {
+                        for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].includes(text) && text.length > 3) {
+                                matchedLine = i;
+                                break;
+                            }
                         }
-                        showToast('✅ 已同步修改');
-                    } else {
-                        // 未找到匹配行，提示
-                        showToast('⚠️ 无法定位源码，请手动修改');
-                        block.contentEditable = 'false';
-                        block.dataset.editing = 'false';
-                        editHint.textContent = '双击文本编辑';
-                        editHint.style.opacity = '0.5';
                     }
-                } else {
-                    // 无变化，关闭编辑
-                    block.contentEditable = 'false';
-                    block.dataset.editing = 'false';
-                    editHint.textContent = '双击文本编辑';
-                    editHint.style.opacity = '0.5';
-                }
+                    if (matchedLine !== -1) {
+                        block.dataset.line = matchedLine;
+                    }
+                });
             }
 
-            // 恢复编辑状态 (在重新渲染后)
-            function restoreEdit(index) {
-                const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
-                if (blocks.length > index) {
-                    const block = blocks[index];
-                    if (block) {
-                        block.contentEditable = 'true';
-                        block.dataset.editing = 'true';
-                        block.focus();
-                        // 将光标移到末尾
-                        const range = document.createRange();
-                        range.setStartAfter(block.lastChild || block);
-                        range.collapse(true);
-                        const sel = window.getSelection();
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                        editHint.textContent = '✏️ 编辑中...';
-                        editHint.style.opacity = '0.9';
-                        // 清除pending
-                        state.pendingEditIndex = -1;
-                    }
+            // 处理双击
+            function onBlockDblClick(e) {
+                const block = e.target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                if (!block) return;
+                // 如果正在编辑其他块，先保存
+                if (currentEditingBlock && currentEditingBlock !== block) {
+                    saveInlineEdit(currentEditingBlock);
                 }
+                // 如果该块已经处于编辑状态，不重复
+                if (block.dataset.editing === 'true') return;
+
+                const lineStr = block.dataset.line;
+                if (lineStr === undefined || lineStr === '') {
+                    showToast('⚠️ 无法定位源码行，请使用源码模式编辑');
+                    return;
+                }
+                const lineNum = parseInt(lineStr);
+                if (isNaN(lineNum) || lineNum < 0 || lineNum >= sourcePane.value.split('\n').length) {
+                    showToast('⚠️ 行号无效');
+                    return;
+                }
+
+                // 获取该行源码
+                const lines = sourcePane.value.split('\n');
+                const sourceLine = lines[lineNum] || '';
+
+                // 保存当前块内容，用于恢复
+                block.dataset.oldText = block.innerText;
+                block.dataset.lineNum = lineNum;
+
+                // 创建 textarea 覆盖
+                const textarea = document.createElement('textarea');
+                textarea.className = 'inline-source-edit';
+                textarea.value = sourceLine;
+                // 自动调整高度
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+
+                // 替换块内容
+                block.innerHTML = '';
+                block.appendChild(textarea);
+                block.dataset.editing = 'true';
+                currentEditingBlock = block;
+
+                // 聚焦
+                textarea.focus();
+                textarea.select();
+                editHint.textContent = '✏️ 编辑源码 (Ctrl+Enter 保存)';
+                editHint.style.opacity = '0.9';
+
+                // 绑定事件
+                textarea.addEventListener('input', function () {
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                });
+
+                // 保存事件: Ctrl+Enter 或 失焦
+                const saveHandler = function (e) {
+                    if (e.type === 'keydown' && !(e.ctrlKey && e.key === 'Enter')) return;
+                    saveInlineEdit(block);
+                };
+                textarea.addEventListener('keydown', saveHandler);
+                textarea.addEventListener('blur', function (e) {
+                    // 延迟一下，防止点击外部导致立即触发两次
+                    setTimeout(() => {
+                        if (block.dataset.editing === 'true') {
+                            saveInlineEdit(block);
+                        }
+                    }, 50);
+                });
+            }
+
+            // 保存内联编辑
+            function saveInlineEdit(block) {
+                if (!block || block.dataset.editing !== 'true') return;
+                const textarea = block.querySelector('textarea');
+                if (!textarea) return;
+                const newContent = textarea.value;
+                const lineNum = parseInt(block.dataset.lineNum);
+                if (isNaN(lineNum)) return;
+
+                // 修改源码
+                let lines = sourcePane.value.split('\n');
+                if (lineNum >= 0 && lineNum < lines.length) {
+                    // 用新内容替换该行 (可能包含换行)
+                    const newLines = newContent.split('\n');
+                    // 替换该行及后续行 (如果newLines长度>1)
+                    lines.splice(lineNum, 1, ...newLines);
+                    const newSource = lines.join('\n');
+                    sourcePane.value = newSource;
+                } else {
+                    showToast('⚠️ 行号越界');
+                    block.dataset.editing = 'false';
+                    currentEditingBlock = null;
+                    immediateRender();
+                    return;
+                }
+
+                // 清除编辑状态
+                block.dataset.editing = 'false';
+                currentEditingBlock = null;
+                editHint.textContent = '双击块编辑源码';
+                editHint.style.opacity = '0.5';
+
+                // 重新渲染
+                immediateRender();
+
+                // 尝试滚动到刚才编辑的块 (通过搜索新内容)
+                setTimeout(() => {
+                    const newText = newContent.trim();
+                    if (newText) {
+                        const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
+                        for (const b of blocks) {
+                            if (b.innerText.trim() === newText) {
+                                b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                break;
+                            }
+                        }
+                    }
+                }, 100);
+
+                showToast('✅ 已更新源码');
             }
 
             // ============================================================
@@ -1245,13 +1276,11 @@
                     hljs.highlightElement(block);
                 });
 
-                // 设置预览可编辑
-                setupPreviewEditable();
+                // 设置可编辑块
+                setupEditableBlocks();
 
-                // 如果存在待恢复的编辑索引
-                if (state.pendingEditIndex !== -1) {
-                    restoreEdit(state.pendingEditIndex);
-                }
+                // 如果当前有编辑状态，保留 (但重新渲染会清除，所以需要恢复？)
+                // 但是我们在保存时已经清除了编辑状态，这里无需处理
 
                 applyFocusMode();
                 applyTypewriterMode();
@@ -1349,7 +1378,6 @@
             }
 
             function highlightCurrentLine() {
-                // 简单实现: 在预览中高亮包含光标的段落 (基于源码光标位置)
                 const cursorPos = sourcePane.selectionStart;
                 const text = sourcePane.value;
                 const lines = text.split('\n');
@@ -1398,8 +1426,8 @@
                         const htmlContent = renderMarkdown(content);
                         const fullHtml = `<!DOCTYPE html>
                     <html><head><meta charset="UTF-8"><title>${title}</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819063301">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819063301">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
                     <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.8;color:#2c3e50;} pre{background:#f5f5f5;padding:12px 16px;border-radius:6px;} blockquote{border-left:4px solid #3b82f6;padding-left:1.2em;margin-left:0;background:#f8f8f8;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 12px;} img{max-width:100%;}</style>
                     </head><body>${htmlContent}</body></html>`;
                         blob = new Blob([fullHtml], { type: 'text/html' });
@@ -1522,13 +1550,8 @@
                 }
                 // Escape 退出编辑
                 if (e.key === 'Escape') {
-                    const active = document.activeElement;
-                    if (active && active.closest && active.closest('[contenteditable="true"]')) {
-                        const block = active.closest('[contenteditable="true"]');
-                        block.contentEditable = 'false';
-                        block.dataset.editing = 'false';
-                        editHint.textContent = '双击文本编辑';
-                        editHint.style.opacity = '0.5';
+                    if (currentEditingBlock) {
+                        saveInlineEdit(currentEditingBlock);
                         e.preventDefault();
                     }
                 }
@@ -1654,17 +1677,8 @@
                     });
                 });
 
-                // 预览编辑事件 (委托)
-                previewPane.addEventListener('dblclick', handleDblClick);
-                previewPane.addEventListener('focusout', handleFocusOut);
-
-                // 当在编辑时按回车，防止换行导致块分裂？允许换行，但会保留在块内
-                previewPane.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter' && e.target.closest && e.target.closest('[contenteditable="true"]')) {
-                        // 允许换行，但阻止默认行为？默认会插入<br>，我们保留
-                        // 不阻止，让用户输入多行文本
-                    }
-                });
+                // 预览双击编辑 (委托)
+                previewPane.addEventListener('dblclick', onBlockDblClick);
 
                 // 检测暗色主题
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -1694,8 +1708,8 @@
                     smartypants: true,
                 });
 
-                editHint.textContent = '双击文本编辑';
-                showToast('✨ 预览中双击任意文本即可编辑');
+                editHint.textContent = '双击块编辑源码';
+                showToast('✨ 双击预览中的块即可编辑源码');
             }
 
             if (document.readyState === 'complete') {
