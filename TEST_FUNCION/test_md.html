@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>终极 MD 编辑器 · Judge0 CE 修复版</title>
+    <title>终极 MD 编辑器 · Judge0 CE 中文修复</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
@@ -634,7 +634,7 @@
 
     <div class="app">
         <header class="app-header">
-            <div class="logo">📝 <span>MD</span>编辑器 <small>· Judge0 CE 修复</small></div>
+            <div class="logo">📝 <span>MD</span>编辑器 <small>· 中文支持</small></div>
             <div class="actions">
                 <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
                 <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
@@ -808,8 +808,7 @@
         let suggestMode = '';
 
         // =====================================================================
-        // 3. Judge0 CE 语言 ID 映射（经过验证，只保留确定有效的）
-        // 根据官方 /languages 端点返回的数据
+        // 3. Judge0 CE 语言 ID 映射（经过验证）
         // =====================================================================
         const LANGUAGE_IDS = {
             'bash': 46,
@@ -828,7 +827,7 @@
         };
 
         // =====================================================================
-        // 4. 补全数据（略，保持原有）
+        // 4. 补全数据（略）
         // =====================================================================
         const codeKeywords = {
             javascript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue', 'try', 'catch', 'finally', 'throw', 'new', 'this', 'class', 'extends', 'super', 'import', 'export', 'default', 'async', 'await', 'yield', 'console', 'log', 'debug', 'error', 'map', 'filter', 'reduce', 'forEach', 'Promise', 'then', 'catch', 'finally'],
@@ -1205,7 +1204,7 @@
         }
 
         // =====================================================================
-        // 8. 代码运行（Judge0 CE 修复版 - 使用 wait=true 一次性提交）
+        // 8. 代码运行（Judge0 CE 支持中文 UTF-8）
         // =====================================================================
         async function runCode(btn, encodedCode) {
             const code = decodeURIComponent(encodedCode);
@@ -1228,10 +1227,13 @@
                     return;
                 }
 
-                // 使用 wait=true 直接等待执行结果，避免轮询
-                const url = `https://ce.judge0.com/submissions?wait=true&base64_encoded=false`;
+                // 将源代码进行 Base64 编码（支持中文）
+                const encodedSource = btoa(unescape(encodeURIComponent(code)));
+
+                // 使用 wait=true 和 base64_encoded=true
+                const url = `https://ce.judge0.com/submissions?wait=true&base64_encoded=true`;
                 const body = {
-                    source_code: code,
+                    source_code: encodedSource,
                     language_id: languageId,
                     stdin: '',
                 };
@@ -1245,17 +1247,15 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    // 提取服务器返回的详细错误信息
                     const errMsg = data.message || data.error || JSON.stringify(data);
                     throw new Error(`HTTP ${response.status}: ${errMsg}`);
                 }
 
-                // 检查是否包含错误字段
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
-                // 解析执行结果
+                // 输出结果（API 会自动解码 stdout/stderr）
                 let outputText = '';
                 if (data.stdout) {
                     outputText += data.stdout;
@@ -1864,7 +1864,7 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
         // =====================================================================
         // 16. 初始化
         // =====================================================================
-        const defaultContent = `# ✨ 终极 MD 编辑器（Judge0 CE 修复版）
+        const defaultContent = `# ✨ 终极 MD 编辑器（中文支持）
 
 **单击任意内容**进入编辑模式，修改后点击其他地方或按 Ctrl+Enter 保存。
 
@@ -1878,26 +1878,25 @@ body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto
 
 ---
 
-## 💻 代码运行（Judge0 CE 一次性执行）
+## 💻 代码运行（支持中文）
 
 \`\`\`javascript
-// JavaScript (Node.js 12.14.0)
-const name = '世界';
-console.log(\`Hello, \${name}!\`);
+// 中文变量名和注释都没问题
+const 名字 = '世界';
+console.log(\`你好，\${名字}！\`);
 \`\`\`
 
 \`\`\`python
-# Python (3.8.1)
-print("Hello from Python!")
-for i in range(3):
-    print(i)
+# Python 也支持中文
+名字 = "世界"
+print(f"你好，{名字}！")
 \`\`\`
 
 \`\`\`java
-// Java (OpenJDK 13.0.1)
+// Java 同样支持中文
 public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello Java!");
+    public static void main(String[] 参数) {
+        System.out.println("你好，世界！");
     }
 }
 \`\`\`
@@ -1916,7 +1915,7 @@ public class Main {
         fullMarkdown = defaultContent;
         renderMarkdown(fullMarkdown);
 
-        console.log('✅ Judge0 CE 修复版已启动！支持一次性执行，错误信息清晰。');
+        console.log('✅ 中文支持版已启动！所有代码均支持 UTF-8。');
     </script>
 </body>
 
