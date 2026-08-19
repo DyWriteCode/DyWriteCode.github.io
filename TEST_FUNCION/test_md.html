@@ -7,12 +7,8 @@
 <<<<<<< HEAD
     <title>终极 MD 编辑器 · Judge0 CE 修复版</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-=======
-    <title>终极 MD 编辑器 · Judge0 CE 驱动</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819014354" />
->>>>>>> b546ee9dd848fcaaa71649e03a928b9d7d094658
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819014354" />
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" />
     <style>
         * {
             margin: 0;
@@ -719,25 +715,25 @@
     <div class="suggest-box" id="suggestBox"></div>
     <div class="math-panel" id="mathPanel"></div>
     <div class="context-menu" id="contextMenu">
-        <div class="menu-item" data-action="h2?v=20260819014354">## 标题2</div>
-        <div class="menu-item" data-action="h3?v=20260819014354">### 标题3</div>
-        <div class="menu-item" data-action="h4?v=20260819014354">#### 标题4</div>
+        <div class="menu-item" data-action="h2">## 标题2</div>
+        <div class="menu-item" data-action="h3">### 标题3</div>
+        <div class="menu-item" data-action="h4">#### 标题4</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="list-ul?v=20260819014354">• 无序列表</div>
-        <div class="menu-item" data-action="list-ol?v=20260819014354">1. 有序列表</div>
-        <div class="menu-item" data-action="quote?v=20260819014354">" 引用</div>
+        <div class="menu-item" data-action="list-ul">• 无序列表</div>
+        <div class="menu-item" data-action="list-ol">1. 有序列表</div>
+        <div class="menu-item" data-action="quote">" 引用</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="code-block?v=20260819014354">&lt;/&gt; 代码块</div>
-        <div class="menu-item" data-action="math-inline?v=20260819014354">∑ 行内公式</div>
-        <div class="menu-item" data-action="math-block?v=20260819014354">∑ 块级公式</div>
+        <div class="menu-item" data-action="code-block">&lt;/&gt; 代码块</div>
+        <div class="menu-item" data-action="math-inline">∑ 行内公式</div>
+        <div class="menu-item" data-action="math-block">∑ 块级公式</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="table?v=20260819014354">▦ 表格</div>
-        <div class="menu-item" data-action="link?v=20260819014354">🔗 链接</div>
-        <div class="menu-item" data-action="image?v=20260819014354">🖼 图片</div>
+        <div class="menu-item" data-action="table">▦ 表格</div>
+        <div class="menu-item" data-action="link">🔗 链接</div>
+        <div class="menu-item" data-action="image">🖼 图片</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="hr?v=20260819014354">— — 分割线</div>
+        <div class="menu-item" data-action="hr">— — 分割线</div>
         <div class="menu-divider"></div>
-        <div class="menu-item" data-action="cancel-edit?v=20260819014354">✖ 取消编辑</div>
+        <div class="menu-item" data-action="cancel-edit">✖ 取消编辑</div>
     </div>
 
     <!-- 公式构建器 -->
@@ -762,9 +758,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20260819014354"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js?v=20260819014354"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260819014354"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
     <script>
         // =====================================================================
@@ -784,8 +780,8 @@
             return `<pre data-lang="${lang}" data-code="${encodeURIComponent(code)}"><button class="run-btn" onclick="runCode(this, \`${encodeURIComponent(code)}\`)">▶ 运行</button><code class="language-${lang} hljs">${highlighted}</code></pre>`;
         };
         renderer.table = function (header, body) { return `<table><thead>${header}</thead><tbody>${body}</tbody></table>`; };
-        renderer.image = function (href, title, text) { return `<img src="${href}?v=20260819014354" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
-        renderer.link = function (href, title, text) { return `<a href="${href}?v=20260819014354" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
+        renderer.image = function (href, title, text) { return `<img src="${href}" alt="${text || ''}" ${title ? `title="${title}"` : ''} loading="lazy" />`; };
+        renderer.link = function (href, title, text) { return `<a href="${href}" ${title ? `title="${title}"` : ''} target="_blank" rel="noopener">${text}</a>`; };
         const markedOptions = { renderer, gfm: true, breaks: true };
 
         // =====================================================================
@@ -1844,8 +1840,8 @@
             const content = preview.innerHTML;
             const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>MD文档</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260819014354">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20260819014354">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 <style>
 body{max-width:900px;margin:40px auto;padding:20px;font-family:'Segoe UI',Roboto,sans-serif;line-height:1.8;background:#f7f9fc;}
 .markdown-body{background:#fff;padding:40px;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,0.04);}
