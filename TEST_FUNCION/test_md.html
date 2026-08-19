@@ -12,7 +12,8 @@
         src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@c82d032/preview_assets/check-update.js?v=20260819032430"
         type="module">
         </script>
-    <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@c82d032/preview_assets/home.ico?v=20260819032430"
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@c82d032/preview_assets/home.ico?v=20260819032430"
         rel="icon" type="image/png" />
     <meta content="no-referrer" name="referrer" />
     <link href="https://cdn.jsdmirror.com?v=20260819032430" rel="preconnect" />
@@ -1077,6 +1078,9 @@
 
         function handlePreviewClick(e) {
             ensureEditingStateValid();
+            if (e.target.closest('textarea.edit-source')) {
+                return;
+            }
             if (e.target.closest(
                 'p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, table, li, th, td'
             )) {
@@ -1163,6 +1167,12 @@
             textarea.className = 'edit-source active';
             textarea.value = textContent;
             const style = getComputedStyle(element);
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+            });
             textarea.style.width = '100%';
             textarea.style.minHeight = Math.max(40, element.offsetHeight) + 'px';
             textarea.style.fontFamily = style.fontFamily || 'inherit';
