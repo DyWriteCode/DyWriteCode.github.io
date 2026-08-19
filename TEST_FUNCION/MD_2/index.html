@@ -4,17 +4,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>类 Typora · 全块精准源码编辑</title>
+    <title>类 Typora · 全块精准源码编辑（最终版）</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819070734" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819070734" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js?v=20260819070734">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819070734">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819070734">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js?v=20260819070734">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js">
     </script>
 
     <style>
@@ -997,13 +997,16 @@
             }
 
             function stripInlineMarkdown(text) {
+                // 移除常见行内标记，保留内容
                 return text.replace(/\*\*(.+?)\*\*/g, '$1')
                     .replace(/\*(.+?)\*/g, '$1')
                     .replace(/~~(.+?)~~/g, '$1')
                     .replace(/`(.+?)`/g, '$1')
                     .replace(/_(.+?)_/g, '$1')
                     .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-                    .replace(/!\[.+?\]\(.+?\)/g, '');
+                    .replace(/!\[.+?\]\(.+?\)/g, '')
+                    .replace(/\$\$(.+?)\$\$/g, '$1') // 块级公式
+                    .replace(/\$(.+?)\$/g, '$1'); // 行内公式
             }
 
             // ============================================================
@@ -1112,7 +1115,7 @@
             }
 
             // ============================================================
-            //  5. 为预览块分配行号（增强匹配）
+            //  5. 为预览块分配行号（完全重写，鲁棒匹配）
             // ============================================================
             function assignLineNumbers() {
                 const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
@@ -1143,7 +1146,6 @@
 
                     // ---- 代码块 (PRE) ----
                     if (tag === 'PRE') {
-                        // 找连续的 ``` ... ```
                         let inCode = false;
                         let codeStart = -1;
                         for (let i = idx; i < lines.length; i++) {
@@ -1153,7 +1155,6 @@
                                     inCode = true;
                                     codeStart = i;
                                 } else {
-                                    // 结束
                                     start = codeStart;
                                     end = i;
                                     idx = i + 1;
@@ -1182,7 +1183,6 @@
 
                     // ---- 表格 (TABLE) ----
                     if (tag === 'TABLE') {
-                        // 找连续的包含 '|' 的行
                         let tableStart = -1,
                             tableEnd = -1;
                         for (let i = idx; i < lines.length; i++) {
@@ -1215,7 +1215,6 @@
 
                     // ---- 引用块 (BLOCKQUOTE) ----
                     if (tag === 'BLOCKQUOTE') {
-                        // 找连续的以 '>' 开头的行
                         let quoteStart = -1,
                             quoteEnd = -1;
                         for (let i = idx; i < lines.length; i++) {
@@ -1249,7 +1248,25 @@
                     // ---- 普通块 (p, li, h1-h6) ----
                     // 获取块的纯文本（去除标记）和原始文本
                     const rawText = block.textContent || '';
+                    // 去除标记后用于匹配
                     const cleanText = stripInlineMarkdown(rawText).replace(/\s+/g, ' ').trim();
+                    // 如果文本为空（可能由图片等组成），尝试匹配原始内容
+                    if (cleanText === '') {
+                        // 尝试匹配原始文本
+                        const original = rawText.replace(/\s+/g, ' ').trim();
+                        for (let i = idx; i < lines.length; i++) {
+                            const line = lines[i].replace(/\s+/g, ' ').trim();
+                            if (line === original || line.includes(original) || original.includes(line)) {
+                                start = i;
+                                end = i;
+                                block.dataset.line = start;
+                                block.dataset.endLine = end;
+                                idx = i + 1;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     // 从当前 idx 开始匹配
                     let found = false;
                     for (let i = idx; i < lines.length; i++) {
@@ -1283,7 +1300,7 @@
                         }
                     }
                     if (!found) {
-                        // 如果都没找到，跳过，但记录一个无效行号避免后续错误
+                        // 如果都没找到，设为无效
                         block.dataset.line = '-1';
                         block.dataset.endLine = '-1';
                     }
@@ -1315,6 +1332,8 @@
                 }
 
                 const lines = sourcePane.value.split('\n');
+                // 确保 endLine 不超过行数
+                if (endLine >= lines.length) endLine = lines.length - 1;
                 const sourceLines = lines.slice(startLine, endLine + 1);
                 const sourceText = sourceLines.join('\n');
 
@@ -1322,16 +1341,26 @@
                 target.dataset.lineNum = startLine;
                 target.dataset.endLineNum = endLine;
 
+                // 创建 textarea 并设置内容
                 const textarea = document.createElement('textarea');
                 textarea.className = 'inline-source-edit';
                 textarea.value = sourceText;
+                // 强制重新计算高度，显示全部内容
                 textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-
+                // 设置 rows 为行数，确保显示完整
+                const rowCount = sourceLines.length;
+                textarea.rows = rowCount || 1;
+                // 但 rows 可能不够，我们使用 scrollHeight
+                // 但需要先添加到DOM才能获取scrollHeight，所以先设置样式
+                textarea.style.height = 'auto';
+                // 添加后调整
                 target.innerHTML = '';
                 target.appendChild(textarea);
                 target.dataset.editing = 'true';
                 currentEditingBlock = target;
+
+                // 现在调整高度
+                textarea.style.height = textarea.scrollHeight + 'px';
 
                 textarea.focus();
                 textarea.select();
@@ -1567,8 +1596,8 @@
                         const htmlContent = renderMarkdown(content);
                         const fullHtml = `<!DOCTYPE html>
                     <html><head><meta charset="UTF-8"><title>${title}</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819070734">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819070734">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
                     <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.8;color:#2c3e50;} pre{background:#f5f5f5;padding:12px 16px;border-radius:6px;} blockquote{border-left:4px solid #3b82f6;padding-left:1.2em;margin-left:0;background:#f8f8f8;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 12px;} img{max-width:100%;}</style>
                     </head><body>${htmlContent}</body></html>`;
                         blob = new Blob([fullHtml], { type: 'text/html' });
