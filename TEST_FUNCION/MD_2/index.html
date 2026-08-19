@@ -4,18 +4,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>类 Typora · 预览编辑源码（全支持）</title>
+    <title>类 Typora · 精准源码编辑</title>
 
-    <!-- 第三方库 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819064415" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819064415" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js?v=20260819064415">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=20260819064415">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260819064415">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js?v=20260819064415">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js">
     </script>
 
     <style>
@@ -787,9 +786,8 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ===== 编辑时源码覆盖层 ===== */
+        /* ===== 编辑时源码覆盖层（彻底无边框） ===== */
         .inline-source-edit {
-            position: relative;
             width: 100%;
             min-height: 1.2em;
             border: none !important;
@@ -811,6 +809,14 @@
             border: none !important;
             outline: none !important;
             box-shadow: none !important;
+        }
+
+        /* 确保父块没有任何额外边框 */
+        #preview-pane [data-editing="true"] {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
         }
 
         /* ===== 辅助 ===== */
@@ -854,7 +860,7 @@
         <!-- 顶部栏 -->
         <header id="topbar">
             <div class="brand">
-                ✍️ Markdown <span>· 全块源码编辑</span>
+                ✍️ Markdown <span>· 精准源码编辑</span>
             </div>
             <div class="actions">
                 <button id="btnSidebar" title="切换侧边栏 (Ctrl+Shift+L)">📑</button>
@@ -983,7 +989,21 @@
             let currentEditingBlock = null;
 
             // ============================================================
-            //  3. 核心渲染
+            //  3. 工具函数：去除 Markdown 行内标记（用于匹配）
+            // ============================================================
+            function stripInlineMarkdown(text) {
+                // 移除 ** **, * *, ~~ ~~, ` `, _ _ (非贪婪)
+                return text.replace(/\*\*(.+?)\*\*/g, '$1')
+                    .replace(/\*(.+?)\*/g, '$1')
+                    .replace(/~~(.+?)~~/g, '$1')
+                    .replace(/`(.+?)`/g, '$1')
+                    .replace(/_(.+?)_/g, '$1')
+                    .replace(/\[(.+?)\]\(.+?\)/g, '$1') // 链接只留文本
+                    .replace(/!\[.+?\]\(.+?\)/g, ''); // 图片移除
+            }
+
+            // ============================================================
+            //  4. 核心渲染（含块行号分配）
             // ============================================================
             function renderMarkdown(markdown) {
                 if (!markdown) return '<p style="opacity:0.4;">开始书写你的文档 ...</p>';
@@ -1096,37 +1116,48 @@
             }
 
             // ============================================================
-            //  4. 预览编辑 (源码内联) —— 改进匹配逻辑
+            //  5. 为预览块分配行号（顺序匹配，忽略标记）
             // ============================================================
-            function setupEditableBlocks() {
-                const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
+            function assignLineNumbers() {
+                const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
                 const lines = sourcePane.value.split('\n');
 
-                blocks.forEach(block => {
-                    // 清除旧 data-line
-                    block.dataset.line = '';
+                // 首先处理代码块（pre）——通过 ``` 边界
+                // 我们先将普通块和代码块分开处理，但为了顺序，我们整体顺序匹配
 
-                    // 处理代码块（pre）
+                // 构建一个数组存储所有块及其文本
+                const blockList = [];
+                for (const block of blocks) {
+                    // 检查父级是否也是块，如果是，跳过（避免嵌套块重复）
+                    const parent = block.parentElement;
+                    if (parent && (parent.matches('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table'))) {
+                        continue;
+                    }
+                    // 如果是代码块（pre），我们特殊处理
                     if (block.tagName === 'PRE') {
-                        const codeBlock = block.querySelector('code');
-                        if (!codeBlock) return;
-                        const text = codeBlock.textContent;
-                        // 尝试在源码中查找包含 ``` 的行，并匹配语言
-                        let lang = '';
-                        const langMatch = codeBlock.className.match(/language-(\w+)/);
-                        if (langMatch) lang = langMatch[1];
-                        // 遍历行，找到包含 ``` 的行
-                        let startLine = -1;
-                        let endLine = -1;
-                        for (let i = 0; i < lines.length; i++) {
-                            const line = lines[i];
-                            if (line.trim().startsWith('```')) {
+                        blockList.push({ element: block, type: 'code', text: block.textContent });
+                    } else {
+                        // 普通块，获取纯文本并去除标记后比较
+                        const rawText = block.textContent || '';
+                        const cleanText = stripInlineMarkdown(rawText).replace(/\s+/g, ' ').trim();
+                        blockList.push({ element: block, type: 'normal', text: cleanText });
+                    }
+                }
+
+                // 现在在源码中顺序查找
+                let currentLineIdx = 0;
+                for (const item of blockList) {
+                    const element = item.element;
+                    const searchText = item.text;
+                    if (item.type === 'code') {
+                        // 查找代码块：找以 ``` 开头和结尾的块
+                        let startLine = -1,
+                            endLine = -1;
+                        for (let i = currentLineIdx; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (line.startsWith('```')) {
                                 if (startLine === -1) {
-                                    // 检查语言是否匹配
-                                    const langInLine = line.replace(/```/, '').trim();
-                                    if (langInLine === lang || (lang === '' && langInLine === '')) {
-                                        startLine = i;
-                                    }
+                                    startLine = i;
                                 } else {
                                     endLine = i;
                                     break;
@@ -1134,106 +1165,96 @@
                             }
                         }
                         if (startLine !== -1 && endLine !== -1) {
-                            // 整个代码块从 startLine 到 endLine (包含)
-                            block.dataset.line = startLine;
-                            block.dataset.endLine = endLine;
+                            element.dataset.line = startLine;
+                            element.dataset.endLine = endLine;
+                            currentLineIdx = endLine + 1;
                         } else {
-                            // 尝试用内容匹配
-                            const trimmed = text.trim();
-                            for (let i = 0; i < lines.length; i++) {
-                                if (lines[i].includes(trimmed)) {
-                                    block.dataset.line = i;
+                            // 降级：文本匹配
+                            for (let i = currentLineIdx; i < lines.length; i++) {
+                                if (lines[i].includes(searchText)) {
+                                    element.dataset.line = i;
+                                    element.dataset.endLine = i;
+                                    currentLineIdx = i + 1;
                                     break;
                                 }
                             }
                         }
-                        return;
-                    }
-
-                    // 普通块
-                    let rawText = block.textContent || '';
-                    rawText = rawText.replace(/\s+/g, ' ').trim();
-                    if (rawText === '') return;
-
-                    // 先在源码中查找精确匹配 (整行trim后相等)
-                    let matchedLine = -1;
-                    for (let i = 0; i < lines.length; i++) {
-                        const trimmedLine = lines[i].trim();
-                        if (trimmedLine === rawText) {
-                            matchedLine = i;
-                            break;
-                        }
-                    }
-                    // 如果没找到，尝试包含匹配
-                    if (matchedLine === -1) {
-                        for (let i = 0; i < lines.length; i++) {
-                            if (lines[i].includes(rawText) && rawText.length > 3) {
-                                matchedLine = i;
+                    } else {
+                        // 普通块：从 currentLineIdx 开始查找包含 cleanText 的行（去除标记后比较）
+                        let found = false;
+                        for (let i = currentLineIdx; i < lines.length; i++) {
+                            const strippedLine = stripInlineMarkdown(lines[i]).replace(/\s+/g, ' ').trim();
+                            // 如果 strippedLine 包含 searchText 或者 searchText 包含 strippedLine（短文本）
+                            if (strippedLine === searchText || strippedLine.includes(searchText) || searchText.includes(
+                                strippedLine)) {
+                                element.dataset.line = i;
+                                element.dataset.endLine = i;
+                                currentLineIdx = i + 1;
+                                found = true;
                                 break;
                             }
                         }
+                        if (!found) {
+                            // 如果未找到，尝试使用原始 textContent 匹配（可能包含标记）
+                            const rawText = element.textContent || '';
+                            for (let i = currentLineIdx; i < lines.length; i++) {
+                                if (lines[i].includes(rawText)) {
+                                    element.dataset.line = i;
+                                    element.dataset.endLine = i;
+                                    currentLineIdx = i + 1;
+                                    break;
+                                }
+                            }
+                        }
                     }
-                    if (matchedLine !== -1) {
-                        block.dataset.line = matchedLine;
-                    }
-                });
+                }
             }
 
-            // 处理双击
+            // ============================================================
+            //  6. 预览编辑（双击编辑源码）
+            // ============================================================
             function onBlockDblClick(e) {
-                let target = e.target;
-                // 如果点击的是 code 内部，向上找 pre
-                if (target.tagName === 'CODE') {
-                    target = target.closest('pre');
-                }
+                let target = e.target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
                 if (!target) return;
-                const block = target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
-                if (!block) return;
 
-                if (currentEditingBlock && currentEditingBlock !== block) {
+                // 如果点击的是表格，我们可以允许编辑，但表格可能多行，我们处理为编辑整个表格源码
+                // 但表格的 textContent 可能包含大量空格，匹配困难，所以我们直接使用 data-line
+                if (currentEditingBlock && currentEditingBlock !== target) {
                     saveInlineEdit(currentEditingBlock);
                 }
-                if (block.dataset.editing === 'true') return;
+                if (target.dataset.editing === 'true') return;
 
-                let lineStr = block.dataset.line;
-                let endLineStr = block.dataset.endLine;
+                const lineStr = target.dataset.line;
                 if (lineStr === undefined || lineStr === '') {
                     showToast('⚠️ 无法定位源码行，请使用源码模式编辑');
                     return;
                 }
-                let lineNum = parseInt(lineStr);
-                let endLineNum = endLineStr ? parseInt(endLineStr) : lineNum;
-                if (isNaN(lineNum) || lineNum < 0 || lineNum >= sourcePane.value.split('\n').length) {
+                let startLine = parseInt(lineStr);
+                let endLine = parseInt(target.dataset.endLine) || startLine;
+                if (isNaN(startLine) || startLine < 0 || startLine >= sourcePane.value.split('\n').length) {
                     showToast('⚠️ 行号无效');
                     return;
                 }
 
-                // 获取该行源码 (如果是代码块，获取多行)
                 const lines = sourcePane.value.split('\n');
-                let sourceLines = [];
-                if (block.tagName === 'PRE' && endLineNum > lineNum) {
-                    sourceLines = lines.slice(lineNum, endLineNum + 1);
-                } else {
-                    sourceLines = [lines[lineNum] || ''];
-                }
+                const sourceLines = lines.slice(startLine, endLine + 1);
                 const sourceText = sourceLines.join('\n');
 
-                // 保存信息
-                block.dataset.oldText = block.innerText;
-                block.dataset.lineNum = lineNum;
-                block.dataset.endLineNum = endLineNum;
+                target.dataset.oldText = target.textContent;
+                target.dataset.lineNum = startLine;
+                target.dataset.endLineNum = endLine;
 
-                // 创建 textarea
                 const textarea = document.createElement('textarea');
                 textarea.className = 'inline-source-edit';
                 textarea.value = sourceText;
                 textarea.style.height = 'auto';
                 textarea.style.height = textarea.scrollHeight + 'px';
 
-                block.innerHTML = '';
-                block.appendChild(textarea);
-                block.dataset.editing = 'true';
-                currentEditingBlock = block;
+                // 清空块并放入 textarea
+                target.innerHTML = '';
+                target.appendChild(textarea);
+                target.dataset.editing = 'true';
+                currentEditingBlock = target;
 
                 textarea.focus();
                 textarea.select();
@@ -1247,13 +1268,13 @@
 
                 const saveHandler = function (e) {
                     if (e.type === 'keydown' && !(e.ctrlKey && e.key === 'Enter')) return;
-                    saveInlineEdit(block);
+                    saveInlineEdit(target);
                 };
                 textarea.addEventListener('keydown', saveHandler);
                 textarea.addEventListener('blur', function (e) {
                     setTimeout(() => {
-                        if (block.dataset.editing === 'true') {
-                            saveInlineEdit(block);
+                        if (target.dataset.editing === 'true') {
+                            saveInlineEdit(target);
                         }
                     }, 50);
                 });
@@ -1264,15 +1285,14 @@
                 const textarea = block.querySelector('textarea');
                 if (!textarea) return;
                 const newContent = textarea.value;
-                const lineNum = parseInt(block.dataset.lineNum);
-                const endLineNum = parseInt(block.dataset.endLineNum) || lineNum;
-                if (isNaN(lineNum)) return;
+                const startLine = parseInt(block.dataset.lineNum);
+                const endLine = parseInt(block.dataset.endLineNum) || startLine;
+                if (isNaN(startLine)) return;
 
                 let lines = sourcePane.value.split('\n');
-                if (lineNum >= 0 && lineNum < lines.length) {
-                    // 用新内容替换行区间
+                if (startLine >= 0 && startLine < lines.length) {
                     const newLines = newContent.split('\n');
-                    lines.splice(lineNum, endLineNum - lineNum + 1, ...newLines);
+                    lines.splice(startLine, endLine - startLine + 1, ...newLines);
                     const newSource = lines.join('\n');
                     sourcePane.value = newSource;
                 } else {
@@ -1291,11 +1311,11 @@
 
                 // 滚动到编辑位置
                 setTimeout(() => {
-                    const newText = newContent.trim().split('\n')[0];
-                    if (newText) {
-                        const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
+                    const firstLine = newContent.trim().split('\n')[0];
+                    if (firstLine) {
+                        const blocks = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
                         for (const b of blocks) {
-                            if (b.textContent.trim().includes(newText) || newText.includes(b.textContent.trim())) {
+                            if (b.textContent.trim().includes(firstLine) || firstLine.includes(b.textContent.trim())) {
                                 b.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 break;
                             }
@@ -1306,7 +1326,7 @@
             }
 
             // ============================================================
-            //  5. 全量渲染
+            //  7. 全量渲染
             // ============================================================
             function fullRender() {
                 const markdown = sourcePane.value;
@@ -1325,7 +1345,9 @@
                     hljs.highlightElement(block);
                 });
 
-                setupEditableBlocks();
+                // 分配行号
+                assignLineNumbers();
+
                 applyFocusMode();
                 applyTypewriterMode();
                 updateModeLabel();
@@ -1348,7 +1370,7 @@
             }
 
             // ============================================================
-            //  6. 模式切换
+            //  8. 模式切换
             // ============================================================
             function setMode(mode) {
                 state.mode = mode;
@@ -1396,7 +1418,7 @@
             }
 
             // ============================================================
-            //  7. 专注 & 打字机
+            //  9. 专注 & 打字机
             // ============================================================
             function applyFocusMode() {
                 const container = document.getElementById('editor-container');
@@ -1435,14 +1457,14 @@
                     charCount += lines[i].length + 1;
                 }
                 previewPane.querySelectorAll('.focus-line').forEach(el => el.classList.remove('focus-line'));
-                const previewLines = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
+                const previewLines = previewPane.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, table');
                 if (previewLines.length > lineIdx) {
                     previewLines[lineIdx]?.classList.add('focus-line');
                 }
             }
 
             // ============================================================
-            //  8. 主题切换
+            //  10. 主题切换
             // ============================================================
             function toggleTheme() {
                 state.dark = !state.dark;
@@ -1458,7 +1480,7 @@
             }
 
             // ============================================================
-            //  9. 导出
+            //  11. 导出
             // ============================================================
             function exportDocument(format) {
                 const content = sourcePane.value;
@@ -1470,8 +1492,8 @@
                         const htmlContent = renderMarkdown(content);
                         const fullHtml = `<!DOCTYPE html>
                     <html><head><meta charset="UTF-8"><title>${title}</title>
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260819064415">
-                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css?v=20260819064415">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
                     <style>body{max-width:900px;margin:40px auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.8;color:#2c3e50;} pre{background:#f5f5f5;padding:12px 16px;border-radius:6px;} blockquote{border-left:4px solid #3b82f6;padding-left:1.2em;margin-left:0;background:#f8f8f8;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 12px;} img{max-width:100%;}</style>
                     </head><body>${htmlContent}</body></html>`;
                         blob = new Blob([fullHtml], { type: 'text/html' });
@@ -1518,7 +1540,7 @@
             }
 
             // ============================================================
-            //  10. Toast
+            //  12. Toast
             // ============================================================
             function showToast(msg) {
                 toastEl.textContent = msg;
@@ -1531,7 +1553,7 @@
             }
 
             // ============================================================
-            //  11. 快捷键
+            //  13. 快捷键
             // ============================================================
             function handleKeydown(e) {
                 const ctrl = e.ctrlKey || e.metaKey;
@@ -1632,7 +1654,7 @@
             }
 
             // ============================================================
-            //  12. 文本操作辅助
+            //  14. 文本操作辅助
             // ============================================================
             function wrapSelection(before, after) {
                 const start = sourcePane.selectionStart;
@@ -1672,7 +1694,7 @@
             }
 
             // ============================================================
-            //  13. 初始化
+            //  15. 初始化
             // ============================================================
             function init() {
                 sourcePane.value = state.content;
@@ -1745,7 +1767,7 @@
                 });
 
                 editHint.textContent = '双击块编辑源码';
-                showToast('✨ 双击预览中的块（含代码块）即可编辑源码');
+                showToast('✨ 双击任意块（含代码、公式）编辑源码');
             }
 
             if (document.readyState === 'complete') {
