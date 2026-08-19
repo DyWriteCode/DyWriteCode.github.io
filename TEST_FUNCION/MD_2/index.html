@@ -1289,10 +1289,7 @@
             }
 
             function init() {
-                var initialMD =
-                    '# 欢迎使用 MD Editor\n\n        这是一个 **类 Typora** 的所见即所得 Markdown 编辑器。\n\n        ## 功能特性\n\n        - 实时渲染 · 光标保持\n        - 标题 (Ctrl+1~6)\n        - **粗体** (Ctrl+B) 和 *斜体* (Ctrl+I)\n        - 有序列表 和 无序列表\n        - > 引用块\n        - ` + '`' +
-                    '行内代码` 和 代码块\n\n        ```javascript\n        console.log(\'Hello, MD Editor!\');\n        ```\n\n        ## 数学公式\n\n        行内公式: $E = mc ^ 2$\n\n        块级公式: \n\n        $$\n        \\\\int_{ -\\\\infty }^ { \\\\infty } e ^ {- x ^ 2
-            } dx = \\\\sqrt{ \\\\pi } \n        $$\n\n        ## 表格\n\n | 语言 | 用途 |\n | --------| ----------|\n | HTML | 结构 |\n | CSS | 样式 |\n | JavaScript | 交互 |\n\n        ## Mermaid 图表\n\n```mermaid\n        graph TD\n            A[开始] --> B{判断}\n            B -->|是| C[执行]\n            B -->|否| D[结束]\n        ```\n\n-- -\n\n ** 快捷键 **: Ctrl + / 源码切换 · Ctrl+B/I · Ctrl + 1~6 · F8 专注 · F9 打字机\n        ';
+            initialMD = "# 欢迎使用 MD Editor/n这是一个简洁的 Markdown 编辑器，支持实时预览、语法高亮、LaTeX 数学公式、Mermaid 流程图、任务列表等功能。"
             currentMarkdown = initialMD;
             renderMarkdown(false);
 
