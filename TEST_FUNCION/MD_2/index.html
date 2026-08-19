@@ -4,30 +4,185 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vditor + MathLive 公式编辑器</title>
+    <title>Vditor + MathLive 可视化公式编辑器</title>
 
+    <!-- Vditor 样式 -->
     <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css" />
     <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css" />
 
-    <!-- MathLive 样式和脚本（使用更稳定的 CDN） -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive@0.105.0/dist/mathlive-fonts.css" />
-    <!-- 注意：这里我们移除了静态 script，改为动态加载，避免加载失败影响页面 -->
+    <!-- MathLive v0.110.0 样式（官方推荐） -->
+    <link rel="stylesheet" href="https://unpkg.com/mathlive@0.110.0/dist/mathlive.core.css" />
+    <link rel="stylesheet" href="https://unpkg.com/mathlive@0.110.0/dist/mathlive.css" />
 
     <style>
-        /* ... 你的样式保持不变 ... */
-        /* (省略，同上文) */
+        /* --- 全局重置 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- 编辑器容器 --- */
+        #vditor {
+            height: 100vh;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .vditor {
+            border: none !important;
+            border-radius: 0 !important;
+        }
+
+        .vditor .vditor-reset {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        /* --- 公式编辑器对话框 --- */
+        #formula-dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #formula-dialog-overlay.active {
+            display: flex;
+        }
+
+        #formula-dialog {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #formula-dialog h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2328;
+        }
+
+        .math-field-container {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 80px;
+            background: #fafbfc;
+            transition: border-color 0.2s;
+        }
+
+        .math-field-container:focus-within {
+            border-color: #0969da;
+        }
+
+        math-field {
+            width: 100%;
+            min-height: 50px;
+            font-size: 20px;
+            display: block;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .dialog-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-cancel {
+            background: #f6f8fa;
+            color: #24292f;
+        }
+
+        .btn-cancel:hover {
+            background: #eaeef2;
+        }
+
+        .btn-insert {
+            background: #0969da;
+            color: #ffffff;
+        }
+
+        .btn-insert:hover {
+            background: #0550ae;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #57606a;
+            margin-top: 8px;
+        }
+
+        /* --- 移动端适配 --- */
+        @media (max-width: 768px) {
+            #vditor {
+                max-width: 100%;
+            }
+
+            .vditor-reset {
+                font-size: 17px !important;
+                padding: 20px !important;
+            }
+
+            #formula-dialog {
+                width: 95%;
+                padding: 16px;
+            }
+
+            math-field {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Vditor 挂载点 -->
     <div id="vditor"></div>
 
     <!-- 公式编辑器对话框 -->
     <div id="formula-dialog-overlay">
         <div id="formula-dialog">
-            <h3>🧮 公式编辑器</h3>
-            <p style="color:#57606a;font-size:14px;margin-bottom:12px;">点击下方区域输入公式，支持键盘和虚拟键盘操作</p>
+            <h3>🧮 可视化公式编辑器</h3>
+            <p style="color:#57606a;font-size:14px;margin-bottom:12px;">
+                点击下方区域输入公式，支持键盘和虚拟键盘操作
+            </p>
             <div class="math-field-container">
+                <!-- 声明式 MathLive 组件 -->
                 <math-field id="math-field"></math-field>
             </div>
             <div class="hint">💡 提示：输入 LaTeX 命令（如 \frac、\sqrt）会自动渲染，也可使用屏幕上的虚拟键盘</div>
@@ -41,50 +196,15 @@
     <!-- Vditor 核心 JS -->
     <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js"></script>
 
+    <!-- MathLive v0.110.0 核心 JS -->
+    <script src="https://unpkg.com/mathlive@0.110.0/dist/mathlive.min.js"></script>
+
     <script>
         // ============================================================
-        //  1. 动态加载 MathLive（避免加载失败导致全局报错）
-        // ============================================================
-        let mathLiveLoaded = false;
-        let mathLiveLoading = false;
-
-        function loadMathLive(callback) {
-            if (typeof MathLive !== 'undefined') {
-                mathLiveLoaded = true;
-                callback();
-                return;
-            }
-            if (mathLiveLoading) {
-                // 如果正在加载，轮询等待
-                const interval = setInterval(() => {
-                    if (typeof MathLive !== 'undefined') {
-                        clearInterval(interval);
-                        mathLiveLoaded = true;
-                        callback();
-                    }
-                }, 100);
-                return;
-            }
-            mathLiveLoading = true;
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/mathlive@0.105.0/dist/mathlive.min.js';
-            script.onload = () => {
-                mathLiveLoaded = true;
-                mathLiveLoading = false;
-                callback();
-            };
-            script.onerror = () => {
-                mathLiveLoading = false;
-                alert('公式编辑器加载失败，请刷新页面重试或检查网络。');
-            };
-            document.head.appendChild(script);
-        }
-
-        // ============================================================
-        //  2. 初始化 Vditor
+        //  1. 初始化 Vditor
         // ============================================================
         const vditor = new Vditor('vditor', {
-            mode: 'ir',
+            mode: 'ir',                     // 即时渲染模式（类 Typora）
             theme: 'classic',
             icon: 'ant',
             height: '100%',
@@ -104,6 +224,7 @@
                 math: { engine: 'KaTeX' },
                 hljs: { style: 'github' }
             },
+            // ---------- 自定义工具栏：添加公式按钮 ----------
             toolbar: [
                 'emoji', 'headings', 'bold', 'italic', 'strike', '|',
                 'line', 'quote', 'list', 'ordered-list', 'check', '|',
@@ -111,12 +232,9 @@
                 {
                     name: 'formula',
                     icon: 'Σ',
-                    tip: '公式编辑器 (可视化)',
+                    tip: '可视化公式编辑器',
                     tipPosition: 's',
-                    click: () => {
-                        // 点击时动态加载 MathLive，加载完成后打开对话框
-                        loadMathLive(() => openFormulaDialog());
-                    }
+                    click: () => openFormulaDialog()
                 },
                 '|', 'upload', 'link', 'table', '|',
                 'undo', 'redo', '|',
@@ -140,35 +258,27 @@
             },
             outline: { enable: true, position: 'left' },
             typewriterMode: true,
-            after: () => {
-                console.log('✅ Vditor 已启动！');
-            }
+            after: () => console.log('✅ Vditor 已启动！')
         });
 
         // ============================================================
-        //  3. 公式对话框逻辑
+        //  2. 公式对话框逻辑（使用 MathLive 的 MathfieldElement）
         // ============================================================
         const overlay = document.getElementById('formula-dialog-overlay');
-        const mathFieldElement = document.getElementById('math-field');
-        let mathFieldInstance = null;
+        const mathField = document.getElementById('math-field');
+
+        // 清空初始值
+        mathField.value = '';
+
+        // 监听输入事件（可选）
+        mathField.addEventListener('input', () => {
+            // console.log('当前公式:', mathField.value);
+        });
 
         function openFormulaDialog() {
-            // 确保 MathLive 已加载（loadMathLive 已确保）
-            if (typeof MathLive === 'undefined') {
-                alert('MathLive 尚未加载，请稍后重试。');
-                return;
-            }
             overlay.classList.add('active');
-            if (!mathFieldInstance) {
-                mathFieldInstance = MathLive.makeMathField(mathFieldElement, {
-                    virtualKeyboardMode: 'manual',
-                    smartFence: true,
-                });
-            } else {
-                mathFieldInstance.latex('');
-                mathFieldInstance.focus();
-            }
-            setTimeout(() => mathFieldInstance?.focus(), 100);
+            mathField.value = '';          // 清空上次内容
+            setTimeout(() => mathField.focus(), 100);
         }
 
         function closeFormulaDialog() {
@@ -176,14 +286,15 @@
         }
 
         function insertFormula() {
-            if (!mathFieldInstance) return;
-            const latex = mathFieldInstance.latex();
+            const latex = mathField.value;   // 直接通过 value 属性获取 LaTeX
             if (latex && latex.trim()) {
+                // 插入块级公式（$$...$$），可改为行内公式 $...$
                 vditor.insertValue(`$$${latex}$$`);
             }
             closeFormulaDialog();
         }
 
+        // --- 绑定事件 ---
         document.getElementById('formula-insert').addEventListener('click', insertFormula);
         document.getElementById('formula-cancel').addEventListener('click', closeFormulaDialog);
         overlay.addEventListener('click', (e) => {
@@ -200,8 +311,11 @@
             }
         });
 
+        // 暴露实例便于调试
         window.vditor = vditor;
+        window.mathField = mathField;
         console.log('💡 点击工具栏的 Σ 按钮打开可视化公式编辑器');
+        console.log('📖 使用 MathLive v0.110.0 和 Vditor v3.10.9');
     </script>
 </body>
 
