@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 编辑器</title>
+
+    <!-- ===== 外部库 CDN ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* ============================================================
+           全局重置 & 变量 (基于用户提供的 style.css 风格)
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f7f9fc;
+            --border: #e2e8f0;
+            --text: #0b1a2f;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --font: 'Segoe UI', Roboto, system-ui, sans-serif;
+            --code: 'JetBrains Mono', 'Fira Code', monospace;
+            --sidebar-bg: #fafcff;
+            --card-bg: #ffffff;
+            --toolbar-bg: #fafcff;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --status-color: #22c55e;
+            --code-bg: #f1f5f9;
+            --blockquote-bg: #f1f5f9;
+            --th-bg: #1e293b;
+            --th-color: #fff;
+            --empty-hint: #b9c5d4;
+            --scrollbar-track: #f1f1f1;
+            --scrollbar-thumb: #c1c7d0;
+        }
+
+        /* ----- 深色主题 ----- */
+        [data-theme="dark"] {
+            --bg: #0d1117;
+            --border: #30363d;
+            --text: #e6edf3;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --card-bg: #161b22;
+            --sidebar-bg: #0d1117;
+            --toolbar-bg: #161b22;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+            --code-bg: #1e2430;
+            --blockquote-bg: #1e2430;
+            --th-bg: #21262d;
+            --th-color: #e6edf3;
+            --empty-hint: #484f58;
+            --status-color: #3fb950;
+            --scrollbar-track: #1e2430;
+            --scrollbar-thumb: #30363d;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            font-family: var(--font);
+            color: var(--text);
+            transition: background 0.25s, color 0.25s;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px;
+        }
+
+        /* ----- 滚动条 ----- */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* ============================================================
+           主容器 .app
+           ============================================================ */
+        .app {
+            width: 100%;
+            max-width: 1200px;
+            height: 98vh;
+            max-height: 960px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: background 0.25s, border-color 0.25s;
+            position: relative;
+        }
+
+        /* ============================================================
+           顶部栏 .app-header
+           ============================================================ */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: var(--card-bg);
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .app-header .logo {
+            font-weight: 700;
+            font-size: 1rem;
+            user-select: none;
+        }
+
+        .app-header .logo span {
+            color: var(--accent);
+        }
+
+        .app-header .actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .app-header button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            color: #334155;
+            transition: 0.1s;
+            color: var(--text);
+        }
+
+        .app-header button:hover {
+            background: #eef2f6;
+        }
+
+        [data-theme="dark"] .app-header button:hover {
+            background: #30363d;
+        }
+
+        .app-header .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .app-header .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        /* ============================================================
+           工具栏 .toolbar
+           ============================================================ */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--toolbar-bg);
+            flex-shrink: 0;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .toolbar .group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 4px;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar .group:last-child {
+            border-right: none;
+        }
+
+        .toolbar button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            height: 28px;
+            white-space: nowrap;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar button:hover {
+            background: #eef2f6;
+        }
+
+        [data-theme="dark"] .toolbar button:hover {
+            background: #30363d;
+        }
+
+        .toolbar button:active {
+            background: #dbeafe;
+        }
+
+        [data-theme="dark"] .toolbar button:active {
+            background: #1f3a5f;
+        }
+
+        .toolbar button i {
+            font-size: 0.8rem;
+        }
+
+        .toolbar select {
+            height: 28px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 0 6px;
+            font-size: 0.7rem;
+            outline: none;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .toolbar .math-templates {
+            display: flex;
+            gap: 2px;
+            margin-left: 2px;
+        }
+
+        .toolbar .math-templates button {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            background: #eef2f6;
+            border-radius: 4px;
+        }
+
+        [data-theme="dark"] .toolbar .math-templates button {
+            background: #30363d;
+        }
+
+        .toolbar .math-templates button:hover {
+            background: #dbeafe;
+        }
+
+        [data-theme="dark"] .toolbar .math-templates button:hover {
+            background: #1f3a5f;
+        }
+
+        /* ============================================================
+           主体布局 (侧边栏 + 编辑区)
+           ============================================================ */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ----- 侧边栏 ----- */
+        .sidebar {
+            width: 0;
+            overflow: hidden;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            background: var(--sidebar-bg);
+            transition: width 0.25s ease, border-color 0.25s, background 0.25s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            width: 240px;
+        }
+
+        .sidebar-header {
+            padding: 10px 14px 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #94a3b8;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header button {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .sidebar-header button:hover {
+            opacity: 1;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-content .outline-item {
+            padding: 3px 0 3px 8px;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+            transition: 0.1s;
+            color: var(--text);
+            text-decoration: none;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-content .outline-item:hover {
+            border-left-color: var(--accent);
+            background: #eef2f6;
+        }
+
+        [data-theme="dark"] .sidebar-content .outline-item:hover {
+            background: #30363d;
+        }
+
+        .sidebar-content .outline-item.h1 {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-content .outline-item.h2 {
+            font-weight: 600;
+            padding-left: 18px;
+        }
+
+        .sidebar-content .outline-item.h3 {
+            font-weight: 500;
+            padding-left: 32px;
+        }
+
+        .sidebar-content .outline-item.h4 {
+            font-weight: 400;
+            padding-left: 46px;
+            font-size: 0.8rem;
+        }
+
+        .sidebar-content .outline-item.h5 {
+            font-weight: 400;
+            padding-left: 60px;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-content .outline-item.h6 {
+            font-weight: 400;
+            padding-left: 74px;
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        .sidebar-content .empty-outline {
+            color: var(--empty-hint);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* ----- 编辑/预览区域 ----- */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            background: var(--card-bg);
+            transition: background 0.25s;
+        }
+
+        /* 双栏容器 */
+        .split-view {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 编辑区 (textarea) */
+        .editor-pane {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            border-right: 1px solid var(--border);
+            transition: border-color 0.25s;
+        }
+
+        .editor-pane.hidden {
+            display: none;
+        }
+
+        .editor-pane textarea {
+            width: 100%;
+            height: 100%;
+            padding: 16px 20px 20px;
+            border: none;
+            outline: none;
+            font-family: var(--code);
+            font-size: 0.92rem;
+            line-height: 1.8;
+            resize: none;
+            background: var(--card-bg);
+            color: var(--text);
+            tab-size: 2;
+            transition: background 0.25s, color 0.25s;
+        }
+
+        .editor-pane textarea::placeholder {
+            color: var(--empty-hint);
+        }
+
+        /* 预览区 */
+        .preview-pane {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 20px;
+            background: var(--card-bg);
+            font-family: var(--font);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--text);
+            transition: background 0.25s, color 0.25s;
+        }
+
+        .preview-pane.hidden {
+            display: none;
+        }
+
+        /* 全屏预览 (只有预览区) */
+        .split-view.preview-only .editor-pane {
+            display: none;
+        }
+
+        .split-view.preview-only .preview-pane {
+            border-left: none;
+        }
+
+        .split-view.source-only .preview-pane {
+            display: none;
+        }
+
+        .split-view.source-only .editor-pane {
+            border-right: none;
+        }
+
+        /* ============================================================
+           预览区渲染样式 (与用户提供的 style.css 一致)
+           ============================================================ */
+        .preview-pane .markdown-body {
+            min-height: 100%;
+        }
+
+        .preview-pane .markdown-body h1 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.2rem;
+            margin: 0.8rem 0 0.4rem;
+        }
+
+        .preview-pane .markdown-body h2 {
+            font-size: 1.4rem;
+            border-left: 5px solid var(--accent);
+            padding-left: 12px;
+            margin: 1rem 0 0.4rem;
+        }
+
+        .preview-pane .markdown-body h3 {
+            font-size: 1.15rem;
+            margin: 0.8rem 0 0.3rem;
+        }
+
+        .preview-pane .markdown-body h4 {
+            font-size: 1.05rem;
+            margin: 0.6rem 0 0.2rem;
+        }
+
+        .preview-pane .markdown-body h5 {
+            font-size: 0.95rem;
+            margin: 0.6rem 0 0.2rem;
+            opacity: 0.85;
+        }
+
+        .preview-pane .markdown-body h6 {
+            font-size: 0.85rem;
+            margin: 0.6rem 0 0.2rem;
+            opacity: 0.7;
+        }
+
+        .preview-pane .markdown-body p {
+            margin: 0.5rem 0;
+        }
+
+        .preview-pane .markdown-body blockquote {
+            border-left: 4px solid var(--accent);
+            padding: 0.2rem 1rem;
+            background: var(--blockquote-bg);
+            border-radius: 0 6px 6px 0;
+            color: var(--text);
+            transition: background 0.25s;
+        }
+
+        .preview-pane .markdown-body ul,
+        .preview-pane .markdown-body ol {
+            padding-left: 1.6rem;
+            margin: 0.4rem 0;
+        }
+
+        .preview-pane .markdown-body li {
+            margin: 0.15rem 0;
+        }
+
+        .preview-pane .markdown-body li.task-list-item {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preview-pane .markdown-body li.task-list-item input[type="checkbox"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .preview-pane .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.8rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .preview-pane .markdown-body th {
+            background: var(--th-bg);
+            color: var(--th-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .preview-pane .markdown-body td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-pane .markdown-body tr:last-child td {
+            border-bottom: none;
+        }
+
+        .preview-pane .markdown-body pre {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            font-family: var(--code);
+            font-size: 0.82rem;
+            border: 1px solid var(--border);
+            margin: 0.6rem 0;
+            position: relative;
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .preview-pane .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            font-family: var(--code);
+            color: var(--text);
+        }
+
+        .preview-pane .markdown-body code {
+            background: var(--code-bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--code);
+            font-size: 0.82rem;
+            transition: background 0.25s;
+        }
+
+        .preview-pane .markdown-body .katex-display {
+            margin: 0.8rem 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .preview-pane .markdown-body .katex {
+            font-size: 1rem;
+        }
+
+        .preview-pane .markdown-body hr {
+            border: none;
+            border-top: 2px solid var(--border);
+            margin: 1.2rem 0;
+        }
+
+        .preview-pane .markdown-body img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+
+        .preview-pane .markdown-body a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .preview-pane .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .preview-pane .markdown-body .empty-hint {
+            color: var(--empty-hint);
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        /* ============================================================
+           状态栏
+           ============================================================ */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.6rem;
+            color: #94a3b8;
+            background: var(--toolbar-bg);
+            flex-shrink: 0;
+            transition: background 0.25s, border-color 0.25s;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .status-bar .dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--status-color);
+            margin-right: 4px;
+        }
+
+        .status-bar .status-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ============================================================
+           响应式
+           ============================================================ */
+        @media (max-width: 720px) {
+            .sidebar.open {
+                width: 180px;
+            }
+
+            .app-header .logo {
+                font-size: 0.85rem;
+            }
+
+            .toolbar button {
+                font-size: 0.65rem;
+                padding: 2px 5px;
+            }
+
+            .editor-pane textarea,
+            .preview-pane {
+                padding: 12px 14px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .split-view {
+                flex-direction: column;
+            }
+
+            .editor-pane {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                max-height: 50%;
+            }
+
+            .preview-pane {
+                max-height: 50%;
+            }
+
+            .sidebar.open {
+                width: 100%;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .app-header .actions button span {
+                display: none;
+            }
+        }
+
+        /* ============================================================
+           小工具 & 动画
+           ============================================================ */
+        .fade-in {
+            animation: fadeIn 0.15s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 专注模式：高亮当前行 (仅对编辑区有效) */
+        .focus-mode .editor-pane textarea {
+            background: var(--card-bg);
+        }
+
+        .focus-mode .preview-pane .markdown-body>*:not(:hover) {
+            opacity: 0.5;
+        }
+
+        .focus-mode .preview-pane .markdown-body>*:hover {
+            opacity: 1;
+        }
+
+        /* 打字机模式：滚动保持当前行居中 */
+        .typewriter-mode .editor-pane textarea {
+            scroll-behavior: smooth;
+        }
+
+        .typewriter-mode .preview-pane {
+            scroll-behavior: smooth;
+        }
+
+        /* ----- 浮动消息 ----- */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 0.8rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================================================
+    主应用
+    ============================================================ -->
+    <div class="app" id="app">
+
+        <!-- 顶部栏 -->
+        <header class="app-header">
+            <div class="logo">📝 <span>Mark</span>down</div>
+            <div class="actions">
+                <button id="btnNew" title="新建 (Ctrl+N)"><i class="fas fa-file"></i> <span>新建</span></button>
+                <button id="btnOpen" title="打开 (Ctrl+O)"><i class="fas fa-folder-open"></i> <span>打开</span></button>
+                <button id="btnSave" title="保存 (Ctrl+S)"><i class="fas fa-save"></i> <span>保存</span></button>
+                <button id="btnExport" title="导出 HTML"><i class="fas fa-file-export"></i> <span>导出</span></button>
+                <button id="btnToggleSidebar" title="侧边栏 (Ctrl+Shift+L)"><i class="fas fa-list-ul"></i></button>
+                <button id="btnToggleTheme" title="切换主题"><i class="fas fa-moon"></i></button>
+                <button id="btnToggleMode" title="切换视图 (Ctrl+/)"><i class="fas fa-columns"></i></button>
+            </div>
+        </header>
+
+        <!-- 工具栏 -->
+        <div class="toolbar" id="toolbar">
+            <div class="group">
+                <button data-cmd="h1" title="标题1 (Ctrl+1)"><b>H1</b></button>
+                <button data-cmd="h2" title="标题2 (Ctrl+2)"><b>H2</b></button>
+                <button data-cmd="h3" title="标题3 (Ctrl+3)"><b>H3</b></button>
+            </div>
+            <div class="group">
+                <button data-cmd="bold" title="加粗 (Ctrl+B)"><b>B</b></button>
+                <button data-cmd="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
+                <button data-cmd="strikethrough" title="删除线"><s>S</s></button>
+                <button data-cmd="code" title="行内代码"><code>&lt;/&gt;</code></button>
+            </div>
+            <div class="group">
+                <button data-cmd="ul" title="无序列表"><i class="fas fa-list-ul"></i></button>
+                <button data-cmd="ol" title="有序列表"><i class="fas fa-list-ol"></i></button>
+                <button data-cmd="task" title="任务列表"><i class="fas fa-check-square"></i></button>
+                <button data-cmd="quote" title="引用"><i class="fas fa-quote-right"></i></button>
+                <button data-cmd="table" title="表格 (Ctrl+T)"><i class="fas fa-table"></i></button>
+                <button data-cmd="hr" title="分割线"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="group">
+                <button data-cmd="link" title="链接"><i class="fas fa-link"></i></button>
+                <button data-cmd="image" title="图片"><i class="fas fa-image"></i></button>
+            </div>
+            <div class="group math-templates">
+                <button data-cmd="math-inline" title="行内公式">∑</button>
+                <button data-cmd="math-block" title="块级公式">∫</button>
+            </div>
+            <div class="group" style="flex:1; justify-content:flex-end;">
+                <button id="btnFocusMode" title="专注模式 (F8)"><i class="fas fa-eye"></i> 专注</button>
+                <button id="btnTypewriterMode" title="打字机模式 (F9)"><i class="fas fa-typewriter"></i> 打字机</button>
+            </div>
+        </div>
+
+        <!-- 主布局 -->
+        <div class="main-layout">
+
+            <!-- 侧边栏 -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span>📑 大纲</span>
+                    <button id="btnCloseSidebar"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="sidebar-content" id="outlineContainer">
+                    <div class="empty-outline">无标题</div>
+                </div>
+            </aside>
+
+            <!-- 编辑区域 -->
+            <div class="editor-area" id="editorArea">
+                <div class="split-view" id="splitView">
+
+                    <!-- 编辑区 -->
+                    <div class="editor-pane" id="editorPane">
+                        <textarea id="editor" placeholder="在此输入 Markdown ..." spellcheck="false"></textarea>
+                    </div>
+
+                    <!-- 预览区 -->
+                    <div class="preview-pane" id="previewPane">
+                        <div class="markdown-body" id="previewContent">
+                            <div class="empty-hint">✨ 开始写作吧 ...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-group">
+                <span><span class="dot"></span> 就绪</span>
+                <span id="wordCount">0 字</span>
+                <span id="charCount">0 字符</span>
+            </div>
+            <div class="status-group">
+                <span id="viewModeLabel">📄 分栏</span>
+                <span id="themeLabel">🌞 亮色</span>
+            </div>
+        </div>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="fileInput" accept=".md,.markdown" style="display:none">
+    </div>
+
+    <!-- ============================================================
+    Toast 消息
+    ============================================================ -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================
+    外部库
+    ============================================================ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js">
+    </script>
+
+    <script>
+        // ================================================================
+        //  主应用 JavaScript
+        // ================================================================
+
+        (function () {
+            'use strict';
+
+            // ----- DOM 引用 -----
+            const editor = document.getElementById('editor');
+            const previewContent = document.getElementById('previewContent');
+            const previewPane = document.getElementById('previewPane');
+            const splitView = document.getElementById('splitView');
+            const sidebar = document.getElementById('sidebar');
+            const outlineContainer = document.getElementById('outlineContainer');
+            const wordCount = document.getElementById('wordCount');
+            const charCount = document.getElementById('charCount');
+            const viewModeLabel = document.getElementById('viewModeLabel');
+            const themeLabel = document.getElementById('themeLabel');
+            const toast = document.getElementById('toast');
+            const fileInput = document.getElementById('fileInput');
+
+            // ----- 状态 -----
+            let currentFile = null; // 当前打开的文件名
+            let viewMode = 'split'; // 'split' | 'preview' | 'source'
+            let theme = 'light'; // 'light' | 'dark'
+            let focusMode = false;
+            let typewriterMode = false;
+            let sidebarOpen = false;
+            let toastTimer = null;
+
+            // ----- Markdown 渲染 (带数学公式) -----
+            function renderMarkdown(text) {
+                if (!text || text.trim() === '') {
+                    previewContent.innerHTML = '<div class="empty-hint">✨ 开始写作吧 ...</div>';
+                    return;
+                }
+
+                // 使用 marked 解析
+                let html = marked.parse(text, {
+                    gfm: true,
+                    breaks: true,
+                    highlight: function (code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (_) { /* fall through */ }
+                        }
+                        try {
+                            return hljs.highlightAuto(code).value;
+                        } catch (_) {
+                            return code;
+                        }
+                    }
+                });
+
+                // 渲染 KaTeX (由 auto-render 处理)
+                previewContent.innerHTML = html;
+
+                try {
+                    renderMathInElement(previewContent, {
+                        delimiters: [
+                            { left: '$$', right: '$$', display: true },
+                            { left: '\\[', right: '\\]', display: true },
+                            { left: '$', right: '$', display: false },
+                            { left: '\\(', right: '\\)', display: false }
+                        ],
+                        throwOnError: false
+                    });
+                } catch (_) { /* ignore */ }
+
+                // 对代码块再次高亮 (marked 的 highlight 已处理，但以防万一)
+                previewContent.querySelectorAll('pre code').forEach((block) => {
+                    if (!block.classList.contains('hljs')) {
+                        hljs.highlightElement(block);
+                    }
+                });
+
+                // 更新大纲
+                updateOutline(text);
+                updateWordCount(text);
+            }
+
+            // ----- 更新大纲 -----
+            function updateOutline(text) {
+                const lines = text.split('\n');
+                const headings = [];
+                const headingRegex = /^(#{1,6})\s+(.+)$/;
+
+                for (const line of lines) {
+                    const match = line.match(headingRegex);
+                    if (match) {
+                        const level = match[1].length;
+                        const title = match[2].trim();
+                        headings.push({ level, title, raw: line });
+                    }
+                }
+
+                if (headings.length === 0) {
+                    outlineContainer.innerHTML = '<div class="empty-outline">无标题</div>';
+                    return;
+                }
+
+                let html = '';
+                for (const h of headings) {
+                    const cls = 'outline-item h' + h.level;
+                    const indent = h.level > 6 ? 6 : h.level;
+                    const style = `padding-left: ${(indent - 1) * 14 + 8}px;`;
+                    html += `<div class="${cls}" style="${style}" data-level="${h.level}" data-title="${h.title.replace(/"/g, '&quot;')}">${h.title}</div>`;
+                }
+                outlineContainer.innerHTML = html;
+
+                // 点击跳转 (简单滚动到对应行)
+                outlineContainer.querySelectorAll('.outline-item').forEach((el) => {
+                    el.addEventListener('click', function () {
+                        const title = this.dataset.title;
+                        const pos = text.indexOf(this.dataset.title);
+                        if (pos >= 0) {
+                            // 在编辑器中定位
+                            const before = text.substring(0, pos);
+                            const lineNum = before.split('\n').length - 1;
+                            const lines = editor.value.split('\n');
+                            let charPos = 0;
+                            for (let i = 0; i < lineNum && i < lines.length; i++) {
+                                charPos += lines[i].length + 1;
+                            }
+                            editor.focus();
+                            editor.setSelectionRange(charPos, charPos);
+                            // 滚动到可视区域
+                            const lineHeight = 28; // 大致行高
+                            editor.scrollTop = (lineNum - 2) * lineHeight;
+                        }
+                    });
+                });
+            }
+
+            // ----- 更新字数统计 -----
+            function updateWordCount(text) {
+                const clean = text.replace(/[#*`_~>\-+=|]/g, ' ').replace(/\s+/g, ' ').trim();
+                const words = clean ? clean.split(' ').filter(w => w.length > 0) : [];
+                wordCount.textContent = words.length + ' 字';
+                charCount.textContent = text.length + ' 字符';
+            }
+
+            // ----- 编辑器事件 -----
+            let renderTimeout = null;
+
+            function handleEditorInput() {
+                const text = editor.value;
+                if (renderTimeout) clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(() => {
+                    renderMarkdown(text);
+                    renderTimeout = null;
+                }, 80);
+            }
+
+            editor.addEventListener('input', handleEditorInput);
+
+            // 初始渲染
+            const initialText = '# 欢迎使用 Markdown 编辑器\n\n' +
+                '这是一个 **所见即所得** 的 Markdown 编辑器。\n\n' +
+                '## 功能特性\n\n' +
+                '- 实时预览\n' +
+                '- 代码高亮\n' +
+                '- 数学公式 $E = mc^2$\n' +
+                '- 表格支持\n' +
+                '- 任务列表\n\n' +
+                '```javascript\nconsole.log("Hello, World!");\n```\n\n' +
+                '> 引用块示例\n\n' +
+                '| 列1 | 列2 |\n' +
+                '|-----|-----|\n' +
+                '| 值A | 值B |\n';
+            editor.value = initialText;
+            renderMarkdown(initialText);
+
+            // ----- 快捷键 -----
+            document.addEventListener('keydown', function (e) {
+                const ctrl = e.ctrlKey || e.metaKey;
+
+                // Ctrl+N 新建
+                if (ctrl && e.key === 'n') {
+                    e.preventDefault();
+                    newFile();
+                    return;
+                }
+                // Ctrl+O 打开
+                if (ctrl && e.key === 'o') {
+                    e.preventDefault();
+                    fileInput.click();
+                    return;
+                }
+                // Ctrl+S 保存
+                if (ctrl && e.key === 's') {
+                    e.preventDefault();
+                    saveFile();
+                    return;
+                }
+                // Ctrl+/ 切换视图
+                if (ctrl && e.key === '/') {
+                    e.preventDefault();
+                    toggleViewMode();
+                    return;
+                }
+                // Ctrl+Shift+L 切换侧边栏
+                if (ctrl && e.shiftKey && e.key === 'L') {
+                    e.preventDefault();
+                    toggleSidebar();
+                    return;
+                }
+                // Ctrl+B 加粗
+                if (ctrl && e.key === 'b') {
+                    e.preventDefault();
+                    wrapSelection('**', '**');
+                    return;
+                }
+                // Ctrl+I 斜体
+                if (ctrl && e.key === 'i') {
+                    e.preventDefault();
+                    wrapSelection('*', '*');
+                    return;
+                }
+                // Ctrl+1..6 标题
+                if (ctrl && /^[1-6]$/.test(e.key)) {
+                    e.preventDefault();
+                    const level = parseInt(e.key);
+                    insertHeading(level);
+                    return;
+                }
+                // Ctrl+T 表格
+                if (ctrl && e.key === 't') {
+                    e.preventDefault();
+                    insertTable();
+                    return;
+                }
+                // F8 专注模式
+                if (e.key === 'F8') {
+                    e.preventDefault();
+                    toggleFocusMode();
+                    return;
+                }
+                // F9 打字机模式
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    toggleTypewriterMode();
+                    return;
+                }
+            });
+
+            // ----- 工具栏命令 -----
+            document.querySelectorAll('[data-cmd]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const cmd = this.dataset.cmd;
+                    switch (cmd) {
+                        case 'h1':
+                        case 'h2':
+                        case 'h3':
+                            const level = parseInt(cmd.charAt(1));
+                            insertHeading(level);
+                            break;
+                        case 'bold':
+                            wrapSelection('**', '**');
+                            break;
+                        case 'italic':
+                            wrapSelection('*', '*');
+                            break;
+                        case 'strikethrough':
+                            wrapSelection('~~', '~~');
+                            break;
+                        case 'code':
+                            wrapSelection('`', '`');
+                            break;
+                        case 'ul':
+                            insertList('- ');
+                            break;
+                        case 'ol':
+                            insertList('1. ');
+                            break;
+                        case 'task':
+                            insertList('- [ ] ');
+                            break;
+                        case 'quote':
+                            wrapSelection('> ', '');
+                            break;
+                        case 'table':
+                            insertTable();
+                            break;
+                        case 'hr':
+                            insertText('\n\n---\n\n');
+                            break;
+                        case 'link':
+                            insertLink();
+                            break;
+                        case 'image':
+                            insertImage();
+                            break;
+                        case 'math-inline':
+                            wrapSelection('$', '$');
+                            break;
+                        case 'math-block':
+                            wrapSelection('\n$$\n', '\n$$\n');
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
+
+            // ----- 编辑器操作函数 -----
+
+            function getSelection() {
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                return { start, end, text: editor.value.substring(start, end) };
+            }
+
+            function replaceSelection(before, after, newText) {
+                const { start, end, text } = getSelection();
+                const full = editor.value;
+                const prefix = full.substring(0, start);
+                const suffix = full.substring(end);
+                const replacement = before + (newText !== undefined ? newText : text) + after;
+                editor.value = prefix + replacement + suffix;
+                const newPos = start + before.length + (newText !== undefined ? newText.length : text.length);
+                editor.setSelectionRange(newPos, newPos);
+                editor.focus();
+                handleEditorInput();
+            }
+
+            function wrapSelection(before, after) {
+                const { start, end, text } = getSelection();
+                if (start === end) {
+                    // 没有选中，插入占位
+                    replaceSelection(before, after, 'text');
+                } else {
+                    replaceSelection(before, after);
+                }
+            }
+
+            function insertText(text) {
+                const { start } = getSelection();
+                const full = editor.value;
+                editor.value = full.substring(0, start) + text + full.substring(start);
+                const newPos = start + text.length;
+                editor.setSelectionRange(newPos, newPos);
+                editor.focus();
+                handleEditorInput();
+            }
+
+            function insertHeading(level) {
+                const { start, end, text } = getSelection();
+                const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+                const lineEnd = editor.value.indexOf('\n', start);
+                const line = editor.value.substring(lineStart, lineEnd === -1 ? editor.value.length : lineEnd);
+                const trimmed = line.trim();
+                const hasHeading = /^#{1,6}\s+/.test(trimmed);
+
+                if (hasHeading) {
+                    // 替换当前标题级别
+                    const oldLevel = trimmed.match(/^(#{1,6})/)[1].length;
+                    const newPrefix = '#'.repeat(level) + ' ';
+                    const rest = trimmed.replace(/^#{1,6}\s+/, '');
+                    const newLine = newPrefix + rest;
+                    const full = editor.value;
+                    editor.value = full.substring(0, lineStart) + newLine + full.substring(lineEnd === -1 ? full.length :
+                        lineEnd);
+                    const newPos = lineStart + newPrefix.length + rest.length;
+                    editor.setSelectionRange(newPos, newPos);
+                } else {
+                    // 在行首插入标题
+                    const prefix = '#'.repeat(level) + ' ';
+                    const full = editor.value;
+                    if (lineStart > 0 && editor.value[lineStart - 1] !== '\n') {
+                        // 不是行首，插入换行
+                        editor.value = full.substring(0, lineStart) + '\n' + prefix + full.substring(lineStart);
+                        const newPos = lineStart + 1 + prefix.length;
+                        editor.setSelectionRange(newPos, newPos);
+                    } else {
+                        editor.value = full.substring(0, lineStart) + prefix + full.substring(lineStart);
+                        const newPos = lineStart + prefix.length;
+                        editor.setSelectionRange(newPos, newPos);
+                    }
+                }
+                editor.focus();
+                handleEditorInput();
+            }
+
+            function insertList(prefix) {
+                const { start, end, text } = getSelection();
+                const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+                const lineEnd = editor.value.indexOf('\n', start);
+                const line = editor.value.substring(lineStart, lineEnd === -1 ? editor.value.length : lineEnd);
+                const trimmed = line.trim();
+
+                if (trimmed === '' || /^[-*]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
+                    // 空行或已有列表项，替换或添加
+                    const full = editor.value;
+                    const before = full.substring(0, lineStart);
+                    const after = full.substring(lineEnd === -1 ? full.length : lineEnd);
+                    const newLine = prefix + (trimmed === '' ? '' : trimmed.replace(/^[-*]\s+|^\d+\.\s+/, ''));
+                    editor.value = before + newLine + after;
+                    const newPos = lineStart + newLine.length;
+                    editor.setSelectionRange(newPos, newPos);
+                } else {
+                    // 在行首插入列表标记
+                    const full = editor.value;
+                    const before = full.substring(0, lineStart);
+                    const after = full.substring(lineStart);
+                    editor.value = before + prefix + after;
+                    const newPos = lineStart + prefix.length;
+                    editor.setSelectionRange(newPos, newPos);
+                }
+                editor.focus();
+                handleEditorInput();
+            }
+
+            function insertTable() {
+                const table = '\n\n| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容 | 内容 | 内容 |\n\n';
+                insertText(table);
+            }
+
+            function insertLink() {
+                const { text } = getSelection();
+                if (text) {
+                    const url = prompt('输入链接地址:', 'https://');
+                    if (url) {
+                        replaceSelection('[', '](' + url + ')', text);
+                    }
+                } else {
+                    const txt = prompt('输入链接文字:', '链接');
+                    if (txt) {
+                        const url = prompt('输入链接地址:', 'https://');
+                        if (url) {
+                            insertText('[' + txt + '](' + url + ')');
+                        }
+                    }
+                }
+            }
+
+            function insertImage() {
+                const alt = prompt('输入图片描述:', '图片');
+                if (alt !== null) {
+                    const url = prompt('输入图片地址:', 'https://');
+                    if (url) {
+                        insertText('![' + alt + '](' + url + ')');
+                    }
+                }
+            }
+
+            // ----- 文件操作 -----
+
+            function newFile() {
+                if (editor.value.trim() && !confirm('当前内容未保存，确定新建吗？')) return;
+                editor.value = '';
+                currentFile = null;
+                renderMarkdown('');
+                editor.focus();
+                showToast('📄 新建文档');
+            }
+
+            function saveFile() {
+                if (!currentFile) {
+                    // 下载为 .md
+                    const blob = new Blob([editor.value], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'document.md';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('💾 已保存 (下载)');
+                } else {
+                    // 实际上浏览器无法直接写入文件系统，下载替代
+                    const blob = new Blob([editor.value], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = currentFile;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('💾 已保存 ' + currentFile);
+                }
+            }
+
+            // 打开文件
+            fileInput.addEventListener('change', function (e) {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    editor.value = ev.target.result;
+                    currentFile = file.name;
+                    renderMarkdown(editor.value);
+                    showToast('📂 已打开 ' + file.name);
+                    fileInput.value = '';
+                };
+                reader.readAsText(file);
+            });
+
+            // ----- 导出 HTML -----
+            document.getElementById('btnExport').addEventListener('click', function () {
+                const content = previewContent.innerHTML;
+                const style = document.querySelector('style').innerHTML;
+                const html = `<!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>${currentFile || 'document'}</title>
+        <style>${style}</style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+        <style>
+          body { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+          .markdown-body { font-family: 'Segoe UI', Roboto, system-ui, sans-serif; line-height: 1.8; }
+          ${document.querySelector('style').innerHTML}
+        </style>
+        </head>
+        <body><div class="markdown-body">${content}</div></body>
+        </html>`;
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (currentFile || 'document') + '.html';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('📤 导出 HTML 完成');
+            });
+
+            // ----- 视图模式切换 -----
+            function toggleViewMode() {
+                const modes = ['split', 'preview', 'source'];
+                const idx = modes.indexOf(viewMode);
+                viewMode = modes[(idx + 1) % modes.length];
+                applyViewMode();
+                const labels = { split: '📄 分栏', preview: '👁 预览', source: '📝 源码' };
+                viewModeLabel.textContent = labels[viewMode];
+                showToast('视图: ' + labels[viewMode]);
+            }
+
+            function applyViewMode() {
+                splitView.className = 'split-view';
+                if (viewMode === 'preview') {
+                    splitView.classList.add('preview-only');
+                } else if (viewMode === 'source') {
+                    splitView.classList.add('source-only');
+                }
+            }
+
+            document.getElementById('btnToggleMode').addEventListener('click', toggleViewMode);
+
+            // ----- 侧边栏 -----
+            function toggleSidebar() {
+                sidebarOpen = !sidebarOpen;
+                sidebar.classList.toggle('open', sidebarOpen);
+            }
+
+            document.getElementById('btnToggleSidebar').addEventListener('click', toggleSidebar);
+            document.getElementById('btnCloseSidebar').addEventListener('click', function () {
+                sidebarOpen = false;
+                sidebar.classList.remove('open');
+            });
+
+            // ----- 主题切换 -----
+            function toggleTheme() {
+                theme = theme === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                themeLabel.textContent = theme === 'light' ? '🌞 亮色' : '🌙 暗色';
+                showToast(theme === 'light' ? '🌞 亮色主题' : '🌙 暗色主题');
+                // 更新代码高亮样式
+                const hlCss = document.querySelector('link[href*="highlight.js"]');
+                if (hlCss) {
+                    hlCss.href = theme === 'light' ?
+                        'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css' :
+                        'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+                }
+                // 重新渲染以更新代码块样式
+                renderMarkdown(editor.value);
+            }
+
+            document.getElementById('btnToggleTheme').addEventListener('click', toggleTheme);
+
+            // ----- 专注模式 -----
+            function toggleFocusMode() {
+                focusMode = !focusMode;
+                document.getElementById('editorArea').classList.toggle('focus-mode', focusMode);
+                showToast(focusMode ? '🔍 专注模式 开启' : '🔍 专注模式 关闭');
+            }
+            document.getElementById('btnFocusMode').addEventListener('click', toggleFocusMode);
+
+            // ----- 打字机模式 -----
+            function toggleTypewriterMode() {
+                typewriterMode = !typewriterMode;
+                document.getElementById('editorArea').classList.toggle('typewriter-mode', typewriterMode);
+                if (typewriterMode) {
+                    // 滚动到中间
+                    const area = document.getElementById('editorArea');
+                    area.scrollTop = (area.scrollHeight - area.clientHeight) / 2;
+                }
+                showToast(typewriterMode ? '⌨️ 打字机模式 开启' : '⌨️ 打字机模式 关闭');
+            }
+            document.getElementById('btnTypewriterMode').addEventListener('click', toggleTypewriterMode);
+
+            // ----- Toast 消息 -----
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                    toastTimer = null;
+                }, 2200);
+            }
+
+            // ----- 初始化状态栏 -----
+            viewModeLabel.textContent = '📄 分栏';
+            themeLabel.textContent = '🌞 亮色';
+
+            // 暴露一些功能到全局 (用于调试)
+            window.__editor = {
+                editor,
+                renderMarkdown,
+                insertHeading,
+                wrapSelection,
+                insertText,
+                newFile,
+                saveFile,
+                toggleViewMode,
+                toggleSidebar,
+                toggleTheme,
+                toggleFocusMode,
+                toggleTypewriterMode
+            };
+
+            console.log('📝 Markdown 编辑器已加载');
+            console.log('快捷键: Ctrl+N 新建, Ctrl+O 打开, Ctrl+S 保存, Ctrl+/ 切换视图, Ctrl+B 加粗, Ctrl+I 斜体');
+
+        })();
+    </script>
+
+</body>
+
+</html>
