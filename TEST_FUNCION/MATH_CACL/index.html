@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LaTeX 公式计算器 - 支持求和/连乘</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css?v=20260820085027" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260820085027"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js?v=20260820085027"></script>
+    <title>LaTeX 公式计算器 - 终极修复版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js">
+    </script>
     <style>
-        /* 样式与之前相同，为节省篇幅省略，实际使用时请保留完整样式 */
+        /* 样式与之前完全一致，省略以保持简洁，实际使用时保留完整样式 */
         * {
             margin: 0;
             padding: 0;
@@ -428,16 +430,16 @@
         <div class="header">
             <span class="header-icon">📐</span>
             <h1>LaTeX 公式计算器</h1>
-            <span class="badge">支持 ∑ / ∏</span>
+            <span class="badge">支持 ∑ / ∏ / ∫</span>
         </div>
         <div class="input-section">
             <div class="input-label">
                 <span>✏️ 输入 LaTeX 公式</span>
-                <small>例如: \sum_{i=1}^{10} i</small>
+                <small>例如: \sum_{i=1}^{10} i 或 \int_{0}^{1} {x^2} dx</small>
             </div>
             <div class="input-row">
-                <input id="latexInput" type="text" placeholder="\sum_{i=1}^{10} i" value="\sum_{i=1}^{10} i"
-                    spellcheck="false" autofocus />
+                <input id="latexInput" type="text" placeholder="\sum_{i=1}^{10} i"
+                    value="\int_{0}^{\frac{\pi}{2}} \sin(x) dx" spellcheck="false" autofocus />
                 <div class="btn-group">
                     <button class="btn" id="calcBtn">🧮 计算</button>
                     <button class="btn btn-secondary" id="convertBtn">🔁 转换</button>
@@ -468,19 +470,22 @@
             <span class="example-tag" data-example="\sum_{i=1}^{5} {\frac{1}{i}}">\sum_{i=1}^{5} {\frac{1}{i}}</span>
             <span class="example-tag" data-example="\prod_{k=1}^{5} k">\prod_{k=1}^{5} k</span>
             <span class="example-tag" data-example="\sum_{i=1}^{5} i^2">\sum_{i=1}^{5} i^2</span>
+            <span class="example-tag" data-example="\int_{0}^{1} {x^2} dx">\int_{0}^{1} {x^2} dx</span>
+            <span class="example-tag" data-example="\int_{0}^{\pi} {\sin(x)} dx">\int_{0}^{\pi} {\sin(x)} dx</span>
+            <span class="example-tag" data-example="\int_{0}^{\frac{\pi}{2}} \sin(x) dx">\int_{0}^{\frac{\pi}{2}}
+                \sin(x) dx</span>
             <span class="example-tag" data-example="\frac{1}{2}+\frac{1}{3}">\frac{1}{2}+\frac{1}{3}</span>
             <span class="example-tag" data-example="\sqrt{2}+\sqrt{3}">\sqrt{2}+\sqrt{3}</span>
             <span class="example-tag" data-example="\sin(\frac{\pi}{2})">\sin(\frac{\pi}{2})</span>
+            <span class="example-tag" data-example="5!">5!</span>
         </div>
-        <div class="footer-note">⚡ <strong>MathJS</strong> 计算 · <strong>KaTeX</strong> 渲染 · 求和/连乘的表达式建议用花括号包裹（如
-            {\frac{1}{i}}）</div>
+        <div class="footer-note">⚡ <strong>MathJS</strong> 计算 · <strong>KaTeX</strong> 渲染 · 求和/连乘/定积分（辛普森法 1000等分）</div>
     </div>
 
     <script>
         (function () {
             'use strict';
 
-            // ===== 开启调试模式 =====
             const DEBUG = true;
 
             const latexInput = document.getElementById('latexInput');
@@ -500,127 +505,82 @@
                 if (DEBUG) console.log(...args);
             }
 
-            // ---------- 工具函数 ----------
-            function findBalancedBraces(s, start) {
-                if (start >= s.length || s[start] !== '{') return null;
-                let depth = 0;
-                for (let i = start; i < s.length; i++) {
-                    if (s[i] === '{') depth++;
-                    else if (s[i] === '}') {
-                        depth--;
-                        if (depth === 0) return { start, end: i };
-                    }
+            // ---------- 数值积分（复合辛普森法，默认1000等分） ----------
+            function numericalIntegral(expr, varName, a, b, n = 1000) {
+                if (n % 2 === 1) n++;
+                const h = (b - a) / n;
+                let sum = 0;
+                for (let i = 0; i <= n; i++) {
+                    const x = a + i * h;
+                    const y = math.evaluate(expr, { [varName]: x });
+                    if (i === 0 || i === n) sum += y;
+                    else if (i % 2 === 0) sum += 2 * y;
+                    else sum += 4 * y;
                 }
-                return null;
-            }
-
-            function findMatchingBracket(s, start, open, close) {
-                if (start >= s.length || s[start] !== open) return null;
-                let depth = 0;
-                for (let i = start; i < s.length; i++) {
-                    if (s[i] === open) depth++;
-                    else if (s[i] === close) {
-                        depth--;
-                        if (depth === 0) return i;
-                    }
-                }
-                return null;
-            }
-
-            function countNestingDepth(s, start, end) {
-                let depth = 0,
-                    maxDepth = 0;
-                for (let i = start; i < end; i++) {
-                    if (s[i] === '{') { depth++; if (depth > maxDepth) maxDepth = depth; } else if (s[i] === '}') depth--;
-                }
-                return maxDepth;
+                return sum * h / 3;
             }
 
             // ---------- 主转换函数 ----------
             function latexToMathJS(latex) {
                 if (!latex || latex.trim() === '') return '';
                 let s = latex.trim();
-                log('📥 latexToMathJS 输入:', s);
-
                 s = s.replace(/\s+/g, ' ');
-                log('  移除多余空格后:', s);
 
-                // 处理求和与连乘
-                let prev = '';
-                let maxIter = 80;
-                while (maxIter-- > 0 && s !== prev) {
-                    prev = s;
-                    s = replaceSumOrProd(s, 'sum');
-                    s = replaceSumOrProd(s, 'prod');
-                    log('  迭代后 s:', s);
-                }
+                // ---- 0. 预处理：移除 \limits 和 \, ----
+                s = s.replace(/\\limits/g, '');
+                s = s.replace(/\\,/g, ' ');
 
-                // 残留检测
-                if (/\\sum|\\prod/.test(s)) {
-                    log('❌ 残留 LaTeX 命令:', s);
-                    throw new Error(`转换失败，残留求和/连乘命令: ${s}`);
-                }
-
-                // 处理分数
-                maxIter = 50;
-                while (maxIter-- > 0) {
-                    const match = findInnermostFrac(s);
-                    if (!match) break;
-                    const { num, den, start, end } = match;
-                    const numC = latexToMathJS(num);
-                    const denC = latexToMathJS(den);
-                    s = s.slice(0, start) + `(${numC})/(${denC})` + s.slice(end);
-                    log('  分数替换后:', s);
-                }
-
-                // 处理根号
-                maxIter = 30;
-                while (maxIter-- > 0) {
-                    const match = findInnermostSqrtN(s);
-                    if (!match) break;
-                    const { n, expr, start, end } = match;
-                    const exprC = latexToMathJS(expr);
-                    const nC = latexToMathJS(n);
-                    s = s.slice(0, start) + `(${exprC})^(1/(${nC}))` + s.slice(end);
-                    log('  根号 n 替换后:', s);
-                }
-                maxIter = 30;
-                while (maxIter-- > 0) {
-                    const match = findInnermostSqrt(s);
-                    if (!match) break;
-                    const { expr, start, end } = match;
-                    const exprC = latexToMathJS(expr);
-                    s = s.slice(0, start) + `sqrt(${exprC})` + s.slice(end);
-                    log('  根号替换后:', s);
-                }
-
-                // 三角函数等
+                // ---- 1. 三角函数等（递归处理参数） ----
                 const funcMap = {
-                    '\\sin': 'sin',
-                    '\\cos': 'cos',
-                    '\\tan': 'tan',
-                    '\\cot': 'cot',
-                    '\\sec': 'sec',
-                    '\\csc': 'csc',
-                    '\\arcsin': 'asin',
-                    '\\arccos': 'acos',
-                    '\\arctan': 'atan',
-                    '\\log': 'log',
-                    '\\ln': 'log',
-                    '\\lg': 'log10',
-                    '\\exp': 'exp',
-                    '\\sinh': 'sinh',
-                    '\\cosh': 'cosh',
-                    '\\tanh': 'tanh'
+                    'sin': 'sin',
+                    'cos': 'cos',
+                    'tan': 'tan',
+                    'cot': 'cot',
+                    'sec': 'sec',
+                    'csc': 'csc',
+                    'arcsin': 'asin',
+                    'arccos': 'acos',
+                    'arctan': 'atan',
+                    'log': 'log',
+                    'ln': 'log',
+                    'lg': 'log10',
+                    'exp': 'exp',
+                    'sinh': 'sinh',
+                    'cosh': 'cosh',
+                    'tanh': 'tanh'
                 };
-                for (const [latexCmd, mathFn] of Object.entries(funcMap)) {
-                    const regex1 = new RegExp(`\\\\${latexCmd}\\{([^}]*)\\}`, 'g');
-                    s = s.replace(regex1, (m, args) => `${mathFn}(${latexToMathJS(args)})`);
-                    const regex2 = new RegExp(`\\\\${latexCmd}\\(([^)]*)\\)`, 'g');
-                    s = s.replace(regex2, (m, args) => `${mathFn}(${latexToMathJS(args)})`);
-                }
+                let prevTrig;
+                do {
+                    prevTrig = s;
+                    for (const [latexCmd, mathFn] of Object.entries(funcMap)) {
+                        const regex1 = new RegExp('\\\\' + latexCmd + '\\{([^}]*)\\}', 'g');
+                        const regex2 = new RegExp('\\\\' + latexCmd + '\\(([^)]*)\\)', 'g');
+                        s = s.replace(regex1, (m, args) => `${mathFn}(${latexToMathJS(args)})`);
+                        s = s.replace(regex2, (m, args) => `${mathFn}(${latexToMathJS(args)})`);
+                    }
+                } while (s !== prevTrig);
 
-                // 常数
+                // ---- 2. 分数 ----
+                let prev;
+                do {
+                    prev = s;
+                    s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, (match, num, den) => {
+                        return `${latexToMathJS(num)}/${latexToMathJS(den)}`;
+                    });
+                } while (s !== prev);
+
+                // ---- 3. 根号 ----
+                do {
+                    prev = s;
+                    s = s.replace(/\\sqrt\[([^{}]*)\]\{([^{}]*)\}/g, (match, n, expr) => {
+                        return `(${latexToMathJS(expr)})^(1/(${latexToMathJS(n)}))`;
+                    });
+                    s = s.replace(/\\sqrt\{([^{}]*)\}/g, (match, expr) => {
+                        return `sqrt(${latexToMathJS(expr)})`;
+                    });
+                } while (s !== prev);
+
+                // ---- 4. 常数替换（提前到积分之前，使上下限中的常量可被 math.evaluate 识别） ----
                 const constMap = {
                     '\\pi': 'pi',
                     '\\Pi': 'pi',
@@ -634,29 +594,7 @@
                     s = s.replace(new RegExp(lc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), mc);
                 }
 
-                // 运算符
-                const opMap = {
-                    '\\times': '*',
-                    '\\cdot': '*',
-                    '\\div': '/',
-                    '\\pm': '±',
-                    '\\mp': '∓',
-                    '\\left(': '(',
-                    '\\right)': ')',
-                    '\\left[': '[',
-                    '\\right]': ']',
-                    '\\left\\{': '{',
-                    '\\right\\}': '}',
-                    '\\left.': '',
-                    '\\right.': '',
-                    '\\left': '',
-                    '\\right': ''
-                };
-                for (const [lc, mc] of Object.entries(opMap)) {
-                    s = s.replace(new RegExp(lc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), mc);
-                }
-
-                // 希腊字母
+                // ---- 5. 希腊字母（同样提前） ----
                 const greekMap = {
                     '\\alpha': 'alpha',
                     '\\beta': 'beta',
@@ -698,33 +636,175 @@
                     s = s.replace(new RegExp(lc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), mc);
                 }
 
-                // 清理花括号
+                // ---- 6. 求和与连乘（直接数值计算） ----
+                let prev2 = '';
+                let maxIter = 80;
+                while (maxIter-- > 0 && s !== prev2) {
+                    prev2 = s;
+                    s = replaceSumOrProd(s, 'sum');
+                    s = replaceSumOrProd(s, 'prod');
+                }
+                if (/\\sum|\\prod/.test(s)) {
+                    throw new Error(`转换失败，残留求和/连乘命令: ${s}`);
+                }
+
+                // ---- 7. 定积分（使用字符串解析代替正则捕获） ----
+                s = processIntegrals(s);
+
+                // ---- 8. 运算符映射 ----
+                const opMap = {
+                    '\\times': '*',
+                    '\\cdot': '*',
+                    '\\div': '/',
+                    '\\pm': '±',
+                    '\\mp': '∓',
+                    '\\left(': '(',
+                    '\\right)': ')',
+                    '\\left[': '[',
+                    '\\right]': ']',
+                    '\\left\\{': '{',
+                    '\\right\\}': '}',
+                    '\\left|': 'abs(',
+                    '\\right|': ')',
+                    '\\left.': '',
+                    '\\right.': '',
+                    '\\left': '',
+                    '\\right': ''
+                };
+                for (const [lc, mc] of Object.entries(opMap)) {
+                    s = s.replace(new RegExp(lc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), mc);
+                }
+
+                // ---- 9. 阶乘支持 (i! -> factorial(i)) ----
+                s = s.replace(/([a-zA-Z0-9]+)\s*!/g, 'factorial($1)');
+
+                // ---- 10. 清理孤立的 { } ----
                 s = s.replace(/\{([^{}]*)\}/g, (match, content) => {
                     if (!/[+\-*/^=<>]/.test(content)) return content;
                     return `(${content})`;
                 });
 
                 s = s.replace(/\s+/g, ' ').trim();
-                log('📤 latexToMathJS 输出:', s);
                 return s;
             }
 
-            // ---------- 替换求和/连乘（修复正则） ----------
-            function replaceSumOrProd(s, type) {
-                const cmd = type === 'sum' ? '\\sum' : '\\prod';
-                const mathFn = type === 'sum' ? 'sum' : 'prod';
+            // ---------- 积分处理函数（替代正则） ----------
+            function processIntegrals(s) {
+                // 循环处理所有积分，直到没有积分标记
+                let newS = s;
+                let maxLoop = 50;
+                while (maxLoop-- > 0) {
+                    const idx = newS.indexOf('\\int');
+                    if (idx === -1) break;
 
-                // 【修复点】将表达式部分改为 `\S+` 匹配非空白字符，同时保留花括号情况
+                    // 找到 \int 后的 _ 和 ^ 以及上下限
+                    let rest = newS.slice(idx + 4); // 跳过 '\int'
+                    // 去除前导空格
+                    rest = rest.trimStart();
+                    if (!rest.startsWith('_')) break; // 格式不符，退出
+                    rest = rest.slice(1); // 去掉 '_'
+                    // 提取下限：可能是 { ... } 或直接数字
+                    let lower = '';
+                    let lowerEnd = 0;
+                    if (rest.startsWith('{')) {
+                        let braceCount = 1;
+                        let i = 1;
+                        while (i < rest.length && braceCount > 0) {
+                            if (rest[i] === '{') braceCount++;
+                            else if (rest[i] === '}') braceCount--;
+                            i++;
+                        }
+                        lower = rest.slice(1, i - 1);
+                        lowerEnd = i;
+                    } else {
+                        // 直接数字或表达式直到 ^ 或空格
+                        let i = 0;
+                        while (i < rest.length && rest[i] !== '^' && !/\s/.test(rest[i])) i++;
+                        lower = rest.slice(0, i);
+                        lowerEnd = i;
+                    }
+                    if (lowerEnd >= rest.length) break;
+                    rest = rest.slice(lowerEnd);
+                    rest = rest.trimStart();
+                    if (!rest.startsWith('^')) break;
+                    rest = rest.slice(1);
+                    // 提取上限
+                    let upper = '';
+                    let upperEnd = 0;
+                    if (rest.startsWith('{')) {
+                        let braceCount = 1;
+                        let i = 1;
+                        while (i < rest.length && braceCount > 0) {
+                            if (rest[i] === '{') braceCount++;
+                            else if (rest[i] === '}') braceCount--;
+                            i++;
+                        }
+                        upper = rest.slice(1, i - 1);
+                        upperEnd = i;
+                    } else {
+                        let i = 0;
+                        while (i < rest.length && !/\s/.test(rest[i]) && rest[i] !== 'd') i++;
+                        upper = rest.slice(0, i);
+                        upperEnd = i;
+                    }
+                    if (upperEnd >= rest.length) break;
+                    rest = rest.slice(upperEnd);
+                    // 现在 rest 是被积表达式 + dx
+                    // 找到 dx 的位置
+                    const dxIndex = rest.search(/\s*d\s*x\s*/);
+                    if (dxIndex === -1) break;
+                    let expr = rest.slice(0, dxIndex).trim();
+                    // 去除外层花括号
+                    if (expr.startsWith('{') && expr.endsWith('}')) expr = expr.slice(1, -1);
+                    // 递归转换上下限和表达式
+                    const lowerC = latexToMathJS(lower);
+                    const upperC = latexToMathJS(upper);
+                    const exprC = latexToMathJS(expr);
+                    let a, b;
+                    try {
+                        a = math.evaluate(lowerC);
+                        b = math.evaluate(upperC);
+                    } catch (_) {
+                        const aNum = parseFloat(lowerC);
+                        const bNum = parseFloat(upperC);
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            a = aNum;
+                            b = bNum;
+                        } else {
+                            break; // 无法求值，退出循环
+                        }
+                    }
+                    if (typeof a !== 'number' || typeof b !== 'number' || !isFinite(a) || !isFinite(b)) break;
+                    let result;
+                    try {
+                        result = numericalIntegral(exprC, 'x', a, b);
+                        if (!isFinite(result)) break;
+                    } catch (_) {
+                        break;
+                    }
+                    // 构造替换字符串：\int...dx 替换为结果
+                    const fullMatch = newS.slice(idx, newS.indexOf('dx', idx) + 2);
+                    // 但可能 dx 后有空格，需要完整替换
+                    // 找到 dx 后的空格，但为了安全，取到 'dx' 后可能还有空格，但我们可以直接用替换
+                    // 使用更精确：将整个匹配替换
+                    const matchEnd = newS.indexOf('dx', idx) + 2;
+                    // 检查后面是否有空格，可以保留，但替换为结果字符串
+                    newS = newS.slice(0, idx) + result.toString() + newS.slice(matchEnd);
+                    // 注意：如果 dx 后有空格，会被保留？但结果字符串后面可能跟着空格，没关系。
+                }
+                return newS;
+            }
+
+            // ---------- 替换求和/连乘 ----------
+            function replaceSumOrProd(s, type) {
+                const cmd = type === 'sum' ? 'sum' : 'prod';
                 const regex = new RegExp(
                     `\\\\${cmd}\\s*_\\s*\\{([^}]*)\\}\\s*\\^\\s*\\{([^}]*)\\}\\s*((?:\\{[^}]*\\})|\\S+)`,
                     'g'
                 );
 
-                log(`🔍 replaceSumOrProd (${type}) 正则:`, regex);
-
                 let newS = s;
                 let match;
-                let replaced = false;
                 while ((match = regex.exec(newS)) !== null) {
                     const fullMatch = match[0];
                     const lower = match[1];
@@ -734,13 +814,14 @@
                         expr = expr.slice(1, -1);
                     }
 
-                    log(`🔍 匹配到 ${type}:`, { fullMatch, lower, upper, expr });
+                    if (/\\sum|\\prod/.test(expr)) {
+                        regex.lastIndex = match.index + fullMatch.length;
+                        continue;
+                    }
 
-                    // 递归转换
                     const lowerC = latexToMathJS(lower);
                     const upperC = latexToMathJS(upper);
                     const exprC = latexToMathJS(expr);
-                    log(`  转换后 lowerC="${lowerC}", upperC="${upperC}", exprC="${exprC}"`);
 
                     let varName = 'x';
                     let lowerVal = lowerC;
@@ -752,158 +833,46 @@
                         varName = 'i';
                         lowerVal = lowerC;
                     }
-                    log(`  变量名="${varName}", 下限值="${lowerVal}"`);
 
-                    let upperVal = upperC;
+                    const upperVal = upperC;
 
                     function isNumeric(str) {
                         return /^-?\d+(\.\d+)?$/.test(str.trim());
                     }
 
                     let replacement = '';
+
                     if (isNumeric(lowerVal) && isNumeric(upperVal)) {
                         const lowerNum = parseFloat(lowerVal);
                         const upperNum = parseFloat(upperVal);
                         if (lowerNum <= upperNum) {
                             const exprWithVar = exprC.replace(new RegExp(`\\b${varName}\\b`, 'g'), 'x');
-                            const rangeExpr = `range(${lowerNum}, ${upperNum})`;
-                            const mapExpr = `map(${rangeExpr}, x -> ${exprWithVar})`;
-                            replacement = `${mathFn}(${mapExpr})`;
-                            log(`  ✅ 生成替换: ${replacement}`);
+                            let result;
+                            if (type === 'sum') {
+                                result = 0;
+                                for (let x = lowerNum; x <= upperNum; x++) {
+                                    result += math.evaluate(exprWithVar, { x: x });
+                                }
+                            } else {
+                                result = 1;
+                                for (let x = lowerNum; x <= upperNum; x++) {
+                                    result *= math.evaluate(exprWithVar, { x: x });
+                                }
+                            }
+                            replacement = result.toString();
                         } else {
                             replacement = type === 'sum' ? '0' : '1';
-                            log(`  ⚠️ 下限 > 上限，替换为 ${replacement}`);
                         }
                     } else {
-                        replacement = `(function(){ throw new Error("求和/积的上下限必须为数值，请使用具体数字"); })()`;
-                        log(`  ❌ 上下限非数值，替换为错误表达式`);
+                        replacement = `(function(){ throw new Error("求和/积的上下限必须为数值"); })()`;
                     }
 
                     newS = newS.replace(fullMatch, replacement);
-                    replaced = true;
                     regex.lastIndex = 0;
                     if (!newS.includes(`\\${cmd}`)) break;
                 }
 
-                if (replaced) {
-                    log(`🔄 替换 ${type} 后:`, newS);
-                }
                 return newS;
-            }
-
-            // ---------- 辅助查找最内层 frac/sqrt ----------
-            function findInnermostFrac(s) {
-                let idx = s.indexOf('\\frac');
-                if (idx === -1) return null;
-                let best = null,
-                    bestDepth = -1,
-                    searchIdx = 0;
-                while (true) {
-                    const startIdx = s.indexOf('\\frac', searchIdx);
-                    if (startIdx === -1) break;
-                    searchIdx = startIdx + 5;
-                    let pos = startIdx + 5;
-                    while (pos < s.length && /\s/.test(s[pos])) pos++;
-                    if (pos >= s.length || s[pos] !== '{') continue;
-                    const numResult = findBalancedBraces(s, pos);
-                    if (!numResult) continue;
-                    const numEnd = numResult.end;
-                    let pos2 = numEnd + 1;
-                    while (pos2 < s.length && /\s/.test(s[pos2])) pos2++;
-                    if (pos2 >= s.length || s[pos2] !== '{') continue;
-                    const denResult = findBalancedBraces(s, pos2);
-                    if (!denResult) continue;
-                    const fullStart = startIdx;
-                    const fullEnd = denResult.end + 1;
-                    const subStr = s.substring(fullStart, fullEnd);
-                    const innerCount = (subStr.match(/\\frac/g) || []).length;
-                    if (innerCount > 1) continue;
-                    const depth = countNestingDepth(s, fullStart, fullEnd);
-                    if (depth > bestDepth) {
-                        bestDepth = depth;
-                        best = {
-                            num: s.substring(numResult.start + 1, numResult.end),
-                            den: s.substring(denResult.start + 1, denResult.end),
-                            start: fullStart,
-                            end: fullEnd
-                        };
-                    }
-                }
-                return best;
-            }
-
-            function findInnermostSqrt(s) {
-                let idx = s.indexOf('\\sqrt');
-                if (idx === -1) return null;
-                let best = null,
-                    bestDepth = -1,
-                    searchIdx = 0;
-                while (true) {
-                    const startIdx = s.indexOf('\\sqrt', searchIdx);
-                    if (startIdx === -1) break;
-                    searchIdx = startIdx + 5;
-                    let pos = startIdx + 5;
-                    while (pos < s.length && /\s/.test(s[pos])) pos++;
-                    if (pos < s.length && s[pos] === '[') continue;
-                    if (pos >= s.length || s[pos] !== '{') continue;
-                    const result = findBalancedBraces(s, pos);
-                    if (!result) continue;
-                    const fullStart = startIdx;
-                    const fullEnd = result.end + 1;
-                    const subStr = s.substring(fullStart, fullEnd);
-                    const innerCount = (subStr.match(/\\sqrt|\\frac/g) || []).length;
-                    if (innerCount > 1) continue;
-                    const depth = countNestingDepth(s, fullStart, fullEnd);
-                    if (depth > bestDepth) {
-                        bestDepth = depth;
-                        best = {
-                            expr: s.substring(result.start + 1, result.end),
-                            start: fullStart,
-                            end: fullEnd
-                        };
-                    }
-                }
-                return best;
-            }
-
-            function findInnermostSqrtN(s) {
-                let idx = s.indexOf('\\sqrt');
-                if (idx === -1) return null;
-                let best = null,
-                    bestDepth = -1,
-                    searchIdx = 0;
-                while (true) {
-                    const startIdx = s.indexOf('\\sqrt', searchIdx);
-                    if (startIdx === -1) break;
-                    searchIdx = startIdx + 5;
-                    let pos = startIdx + 5;
-                    while (pos < s.length && /\s/.test(s[pos])) pos++;
-                    if (pos >= s.length || s[pos] !== '[') continue;
-                    const bracketEnd = findMatchingBracket(s, pos, '[', ']');
-                    if (!bracketEnd) continue;
-                    const n = s.substring(pos + 1, bracketEnd);
-                    let pos2 = bracketEnd + 1;
-                    while (pos2 < s.length && /\s/.test(s[pos2])) pos2++;
-                    if (pos2 >= s.length || s[pos2] !== '{') continue;
-                    const result = findBalancedBraces(s, pos2);
-                    if (!result) continue;
-                    const fullStart = startIdx;
-                    const fullEnd = result.end + 1;
-                    const subStr = s.substring(fullStart, fullEnd);
-                    const innerCount = (subStr.match(/\\sqrt|\\frac/g) || []).length;
-                    if (innerCount > 1) continue;
-                    const depth = countNestingDepth(s, fullStart, fullEnd);
-                    if (depth > bestDepth) {
-                        bestDepth = depth;
-                        best = {
-                            n: n,
-                            expr: s.substring(result.start + 1, result.end),
-                            start: fullStart,
-                            end: fullEnd
-                        };
-                    }
-                }
-                return best;
             }
 
             // ---------- 计算 ----------
@@ -914,6 +883,7 @@
                 try {
                     log('🚀 开始转换...');
                     const mathExpr = latexToMathJS(latex);
+                    log('📐 转换后表达式:', mathExpr);
                     if (!mathExpr || mathExpr.trim() === '') {
                         return { success: false, error: '转换后的表达式为空' };
                     }
@@ -937,9 +907,7 @@
                     return { success: true, result: displayResult, mathExpr };
                 } catch (err) {
                     let msg = err.message || '计算错误';
-                    if (msg.includes('上下限必须为数值')) {
-                        // 友好提示
-                    } else if (msg.includes('undefined')) {
+                    if (msg.includes('undefined')) {
                         msg = '表达式包含未定义的变量，请确保所有变量都有数值';
                     }
                     const debugInfo = `转换结果: ${lastConverted || '无'}\n错误: ${err.stack || err.message}`;
@@ -1048,8 +1016,8 @@
 
             window.addEventListener('DOMContentLoaded', () => { setTimeout(handleCalculate, 300); });
 
-            window.__test = { latexToMathJS, compute, renderLatex };
-            console.log('📐 LaTeX 公式计算器已加载 (修复正则，开启调试)');
+            window.__test = { latexToMathJS, compute, renderLatex, numericalIntegral };
+            console.log('📐 LaTeX 公式计算器已加载 (终极修复版)');
         })();
     </script>
 </body>
