@@ -4,18 +4,20 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vditor + MathLive 智能公式插入（修复版）</title>
+    <title>Vditor + MathLive + 高级表格 (最终修复版)</title>
 
     <!-- Vditor 样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css?v=20260820131502" />
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260820131502" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css" />
 
     <!-- MathLive 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css?v=20260820131502" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css?v=20260820131502" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css" />
+
+    <!-- Handsontable 样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css" />
 
     <style>
-        /* ---------- 全局重置 ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -66,7 +68,24 @@
             line-height: 1.8;
         }
 
-        /* ---------- 公式面板 ---------- */
+        /* 表格样式：去掉表格自身边框，只依赖单元格边框 */
+        .vditor-preview table,
+        .vditor-reset table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            font-size: 14px !important;
+            border: none !important;
+        }
+
+        .vditor-preview table td,
+        .vditor-preview table th,
+        .vditor-reset table td,
+        .vditor-reset table th {
+            border: 1px solid #ccc !important;
+            padding: 6px 10px !important;
+            vertical-align: middle !important;
+        }
+
         #formula-panel {
             position: fixed;
             bottom: 0;
@@ -253,7 +272,393 @@
             flex-shrink: 0;
         }
 
-        /* ---------- 移动端适配 ---------- */
+        #table-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        #table-modal-overlay.open {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        #table-modal {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px 12px 24px;
+            border-bottom: 1px solid #e9ecf0;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .table-modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2328;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-modal-header h2 small {
+            font-weight: 400;
+            font-size: 13px;
+            color: #57606a;
+        }
+
+        .table-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 0 6px;
+            line-height: 1;
+            transition: color 0.2s;
+            touch-action: manipulation;
+        }
+
+        .table-modal-close:hover {
+            color: #1f2328;
+        }
+
+        .table-modal-toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            padding: 10px 24px;
+            background: #fafbfc;
+            border-bottom: 1px solid #e9ecf0;
+            flex-shrink: 0;
+        }
+
+        .table-modal-toolbar label {
+            font-size: 13px;
+            color: #24292f;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        .table-modal-toolbar input[type="number"] {
+            width: 56px;
+            padding: 4px 6px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .table-modal-toolbar input[type="color"] {
+            width: 32px;
+            height: 32px;
+            padding: 2px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .table-modal-toolbar .sep {
+            width: 1px;
+            height: 28px;
+            background: #d0d7de;
+        }
+
+        .table-modal-toolbar .btn-sm {
+            padding: 4px 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #f6f8fa;
+            color: #24292f;
+            transition: background 0.15s;
+            touch-action: manipulation;
+            font-weight: 500;
+        }
+
+        .table-modal-toolbar .btn-sm:hover {
+            background: #eaeef2;
+        }
+
+        .table-modal-toolbar .btn-sm.primary {
+            background: #0969da;
+            color: #fff;
+        }
+
+        .table-modal-toolbar .btn-sm.primary:hover {
+            background: #0550ae;
+        }
+
+        .table-modal-toolbar .btn-sm.danger {
+            background: #cf222e;
+            color: #fff;
+        }
+
+        .table-modal-toolbar .btn-sm.danger:hover {
+            background: #a0111f;
+        }
+
+        #handsontable-container {
+            flex: 1 1 0;
+            min-height: 320px;
+            height: 100%;
+            padding: 12px 16px 16px 16px;
+            overflow: hidden;
+            position: relative;
+            background: #ffffff;
+        }
+
+        #handsontable-container .htCore {
+            font-size: 14px;
+        }
+
+        #handsontable-container .wtHolder {
+            overflow: auto !important;
+        }
+
+        .table-modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px 16px 24px;
+            border-top: 1px solid #e9ecf0;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .table-modal-footer .hint {
+            font-size: 13px;
+            color: #57606a;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .table-modal-footer .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-modal-footer button {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            touch-action: manipulation;
+            min-height: 38px;
+            font-weight: 500;
+        }
+
+        .table-modal-footer button:active {
+            transform: scale(0.97);
+        }
+
+        .table-modal-footer .btn-cancel {
+            background: #f6f8fa;
+            color: #24292f;
+        }
+
+        .table-modal-footer .btn-cancel:hover {
+            background: #eaeef2;
+        }
+
+        .table-modal-footer .btn-insert {
+            background: #0969da;
+            color: #fff;
+        }
+
+        .table-modal-footer .btn-insert:hover {
+            background: #0550ae;
+        }
+
+        #table-source-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0, 0, 0, 0.50);
+            backdrop-filter: blur(3px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #table-source-modal-overlay.open {
+            display: flex;
+        }
+
+        #table-source-modal {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 780px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.20);
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .source-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px 12px 24px;
+            border-bottom: 1px solid #e9ecf0;
+            flex-shrink: 0;
+        }
+
+        .source-modal-header h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1f2328;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-modal-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 0 6px;
+            line-height: 1;
+            transition: color 0.2s;
+            touch-action: manipulation;
+        }
+
+        .source-modal-close:hover {
+            color: #1f2328;
+        }
+
+        .source-modal-body {
+            flex: 1 1 auto;
+            padding: 16px 24px 12px 24px;
+            overflow-y: auto;
+            min-height: 160px;
+        }
+
+        .source-modal-body textarea {
+            width: 100%;
+            height: 260px;
+            padding: 12px 14px;
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            resize: vertical;
+            background: #fafbfc;
+            transition: border-color 0.2s;
+            color: #1f2328;
+            tab-size: 2;
+        }
+
+        .source-modal-body textarea:focus {
+            border-color: #0969da;
+            outline: none;
+            background: #ffffff;
+        }
+
+        .source-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 12px 24px 18px 24px;
+            border-top: 1px solid #e9ecf0;
+            flex-shrink: 0;
+        }
+
+        .source-modal-footer button {
+            padding: 8px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            touch-action: manipulation;
+            min-height: 38px;
+            font-weight: 500;
+        }
+
+        .source-modal-footer button:active {
+            transform: scale(0.97);
+        }
+
+        .source-modal-footer .btn-source-cancel {
+            background: #f6f8fa;
+            color: #24292f;
+        }
+
+        .source-modal-footer .btn-source-cancel:hover {
+            background: #eaeef2;
+        }
+
+        .source-modal-footer .btn-source-update {
+            background: #0969da;
+            color: #fff;
+        }
+
+        .source-modal-footer .btn-source-update:hover {
+            background: #0550ae;
+        }
+
         @media (max-width: 768px) {
             #app {
                 max-width: 100%;
@@ -302,6 +707,69 @@
                 min-height: 38px !important;
                 font-size: 14px !important;
             }
+
+            #table-modal {
+                max-height: 96vh;
+                border-radius: 12px;
+            }
+
+            .table-modal-header {
+                padding: 12px 16px 10px 16px;
+            }
+
+            .table-modal-toolbar {
+                padding: 8px 16px;
+                gap: 6px 10px;
+            }
+
+            #handsontable-container {
+                padding: 8px 10px 10px 10px;
+                min-height: 220px;
+            }
+
+            .table-modal-footer {
+                padding: 10px 16px 14px 16px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-modal-footer .hint {
+                font-size: 12px;
+                text-align: center;
+            }
+
+            .table-modal-footer .actions {
+                justify-content: center;
+            }
+
+            .table-modal-toolbar input[type="number"] {
+                width: 46px;
+                font-size: 12px;
+            }
+
+            .table-modal-toolbar label {
+                font-size: 12px;
+            }
+
+            #table-source-modal {
+                max-height: 90vh;
+                border-radius: 12px;
+            }
+
+            .source-modal-body textarea {
+                height: 180px;
+                font-size: 13px;
+            }
+
+            .source-modal-header h3 {
+                font-size: 15px;
+            }
+
+            .source-modal-footer button {
+                font-size: 13px;
+                padding: 6px 18px;
+                min-height: 34px;
+            }
         }
 
         @media (max-width: 420px) {
@@ -333,6 +801,47 @@
                 padding: 4px 12px;
                 min-height: 32px;
             }
+
+            .table-modal-toolbar input[type="number"] {
+                width: 38px;
+                font-size: 11px;
+            }
+
+            .table-modal-toolbar .btn-sm {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+
+            .table-modal-footer button {
+                font-size: 12px;
+                padding: 6px 16px;
+                min-height: 32px;
+            }
+
+            #handsontable-container {
+                min-height: 160px;
+                padding: 4px 6px 6px 6px;
+            }
+
+            .source-modal-body textarea {
+                height: 140px;
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+
+            .source-modal-body {
+                padding: 10px 14px 8px 14px;
+            }
+
+            .source-modal-footer {
+                padding: 8px 14px 12px 14px;
+            }
+
+            .source-modal-footer button {
+                font-size: 12px;
+                padding: 4px 14px;
+                min-height: 30px;
+            }
         }
 
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -341,7 +850,6 @@
             }
         }
 
-        /* ---------- 滚动条美化 ---------- */
         .vditor-reset::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -358,6 +866,10 @@
 
         .vditor-reset::-webkit-scrollbar-thumb:hover {
             background: #b0b7be;
+        }
+
+        #handsontable-container .wtHolder {
+            overflow: auto !important;
         }
     </style>
 </head>
@@ -377,32 +889,108 @@
                 </h3>
                 <button class="panel-close-btn" id="panel-close" aria-label="关闭面板">✕</button>
             </div>
-
             <div class="math-field-container" id="math-field-container"></div>
-
             <div class="panel-hint">
                 💡 使用虚拟键盘输入 · Enter 插入 · Esc 取消 · 编辑时 \exponentialE 自动转为 \mathrm{e}
             </div>
-
             <div class="panel-actions">
                 <button class="btn-cancel-panel" id="panel-cancel">取消</button>
                 <button class="btn-insert-panel" id="panel-insert">插入公式</button>
             </div>
         </div>
+
+        <div id="table-modal-overlay">
+            <div id="table-modal">
+                <div class="table-modal-header">
+                    <h2>
+                        📊 高级表格编辑器
+                        <small>· 类似 Excel 的编辑体验</small>
+                    </h2>
+                    <button class="table-modal-close" id="table-modal-close" aria-label="关闭表格编辑器">✕</button>
+                </div>
+
+                <div class="table-modal-toolbar">
+                    <label>
+                        行:
+                        <input type="number" id="ht-rows" value="5" min="1" max="50" />
+                    </label>
+                    <label>
+                        列:
+                        <input type="number" id="ht-cols" value="5" min="1" max="30" />
+                    </label>
+                    <button class="btn-sm primary" id="ht-resize-btn">调整大小</button>
+
+                    <span class="sep"></span>
+
+                    <label>
+                        🎨 背景色:
+                        <input type="color" id="ht-bgcolor" value="#e6f0fa" />
+                    </label>
+                    <button class="btn-sm" id="ht-apply-bg">应用到选中</button>
+                    <button class="btn-sm danger" id="ht-clear-bg">清除选中背景</button>
+
+                    <span class="sep"></span>
+
+                    <label>
+                        📏 列宽:
+                        <input type="number" id="ht-colwidth" value="100" min="20" max="400" style="width:52px;" />
+                    </label>
+                    <button class="btn-sm" id="ht-apply-colwidth">应用到选中列</button>
+
+                    <span class="sep"></span>
+
+                    <label>
+                        📐 行高:
+                        <input type="number" id="ht-rowheight" value="32" min="16" max="200" style="width:52px;" />
+                    </label>
+                    <button class="btn-sm" id="ht-apply-rowheight">应用到选中行</button>
+                </div>
+
+                <div id="handsontable-container"></div>
+
+                <div class="table-modal-footer">
+                    <div class="hint">
+                        💡 双击单元格可编辑文字；调整结构/样式请重新打开本编辑器。
+                    </div>
+                    <div class="actions">
+                        <button class="btn-cancel" id="table-cancel">取消</button>
+                        <button class="btn-insert" id="table-insert">✅ 插入表格</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="table-source-modal-overlay">
+            <div id="table-source-modal">
+                <div class="source-modal-header">
+                    <h3>📝 编辑表格 HTML 源码</h3>
+                    <button class="source-modal-close" id="source-modal-close" aria-label="关闭源码编辑器">✕</button>
+                </div>
+                <div class="source-modal-body">
+                    <textarea id="table-source-editor" spellcheck="false"></textarea>
+                    <div style="margin-top:8px;font-size:13px;color:#57606a;">
+                        💡 编辑表格的 HTML 源码，点击「更新表格」保存。
+                    </div>
+                </div>
+                <div class="source-modal-footer">
+                    <button class="btn-source-cancel" id="source-modal-cancel">取消</button>
+                    <button class="btn-source-update" id="source-modal-update">✅ 更新表格</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Vditor -->
-    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js?v=20260820131502">
+    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js">
     </script>
-
-    <!-- MathLive -->
-    <script src="https://cdn.jsdelivr.net/npm/mathlive?v=20260820131502">
+    <script src="https://cdn.jsdelivr.net/npm/mathlive">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js">
     </script>
 
     <script>
-        // ============================================================
-        // 1. 等待 MathLive 加载
-        // ============================================================
+        // ================================================================
+        //  0. 等待 MathLive 加载
+        // ================================================================
         function waitForMathLive(callback) {
             if (typeof MathfieldElement !== 'undefined') {
                 callback();
@@ -421,35 +1009,55 @@
             }, 10000);
         }
 
-        // ============================================================
-        // 2. 默认内容
-        // ============================================================
+        // ================================================================
+        //  1. 默认内容
+        // ================================================================
         const DEFAULT_CONTENT = [
-            '# 欢迎使用 Vditor + MathLive 🎉',
+            '# 欢迎使用 Vditor + MathLive + 高级表格 🎉',
             '点击工具栏的 **Σ** 按钮，在光标处插入 **块级公式**。',
+            '点击工具栏的 **📊 表格** 按钮，打开 **高级表格编辑器**（类似 Excel）。',
             '## ✨ 支持自定义宏',
             '现在支持 `\\exponentialE` 和 `\\imaginaryI`，会自动转换为 `\\mathrm{e}` 和 `\\mathrm{i}`。',
             '## 示例矩阵',
             '$$\\begin{pmatrix} \\mathrm{e} & \\mathrm{i} \\end{pmatrix}$$',
-            '试试点击 Σ 编辑上面的公式吧！'
+            '## 高级表格示例',
+            '<table style="border-collapse:collapse;width:100%;font-size:14px;">',
+            '<thead><tr style="background:#e6f0fa;">',
+            '<th style="border:1px solid #ccc;padding:6px 10px;width:100px;">项目</th>',
+            '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q1</th>',
+            '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q2</th>',
+            '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q3</th>',
+            '</tr></thead>',
+            '<tbody>',
+            '<tr><td style="border:1px solid #ccc;padding:6px 10px;background:#f9f9f9;">营收</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥12.4万</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;background:#e6f7e6;">¥15.8万</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥18.2万</td></tr>',
+            '<tr><td style="border:1px solid #ccc;padding:6px 10px;background:#f9f9f9;">成本</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥8.1万</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;background:#fde8e8;">¥9.3万</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥10.5万</td></tr>',
+            '</tbody></table>',
+            '试试点击 **📊 表格** 按钮，创建你自己的高级表格吧！'
         ].join('\n');
 
-        // ============================================================
-        // 3. 初始化 Vditor
-        // ============================================================
+        // ================================================================
+        //  2. 初始化 Vditor（关闭 sanitize）
+        // ================================================================
         const vditor = new Vditor('vditor', {
             mode: 'ir',
             theme: 'classic',
             icon: 'ant',
             height: '100%',
             value: DEFAULT_CONTENT,
-            cache: { enable: true, id: 'vditor-mathlive-inline' },
+            cache: { enable: true, id: 'vditor-mathlive-table' },
             preview: {
                 delay: 500,
                 maxWidth: 800,
                 mode: 'both',
                 math: { engine: 'KaTeX' },
-                hljs: { style: 'github' }
+                hljs: { style: 'github' },
+                sanitize: false // 关键：允许 HTML
             },
             toolbar: [
                 'emoji', 'headings', 'bold', 'italic', 'strike', '|',
@@ -464,6 +1072,15 @@
                         waitForMathLive(() => {
                             openFormulaPanel();
                         });
+                    }
+                }, '|', {
+                    name: 'advanced-table',
+                    icon: '<span style="font-size:18px;">📊</span>',
+                    tip: '高级表格编辑器（类似 Excel）',
+                    tipPosition: 's',
+                    click: () => {
+                        saveCursorPosition();
+                        openTableEditor();
                     }
                 },
                 '|', 'upload', 'link', 'table', '|',
@@ -493,12 +1110,13 @@
                     console.log('✅ MathLive 已就绪');
                     setupGlobalKeyboard();
                 });
+                setupTableDoubleClickEdit();
             }
         });
 
-        // ============================================================
-        // 4. 光标位置管理
-        // ============================================================
+        // ================================================================
+        //  3. 光标位置管理（仅用于公式面板）
+        // ================================================================
         let savedCursorRange = null;
 
         function saveCursorPosition() {
@@ -523,9 +1141,9 @@
             return false;
         }
 
-        // ============================================================
-        // 5. 内联面板 + MathField（增加自定义宏）
-        // ============================================================
+        // ================================================================
+        //  4. 公式面板
+        // ================================================================
         const panel = document.getElementById('formula-panel');
         const container = document.getElementById('math-field-container');
         let mathField = null;
@@ -555,20 +1173,15 @@
                 mathField.value = '';
                 return mathField;
             }
-
             mathField = new MathfieldElement();
             mathField.virtualKeyboardPolicy = 'on';
             mathField.virtualKeyboardMode = 'overlay';
             mathField.smartFence = true;
             mathField.readonly = false;
-
-            // ========== 注册自定义宏（编辑时使用） ==========
             mathField.customLatexMacros = {
                 'exponentialE': '\\mathrm{e}',
                 'imaginaryI': '\\mathrm{i}'
             };
-            // ==================================================
-
             mathField.style.position = 'relative';
             mathField.style.zIndex = '10000';
             mathField.style.width = '100%';
@@ -578,50 +1191,35 @@
             mathField.style.outline = 'none';
             mathField.value = '';
 
-            // 屏蔽物理键盘输入
             mathField.addEventListener('keydown', (e) => {
                 const key = e.key;
                 if (key === 'Enter' || key === 'Escape') return;
                 e.preventDefault();
                 e.stopPropagation();
             }, true);
-
             mathField.addEventListener('keyup', (e) => {
                 if (e.key === 'Enter' || e.key === 'Escape') return;
                 e.preventDefault();
                 e.stopPropagation();
             }, true);
-
             mathField.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' || e.key === 'Escape') return;
                 e.preventDefault();
                 e.stopPropagation();
             }, true);
 
-            // 键盘显示/隐藏事件
             mathField.addEventListener('virtual-keyboard-show', () => {
-                if (isPanelOpen) {
-                    setTimeout(() => {
-                        adjustPanelForKeyboard(true);
-                    }, 50);
-                }
+                if (isPanelOpen) setTimeout(() => adjustPanelForKeyboard(true), 50);
             });
-
             mathField.addEventListener('virtual-keyboard-hide', () => {
-                if (isPanelOpen) {
-                    adjustPanelForKeyboard(false);
-                }
+                if (isPanelOpen) adjustPanelForKeyboard(false);
             });
-
             mathField.addEventListener('focus', () => {
                 if (isPanelOpen) {
                     panel.classList.add('keyboard-visible');
-                    setTimeout(() => {
-                        mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                    }, 150);
+                    setTimeout(() => mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 150);
                 }
             });
-
             mathField.addEventListener('blur', () => {
                 panel.classList.remove('keyboard-visible');
             });
@@ -630,24 +1228,17 @@
             return mathField;
         }
 
-        // ============================================================
-        // 6. 调整面板位置以贴合键盘
-        // ============================================================
         function adjustPanelForKeyboard(show) {
             if (!isPanelOpen) return;
             if (show) {
                 let keyboardHeight = 0;
                 try {
                     if (mathField && mathField.shadowRoot) {
-                        const keyboardEl = mathField.shadowRoot.querySelector('[part="virtual-keyboard"]');
-                        if (keyboardEl) {
-                            keyboardHeight = keyboardEl.clientHeight;
-                        }
+                        const el = mathField.shadowRoot.querySelector('[part="virtual-keyboard"]');
+                        if (el) keyboardHeight = el.clientHeight;
                     }
                 } catch (e) { /* 忽略 */ }
-                if (!keyboardHeight) {
-                    keyboardHeight = window.innerHeight < 600 ? 280 : 340;
-                }
+                if (!keyboardHeight) keyboardHeight = window.innerHeight < 600 ? 280 : 340;
                 let safeBottom = 0;
                 try {
                     const env = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom');
@@ -664,9 +1255,6 @@
             }
         }
 
-        // ============================================================
-        // 7. 公式块检测工具（与之前相同）
-        // ============================================================
         function getCursorBlockInfo() {
             const sel = window.getSelection();
             if (!sel || sel.rangeCount === 0) return null;
@@ -679,8 +1267,8 @@
             if (!block) return null;
             const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
             const textNodes = [];
-            let total = 0;
-            let current = walker.nextNode();
+            let total = 0,
+                current = walker.nextNode();
             while (current) {
                 textNodes.push(current);
                 total += current.textContent.length;
@@ -688,10 +1276,7 @@
             }
             let offset = 0;
             for (let tn of textNodes) {
-                if (tn === range.startContainer) {
-                    offset += range.startOffset;
-                    break;
-                } else {
+                if (tn === range.startContainer) { offset += range.startOffset; break; } else {
                     offset += tn.textContent.length;
                 }
             }
@@ -705,11 +1290,9 @@
             const regex = /\$\$[^$]*\$\$/g;
             let match;
             while ((match = regex.exec(text)) !== null) {
-                const start = match.index;
-                const end = match.index + match[0].length;
-                if (offset >= start && offset <= end) {
-                    return true;
-                }
+                const start = match.index,
+                    end = match.index + match[0].length;
+                if (offset >= start && offset <= end) return true;
             }
             return false;
         }
@@ -721,61 +1304,33 @@
             const regex = /\$\$([^$]*)\$\$/g;
             let match;
             while ((match = regex.exec(text)) !== null) {
-                const start = match.index;
-                const end = match.index + match[0].length;
+                const start = match.index,
+                    end = match.index + match[0].length;
                 if (offset >= start && offset <= end) {
-                    const inner = match[1];
-                    return {
-                        inner,
-                        start,
-                        end,
-                        fullText: text,
-                        block,
-                        html
-                    };
+                    return { inner: match[1], start, end, fullText: text, block, html };
                 }
             }
             return null;
         }
 
-        // ============================================================
-        // 8. 打开/关闭面板（不插入占位符）
-        // ============================================================
         function openFormulaPanel() {
             const mf = createMathField();
             mf.value = '';
-            // 保存当前光标位置
             saveCursorPosition();
-            // 检测是否在公式块内
             const blockInfo = getFormulaBlockContent();
-            if (blockInfo) {
-                // 加载已有内容
-                mf.value = blockInfo.inner;
-                console.log('📐 检测到公式块，加载内容:', blockInfo.inner);
-            } else {
-                console.log('📐 未检测到公式块，面板为空');
-            }
+            if (blockInfo) mf.value = blockInfo.inner;
             panel.classList.add('open');
             isPanelOpen = true;
             panel.style.bottom = '0px';
             panel.style.maxHeight = '70vh';
             setTimeout(() => {
                 mf.focus();
-                if (mf.showVirtualKeyboard) {
-                    mf.showVirtualKeyboard();
-                } else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) {
-                    window.mathVirtualKeyboard.show();
-                }
+                if (mf.showVirtualKeyboard) mf.showVirtualKeyboard();
+                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) window.mathVirtualKeyboard.show();
                 setupGlobalKeyboard();
-                setTimeout(() => {
-                    if (mf.showVirtualKeyboard) {
-                        mf.showVirtualKeyboard();
-                    }
-                }, 200);
+                setTimeout(() => { if (mf.showVirtualKeyboard) mf.showVirtualKeyboard(); }, 200);
             }, 400);
-            setTimeout(() => {
-                panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }, 300);
+            setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
         }
 
         function closeFormulaPanel(cancel = true) {
@@ -786,36 +1341,22 @@
             panel.style.maxHeight = '70vh';
             if (mathField) {
                 mathField.blur();
-                if (mathField.hideVirtualKeyboard) {
-                    mathField.hideVirtualKeyboard();
-                } else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) {
-                    window.mathVirtualKeyboard.hide();
-                }
+                if (mathField.hideVirtualKeyboard) mathField.hideVirtualKeyboard();
+                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) window.mathVirtualKeyboard.hide();
                 mathField.value = '';
             }
             setTimeout(() => {
                 vditor.focus();
-                if (cancel) {
-                    restoreCursorPosition();
-                }
+                if (cancel) restoreCursorPosition();
             }, 150);
         }
 
-        // ============================================================
-        // 9. 插入公式（核心修改：使用展开后的 LaTeX）
-        // ============================================================
         function insertFormulaFromPanel() {
             if (!mathField) return;
-
-            // 🔥 使用 'latex-expanded' 获取展开后的 LaTeX（宏被展开）
             const latex = mathField.getValue('latex-expanded');
-            if (!latex || !latex.trim()) {
-                closeFormulaPanel(true);
-                return;
-            }
+            if (!latex || !latex.trim()) { closeFormulaPanel(true); return; }
             const trimmedLatex = latex.trim();
             closeFormulaPanel(false);
-
             setTimeout(() => {
                 const restored = restoreCursorPosition();
                 if (!restored) {
@@ -850,29 +1391,20 @@
                         sel.addRange(newRange);
                         vditor.focus();
                         return;
-                    } else {
-                        vditor.insertValue(`$$${trimmedLatex}$$`);
-                    }
-                } else {
-                    vditor.insertValue(`$$${trimmedLatex}$$`);
-                }
+                    } else { vditor.insertValue(`$$${trimmedLatex}$$`); }
+                } else { vditor.insertValue(`$$${trimmedLatex}$$`); }
                 vditor.focus();
             }, 100);
         }
 
-        // ============================================================
-        // 10. 事件绑定
-        // ============================================================
         document.getElementById('panel-insert').addEventListener('click', (e) => {
             e.stopPropagation();
             insertFormulaFromPanel();
         });
-
         document.getElementById('panel-cancel').addEventListener('click', (e) => {
             e.stopPropagation();
             closeFormulaPanel(true);
         });
-
         document.getElementById('panel-close').addEventListener('click', (e) => {
             e.stopPropagation();
             closeFormulaPanel(true);
@@ -880,21 +1412,18 @@
 
         document.addEventListener('keydown', (e) => {
             if (!isPanelOpen) return;
-
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 insertFormulaFromPanel();
                 return;
             }
-
             if (e.key === 'Escape') {
                 e.preventDefault();
                 e.stopPropagation();
                 closeFormulaPanel(true);
                 return;
             }
-
             if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
                 if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'Tab') {
                     e.preventDefault();
@@ -910,9 +1439,7 @@
                 if (isPanelOpen && mathField) {
                     if (mathField.shadowRoot && mathField.shadowRoot.querySelector('[part="virtual-keyboard"]')) {
                         adjustPanelForKeyboard(true);
-                    } else {
-                        adjustPanelForKeyboard(false);
-                    }
+                    } else { adjustPanelForKeyboard(false); }
                 }
             }, 350);
         });
@@ -923,28 +1450,714 @@
                     mathField.blur();
                     setTimeout(() => {
                         mathField.focus();
-                        if (mathField.showVirtualKeyboard) {
-                            mathField.showVirtualKeyboard();
-                        }
+                        if (mathField.showVirtualKeyboard) mathField.showVirtualKeyboard();
                     }, 350);
                 }
             }, 500);
         });
 
-        // ============================================================
-        // 11. 暴露全局函数
-        // ============================================================
+        // ================================================================
+        //  5. 高级表格编辑器
+        // ================================================================
+        let hotInstance = null;
+        let hotContainer = document.getElementById('handsontable-container');
+        let isHotLoading = false;
+        let lastSelectedRange = null;
+
+        function isCellSelected(instance, row, col) {
+            if (!lastSelectedRange) return false;
+            const { rowStart, colStart, rowEnd, colEnd } = lastSelectedRange;
+            if (colStart === -1 && colEnd === -1) {
+                if (row >= rowStart && row <= rowEnd) return true;
+            } else if (rowStart === -1 && rowEnd === -1) {
+                if (col >= colStart && col <= colEnd) return true;
+            } else {
+                if (row >= rowStart && row <= rowEnd && col >= colStart && col <= colEnd) return true;
+            }
+            return false;
+        }
+
+        function bgRenderer(instance, td, row, col, prop, value, cellProperties) {
+            td.textContent = value !== undefined && value !== null ? value : '';
+            td.style.whiteSpace = 'pre-wrap';
+            td.style.wordWrap = 'break-word';
+            td.style.verticalAlign = 'middle';
+            td.style.textAlign = 'left';
+            td.style.padding = '6px 10px';
+
+            let bgColor = cellProperties.bgColor || '#ffffff';
+            if (row >= 0 && col >= 0 && isCellSelected(instance, row, col)) {
+                bgColor = '#c7e0f5';
+            }
+            td.style.backgroundColor = bgColor;
+            if (row === -1 || col === -1) {
+                td.style.backgroundColor = '#f0f2f5';
+            }
+        }
+
+        function initCellBgColors(instance, rows, cols, color) {
+            if (!instance) return;
+            const bg = color || '#ffffff';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    instance.setCellMeta(r, c, 'bgColor', bg);
+                }
+            }
+        }
+
+        function waitForHandsontable(callback) {
+            if (typeof Handsontable !== 'undefined') {
+                callback();
+                return;
+            }
+            if (isHotLoading) {
+                const check = setInterval(() => {
+                    if (typeof Handsontable !== 'undefined') {
+                        clearInterval(check);
+                        callback();
+                    }
+                }, 100);
+                return;
+            }
+            isHotLoading = true;
+            console.log('⏳ 等待 Handsontable 加载...');
+            let attempts = 0;
+            const check = setInterval(() => {
+                attempts++;
+                if (typeof Handsontable !== 'undefined') {
+                    clearInterval(check);
+                    isHotLoading = false;
+                    console.log('✅ Handsontable 已加载');
+                    callback();
+                } else if (attempts > 60) {
+                    clearInterval(check);
+                    isHotLoading = false;
+                    console.error('❌ Handsontable 加载超时');
+                    alert('表格编辑器加载超时，请刷新页面重试。');
+                }
+            }, 150);
+        }
+
+        function openTableEditor() {
+            waitForHandsontable(() => {
+                const overlay = document.getElementById('table-modal-overlay');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+
+                const containerEl = document.getElementById('handsontable-container');
+                if (containerEl) {
+                    containerEl.style.minHeight = '350px';
+                    containerEl.style.height = '100%';
+                    void containerEl.offsetHeight;
+                }
+
+                let initAttempts = 0;
+                const maxAttempts = 20;
+
+                function tryInitHot() {
+                    const rect = containerEl ? containerEl.getBoundingClientRect() : null;
+                    const hasSize = rect && rect.width > 10 && rect.height > 50;
+
+                    if (hasSize || initAttempts >= maxAttempts) {
+                        console.log(`📐 容器尺寸: ${rect?.width || '?'} x ${rect?.height || '?'}, 尝试初始化`);
+                        if (!hotInstance) {
+                            initHandsontable();
+                        } else {
+                            hotInstance.render();
+                            setTimeout(() => {
+                                if (hotInstance) hotInstance.render();
+                            }, 80);
+                        }
+                        setTimeout(() => {
+                            if (hotInstance) {
+                                hotInstance.selectCell(0, 0);
+                                hotInstance.render();
+                            }
+                        }, 120);
+                        return;
+                    }
+
+                    initAttempts++;
+                    console.log(`⏳ 等待容器渲染... (${initAttempts}/${maxAttempts})`);
+                    setTimeout(tryInitHot, 120);
+                }
+
+                requestAnimationFrame(() => {
+                    setTimeout(tryInitHot, 200);
+                });
+            });
+        }
+
+        function closeTableEditor() {
+            const overlay = document.getElementById('table-modal-overlay');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+            if (hotInstance) {
+                setTimeout(() => {
+                    if (hotInstance) {
+                        hotInstance.destroy();
+                        hotInstance = null;
+                        console.log('🧹 Handsontable 实例已销毁');
+                    }
+                }, 300);
+            }
+        }
+
+        function initHandsontable() {
+            const rows = parseInt(document.getElementById('ht-rows').value) || 5;
+            const cols = parseInt(document.getElementById('ht-cols').value) || 5;
+
+            const data = [];
+            for (let r = 0; r < rows; r++) {
+                const row = [];
+                for (let c = 0; c < cols; c++) {
+                    row.push('');
+                }
+                data.push(row);
+            }
+
+            const colHeaders = [];
+            for (let c = 0; c < cols; c++) {
+                colHeaders.push(String.fromCharCode(65 + c));
+            }
+
+            const defaultWidth = parseInt(document.getElementById('ht-colwidth').value) || 100;
+            const defaultHeight = parseInt(document.getElementById('ht-rowheight').value) || 32;
+            const colWidths = new Array(cols).fill(defaultWidth);
+            const rowHeights = new Array(rows).fill(defaultHeight);
+
+            const containerEl = document.getElementById('handsontable-container');
+            if (containerEl) {
+                const rect = containerEl.getBoundingClientRect();
+                if (rect.height < 100) {
+                    containerEl.style.minHeight = '350px';
+                    containerEl.style.height = '100%';
+                }
+            }
+
+            if (hotInstance) {
+                try { hotInstance.destroy(); } catch (e) { /* 忽略 */ }
+                hotInstance = null;
+            }
+
+            hotInstance = new Handsontable(hotContainer, {
+                data: data,
+                rowHeaders: true,
+                colHeaders: colHeaders,
+                contextMenu: true,
+                licenseKey: 'non-commercial-and-evaluation',
+                height: '100%',
+                width: '100%',
+                stretchH: 'all',
+                manualColumnResize: true,
+                manualRowResize: true,
+                allowInsertRow: true,
+                allowInsertColumn: true,
+                allowRemoveRow: true,
+                allowRemoveColumn: true,
+                comments: true,
+                colWidths: colWidths,
+                rowHeights: rowHeights,
+                renderer: bgRenderer,
+                afterInit: function () {
+                    const rowsCount = this.countRows();
+                    const colsCount = this.countCols();
+                    initCellBgColors(this, rowsCount, colsCount, '#ffffff');
+                    this.render();
+                    console.log('✅ Handsontable 初始化完成');
+                },
+                afterChange: function (changes, source) {
+                    if (changes) {
+                        const instance = this;
+                        const rowsCount = instance.countRows();
+                        const colsCount = instance.countCols();
+                        for (let r = 0; r < rowsCount; r++) {
+                            for (let c = 0; c < colsCount; c++) {
+                                const meta = instance.getCellMeta(r, c);
+                                if (!meta.bgColor) {
+                                    instance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                                }
+                            }
+                        }
+                        instance.render();
+                    }
+                },
+                afterSelection: function (row, col, row2, col2) {
+                    lastSelectedRange = { rowStart: row, colStart: col, rowEnd: row2, colEnd: col2 };
+                    console.log('📌 选中更新:', lastSelectedRange);
+                    if (this) this.render();
+                },
+                afterDeselect: function () {
+                    console.log('📌 取消选中');
+                }
+            });
+
+            setTimeout(() => {
+                if (hotInstance) {
+                    const rowsCount = hotInstance.countRows();
+                    const colsCount = hotInstance.countCols();
+                    for (let r = 0; r < rowsCount; r++) {
+                        for (let c = 0; c < colsCount; c++) {
+                            const meta = hotInstance.getCellMeta(r, c);
+                            if (!meta.bgColor) {
+                                hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                            }
+                        }
+                    }
+                    hotInstance.render();
+                }
+            }, 80);
+
+            document.getElementById('ht-rows').value = rows;
+            document.getElementById('ht-cols').value = cols;
+
+            console.log('✅ Handsontable 初始化完成');
+        }
+
+        function getSelectedRange() {
+            if (!hotInstance) return null;
+            try {
+                const ranges = hotInstance.getSelectedRange();
+                if (ranges && ranges.length > 0) {
+                    const range = ranges[0];
+                    if (range) {
+                        const r1 = range.from.row,
+                            c1 = range.from.col;
+                        const r2 = range.to.row,
+                            c2 = range.to.col;
+                        if (typeof r1 === 'number' && typeof c1 === 'number' &&
+                            typeof r2 === 'number' && typeof c2 === 'number') {
+                            lastSelectedRange = { rowStart: r1, colStart: c1, rowEnd: r2, colEnd: c2 };
+                            return lastSelectedRange;
+                        }
+                    }
+                }
+            } catch (e) { /* 忽略 */ }
+
+            let sel = hotInstance.getSelected();
+            if (sel && sel.length > 0 && sel[0]) {
+                const [rowStart, colStart, rowEnd, colEnd] = sel[0];
+                if (typeof rowStart === 'number' && typeof colStart === 'number' &&
+                    typeof rowEnd === 'number' && typeof colEnd === 'number') {
+                    lastSelectedRange = { rowStart, colStart, rowEnd, colEnd };
+                    return lastSelectedRange;
+                }
+            }
+
+            const lastSel = hotInstance.getSelectedLast();
+            if (lastSel) {
+                const [rowStart, colStart, rowEnd, colEnd] = lastSel;
+                if (typeof rowStart === 'number' && typeof colStart === 'number' &&
+                    typeof rowEnd === 'number' && typeof colEnd === 'number') {
+                    lastSelectedRange = { rowStart, colStart, rowEnd, colEnd };
+                    return lastSelectedRange;
+                }
+            }
+
+            return lastSelectedRange || null;
+        }
+
+        function normalizeRange(range) {
+            if (!range) return null;
+            let { rowStart, colStart, rowEnd, colEnd } = range;
+            const totalRows = hotInstance.countRows();
+            const totalCols = hotInstance.countCols();
+
+            if (typeof rowStart !== 'number') rowStart = 0;
+            if (typeof colStart !== 'number') colStart = 0;
+            if (typeof rowEnd !== 'number') rowEnd = rowStart;
+            if (typeof colEnd !== 'number') colEnd = colStart;
+
+            if (rowStart === -1) {
+                rowStart = 0;
+                rowEnd = totalRows - 1;
+            }
+            if (colStart === -1) {
+                colStart = 0;
+                colEnd = totalCols - 1;
+            }
+            if (rowStart < 0) rowStart = 0;
+            if (colStart < 0) colStart = 0;
+            if (rowEnd >= totalRows) rowEnd = totalRows - 1;
+            if (colEnd >= totalCols) colEnd = totalCols - 1;
+
+            return { rowStart, colStart, rowEnd, colEnd };
+        }
+
+        function resizeTable() {
+            if (!hotInstance) { initHandsontable(); return; }
+            const rows = parseInt(document.getElementById('ht-rows').value) || 1;
+            const cols = parseInt(document.getElementById('ht-cols').value) || 1;
+            const currentData = hotInstance.getData();
+            const newData = [];
+            for (let r = 0; r < rows; r++) {
+                const row = [];
+                for (let c = 0; c < cols; c++) {
+                    row.push((currentData[r] && currentData[r][c] !== undefined) ? currentData[r][c] : '');
+                }
+                newData.push(row);
+            }
+
+            const colHeaders = [];
+            for (let c = 0; c < cols; c++) colHeaders.push(String.fromCharCode(65 + c));
+
+            const defaultWidth = parseInt(document.getElementById('ht-colwidth').value) || 100;
+            const defaultHeight = parseInt(document.getElementById('ht-rowheight').value) || 32;
+            const colWidths = new Array(cols).fill(defaultWidth);
+            const rowHeights = new Array(rows).fill(defaultHeight);
+
+            hotInstance.updateSettings({ data: newData, colHeaders, colWidths, rowHeights });
+            setTimeout(() => {
+                if (hotInstance) {
+                    const rowsCount = hotInstance.countRows();
+                    const colsCount = hotInstance.countCols();
+                    for (let r = 0; r < rowsCount; r++) {
+                        for (let c = 0; c < colsCount; c++) {
+                            const meta = hotInstance.getCellMeta(r, c);
+                            if (!meta.bgColor) hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                        }
+                    }
+                    hotInstance.render();
+                }
+            }, 50);
+        }
+
+        function applyBgToSelected() {
+            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
+            const range = getSelectedRange();
+            if (!range) { alert('请先选中一个或多个单元格！'); return; }
+            const norm = normalizeRange(range);
+            if (!norm) return;
+            const { rowStart, colStart, rowEnd, colEnd } = norm;
+            const color = document.getElementById('ht-bgcolor').value;
+            for (let r = rowStart; r <= rowEnd; r++) {
+                for (let c = colStart; c <= colEnd; c++) {
+                    hotInstance.setCellMeta(r, c, 'bgColor', color);
+                }
+            }
+            hotInstance.render();
+            alert(`✅ 已应用背景色到 ${rowEnd - rowStart + 1} 行 × ${colEnd - colStart + 1} 列`);
+        }
+
+        function clearBgFromSelected() {
+            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
+            const range = getSelectedRange();
+            if (!range) { alert('请先选中一个或多个单元格！'); return; }
+            const norm = normalizeRange(range);
+            if (!norm) return;
+            const { rowStart, colStart, rowEnd, colEnd } = norm;
+            for (let r = rowStart; r <= rowEnd; r++) {
+                for (let c = colStart; c <= colEnd; c++) {
+                    hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                }
+            }
+            hotInstance.render();
+            alert('✅ 已清除选中区域背景色');
+        }
+
+        function applyColWidthToSelected() {
+            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
+            const range = getSelectedRange();
+            if (!range) { alert('请先选中一个或多个单元格！'); return; }
+            const norm = normalizeRange(range);
+            if (!norm) return;
+            const { colStart, colEnd } = norm;
+            const width = parseInt(document.getElementById('ht-colwidth').value) || 100;
+            const currentColWidths = hotInstance.getSettings().colWidths || [];
+            const newColWidths = [...currentColWidths];
+            for (let c = colStart; c <= colEnd; c++) newColWidths[c] = width;
+            hotInstance.updateSettings({ colWidths: newColWidths });
+            hotInstance.render();
+            alert(`✅ 已应用列宽 ${width}px 到 ${colEnd - colStart + 1} 列`);
+        }
+
+        function applyRowHeightToSelected() {
+            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
+            const range = getSelectedRange();
+            if (!range) { alert('请先选中一个或多个单元格！'); return; }
+            const norm = normalizeRange(range);
+            if (!norm) return;
+            const { rowStart, rowEnd } = norm;
+            const height = parseInt(document.getElementById('ht-rowheight').value) || 32;
+            const currentRowHeights = hotInstance.getSettings().rowHeights || [];
+            const newRowHeights = [...currentRowHeights];
+            for (let r = rowStart; r <= rowEnd; r++) newRowHeights[r] = height;
+            hotInstance.updateSettings({ rowHeights: newRowHeights });
+            hotInstance.render();
+            alert(`✅ 已应用行高 ${height}px 到 ${rowEnd - rowStart + 1} 行`);
+        }
+
+        // ================================================================
+        //  生成带完整样式的 HTML 表格（去掉表格自身边框）
+        // ================================================================
+        function generateHTMLTable() {
+            if (!hotInstance) return '<table><tr><td>空表格</td></tr></table>';
+            const data = hotInstance.getData();
+            const settings = hotInstance.getSettings();
+            const colHeaders = settings.colHeaders || [];
+            const rowHeaders = settings.rowHeaders || false;
+            const colWidths = settings.colWidths || [];
+            const rowHeights = settings.rowHeights || [];
+
+            const bgColors = {};
+            const rowsCount = data.length;
+            const colsCount = rowsCount > 0 ? data[0]?.length || 0 : 0;
+
+            for (let r = 0; r < rowsCount; r++) {
+                for (let c = 0; c < (data[r]?.length || 0); c++) {
+                    try {
+                        const meta = hotInstance.getCellMeta(r, c);
+                        bgColors[`${r},${c}`] = meta.bgColor || '#ffffff';
+                    } catch (e) { bgColors[`${r},${c}`] = '#ffffff'; }
+                }
+            }
+
+            if (rowsCount === 0 || colsCount === 0) {
+                return '<table style="border-collapse:collapse;width:100%;font-size:14px;"><tr><td style="border:1px solid #ccc;padding:6px 10px;">空表格</td></tr></table>';
+            }
+
+            let html = '<table style="border-collapse:collapse;width:100%;font-size:14px;">';
+            if (colHeaders && colHeaders.length > 0) {
+                html += '<thead><tr>';
+                if (rowHeaders) {
+                    html += '<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;text-align:center;">#</th>';
+                }
+                for (let c = 0; c < Math.min(colHeaders.length, colsCount); c++) {
+                    const width = colWidths[c] ? `width:${colWidths[c]}px;` : '';
+                    html += `<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;${width}">${colHeaders[c] || ''}</th>`;
+                }
+                html += '</tr></thead>';
+            }
+
+            html += '<tbody>';
+            for (let r = 0; r < rowsCount; r++) {
+                const row = data[r] || [];
+                const height = rowHeights[r] ? `height:${rowHeights[r]}px;` : '';
+                html += '<tr>';
+                if (rowHeaders) {
+                    html += `<td style="border:1px solid #ccc;padding:6px 10px;background:#f9fafb;font-weight:500;text-align:center;${height}">${r + 1}</td>`;
+                }
+                for (let c = 0; c < Math.min(row.length, colsCount); c++) {
+                    const bgKey = `${r},${c}`;
+                    const bg = bgColors[bgKey] || '#ffffff';
+                    const bgStyle = `background-color:${bg};`;
+                    const width = colWidths[c] ? `width:${colWidths[c]}px;` : '';
+                    const val = (row[c] !== undefined && row[c] !== null) ? String(row[c]) : '';
+                    html += `<td style="border:1px solid #ccc;padding:6px 10px;${bgStyle}${width}${height}">${val}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // ================================================================
+        //  插入表格到 Vditor（使用 insertValue + html:true）
+        // ================================================================
+        function insertTableToVditor() {
+            if (!hotInstance) { alert('请先编辑表格内容！'); return; }
+
+            const htmlTable = generateHTMLTable();
+            if (!htmlTable) { alert('生成表格失败，请重试。'); return; }
+
+            // 用 div 包裹，前后加换行，确保被识别为 HTML 块
+            const wrappedHtml = '\n\n<div style="margin:12px 0;">' + htmlTable + '</div>\n\n';
+
+            // 关闭表格编辑器
+            closeTableEditor();
+
+            setTimeout(() => {
+                // 使用 insertValue 并指定 html:true，插入到光标位置且不转义
+                vditor.insertValue(wrappedHtml, { html: true });
+
+                // 强制刷新预览
+                setTimeout(() => {
+                    try {
+                        const event = new Event('input', { bubbles: true });
+                        const editorEl = document.querySelector('.vditor-reset');
+                        if (editorEl) editorEl.dispatchEvent(event);
+                        if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
+                        if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview.render();
+                    } catch (e) { console.warn('刷新预览失败:', e); }
+                }, 150);
+
+                vditor.focus();
+
+                // 提示
+                const hint = document.createElement('div');
+                hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2328;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90%;text-align:center;transition:opacity 0.4s;';
+                hint.textContent = '✅ 表格已插入到光标位置！预览模式下显示完整样式。';
+                document.body.appendChild(hint);
+                setTimeout(() => {
+                    hint.style.opacity = '0';
+                    setTimeout(() => hint.remove(), 500);
+                }, 4000);
+            }, 200);
+        }
+
+        // ================================================================
+        //  6. 双击表格编辑 HTML 源码
+        // ================================================================
+        let sourceEditorTarget = null;
+
+        function setupTableDoubleClickEdit() {
+            const resetEl = document.querySelector('.vditor-reset');
+            if (!resetEl) { setTimeout(setupTableDoubleClickEdit, 500); return; }
+
+            resetEl.removeEventListener('dblclick', handleTableDblClick);
+            resetEl.addEventListener('dblclick', handleTableDblClick);
+
+            const observer = new MutationObserver(() => {
+                if (resetEl && !resetEl._listenerAttached) {
+                    resetEl.addEventListener('dblclick', handleTableDblClick);
+                    resetEl._listenerAttached = true;
+                }
+            });
+            observer.observe(resetEl, { childList: true, subtree: true });
+            resetEl._listenerAttached = true;
+            console.log('✅ 表格双击编辑源码功能已启用');
+        }
+
+        function handleTableDblClick(e) {
+            const target = e.target;
+            let table = target.closest('table');
+            if (!table) return;
+            if (table.closest('#table-modal-overlay') || table.closest('#table-modal')) return;
+            if (table.closest('#table-source-modal-overlay')) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            sourceEditorTarget = table;
+            const outerHTML = table.outerHTML;
+
+            const overlay = document.getElementById('table-source-modal-overlay');
+            const textarea = document.getElementById('table-source-editor');
+            textarea.value = outerHTML;
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                textarea.focus();
+                textarea.select();
+            }, 100);
+        }
+
+        function closeSourceModal(cancel = true) {
+            const overlay = document.getElementById('table-source-modal-overlay');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+            if (cancel) sourceEditorTarget = null;
+        }
+
+        function updateTableFromSource() {
+            const textarea = document.getElementById('table-source-editor');
+            const newHTML = textarea.value.trim();
+            if (!newHTML) { alert('表格源码不能为空！'); return; }
+            if (!sourceEditorTarget) {
+                alert('没有找到要更新的表格，请重新双击表格。');
+                closeSourceModal(true); return;
+            }
+
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newHTML;
+                const newTable = tempDiv.querySelector('table');
+                if (!newTable) { alert('无效的表格 HTML，请确保内容包含 <table> 标签。'); return; }
+
+                const parent = sourceEditorTarget.parentNode;
+                if (parent) {
+                    parent.replaceChild(newTable, sourceEditorTarget);
+                    sourceEditorTarget = newTable;
+                } else {
+                    alert('表格已不存在，请重新双击表格编辑。');
+                    closeSourceModal(true);
+                    return;
+                }
+
+                closeSourceModal(false);
+                try {
+                    const vditorEl = document.querySelector('.vditor-reset');
+                    if (vditorEl) {
+                        const evt = new Event('input', { bubbles: true });
+                        vditorEl.dispatchEvent(evt);
+                    }
+                    if (window.vditor && window.vditor.render) window.vditor.render();
+                } catch (e) { console.warn('触发重新渲染失败:', e); }
+                console.log('✅ 表格源码已更新并重新渲染');
+            } catch (err) {
+                console.error('更新表格失败:', err);
+                alert('更新表格失败: ' + err.message);
+            }
+        }
+
+        document.getElementById('source-modal-close').addEventListener('click', () => closeSourceModal(true));
+        document.getElementById('source-modal-cancel').addEventListener('click', () => closeSourceModal(true));
+        document.getElementById('source-modal-update').addEventListener('click', updateTableFromSource);
+        document.getElementById('table-source-modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeSourceModal(true);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('table-source-modal-overlay');
+            if (!overlay.classList.contains('open')) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeSourceModal(true);
+            }
+            if ((e.key === 'Enter' || e.key === 's') && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                updateTableFromSource();
+            }
+        });
+
+        // ================================================================
+        //  7. 事件绑定
+        // ================================================================
+
+        document.getElementById('table-modal-close').addEventListener('click', closeTableEditor);
+        document.getElementById('table-cancel').addEventListener('click', closeTableEditor);
+        document.getElementById('table-modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeTableEditor();
+        });
+        document.getElementById('table-insert').addEventListener('click', insertTableToVditor);
+        document.getElementById('ht-resize-btn').addEventListener('click', resizeTable);
+        document.getElementById('ht-apply-bg').addEventListener('click', applyBgToSelected);
+        document.getElementById('ht-clear-bg').addEventListener('click', clearBgFromSelected);
+        document.getElementById('ht-apply-colwidth').addEventListener('click', applyColWidthToSelected);
+        document.getElementById('ht-apply-rowheight').addEventListener('click', applyRowHeightToSelected);
+
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('table-modal-overlay');
+            if (!overlay.classList.contains('open')) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeTableEditor();
+            }
+            if ((e.key === 'Enter' || e.key === 'Insert') && e.ctrlKey) {
+                e.preventDefault();
+                insertTableToVditor();
+            }
+        });
+
+        let hotResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(hotResizeTimer);
+            hotResizeTimer = setTimeout(() => { if (hotInstance) hotInstance.render(); }, 300);
+        });
+
+        // ================================================================
+        //  8. 暴露全局变量
+        // ================================================================
         window.resetEditorContent = function () {
             vditor.setValue(DEFAULT_CONTENT);
             console.log('✅ 编辑器内容已重置为默认内容');
         };
-
         window.vditor = vditor;
         window.mathField = mathField;
+        window.hotInstance = hotInstance;
 
-        console.log('✅ 内联公式编辑器已启动（修复版）！');
-        console.log('💡 控制台输入 resetEditorContent() 可重置编辑器内容。');
-        console.log('💡 使用 \\exponentialE 和 \\imaginaryI 会转为 \\mathrm{e} 和 \\mathrm{i}，KaTeX 可正常渲染。');
+        console.log('✅ 高级表格编辑器已启动 (最终修复版)');
+        console.log('💡 点击「插入表格」会将表格插入到光标当前位置，预览模式下显示完整样式。');
     </script>
 
 </body>
