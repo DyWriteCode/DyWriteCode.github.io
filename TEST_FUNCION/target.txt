@@ -1,0 +1,2 @@
+index.min.js:1
+ Uncaught IndexSizeError: Failed to execute 'getRangeAt' on 'Selection': 0 is not a valid index.而且我发现这个表格很容易莫名其妙就被覆盖消失掉。
