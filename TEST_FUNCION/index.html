@@ -4,12 +4,236 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <title>TEST_FUNCION</title>
+        <style>
+            /* ===== 全局重置 & 基础 ===== */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: linear-gradient(145deg, #f6f9fc 0%, #e9f0f7 100%);
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                padding: 24px;
+            }
+
+            /* ===== 卡片容器 ===== */
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 20px;
+                max-width: 820px;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.55);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-radius: 48px;
+                padding: 40px 36px;
+                box-shadow:
+                    0 20px 60px rgba(0, 20, 40, 0.10),
+                    0 8px 24px rgba(0, 20, 40, 0.04),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                transition: box-shadow 0.3s ease;
+            }
+
+            /* ===== 每个链接卡片 ===== */
+            .grid a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 28px 16px;
+                text-decoration: none;
+                font-size: 1.1rem;
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                color: #1a2a3a;
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                border-radius: 28px;
+                border: 1px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 4px 12px rgba(0, 20, 40, 0.04);
+                transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+                text-align: center;
+                min-height: 80px;
+                word-break: break-word;
+                line-height: 1.4;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* ===== 链接前的装饰小点 ===== */
+            .grid a::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                border-radius: 28px;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+                pointer-events: none;
+            }
+
+            /* ===== 悬停 & 聚焦效果 ===== */
+            .grid a:hover {
+                transform: translateY(-4px) scale(1.02);
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow:
+                    0 20px 40px rgba(0, 20, 40, 0.12),
+                    0 8px 20px rgba(0, 20, 40, 0.06);
+                border-color: rgba(255, 255, 255, 1);
+                color: #0b1a2a;
+            }
+
+            .grid a:active {
+                transform: translateY(0px) scale(0.97);
+                transition-duration: 0.08s;
+            }
+
+            /* ===== 每个链接不同的柔和色调 ===== */
+            .grid a:nth-child(1) {
+                background: rgba(235, 248, 255, 0.75);
+            }
+            .grid a:nth-child(1):hover {
+                background: rgba(235, 248, 255, 0.95);
+            }
+
+            .grid a:nth-child(2) {
+                background: rgba(240, 247, 255, 0.75);
+            }
+            .grid a:nth-child(2):hover {
+                background: rgba(240, 247, 255, 0.95);
+            }
+
+            .grid a:nth-child(3) {
+                background: rgba(245, 245, 255, 0.75);
+            }
+            .grid a:nth-child(3):hover {
+                background: rgba(245, 245, 255, 0.95);
+            }
+
+            .grid a:nth-child(4) {
+                background: rgba(255, 245, 235, 0.75);
+            }
+            .grid a:nth-child(4):hover {
+                background: rgba(255, 245, 235, 0.95);
+            }
+
+            .grid a:nth-child(5) {
+                background: rgba(240, 255, 244, 0.75);
+            }
+            .grid a:nth-child(5):hover {
+                background: rgba(240, 255, 244, 0.95);
+            }
+
+            /* ===== 响应式微调 ===== */
+            @media (max-width: 600px) {
+                .grid {
+                    padding: 28px 20px;
+                    border-radius: 32px;
+                    gap: 14px;
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                }
+
+                .grid a {
+                    padding: 20px 12px;
+                    font-size: 0.95rem;
+                    min-height: 64px;
+                    border-radius: 22px;
+                }
+            }
+
+            @media (max-width: 400px) {
+                .grid {
+                    padding: 20px 14px;
+                    gap: 12px;
+                    grid-template-columns: 1fr 1fr;
+                    border-radius: 28px;
+                }
+
+                .grid a {
+                    padding: 16px 8px;
+                    font-size: 0.85rem;
+                    min-height: 56px;
+                    border-radius: 18px;
+                }
+            }
+
+            /* ===== 暗色模式适配（可选） ===== */
+            @media (prefers-color-scheme: dark) {
+                body {
+                    background: linear-gradient(145deg, #1a2533, #0f1722);
+                }
+
+                .grid {
+                    background: rgba(30, 42, 58, 0.65);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border-color: rgba(255, 255, 255, 0.08);
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                }
+
+                .grid a {
+                    color: #e8edf4;
+                    background: rgba(50, 65, 85, 0.6);
+                    border-color: rgba(255, 255, 255, 0.06);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                }
+
+                .grid a:hover {
+                    color: #ffffff;
+                    background: rgba(70, 90, 115, 0.85);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                }
+
+                .grid a:nth-child(1) {
+                    background: rgba(30, 60, 90, 0.5);
+                }
+                .grid a:nth-child(1):hover {
+                    background: rgba(30, 60, 90, 0.8);
+                }
+                .grid a:nth-child(2) {
+                    background: rgba(40, 50, 90, 0.5);
+                }
+                .grid a:nth-child(2):hover {
+                    background: rgba(40, 50, 90, 0.8);
+                }
+                .grid a:nth-child(3) {
+                    background: rgba(60, 40, 90, 0.5);
+                }
+                .grid a:nth-child(3):hover {
+                    background: rgba(60, 40, 90, 0.8);
+                }
+                .grid a:nth-child(4) {
+                    background: rgba(80, 50, 30, 0.5);
+                }
+                .grid a:nth-child(4):hover {
+                    background: rgba(80, 50, 30, 0.8);
+                }
+                .grid a:nth-child(5) {
+                    background: rgba(30, 70, 50, 0.5);
+                }
+                .grid a:nth-child(5):hover {
+                    background: rgba(30, 70, 50, 0.8);
+                }
+            }
+        </style>
     </head>
     <body>
-        <a href="./VOICE/index.html?v=20260820124529">VOICE</a>
-        <a href="./MD_1/index.html?v=20260820124529">MD_1</a>
-        <a href="./MD_2/index.html?v=20260820124529">MD_2</a>
-        <a href="./MATH_CACL/index.html?v=20260820124529">MATH_CACL</a>
-        <a href="./CODE_CE/index.html?v=20260820124529">CODE_CE</a>
+        <div class="grid">
+            <a href="./VOICE/index.html?v=20260820085027">VOICE</a>
+            <a href="./MD_1/index.html?v=20260820085027">MD_1</a>
+            <a href="./MD_2/index.html?v=20260820085027">MD_2</a>
+            <a href="./MATH_CACL/index.html?v=20260820085027">MATH_CACL</a>
+            <a href="./CODE_CE/index.html?v=20260820085027">CODE_CE</a>
+        </div>
     </body>
 </html>
