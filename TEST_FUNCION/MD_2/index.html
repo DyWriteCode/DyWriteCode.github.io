@@ -7,12 +7,12 @@
     <title>Vditor + MathLive 公式编辑器</title>
 
     <!-- Vditor 样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css?v=20260820040254" />
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260820040254" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css" />
 
     <!-- MathLive 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css?v=20260820040254" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css?v=20260820040254" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css" />
 
     <style>
         /* --- 全局重置 --- */
@@ -110,8 +110,13 @@
             touch-action: manipulation;
         }
 
-        /* 隐藏虚拟键盘切换按钮 */
+        /* ★ 彻底隐藏虚拟键盘切换按钮 ★ */
         math-field::part(virtual-keyboard-toggle) {
+            display: none !important;
+        }
+
+        /* 隐藏整个虚拟键盘容器（如果出现） */
+        math-field::part(virtual-keyboard) {
             display: none !important;
         }
 
@@ -217,10 +222,10 @@
     </div>
 
     <!-- Vditor -->
-    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js?v=20260820040254"></script>
+    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js"></script>
 
     <!-- MathLive -->
-    <script src="https://cdn.jsdelivr.net/npm/mathlive?v=20260820040254"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 
     <script>
         // ============================================================
@@ -338,7 +343,7 @@
         }
 
         // ============================================================
-        //  4. 公式对话框逻辑（直接在实例中配置 locale 和 virtualKeyboardPolicy）
+        //  4. 公式对话框逻辑（强制禁用虚拟键盘 + 汉化）
         // ============================================================
         const overlay = document.getElementById('formula-dialog-overlay');
         const container = document.getElementById('math-field-container');
@@ -349,18 +354,30 @@
                 mathField.value = '';
                 return mathField;
             }
-            // ★ 创建实例时直接指定 locale 和 virtualKeyboardPolicy ★
+            // 创建实例
             mathField = new MathfieldElement({
-                locale: 'zh-CN',                // 中文界面
-                virtualKeyboardPolicy: 'off',   // 关闭虚拟键盘
                 smartFence: true,
             });
+
+            // ★ 关键：通过 setOptions 应用配置 ★
+            mathField.setOptions({
+                locale: 'zh-CN',                // 中文界面
+                virtualKeyboardPolicy: 'off',   // 禁用虚拟键盘
+            });
+
+            // 备用：直接设置属性
+            mathField.setAttribute('virtual-keyboard-policy', 'off');
+
+            // 样式
             mathField.style.width = '100%';
             mathField.style.minHeight = '50px';
             mathField.style.fontSize = '20px';
             mathField.value = '';
             container.appendChild(mathField);
+
+            // 监听输入（可选）
             mathField.addEventListener('input', () => { });
+
             return mathField;
         }
 
