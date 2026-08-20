@@ -4,17 +4,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vditor + MathLive 智能公式插入（支持自定义宏）</title>
+    <title>Vditor + MathLive 智能公式插入（修复版）</title>
 
     <!-- Vditor 样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css?v=20260820124613" />
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260820124613" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css" />
 
     <!-- MathLive 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css?v=20260820124613" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css?v=20260820124613" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css" />
 
     <style>
+        /* ---------- 全局重置 ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -65,7 +66,7 @@
             line-height: 1.8;
         }
 
-        /* ===== 公式面板 - 固定定位，底部贴合键盘 ===== */
+        /* ---------- 公式面板 ---------- */
         #formula-panel {
             position: fixed;
             bottom: 0;
@@ -252,7 +253,7 @@
             flex-shrink: 0;
         }
 
-        /* ===== 移动端适配 ===== */
+        /* ---------- 移动端适配 ---------- */
         @media (max-width: 768px) {
             #app {
                 max-width: 100%;
@@ -340,6 +341,7 @@
             }
         }
 
+        /* ---------- 滚动条美化 ---------- */
         .vditor-reset::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -361,17 +363,27 @@
 </head>
 
 <body>
+
     <div id="app">
         <div id="vditor-wrapper">
             <div id="vditor"></div>
         </div>
+
         <div id="formula-panel">
             <div class="panel-header">
-                <h3>🧮 公式编辑 <small>· 虚拟键盘 · 支持自定义宏</small></h3>
-                <button class="panel-close-btn" id="panel-close">✕</button>
+                <h3>
+                    🧮 公式编辑
+                    <small>· 虚拟键盘 · 支持 \exponentialE 和 \imaginaryI</small>
+                </h3>
+                <button class="panel-close-btn" id="panel-close" aria-label="关闭面板">✕</button>
             </div>
+
             <div class="math-field-container" id="math-field-container"></div>
-            <div class="panel-hint">💡 支持 \exponentialE → \mathrm{e}，\imaginaryI → \mathrm{i} · Enter 插入 · Esc 取消</div>
+
+            <div class="panel-hint">
+                💡 使用虚拟键盘输入 · Enter 插入 · Esc 取消 · 编辑时 \exponentialE 自动转为 \mathrm{e}
+            </div>
+
             <div class="panel-actions">
                 <button class="btn-cancel-panel" id="panel-cancel">取消</button>
                 <button class="btn-insert-panel" id="panel-insert">插入公式</button>
@@ -379,19 +391,34 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js?v=20260820124613"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mathlive?v=20260820124613"></script>
+    <!-- Vditor -->
+    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js">
+    </script>
+
+    <!-- MathLive -->
+    <script src="https://cdn.jsdelivr.net/npm/mathlive">
+    </script>
 
     <script>
         // ============================================================
         // 1. 等待 MathLive 加载
         // ============================================================
         function waitForMathLive(callback) {
-            if (typeof MathfieldElement !== 'undefined') { callback(); return; }
+            if (typeof MathfieldElement !== 'undefined') {
+                callback();
+                return;
+            }
             const check = setInterval(() => {
-                if (typeof MathfieldElement !== 'undefined') { clearInterval(check); callback(); }
+                if (typeof MathfieldElement !== 'undefined') {
+                    clearInterval(check);
+                    callback();
+                }
             }, 100);
-            setTimeout(() => { clearInterval(check); console.error('MathLive 加载超时'); alert('公式编辑器加载超时，请刷新页面重试。'); }, 10000);
+            setTimeout(() => {
+                clearInterval(check);
+                console.error('MathLive 加载超时');
+                alert('公式编辑器加载超时，请刷新页面重试。');
+            }, 10000);
         }
 
         // ============================================================
@@ -401,9 +428,9 @@
             '# 欢迎使用 Vditor + MathLive 🎉',
             '点击工具栏的 **Σ** 按钮，在光标处插入 **块级公式**。',
             '## ✨ 支持自定义宏',
-            '现在支持 `\\exponentialE` 和 `\\imaginaryI`，会自动转换为标准命令。',
+            '现在支持 `\\exponentialE` 和 `\\imaginaryI`，会自动转换为 `\\mathrm{e}` 和 `\\mathrm{i}`。',
             '## 示例矩阵',
-            '$$\\begin{pmatrix} \\exponentialE & \\imaginaryI \\end{pmatrix}$$',
+            '$$\\begin{pmatrix} \\mathrm{e} & \\mathrm{i} \\end{pmatrix}$$',
             '试试点击 Σ 编辑上面的公式吧！'
         ].join('\n');
 
@@ -417,7 +444,13 @@
             height: '100%',
             value: DEFAULT_CONTENT,
             cache: { enable: true, id: 'vditor-mathlive-inline' },
-            preview: { delay: 500, maxWidth: 800, mode: 'both', math: { engine: 'KaTeX' }, hljs: { style: 'github' } },
+            preview: {
+                delay: 500,
+                maxWidth: 800,
+                mode: 'both',
+                math: { engine: 'KaTeX' },
+                hljs: { style: 'github' }
+            },
             toolbar: [
                 'emoji', 'headings', 'bold', 'italic', 'strike', '|',
                 'line', 'quote', 'list', 'ordered-list', 'check', '|',
@@ -426,31 +459,72 @@
                     icon: '<span style="font-weight:bold;font-size:18px;">Σ</span>',
                     tip: '插入块级公式（内联编辑）',
                     tipPosition: 's',
-                    click: () => { saveCursorPosition(); waitForMathLive(() => { openFormulaPanel(); }); }
+                    click: () => {
+                        saveCursorPosition();
+                        waitForMathLive(() => {
+                            openFormulaPanel();
+                        });
+                    }
                 },
                 '|', 'upload', 'link', 'table', '|',
-                'undo', 'redo', '|', { name: 'more', toolbar: ['edit-mode', 'both', 'preview', 'fullscreen', 'outline', 'export', 'info'] }
+                'undo', 'redo', '|', {
+                    name: 'more',
+                    toolbar: ['edit-mode', 'both', 'preview', 'fullscreen', 'outline', 'export', 'info']
+                }
             ],
             counter: { enable: true, type: 'markdown' },
-            upload: { accept: 'image/*', handler: (files) => { const file = files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { vditor.insertValue(`![${file.name}](${e.target.result})`); }; reader.readAsDataURL(file); } },
+            upload: {
+                accept: 'image/*',
+                handler: (files) => {
+                    const file = files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        vditor.insertValue(`![${file.name}](${e.target.result})`);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
             outline: { enable: true, position: 'left' },
             typewriterMode: true,
-            after: () => { console.log('✅ Vditor 已启动！'); waitForMathLive(() => { console.log('✅ MathLive 已就绪'); setupGlobalKeyboard(); }); }
+            after: () => {
+                console.log('✅ Vditor 已启动！');
+                waitForMathLive(() => {
+                    console.log('✅ MathLive 已就绪');
+                    setupGlobalKeyboard();
+                });
+            }
         });
 
         // ============================================================
         // 4. 光标位置管理
         // ============================================================
         let savedCursorRange = null;
+
         function saveCursorPosition() {
-            try { const sel = window.getSelection(); if (sel && sel.rangeCount > 0) savedCursorRange = sel.getRangeAt(0).cloneRange(); } catch (e) { console.warn('保存光标位置失败:', e); }
+            try {
+                const selection = window.getSelection();
+                if (selection && selection.rangeCount > 0) {
+                    savedCursorRange = selection.getRangeAt(0).cloneRange();
+                }
+            } catch (e) { console.warn('保存光标位置失败:', e); }
         }
+
         function restoreCursorPosition() {
-            try { if (savedCursorRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedCursorRange); savedCursorRange = null; return true; } } catch (e) { console.warn('恢复光标位置失败:', e); } return false;
+            try {
+                if (savedCursorRange) {
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(savedCursorRange);
+                    savedCursorRange = null;
+                    return true;
+                }
+            } catch (e) { console.warn('恢复光标位置失败:', e); }
+            return false;
         }
 
         // ============================================================
-        // 5. 内联面板 + MathField（关键修改：增加自定义宏）
+        // 5. 内联面板 + MathField（增加自定义宏）
         // ============================================================
         const panel = document.getElementById('formula-panel');
         const container = document.getElementById('math-field-container');
@@ -477,7 +551,10 @@
         }
 
         function createMathField() {
-            if (mathField) { mathField.value = ''; return mathField; }
+            if (mathField) {
+                mathField.value = '';
+                return mathField;
+            }
 
             mathField = new MathfieldElement();
             mathField.virtualKeyboardPolicy = 'on';
@@ -485,13 +562,12 @@
             mathField.smartFence = true;
             mathField.readonly = false;
 
-            // ========== 🔥 核心修改：注册自定义宏 ==========
+            // ========== 注册自定义宏（编辑时使用） ==========
             mathField.customLatexMacros = {
                 'exponentialE': '\\mathrm{e}',
                 'imaginaryI': '\\mathrm{i}'
             };
-            // 您可在此继续添加更多宏，如 \R → \mathbb{R} 等
-            // =============================================
+            // ==================================================
 
             mathField.style.position = 'relative';
             mathField.style.zIndex = '10000';
@@ -502,41 +578,81 @@
             mathField.style.outline = 'none';
             mathField.value = '';
 
-            // 屏蔽物理键盘
+            // 屏蔽物理键盘输入
             mathField.addEventListener('keydown', (e) => {
                 const key = e.key;
                 if (key === 'Enter' || key === 'Escape') return;
-                e.preventDefault(); e.stopPropagation();
-            }, true);
-            mathField.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter' || e.key === 'Escape') return;
-                e.preventDefault(); e.stopPropagation();
-            }, true);
-            mathField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' || e.key === 'Escape') return;
-                e.preventDefault(); e.stopPropagation();
+                e.preventDefault();
+                e.stopPropagation();
             }, true);
 
-            mathField.addEventListener('virtual-keyboard-show', () => { if (isPanelOpen) { setTimeout(() => { adjustPanelForKeyboard(true); }, 50); } });
-            mathField.addEventListener('virtual-keyboard-hide', () => { if (isPanelOpen) { adjustPanelForKeyboard(false); } });
-            mathField.addEventListener('focus', () => { if (isPanelOpen) { panel.classList.add('keyboard-visible'); setTimeout(() => { mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 150); } });
-            mathField.addEventListener('blur', () => { panel.classList.remove('keyboard-visible'); });
+            mathField.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') return;
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+
+            mathField.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') return;
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+
+            // 键盘显示/隐藏事件
+            mathField.addEventListener('virtual-keyboard-show', () => {
+                if (isPanelOpen) {
+                    setTimeout(() => {
+                        adjustPanelForKeyboard(true);
+                    }, 50);
+                }
+            });
+
+            mathField.addEventListener('virtual-keyboard-hide', () => {
+                if (isPanelOpen) {
+                    adjustPanelForKeyboard(false);
+                }
+            });
+
+            mathField.addEventListener('focus', () => {
+                if (isPanelOpen) {
+                    panel.classList.add('keyboard-visible');
+                    setTimeout(() => {
+                        mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }, 150);
+                }
+            });
+
+            mathField.addEventListener('blur', () => {
+                panel.classList.remove('keyboard-visible');
+            });
 
             container.appendChild(mathField);
             return mathField;
         }
 
         // ============================================================
-        // 6. 调整面板位置
+        // 6. 调整面板位置以贴合键盘
         // ============================================================
         function adjustPanelForKeyboard(show) {
             if (!isPanelOpen) return;
             if (show) {
                 let keyboardHeight = 0;
-                try { if (mathField && mathField.shadowRoot) { const el = mathField.shadowRoot.querySelector('[part="virtual-keyboard"]'); if (el) keyboardHeight = el.clientHeight; } } catch (e) { }
-                if (!keyboardHeight) keyboardHeight = window.innerHeight < 600 ? 280 : 340;
+                try {
+                    if (mathField && mathField.shadowRoot) {
+                        const keyboardEl = mathField.shadowRoot.querySelector('[part="virtual-keyboard"]');
+                        if (keyboardEl) {
+                            keyboardHeight = keyboardEl.clientHeight;
+                        }
+                    }
+                } catch (e) { /* 忽略 */ }
+                if (!keyboardHeight) {
+                    keyboardHeight = window.innerHeight < 600 ? 280 : 340;
+                }
                 let safeBottom = 0;
-                try { const env = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom'); if (env) safeBottom = parseInt(env) || 0; } catch (e) { }
+                try {
+                    const env = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom');
+                    if (env) safeBottom = parseInt(env) || 0;
+                } catch (e) { /* 忽略 */ }
                 const totalOffset = keyboardHeight + safeBottom;
                 panel.style.bottom = totalOffset + 'px';
                 panel.style.maxHeight = `calc(100vh - ${totalOffset}px - 16px)`;
@@ -549,7 +665,7 @@
         }
 
         // ============================================================
-        // 7. 公式块检测（与之前相同）
+        // 7. 公式块检测工具（与之前相同）
         // ============================================================
         function getCursorBlockInfo() {
             const sel = window.getSelection();
@@ -565,10 +681,19 @@
             const textNodes = [];
             let total = 0;
             let current = walker.nextNode();
-            while (current) { textNodes.push(current); total += current.textContent.length; current = walker.nextNode(); }
+            while (current) {
+                textNodes.push(current);
+                total += current.textContent.length;
+                current = walker.nextNode();
+            }
             let offset = 0;
             for (let tn of textNodes) {
-                if (tn === range.startContainer) { offset += range.startOffset; break; } else { offset += tn.textContent.length; }
+                if (tn === range.startContainer) {
+                    offset += range.startOffset;
+                    break;
+                } else {
+                    offset += tn.textContent.length;
+                }
             }
             return { block, text: block.textContent, offset, textNodes, html: block.innerHTML };
         }
@@ -582,7 +707,9 @@
             while ((match = regex.exec(text)) !== null) {
                 const start = match.index;
                 const end = match.index + match[0].length;
-                if (offset >= start && offset <= end) return true;
+                if (offset >= start && offset <= end) {
+                    return true;
+                }
             }
             return false;
         }
@@ -597,21 +724,32 @@
                 const start = match.index;
                 const end = match.index + match[0].length;
                 if (offset >= start && offset <= end) {
-                    return { inner: match[1], start, end, fullText: text, block, html };
+                    const inner = match[1];
+                    return {
+                        inner,
+                        start,
+                        end,
+                        fullText: text,
+                        block,
+                        html
+                    };
                 }
             }
             return null;
         }
 
         // ============================================================
-        // 8. 打开/关闭面板
+        // 8. 打开/关闭面板（不插入占位符）
         // ============================================================
         function openFormulaPanel() {
             const mf = createMathField();
             mf.value = '';
+            // 保存当前光标位置
             saveCursorPosition();
+            // 检测是否在公式块内
             const blockInfo = getFormulaBlockContent();
             if (blockInfo) {
+                // 加载已有内容
                 mf.value = blockInfo.inner;
                 console.log('📐 检测到公式块，加载内容:', blockInfo.inner);
             } else {
@@ -623,12 +761,21 @@
             panel.style.maxHeight = '70vh';
             setTimeout(() => {
                 mf.focus();
-                if (mf.showVirtualKeyboard) mf.showVirtualKeyboard();
-                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) window.mathVirtualKeyboard.show();
+                if (mf.showVirtualKeyboard) {
+                    mf.showVirtualKeyboard();
+                } else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) {
+                    window.mathVirtualKeyboard.show();
+                }
                 setupGlobalKeyboard();
-                setTimeout(() => { if (mf.showVirtualKeyboard) mf.showVirtualKeyboard(); }, 200);
+                setTimeout(() => {
+                    if (mf.showVirtualKeyboard) {
+                        mf.showVirtualKeyboard();
+                    }
+                }, 200);
             }, 400);
-            setTimeout(() => { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 300);
+            setTimeout(() => {
+                panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }, 300);
         }
 
         function closeFormulaPanel(cancel = true) {
@@ -639,31 +786,49 @@
             panel.style.maxHeight = '70vh';
             if (mathField) {
                 mathField.blur();
-                if (mathField.hideVirtualKeyboard) mathField.hideVirtualKeyboard();
-                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) window.mathVirtualKeyboard.hide();
+                if (mathField.hideVirtualKeyboard) {
+                    mathField.hideVirtualKeyboard();
+                } else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) {
+                    window.mathVirtualKeyboard.hide();
+                }
                 mathField.value = '';
             }
             setTimeout(() => {
                 vditor.focus();
-                if (cancel) restoreCursorPosition();
+                if (cancel) {
+                    restoreCursorPosition();
+                }
             }, 150);
         }
 
         // ============================================================
-        // 9. 插入公式（与之前相同，但宏已在MathField层处理）
+        // 9. 插入公式（核心修改：使用展开后的 LaTeX）
         // ============================================================
         function insertFormulaFromPanel() {
             if (!mathField) return;
-            const latex = mathField.value;
-            if (!latex || !latex.trim()) { closeFormulaPanel(true); return; }
+
+            // 🔥 使用 'latex-expanded' 获取展开后的 LaTeX（宏被展开）
+            const latex = mathField.getValue('latex-expanded');
+            if (!latex || !latex.trim()) {
+                closeFormulaPanel(true);
+                return;
+            }
             const trimmedLatex = latex.trim();
             closeFormulaPanel(false);
 
             setTimeout(() => {
                 const restored = restoreCursorPosition();
-                if (!restored) { vditor.insertValue(`$$${trimmedLatex}$$`); vditor.focus(); return; }
+                if (!restored) {
+                    vditor.insertValue(`$$${trimmedLatex}$$`);
+                    vditor.focus();
+                    return;
+                }
                 const sel = window.getSelection();
-                if (!sel || !sel.rangeCount) { vditor.insertValue(`$$${trimmedLatex}$$`); vditor.focus(); return; }
+                if (!sel || !sel.rangeCount) {
+                    vditor.insertValue(`$$${trimmedLatex}$$`);
+                    vditor.focus();
+                    return;
+                }
                 const inside = isInsideFormulaBlock();
                 if (inside) {
                     const blockInfo = getFormulaBlockContent();
@@ -698,16 +863,43 @@
         // ============================================================
         // 10. 事件绑定
         // ============================================================
-        document.getElementById('panel-insert').addEventListener('click', (e) => { e.stopPropagation(); insertFormulaFromPanel(); });
-        document.getElementById('panel-cancel').addEventListener('click', (e) => { e.stopPropagation(); closeFormulaPanel(true); });
-        document.getElementById('panel-close').addEventListener('click', (e) => { e.stopPropagation(); closeFormulaPanel(true); });
+        document.getElementById('panel-insert').addEventListener('click', (e) => {
+            e.stopPropagation();
+            insertFormulaFromPanel();
+        });
+
+        document.getElementById('panel-cancel').addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeFormulaPanel(true);
+        });
+
+        document.getElementById('panel-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeFormulaPanel(true);
+        });
 
         document.addEventListener('keydown', (e) => {
             if (!isPanelOpen) return;
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); insertFormulaFromPanel(); return; }
-            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeFormulaPanel(true); return; }
+
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                insertFormulaFromPanel();
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                closeFormulaPanel(true);
+                return;
+            }
+
             if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'Tab') { e.preventDefault(); e.stopPropagation(); }
+                if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'Tab') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
         }, true);
 
@@ -718,27 +910,43 @@
                 if (isPanelOpen && mathField) {
                     if (mathField.shadowRoot && mathField.shadowRoot.querySelector('[part="virtual-keyboard"]')) {
                         adjustPanelForKeyboard(true);
-                    } else { adjustPanelForKeyboard(false); }
+                    } else {
+                        adjustPanelForKeyboard(false);
+                    }
                 }
             }, 350);
         });
+
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 if (isPanelOpen && mathField) {
                     mathField.blur();
-                    setTimeout(() => { mathField.focus(); if (mathField.showVirtualKeyboard) mathField.showVirtualKeyboard(); }, 350);
+                    setTimeout(() => {
+                        mathField.focus();
+                        if (mathField.showVirtualKeyboard) {
+                            mathField.showVirtualKeyboard();
+                        }
+                    }, 350);
                 }
             }, 500);
         });
 
         // ============================================================
-        // 11. 暴露全局
+        // 11. 暴露全局函数
         // ============================================================
-        window.resetEditorContent = function () { vditor.setValue(DEFAULT_CONTENT); console.log('✅ 编辑器内容已重置'); };
+        window.resetEditorContent = function () {
+            vditor.setValue(DEFAULT_CONTENT);
+            console.log('✅ 编辑器内容已重置为默认内容');
+        };
+
         window.vditor = vditor;
         window.mathField = mathField;
-        console.log('✅ 内联公式编辑器已启动（支持 \\exponentialE 和 \\imaginaryI）！');
+
+        console.log('✅ 内联公式编辑器已启动（修复版）！');
+        console.log('💡 控制台输入 resetEditorContent() 可重置编辑器内容。');
+        console.log('💡 使用 \\exponentialE 和 \\imaginaryI 会转为 \\mathrm{e} 和 \\mathrm{i}，KaTeX 可正常渲染。');
     </script>
+
 </body>
 
 </html>
