@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Vditor + 代码执行 + LaTeX 计算（点击浮动按钮）</title>
     <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css?v=20260822024743" />
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260822024743" />
+    <link rel="stylesheet"
+        href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260822024743" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css?v=20260822024743" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css?v=20260822024743" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css?v=20260822024743" />
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css?v=20260822024743" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js?v=20260822024743">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js?v=20260822024743">
@@ -707,36 +709,36 @@
             border-left: 4px solid #1a7f37;
         }
 
-        /* ===== 工具栏语言选择器 ===== */
-        .vditor-toolbar .vditor-toolbar__item--custom select {
-            border: 1px solid #d0d7de;
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 12px;
-            background: #fff;
-            color: #24292f;
-            height: 26px;
-            outline: none;
-            cursor: pointer;
+        /* ===== 工具栏自定义项统一垂直居中（强力修复） ===== */
+        .vditor-toolbar__item--custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            vertical-align: middle !important;
+            height: 100% !important;
         }
 
-        .vditor-toolbar .vditor-toolbar__item--custom select:focus {
-            border-color: #0969da;
+        .vditor-toolbar__item--custom .btn-icon,
+        .vditor-toolbar__item--custom select,
+        .vditor-toolbar__item--custom span {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            vertical-align: middle !important;
+            line-height: 1 !important;
         }
 
-        .vditor-toolbar .vditor-toolbar__item--custom .btn-icon {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 0 4px;
-            line-height: 1;
-            color: #24292f;
-            transition: color 0.2s;
+        /* 高级表格图标 */
+        .vditor-toolbar__item [data-name="advanced-table"] span {
+            display: inline-flex !important;
+            align-items: center !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
         }
 
-        .vditor-toolbar .vditor-toolbar__item--custom .btn-icon:hover {
-            color: #0969da;
+        /* 语言选择器 */
+        #exec-lang-select {
+            vertical-align: middle !important;
+            margin: 0 !important;
         }
 
         /* ===== 响应式 ===== */
@@ -1607,7 +1609,7 @@
     </script>
 
     <!-- ============================================================ -->
-    <!-- 3. 主应用逻辑 -->
+    <!-- 3. 主应用逻辑 + 导出功能（已修复导出样式） -->
     <!-- ============================================================ -->
     <script>
         // ===== 工具函数 =====
@@ -1681,7 +1683,7 @@
 
         // ===== 默认内容 =====
         var DEFAULT_CONTENT = [
-            '# 欢迎使用 Vditor + 代码执行 + LaTeX 计算（点击浮动按钮）🎉',
+            '# 欢迎使用 Vditor + Judge0代码执行 + LaTeX 计算🎉',
             '## 🧮 LaTeX 公式',
             '单击公式块会出现 **✎ 编辑** 和 **🧮 计算** 按钮。',
             '$$\\sum_{i=1}^{10} i = 55$$',
@@ -1796,59 +1798,611 @@
                 waitForMathLive(function () {
                     console.log('✅ MathLive 已就绪');
                     setupGlobalKeyboard();
+                    if (typeof MathfieldElement !== 'undefined') {
+                        MathfieldElement.soundsDirectory = null;
+                    }
                 });
                 bindClickEdit();
                 injectLanguageSelector();
+                injectExportButton();
             }
         });
 
-        // ===== 注入语言选择器 =====
-        function injectLanguageSelector() {
+        // ================================================================
+        //  🚀 导出为 HTML 功能（完美复刻第二个文件样式）
+        // ================================================================
+
+        /**
+         * 在 Vditor 工具栏中注入"导出 HTML"按钮
+         */
+        function injectExportButton() {
             var check = setInterval(function () {
                 var toolbar = document.querySelector('.vditor-toolbar');
                 if (!toolbar) return;
-                if (document.getElementById('exec-lang-select')) { clearInterval(check); return; }
+                if (document.getElementById('export-html-btn')) { clearInterval(check); return; }
+
                 var items = toolbar.querySelectorAll('.vditor-toolbar__item');
                 var targetItem = null;
                 for (var i = 0; i < items.length; i++) {
-                    var btn = items[i].querySelector('[data-name="advanced-table"]');
+                    var btn = items[i].querySelector('[data-name="more"]');
                     if (btn) { targetItem = items[i]; break; }
                 }
-                if (!targetItem) return;
+                if (!targetItem) {
+                    targetItem = items[items.length - 1];
+                }
+
                 var container = document.createElement('span');
                 container.className = 'vditor-toolbar__item vditor-toolbar__item--custom';
-                container.style.marginLeft = '4px';
-                container.innerHTML =
-                    `
-                    <select id="exec-lang-select" style="border:1px solid #d0d7de;border-radius:4px;padding:2px 6px;font-size:12px;background:#fff;height:26px;outline:none;cursor:pointer;">
-                        <option value="71">Python 3</option>
-                        <option value="63">JavaScript (Node.js)</option>
-                        <option value="62">Java</option>
-                        <option value="54">C++</option>
-                        <option value="50">C</option>
-                        <option value="68">PHP</option>
-                        <option value="60">Go</option>
-                        <option value="72">Ruby</option>
-                        <option value="73">Rust</option>
-                        <option value="74">TypeScript</option>
-                        <option value="46">Bash</option>
-                        <option value="51">C#</option>
-                        <option value="83">Swift</option>
-                        <option value="80">R</option>
-                        <option value="85">Perl</option>
-                        <option value="86">Lua</option>
-                        <option value="91">Kotlin</option>
-                        <option value="92">Scala</option>
-                        <option value="93">Dart</option>
-                        <option value="94">Julia</option>
-                    </select>
-                `;
-                targetItem.parentNode.insertBefore(container, targetItem.nextSibling);
+                container.style.cssText = 'display:inline-flex !important; align-items:center !important; height:100% !important; margin-left:4px;';
+
+                var btn = document.createElement('button');
+                btn.id = 'export-html-btn';
+                btn.className = 'btn-icon';
+                btn.setAttribute('title', '导出 HTML（样式参考第二个文件）');
+                btn.setAttribute('aria-label', '导出 HTML');
+                btn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:18px;padding:0 6px;line-height:1;color:#24292f;display:inline-flex;align-items:center;justify-content:center;height:100%;';
+                btn.textContent = '📤';
+
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    exportToHTML();
+                });
+
+                container.appendChild(btn);
+                targetItem.parentNode.insertBefore(container, targetItem);
+
                 clearInterval(check);
-                console.log('✅ 语言选择器已注入');
+                console.log('✅ 导出按钮已注入');
             }, 500);
             setTimeout(function () { clearInterval(check); }, 8000);
         }
+
+        /**
+         * 导出当前编辑器内容为 HTML 文件（样式完美复刻第二个文件）
+         */
+        function exportToHTML() {
+            showHint('⏳ 正在生成 HTML...');
+
+            var markdown = vditor.getValue();
+            if (!markdown || markdown.trim() === '') {
+                showHint('⚠️ 编辑器内容为空，无法导出');
+                return;
+            }
+
+            var container = document.createElement('div');
+            container.style.cssText =
+                'position:fixed;left:-9999px;top:0;width:800px;padding:40px;background:#fff;z-index:99999;';
+            document.body.appendChild(container);
+
+            var usePreviewRender = function () {
+                return new Promise(function (resolve, reject) {
+                    try {
+                        if (vditor.preview && typeof vditor.preview.render === 'function') {
+                            var previewOpts = {
+                                value: markdown,
+                                mode: 'both',
+                                anchor: 0,
+                                customEmoji: (vditor.options.preview && vditor.options.preview.customEmoji) || {},
+                                emoji: (vditor.options.preview && vditor.options.preview.emoji) || [],
+                                hljs: (vditor.options.preview && vditor.options.preview.hljs) || { style: 'github' },
+                                math: (vditor.options.preview && vditor.options.preview.math) || { engine: 'KaTeX' },
+                                sanitize: false,
+                                // 关键：使用 preview 模式，只渲染预览内容，不包含编辑器标记
+                                mode: 'preview'
+                            };
+                            // 清空容器
+                            container.innerHTML = '';
+                            vditor.preview.render(previewOpts, container);
+                            setTimeout(function () {
+                                // 获取渲染内容，去除 Vditor 特有的类名和结构
+                                var html = container.innerHTML;
+                                // 清理：移除 vditor-ir 相关类，保留 vditor-reset 内容
+                                html = cleanVditorHtml(html);
+                                resolve(html);
+                            }, 600);
+                        } else {
+                            reject(new Error('vditor.preview.render 不可用'));
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            };
+
+            var extractFromDOM = function () {
+                var irElement = document.querySelector('.vditor-ir');
+                if (!irElement) {
+                    throw new Error('无法找到编辑器内容');
+                }
+                var clone = irElement.cloneNode(true);
+                var markers = clone.querySelectorAll('.vditor-ir__marker, .vditor-ir__marker--pre, .vditor-ir__marker--custom');
+                markers.forEach(function (el) { el.remove(); });
+                var nodes = clone.querySelectorAll('.vditor-ir__node');
+                nodes.forEach(function (el) {
+                    var parent = el.parentNode;
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    parent.removeChild(el);
+                });
+                var emptyP = clone.querySelectorAll('p:empty');
+                emptyP.forEach(function (el) { el.remove(); });
+                return clone.innerHTML;
+            };
+
+            usePreviewRender().then(function (html) {
+                generateAndDownload(html);
+            }).catch(function (err) {
+                console.warn('预览渲染失败，使用降级方案:', err);
+                try {
+                    var html = extractFromDOM();
+                    generateAndDownload(html);
+                } catch (e) {
+                    showHint('❌ 导出失败: ' + e.message);
+                    document.body.removeChild(container);
+                }
+            });
+
+            function generateAndDownload(content) {
+                var fullHTML = generateHTMLTemplate(content);
+                downloadFile(fullHTML, 'export.html');
+                document.body.removeChild(container);
+                showHint('✅ HTML 导出成功！');
+            }
+        }
+
+        /**
+         * 清理 Vditor 渲染的 HTML，去除编辑器特有的类名和结构
+         */
+        function cleanVditorHtml(html) {
+            // 创建一个临时 DOM 来操作
+            var div = document.createElement('div');
+            div.innerHTML = html;
+
+            // 移除所有 vditor-ir__ 开头的类
+            var allElements = div.querySelectorAll('*');
+            for (var i = 0; i < allElements.length; i++) {
+                var el = allElements[i];
+                var classes = el.className ? el.className.split(' ') : [];
+                var filtered = [];
+                for (var j = 0; j < classes.length; j++) {
+                    if (classes[j] && !classes[j].startsWith('vditor-ir__')) {
+                        filtered.push(classes[j]);
+                    }
+                }
+                el.className = filtered.join(' ');
+            }
+
+            // 移除 data-type="html-block" 等属性
+            var dataElements = div.querySelectorAll('[data-type]');
+            for (var i = 0; i < dataElements.length; i++) {
+                dataElements[i].removeAttribute('data-type');
+            }
+            var dataElements2 = div.querySelectorAll('[data-block]');
+            for (var i = 0; i < dataElements2.length; i++) {
+                dataElements2[i].removeAttribute('data-block');
+            }
+            var dataElements3 = div.querySelectorAll('[data-render]');
+            for (var i = 0; i < dataElements3.length; i++) {
+                dataElements3[i].removeAttribute('data-render');
+            }
+
+            // 移除空的 marker 和 preview 包装
+            var markers = div.querySelectorAll('.vditor-ir__marker, .vditor-ir__marker--pre, .vditor-ir__preview');
+            markers.forEach(function (el) {
+                // 如果元素是空的，直接移除
+                if (el.innerHTML.trim() === '' || el.innerHTML === '&nbsp;') {
+                    el.remove();
+                    return;
+                }
+                // 否则，保留其内容，但移除类
+                var parent = el.parentNode;
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+            });
+
+            // 移除 .vditor-reset 类，但保留内容
+            var resets = div.querySelectorAll('.vditor-reset');
+            resets.forEach(function (el) {
+                el.className = '';
+            });
+
+            // 移除空段落
+            var emptyP = div.querySelectorAll('p:empty');
+            emptyP.forEach(function (el) { el.remove(); });
+
+            return div.innerHTML;
+        }
+
+        /**
+         * 生成完整的 HTML 模板（完美复刻第二个文件的样式）
+         */
+        function generateHTMLTemplate(content) {
+            return `<!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>导出的内容</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+            <style>
+                /* ===== 全局样式（完美复刻第二个文件） ===== */
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    background: #f7f9fc;
+                    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+                    padding: 2rem 1.5rem;
+                    color: #0b1a2f;
+                    line-height: 1.7;
+                }
+
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    background: #ffffff;
+                    padding: 2.8rem 3rem;
+                    border-radius: 32px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+                }
+
+                h1 {
+                    font-size: 2.4rem;
+                    font-weight: 700;
+                    border-bottom: 3px solid #e2e8f0;
+                    padding-bottom: 0.8rem;
+                    margin-bottom: 2rem;
+                }
+
+                h2 {
+                    font-size: 1.8rem;
+                    font-weight: 600;
+                    margin-top: 3rem;
+                    margin-bottom: 1.4rem;
+                    border-left: 6px solid #3b82f6;
+                    padding-left: 1.2rem;
+                }
+
+                h3 {
+                    font-size: 1.4rem;
+                    font-weight: 600;
+                    margin-top: 2.2rem;
+                    margin-bottom: 0.8rem;
+                }
+
+                h4 {
+                    font-size: 1.15rem;
+                    font-weight: 600;
+                    margin-top: 1.8rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                p {
+                    margin-bottom: 1rem;
+                }
+
+                .math-block {
+                    background: #f1f5f9;
+                    padding: 1.6rem 2rem;
+                    border-radius: 20px;
+                    margin: 1.4rem 0 1.8rem 0;
+                    overflow-x: auto;
+                    border: 1px solid #e6edf5;
+                    text-align: center;
+                }
+
+                .formula-source {
+                    font-size: 0.95rem;
+                    color: #1e40af;
+                    background: #e6f0ff;
+                    padding: 0.3rem 0.8rem;
+                    border-radius: 12px;
+                    display: inline-block;
+                    margin-bottom: 0.8rem;
+                }
+
+                .derivation-step {
+                    background: #ffffff;
+                    padding: 1.5rem 2rem;
+                    border-radius: 16px;
+                    margin: 1.2rem 0 1.8rem 0;
+                    border: 1px dashed #94a3b8;
+                    text-align: left;
+                }
+
+                .derivation-step .math-block {
+                    background: #f8fafc;
+                    border: none;
+                    padding: 0.8rem 0;
+                    margin: 0.5rem 0;
+                    text-align: center;
+                }
+
+                .derivation-note {
+                    font-size: 0.95rem;
+                    color: #334155;
+                    background: #f1f5f9;
+                    padding: 0.6rem 1.2rem;
+                    border-radius: 8px;
+                    margin: 0.6rem 0 0.2rem 0;
+                    border-left: 4px solid #3b82f6;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 1.8rem 0;
+                    font-size: 0.95rem;
+                    background: white;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+                }
+
+                th {
+                    background: #1e293b;
+                    color: white;
+                    font-weight: 600;
+                    padding: 12px 14px;
+                    text-align: left;
+                }
+
+                td {
+                    padding: 12px 14px;
+                    border-bottom: 1px solid #e9edf2;
+                    vertical-align: top;
+                }
+
+                .note-box {
+                    background: #fefce8;
+                    border-left: 6px solid #f59e0b;
+                    padding: 1.2rem 1.8rem;
+                    border-radius: 14px;
+                    margin: 1.8rem 0;
+                }
+
+                .hr-light {
+                    margin: 2.8rem 0;
+                    border: 0;
+                    height: 1px;
+                    background: linear-gradient(to right, #d1d9e6, transparent);
+                }
+
+                .footer-meta {
+                    margin-top: 3.5rem;
+                    font-size: 0.9rem;
+                    color: #64748b;
+                    text-align: center;
+                    border-top: 1px solid #e2e8f0;
+                    padding-top: 2rem;
+                }
+
+                .theory-tag {
+                    display: inline-block;
+                    background: #dbeafe;
+                    color: #1e40af;
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    padding: 0.1rem 0.7rem;
+                    border-radius: 20px;
+                    margin-right: 0.4rem;
+                }
+
+                .improve-tag {
+                    display: inline-block;
+                    background: #dbeafe;
+                    color: #11db4d;
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    padding: 0.1rem 0.7rem;
+                    border-radius: 20px;
+                    margin-right: 0.4rem;
+                }
+
+                pre {
+                    background: #f6f8fa;
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    overflow-x: auto;
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                    font-size: 14px;
+                    border: 1px solid #e9ecf0;
+                    margin: 1rem 0;
+                }
+
+                code {
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                    background: #f0f2f5;
+                    padding: 0.2rem 0.4rem;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                }
+
+                pre code {
+                    background: transparent;
+                    padding: 0;
+                }
+
+                ul,
+                ol {
+                    padding-left: 2rem;
+                    margin-bottom: 1rem;
+                }
+
+                blockquote {
+                    border-left: 4px solid #3b82f6;
+                    padding-left: 1rem;
+                    margin: 1rem 0;
+                    color: #475569;
+                }
+
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 8px;
+                }
+
+                /* Vditor 渲染内容的额外兼容样式 */
+                .vditor-reset {
+                    font-size: 16px;
+                    line-height: 1.8;
+                }
+
+                .vditor-reset table {
+                    border-collapse: collapse !important;
+                    width: 100% !important;
+                    font-size: 14px !important;
+                    border: none !important;
+                    display: block;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                    max-width: 100%;
+                }
+
+                .vditor-reset table td,
+                .vditor-reset table th {
+                    border: 1px solid #ccc !important;
+                    padding: 6px 10px !important;
+                    vertical-align: middle !important;
+                }
+
+                .vditor-reset pre {
+                    background: #f6f8fa;
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    overflow-x: auto;
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                    font-size: 14px;
+                    border: 1px solid #e9ecf0;
+                    margin: 1rem 0;
+                }
+
+                .vditor-reset code {
+                    font-family: 'SF Mono', 'Fira Code', monospace;
+                    background: #f0f2f5;
+                    padding: 0.2rem 0.4rem;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                }
+
+                .vditor-reset pre code {
+                    background: transparent;
+                    padding: 0;
+                }
+
+                .vditor-reset blockquote {
+                    border-left: 4px solid #3b82f6;
+                    padding-left: 1rem;
+                    margin: 1rem 0;
+                    color: #475569;
+                }
+
+                .vditor-reset ul,
+                .vditor-reset ol {
+                    padding-left: 2rem;
+                    margin-bottom: 1rem;
+                }
+
+                .vditor-reset img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 8px;
+                }
+
+                .vditor-reset h1,
+                .vditor-reset h2,
+                .vditor-reset h3,
+                .vditor-reset h4,
+                .vditor-reset h5,
+                .vditor-reset h6 {
+                    margin-top: 1.5rem;
+                    margin-bottom: 0.8rem;
+                    font-weight: 600;
+                }
+
+                .vditor-reset h1 {
+                    font-size: 2.4rem;
+                    border-bottom: 3px solid #e2e8f0;
+                    padding-bottom: 0.8rem;
+                }
+
+                .vditor-reset h2 {
+                    font-size: 1.8rem;
+                    border-left: 6px solid #3b82f6;
+                    padding-left: 1.2rem;
+                }
+
+                .vditor-reset h3 {
+                    font-size: 1.4rem;
+                }
+
+                .vditor-reset h4 {
+                    font-size: 1.15rem;
+                }
+
+                .vditor-reset p {
+                    margin-bottom: 1rem;
+                }
+
+                @media (max-width:700px) {
+                    .container {
+                        padding: 1.8rem 1.2rem;
+                    }
+                    h1 {
+                        font-size: 1.8rem;
+                    }
+                    .vditor-reset h1 {
+                        font-size: 1.8rem;
+                    }
+                    .vditor-reset h2 {
+                        font-size: 1.5rem;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                ${content}
+                <div class="footer-meta">📐 使用 KaTeX 渲染 | 导出自 Vditor 编辑器</div>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"><\/script>
+            <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"><\/script>
+            <script>
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '\\\\[', right: '\\\\]', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\\\(', right: '\\\\)', display: false}
+                    ],
+                    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+                });
+            <\/script>
+        </body>
+        </html>`;
+        }
+
+        function downloadFile(content, filename) {
+            var blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+        }
+
+        // ================================================================
+        //  原有功能（光标管理、浮动按钮、公式面板、表格编辑器等）
+        // ================================================================
 
         // ===== 光标位置管理 =====
         var savedCursorRange = null;
@@ -2160,19 +2714,16 @@
         }
 
         // ================================================================
-        // 最终修复：handleEditFormula 精确提取公式
-        // 不再 fallback 到 blockEl.textContent，避免混入预览区渲染文本
+        //  公式编辑（精确提取）——保持不变
         // ================================================================
         function handleEditFormula(blockEl) {
             console.log('[handleEditFormula] 开始处理，blockEl:', blockEl);
 
-            // 1. 确保 blockEl 是 vditor-ir__node（向上查找）
             var irNode = blockEl.closest ? blockEl.closest('.vditor-ir__node') : null;
             if (irNode) {
                 blockEl = irNode;
                 console.log('[handleEditFormula] 已定位到 vditor-ir__node:', blockEl);
             } else {
-                // 如果 blockEl 本身是 vditor-ir__node，closest 也会返回自身
                 if (blockEl.classList && blockEl.classList.contains('vditor-ir__node')) {
                     console.log('[handleEditFormula] blockEl 本身就是 vditor-ir__node');
                 } else {
@@ -2180,17 +2731,17 @@
                 }
             }
 
-            // 2. 查找 marker（支持两种类名）
             var marker = blockEl.querySelector('.vditor-ir__marker--pre, .vditor-ir__marker');
             var fullText = '';
             var formulaText = '';
             var sourceElement = null;
+            var codeElement = null;
 
             if (marker) {
                 console.log('[handleEditFormula] 找到 marker:', marker);
-                // 优先从 code 元素中提取
                 var code = marker.querySelector('code');
                 if (code) {
+                    codeElement = code;
                     fullText = code.textContent || '';
                     console.log('[handleEditFormula] 从 marker code 获取文本:', fullText);
                     var regex = /\$\$([^$]*)\$\$/g;
@@ -2198,9 +2749,7 @@
                     if (match) {
                         formulaText = match[1].trim();
                         sourceElement = code;
-                        console.log('[handleEditFormula] 从 code 提取公式:', formulaText);
                     } else {
-                        // code 中没有 $$...$$，尝试从 code.textContent 直接取（可能是裸 LaTeX）
                         var trimmed = fullText.trim();
                         if (trimmed && !trimmed.includes('$$')) {
                             formulaText = trimmed;
@@ -2209,8 +2758,6 @@
                         }
                     }
                 }
-
-                // 如果 code 中没有提取到，从 marker.textContent 中提取
                 if (!formulaText) {
                     fullText = marker.textContent || '';
                     console.log('[handleEditFormula] 从 marker.textContent 获取文本:', fullText);
@@ -2221,7 +2768,6 @@
                         sourceElement = marker;
                         console.log('[handleEditFormula] 从 marker.textContent 提取公式:', formulaText);
                     } else {
-                        // marker.textContent 中没有 $$...$$，尝试直接取（可能是裸 LaTeX）
                         var trimmed = fullText.trim();
                         if (trimmed && !trimmed.includes('$$')) {
                             formulaText = trimmed;
@@ -2232,7 +2778,6 @@
                 }
             } else {
                 console.warn('[handleEditFormula] 未找到 marker，尝试从 blockEl 中查找 code');
-                // 如果没有 marker，尝试从 blockEl 中查找任何包含 $$...$$ 的 code 或 pre
                 var candidates = blockEl.querySelectorAll('code, pre');
                 for (var i = 0; i < candidates.length; i++) {
                     var el = candidates[i];
@@ -2243,6 +2788,7 @@
                         if (match) {
                             formulaText = match[1].trim();
                             sourceElement = el;
+                            if (el.tagName === 'CODE') codeElement = el;
                             console.log('[handleEditFormula] 从候选元素提取公式:', formulaText);
                             break;
                         }
@@ -2250,20 +2796,19 @@
                 }
             }
 
-            // 3. 如果仍然没有提取到，报错（不再 fallback 到 blockEl.textContent）
             if (!formulaText) {
                 showHint('⚠️ 未找到公式内容，请确保公式以 $$...$$ 包裹');
                 return;
             }
 
-            // 4. 清理转义字符
+            formulaText = formulaText.replace(/^\$\$/, '').replace(/\$\$$/, '').trim();
             formulaText = formulaText.replace(/\\\\/g, '\\');
             console.log('[handleEditFormula] 最终提取的公式内容:', formulaText);
 
-            // 5. 保存编辑信息
             var editElement = {
                 block: blockEl,
                 marker: marker,
+                codeElement: codeElement,
                 sourceElement: sourceElement,
                 formulaText: formulaText,
                 fullText: fullText
@@ -2280,32 +2825,85 @@
 
         // ===== 计算公式 =====
         function handleCalculateFormulaFromBlock(blockEl) {
-            var fullText = blockEl.children[1]?.children[0]?.textContent || blockEl.textContent || '';
-            var regex = /\$\$([^$]*)\$\$/g;
-            var match = regex.exec(fullText);
-            if (!match) { showHint('未找到公式内容'); return; }
-            var latex = match[1].trim();
-            if (!latex) { showHint('公式为空'); return; }
+            var node = blockEl.closest ? blockEl.closest('.vditor-ir__node') : null;
+            if (node) blockEl = node;
+
+            var marker = blockEl.querySelector('.vditor-ir__marker--pre, .vditor-ir__marker');
+            var formulaText = '';
+            var sourceElement = null;
+
+            if (marker) {
+                var code = marker.querySelector('code');
+                if (code) {
+                    var fullText = code.textContent || '';
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(fullText);
+                    if (match) {
+                        formulaText = match[1].trim();
+                        sourceElement = code;
+                    } else {
+                        var trimmed = fullText.trim();
+                        if (trimmed && !trimmed.includes('$$')) {
+                            formulaText = trimmed;
+                            sourceElement = code;
+                        }
+                    }
+                }
+                if (!formulaText) {
+                    var fullText = marker.textContent || '';
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(fullText);
+                    if (match) {
+                        formulaText = match[1].trim();
+                        sourceElement = marker;
+                    } else {
+                        var trimmed = fullText.trim();
+                        if (trimmed && !trimmed.includes('$$')) {
+                            formulaText = trimmed;
+                            sourceElement = marker;
+                        }
+                    }
+                }
+            } else {
+                var candidates = blockEl.querySelectorAll('code, pre');
+                for (var i = 0; i < candidates.length; i++) {
+                    var el = candidates[i];
+                    var text = el.textContent || '';
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(text);
+                    if (match) {
+                        formulaText = match[1].trim();
+                        sourceElement = el;
+                        break;
+                    }
+                }
+            }
+
+            if (!formulaText) {
+                showHint('⚠️ 未找到公式内容，请确保公式以 $$...$$ 包裹');
+                return;
+            }
+
+            formulaText = formulaText.replace(/\\\\/g, '\\');
+
             try {
-                var result = LaTeXCalculator.compute(latex);
+                var result = LaTeXCalculator.compute(formulaText);
                 if (result.success) {
                     var content = '';
                     content += '<div class="label-tag">✅ 计算结果</div>';
                     content += '<div style="margin-top:6px;font-weight:500;color:#1a7f37;">' + result.result + '</div>';
                     if (result.mathExpr) {
-                        content +=
-                            '<div style="margin-top:10px;font-size:13px;color:#57606a;">MathJS 表达式：<code>' + result
-                                .mathExpr + '</code></div>';
+                        content += '<div style="margin-top:10px;font-size:13px;color:#57606a;">MathJS 表达式：<code>' + result
+                            .mathExpr + '</code></div>';
                     }
                     try {
                         if (typeof katex !== 'undefined') {
-                            var katexHtml = katex.renderToString(latex, {
+                            var katexHtml = katex.renderToString(formulaText, {
                                 throwOnError: false,
                                 displayMode: true,
                                 trust: true
                             });
-                            content +=
-                                '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecf0;">';
+                            content += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecf0;">';
                             content += '<div style="font-size:13px;color:#57606a;margin-bottom:6px;">📐 公式预览</div>';
                             content += '<div class="latex-output">' + katexHtml + '</div>';
                             content += '</div>';
@@ -2538,21 +3136,117 @@
 
         // ===== 执行代码 =====
         function handleExecuteCodeFromBlock(blockEl) {
-            console.log('[handleExecuteCodeFromBlock] 被调用，blockEl:', blockEl);
+            function getDisplayName(lang) {
+                var map = {
+                    'python': 'Python',
+                    'python3': 'Python 3',
+                    'python2': 'Python 2',
+                    'javascript': 'JavaScript',
+                    'nodejs': 'Node.js',
+                    'js': 'JavaScript',
+                    'bash': 'Bash',
+                    'shell': 'Shell',
+                    'c': 'C',
+                    'cpp': 'C++',
+                    'c++': 'C++',
+                    'java': 'Java',
+                    'ruby': 'Ruby',
+                    'rust': 'Rust',
+                    'typescript': 'TypeScript',
+                    'ts': 'TypeScript',
+                    'php': 'PHP',
+                    'go': 'Go',
+                    'swift': 'Swift',
+                    'r': 'R',
+                    'perl': 'Perl',
+                    'lua': 'Lua',
+                    'haskell': 'Haskell',
+                    'elixir': 'Elixir',
+                    'erlang': 'Erlang',
+                    'clojure': 'Clojure',
+                    'kotlin': 'Kotlin',
+                    'scala': 'Scala',
+                    'dart': 'Dart',
+                    'julia': 'Julia',
+                    'crystal': 'Crystal',
+                    'zig': 'Zig',
+                    'nim': 'Nim',
+                    'v': 'V',
+                    'groovy': 'Groovy',
+                    'csharp': 'C#',
+                    'c#': 'C#',
+                    'fsharp': 'F#',
+                    'vbnet': 'VB.NET',
+                    'sqlite': 'SQLite',
+                    'postgresql': 'PostgreSQL',
+                    'mysql': 'MySQL',
+                    'rlang': 'R'
+                };
+                return map[lang] || lang.charAt(0).toUpperCase() + lang.slice(1);
+            }
+
             var codeEl = blockEl;
             var code = codeEl ? codeEl.textContent || '' : '';
             code = code.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-            code = code.replace("▶", '').trim();
+            code = code.replace(/[▶]/, '').trim();
 
-            if (!code.trim()) { showHint('代码块为空'); return; }
+            if (!code.trim()) {
+                showHint('⚠️ 代码块为空，无法执行');
+                return;
+            }
+
             var langSelect = document.getElementById('exec-lang-select');
-            var languageId = langSelect ? parseInt(langSelect.value) : 71;
-            var langName = langSelect ? langSelect.options[langSelect.selectedIndex]?.text || 'Python 3' : 'Python 3';
+            var languageId = 71;
+            var langName = 'Python 3';
+            var autoDetected = false;
 
-            var content = '<div style="display:flex;align-items:center;gap:10px;color:#57606a;">';
-            content +=
-                '<span style="display:inline-block;width:20px;height:20px;border:3px solid #d0d7de;border-top-color:#0969da;border-radius:50%;animation:spin 0.8s linear infinite;"></span>';
-            content += '<span>⏳ 正在执行代码...</span>';
+            if (codeEl) {
+                var classNames = codeEl.className || '';
+                var match = classNames.match(/\blanguage-([\w-]+)/);
+                if (match) {
+                    var detectedLang = match[1];
+                    try {
+                        var id = Judge0Executor.resolveLanguage(detectedLang);
+                        languageId = id;
+                        autoDetected = true;
+                        langName = getDisplayName(detectedLang);
+                        if (langSelect) {
+                            for (var i = 0; i < langSelect.options.length; i++) {
+                                if (parseInt(langSelect.options[i].value) === id) {
+                                    langSelect.value = String(id);
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        if (langSelect) {
+                            languageId = parseInt(langSelect.value);
+                            var selectedOption = langSelect.options[langSelect.selectedIndex];
+                            langName = selectedOption ? selectedOption.text : 'Python 3';
+                        }
+                        autoDetected = false;
+                    }
+                } else {
+                    if (langSelect) {
+                        languageId = parseInt(langSelect.value);
+                        var selectedOption = langSelect.options[langSelect.selectedIndex];
+                        langName = selectedOption ? selectedOption.text : 'Python 3';
+                    }
+                }
+            } else {
+                if (langSelect) {
+                    languageId = parseInt(langSelect.value);
+                    var selectedOption = langSelect.options[langSelect.selectedIndex];
+                    langName = selectedOption ? selectedOption.text : 'Python 3';
+                }
+            }
+
+            var modeLabel = autoDetected ? '🔍 自动识别' : '🛠️ 手动选择';
+            var statusMsg = '⏳ 正在执行代码（' + modeLabel + ': ' + langName + '，ID: ' + languageId + '）';
+            var content = '<div style="font-size:13px;color:#57606a;margin-bottom:8px;">' + statusMsg + '</div>';
+            content += '<div style="display:flex;align-items:center;gap:10px;color:#57606a;">';
+            content += '<span style="display:inline-block;width:20px;height:20px;border:3px solid #d0d7de;border-top-color:#0969da;border-radius:50%;animation:spin 0.8s linear infinite;"></span>';
+            content += '<span>⏳ 正在执行...</span>';
             content += '</div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
             showResult('▶ 代码执行中', content, false);
 
@@ -2564,22 +3258,21 @@
                 apiBase: 'https://ce.judge0.com'
             }).then(function (result) {
                 var output = '';
+                var modeLabelResult = autoDetected ? '🔍 自动识别' : '🛠️ 手动选择';
                 output += '<div class="label-tag">✅ 执行完成</div>';
-                output += '<div style="margin-top:8px;font-size:13px;color:#57606a;">语言：' + langName +
-                    ' (ID: ' + languageId + ')</div>';
+                output += '<div style="margin-top:8px;font-size:13px;color:#57606a;">' + modeLabelResult +
+                    '：<strong>' + langName + '</strong>（ID: ' + languageId + '）</div>';
+
                 if (result.stdout) {
-                    output +=
-                        '<div style="margin-top:10px;"><div style="font-weight:500;margin-bottom:4px;">📤 标准输出</div><div class="code-block">' +
+                    output += '<div style="margin-top:10px;"><div style="font-weight:500;margin-bottom:4px;">📤 标准输出</div><div class="code-block">' +
                         escapeHtml(result.stdout) + '</div></div>';
                 }
                 if (result.stderr) {
-                    output +=
-                        '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">⚠️ 错误输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
+                    output += '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">⚠️ 错误输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
                         escapeHtml(result.stderr) + '</div></div>';
                 }
                 if (result.compile_output) {
-                    output +=
-                        '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">🔧 编译输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
+                    output += '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">🔧 编译输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
                         escapeHtml(result.compile_output) + '</div></div>';
                 }
                 if (result.status && result.status.description) {
@@ -2599,10 +3292,13 @@
                 output += '<div style="font-size:13px;color:#57606a;margin-bottom:4px;">📄 源代码</div>';
                 output += '<div class="code-block" style="font-size:13px;">' + escapeHtml(code) + '</div>';
                 output += '</div>';
+
                 showResult('▶ 代码执行结果', output, false);
             }).catch(function (err) {
                 var errContent = '<div class="error-text">❌ 执行失败: ' + escapeHtml(err.message || '未知错误') +
                     '</div>';
+                errContent += '<div style="margin-top:8px;font-size:13px;color:#57606a;">语言：' + langName +
+                    '（ID: ' + languageId + '）</div>';
                 errContent += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecf0;">';
                 errContent += '<div style="font-size:13px;color:#57606a;margin-bottom:4px;">📄 源代码</div>';
                 errContent += '<div class="code-block" style="font-size:13px;">' + escapeHtml(code) + '</div>';
@@ -2687,7 +3383,8 @@
             }, true);
             mathField.addEventListener('input', function () {
                 var latex = mathField.getValue();
-                var newLatex = latex.replace(/\\exponentialE/g, '\\mathrm{e}').replace(/\\imaginaryI/g, '\\mathrm{i}');
+                var newLatex = latex.replace(/\\exponentialE/g, '\\mathrm{e}').replace(/\\imaginaryI/g,
+                    '\\mathrm{i}');
                 if (newLatex !== latex) mathField.value = newLatex;
             });
             mathField.addEventListener('virtual-keyboard-show', function () {
@@ -2838,7 +3535,7 @@
         }
 
         // ================================================================
-        // ★★★ 修复的 insertFormulaFromPanel：支持通过 marker 精确更新 ★★★
+        //  插入 / 更新公式
         // ================================================================
         function insertFormulaFromPanel() {
             if (!mathField) return;
@@ -2848,84 +3545,68 @@
                 return;
             }
             var trimmedLatex = latex.trim();
+            trimmedLatex = trimmedLatex.replace(/^\$\$/, '').replace(/\$\$$/, '').trim();
 
             if (editingFormulaElement) {
                 var block = editingFormulaElement.block;
-                var marker = editingFormulaElement.marker;
-                var sourceElement = editingFormulaElement.sourceElement;
-
-                // 优先使用 sourceElement（marker 或 code）来更新
-                if (sourceElement) {
-                    var currentText = sourceElement.textContent || '';
-                    console.log('[insertFormulaFromPanel] 更新 sourceElement，当前文本:', currentText);
-                    var regex = /\$\$([^$]*)\$\$/g;
-                    var match = regex.exec(currentText);
-                    if (match) {
-                        var start = match.index;
-                        var end = start + match[0].length;
-                        var newText = currentText.substring(0, start + 2) + trimmedLatex + currentText.substring(end - 2);
-                        sourceElement.textContent = newText;
-                        console.log('[insertFormulaFromPanel] 更新后的 sourceElement 文本:', newText);
-
-                        // 如果有 marker 但 sourceElement 不是 marker，同步更新 marker
-                        if (marker && sourceElement !== marker) {
-                            var markerText = marker.textContent || '';
-                            var markerMatch = regex.exec(markerText);
-                            if (markerMatch) {
-                                var mStart = markerMatch.index;
-                                var mEnd = mStart + markerMatch[0].length;
-                                var mNewText = markerText.substring(0, mStart + 2) + trimmedLatex + markerText.substring(
-                                    mEnd - 2);
-                                marker.textContent = mNewText;
-                            }
-                        }
-
-                        // 触发 Vditor 重新渲染
-                        setTimeout(function () {
-                            try {
-                                if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
-                                if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview
-                                    .render();
-                            } catch (e) { /* 忽略 */ }
-                        }, 100);
-
-                        editingFormulaElement = null;
-                        closeFormulaPanel(false);
-                        vditor.focus();
-                        showHint('✅ 公式已更新');
-                        return;
-                    }
+                if (!block) {
+                    showHint('⚠️ 找不到公式块，更新失败');
+                    closeFormulaPanel(true);
+                    return;
                 }
 
-                // 如果 sourceElement 更新失败，使用 block.textContent 更新（兼容旧逻辑）
-                if (block) {
-                    var fullText = block.textContent || '';
-                    var regex2 = /\$\$([^$]*)\$\$/g;
-                    var match2 = regex2.exec(fullText);
-                    if (match2) {
-                        var start2 = match2.index;
-                        var end2 = start2 + match2[0].length;
-                        var newText2 = fullText.substring(0, start2 + 2) + trimmedLatex + fullText.substring(end2 - 2);
-                        while (block.firstChild) {
-                            block.removeChild(block.firstChild);
-                        }
-                        block.appendChild(document.createTextNode(newText2));
-                        editingFormulaElement = null;
-                        closeFormulaPanel(false);
-                        vditor.focus();
-                        showHint('✅ 公式已更新（使用兼容模式）');
-                        return;
+                var blockId = block.getAttribute('data-block') || '0';
+                var newFormula = '$$' + trimmedLatex + '$$';
+
+                var previewHtml = '';
+                try {
+                    if (typeof katex !== 'undefined') {
+                        previewHtml = katex.renderToString(trimmedLatex, {
+                            throwOnError: false,
+                            displayMode: true,
+                            trust: true
+                        });
+                    } else {
+                        previewHtml = '<span style="color:red;">⚠️ KaTeX 未加载</span>';
                     }
+                } catch (e) {
+                    previewHtml = '<span style="color:red;">⚠️ 渲染错误: ' + e.message + '</span>';
                 }
 
-                // 如果都失败，提示
-                showHint('⚠️ 更新公式失败，请手动编辑');
+                var newBlockHtml = '<div data-type="html-block" data-block="' + blockId +
+                    '" class="vditor-ir__node">\n' +
+                    '  <pre class="vditor-ir__marker--pre vditor-ir__marker"><code data-type="html-block">' +
+                    newFormula + '</code></pre>\n' +
+                    '  <pre class="vditor-ir__preview" data-render="1">' + previewHtml + '</pre>\n' +
+                    '</div>';
+
+                var parent = block.parentNode;
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newBlockHtml;
+                var fragment = document.createDocumentFragment();
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
+                }
+                parent.replaceChild(fragment, block);
+
+                var editor = getEditorElement();
+                if (editor) {
+                    editor.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+                }
+                setTimeout(function () {
+                    try {
+                        if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
+                        if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview.render();
+                    } catch (e) { /* 忽略 */ }
+                }, 100);
+
                 editingFormulaElement = null;
-                closeFormulaPanel(true);
+                closeFormulaPanel(false);
+                vditor.focus();
+                showHint('✅ 公式已更新');
                 return;
             }
 
-            // 插入新公式（非编辑模式）
             closeFormulaPanel(false);
             setTimeout(function () {
                 var restored = restoreCursorPosition();
@@ -2960,7 +3641,6 @@
                 vditor.focus();
             }, 100);
         }
-
         document.getElementById('panel-insert').addEventListener('click', function (e) {
             e.stopPropagation();
             safeExecute(insertFormulaFromPanel, '插入/更新公式失败');
@@ -3774,6 +4454,56 @@
             hotResizeTimer = setTimeout(function () { if (hotInstance) hotInstance.render(); }, 300);
         });
 
+        // ================================================================
+        //  语言选择器注入（已修复垂直居中）
+        // ================================================================
+        function injectLanguageSelector() {
+            var check = setInterval(function () {
+                var toolbar = document.querySelector('.vditor-toolbar');
+                if (!toolbar) return;
+                if (document.getElementById('exec-lang-select')) { clearInterval(check); return; }
+                var items = toolbar.querySelectorAll('.vditor-toolbar__item');
+                var targetItem = null;
+                for (var i = 0; i < items.length; i++) {
+                    var btn = items[i].querySelector('[data-name="advanced-table"]');
+                    if (btn) { targetItem = items[i]; break; }
+                }
+                if (!targetItem) return;
+                var container = document.createElement('span');
+                container.className = 'vditor-toolbar__item vditor-toolbar__item--custom';
+                container.style.cssText = 'display:inline-flex !important; align-items:center !important; height:100% !important; margin-left:4px;';
+                container.innerHTML =
+                    `
+                    <select id="exec-lang-select" style="border:1px solid #d0d7de;border-radius:4px;padding:2px 6px;font-size:12px;background:#fff;height:26px;outline:none;cursor:pointer;vertical-align:middle;">
+                        <option value="71">Python 3</option>
+                        <option value="63">JavaScript (Node.js)</option>
+                        <option value="62">Java</option>
+                        <option value="54">C++</option>
+                        <option value="50">C</option>
+                        <option value="68">PHP</option>
+                        <option value="60">Go</option>
+                        <option value="72">Ruby</option>
+                        <option value="73">Rust</option>
+                        <option value="74">TypeScript</option>
+                        <option value="46">Bash</option>
+                        <option value="51">C#</option>
+                        <option value="83">Swift</option>
+                        <option value="80">R</option>
+                        <option value="85">Perl</option>
+                        <option value="86">Lua</option>
+                        <option value="91">Kotlin</option>
+                        <option value="92">Scala</option>
+                        <option value="93">Dart</option>
+                        <option value="94">Julia</option>
+                    </select>
+                `;
+                targetItem.parentNode.insertBefore(container, targetItem.nextSibling);
+                clearInterval(check);
+                console.log('✅ 语言选择器已注入（已修复对齐）');
+            }, 500);
+            setTimeout(function () { clearInterval(check); }, 8000);
+        }
+
         // ===== 暴露全局 =====
         window.resetEditorContent = function () {
             vditor.setValue(DEFAULT_CONTENT);
@@ -3786,7 +4516,8 @@
         window.LaTeXCalculator = LaTeXCalculator;
 
         console.log('✅ 完整版已加载：支持代码执行 + LaTeX 计算 + 高级表格（点击浮动按钮）');
-        console.log('💡 公式提取逻辑已彻底修复：精确从 marker/code 提取，不再混入预览区文本。');
+        console.log('✅ 新增「导出 HTML」功能，样式完美复刻第二个文件');
+        console.log('✅ 所有工具栏按钮已垂直居中修复');
     </script>
 </body>
 

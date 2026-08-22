@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>陨石追踪 · 特写跟随</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at 50% 50%, #0a0e1a, #000000);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            let W, H;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', () => {
+                resize();
+                initScene();
+            });
+            resize();
+
+            // ---------- 背景星星 ----------
+            const BG_STAR_COUNT = 600;
+            let bgStars = [];
+
+            function initBackgroundStars() {
+                bgStars = [];
+                for (let i = 0; i < BG_STAR_COUNT; i++) {
+                    bgStars.push({
+                        x: Math.random() * W,
+                        y: Math.random() * H,
+                        r: 0.3 + Math.random() * 1.8,
+                        phase: Math.random() * Math.PI * 2,
+                        speed: 0.002 + Math.random() * 0.015,
+                        baseAlpha: 0.3 + Math.random() * 0.7,
+                    });
+                }
+            }
+            initBackgroundStars();
+
+            // ---------- 工具函数 ----------
+            function lighten(hex, amt) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.min(255, r + amt);
+                g = Math.min(255, g + amt);
+                b = Math.min(255, b + amt);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function darken(hex, amt) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.max(0, r - amt);
+                g = Math.max(0, g - amt);
+                b = Math.max(0, b - amt);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            // ---------- 视口系统 ----------
+            let viewport = {
+                cx: W / 2,
+                cy: H / 2,
+                scale: 1,
+                targetCx: W / 2,
+                targetCy: H / 2,
+                targetScale: 1,
+                startCx: W / 2,
+                startCy: H / 2,
+                startScale: 1,
+                transitionProgress: 1,
+                transitionDuration: 60,
+                isTransitioning: false,
+                // 新增：是否处于跟随模式
+                followMode: false,
+            };
+
+            function updateViewport() {
+                if (viewport.isTransitioning) {
+                    viewport.transitionProgress += 1 / viewport.transitionDuration;
+                    if (viewport.transitionProgress >= 1) {
+                        viewport.transitionProgress = 1;
+                        viewport.isTransitioning = false;
+                    }
+                    const t = viewport.transitionProgress;
+                    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                    viewport.cx = viewport.startCx + (viewport.targetCx - viewport.startCx) * ease;
+                    viewport.cy = viewport.startCy + (viewport.targetCy - viewport.startCy) * ease;
+                    viewport.scale = viewport.startScale + (viewport.targetScale - viewport.startScale) * ease;
+                } else if (viewport.followMode) {
+                    // 跟随模式：直接设置位置为目标（保持放大），不做缓动（或可以缓动但为了简洁直接赋值）
+                    // 但为了平滑，我们让视口缓慢靠近目标，使用 lerp
+                    const lerpFactor = 0.1;
+                    viewport.cx += (viewport.targetCx - viewport.cx) * lerpFactor;
+                    viewport.cy += (viewport.targetCy - viewport.cy) * lerpFactor;
+                    viewport.scale += (viewport.targetScale - viewport.scale) * lerpFactor;
+                }
+            }
+
+            function transitionViewport(toCx, toCy, toScale, duration) {
+                viewport.startCx = viewport.cx;
+                viewport.startCy = viewport.cy;
+                viewport.startScale = viewport.scale;
+                viewport.targetCx = toCx;
+                viewport.targetCy = toCy;
+                viewport.targetScale = toScale;
+                viewport.transitionProgress = 0;
+                viewport.transitionDuration = duration || 60;
+                viewport.isTransitioning = true;
+                viewport.followMode = false; // 过渡期间关闭跟随模式
+            }
+
+            // 开始跟随模式（持续追踪目标）
+            function startFollowMode(toCx, toCy, toScale) {
+                viewport.targetCx = toCx;
+                viewport.targetCy = toCy;
+                viewport.targetScale = toScale;
+                viewport.followMode = true;
+                viewport.isTransitioning = false;
+                // 如果当前视口与目标差距较大，直接跳转到目标附近
+                viewport.cx = toCx;
+                viewport.cy = toCy;
+                viewport.scale = toScale;
+            }
+
+            // 更新跟随目标（在跟随模式下更新目标位置）
+            function updateFollowTarget(toCx, toCy) {
+                if (viewport.followMode) {
+                    viewport.targetCx = toCx;
+                    viewport.targetCy = toCy;
+                    // 保持目标缩放不变
+                }
+            }
+
+            function resetViewport(duration) {
+                transitionViewport(W / 2, H / 2, 1, duration || 60);
+                viewport.followMode = false;
+            }
+
+            // ---------- 行星类 (固定位置，星环自转) ----------
+            class Planet {
+                constructor(x, y, radius, color, ringLayers, craterCount) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.color = color;
+                    this.ringLayers = ringLayers;
+                    this.craterCount = craterCount || 20;
+                    this.rotation = 0;
+                    this.craters = [];
+                    for (let i = 0; i < this.craterCount; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 0.85;
+                        const x = Math.cos(angle) * dist;
+                        const y = Math.sin(angle) * dist;
+                        const r = 1.5 + Math.random() * 6;
+                        const depth = 0.3 + Math.random() * 0.7;
+                        this.craters.push({ x, y, r, depth });
+                    }
+                }
+
+                update() {
+                    this.rotation += 0.001;
+                    for (const layer of this.ringLayers) {
+                        layer.angle += layer.speed;
+                    }
+                }
+
+                draw(ctx) {
+                    const p = this;
+                    const grad = ctx.createRadialGradient(
+                        p.x - p.radius * 0.3, p.y - p.radius * 0.3, p.radius * 0.1,
+                        p.x, p.y, p.radius
+                    );
+                    const base = p.color;
+                    grad.addColorStop(0, lighten(base, 40));
+                    grad.addColorStop(0.5, base);
+                    grad.addColorStop(1, darken(base, 60));
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.shadowColor = 'rgba(180, 200, 255, 0.12)';
+                    ctx.shadowBlur = 35;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius * 0.98, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(200, 220, 255, 0.04)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // 陨石坑
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    for (const c of p.craters) {
+                        ctx.beginPath();
+                        ctx.ellipse(c.x, c.y, c.r * 0.8, c.r * 0.6, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0,0,0,${0.15 + c.depth * 0.2})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(c.x - c.r * 0.1, c.y - c.r * 0.1, c.r * 0.7, c.r * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.05 + c.depth * 0.1})`;
+                        ctx.fill();
+                        if (c.depth > 0.6) {
+                            ctx.beginPath();
+                            ctx.arc(c.x - c.r * 0.3, c.y - c.r * 0.3, c.r * 0.2, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+
+                    // 亮斑
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    for (let i = 0; i < 5; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = p.radius * (0.3 + Math.random() * 0.6);
+                        const x = Math.cos(angle) * dist;
+                        const y = Math.sin(angle) * dist;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2 + Math.random() * 4, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.03 + Math.random() * 0.08})`;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                drawRings(ctx) {
+                    for (const layer of this.ringLayers) {
+                        this.drawRingLayer(ctx, layer);
+                    }
+                }
+
+                drawRingLayer(ctx, layer) {
+                    const { particles, a, b, tilt, angle, color } = layer;
+                    const cosT = Math.cos(tilt);
+                    const sinT = Math.sin(tilt);
+
+                    for (const p of particles) {
+                        if (p.detached) continue;
+                        const totalAngle = p.angleOffset + angle;
+                        const rx = a + p.radialOffset;
+                        const ry = b + p.radialOffset * 0.6;
+                        const x0 = rx * Math.cos(totalAngle);
+                        const y0 = ry * Math.sin(totalAngle);
+                        const localX = x0 * cosT - y0 * sinT;
+                        const localY = x0 * sinT + y0 * cosT;
+                        const wx = this.x + localX;
+                        const wy = this.y + localY;
+
+                        const brightness = 0.6 + 0.4 * (1 - Math.hypot(localX, localY) / (a * 1.2));
+                        ctx.beginPath();
+                        ctx.arc(wx, wy, p.size * 0.9, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.globalAlpha = 0.6 + 0.4 * brightness;
+                        ctx.fill();
+                        ctx.shadowColor = 'rgba(255,255,255,0.05)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.arc(wx - p.size * 0.2, wy - p.size * 0.2, p.size * 0.3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+
+                getParticlePosition(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    const totalAngle = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset;
+                    const ry = layer.b + p.radialOffset * 0.6;
+                    const x0 = rx * Math.cos(totalAngle);
+                    const y0 = ry * Math.sin(totalAngle);
+                    const cosT = Math.cos(layer.tilt);
+                    const sinT = Math.sin(layer.tilt);
+                    const localX = x0 * cosT - y0 * sinT;
+                    const localY = x0 * sinT + y0 * cosT;
+                    return { x: this.x + localX, y: this.y + localY };
+                }
+
+                getParticleTangent(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    const totalAngle = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset;
+                    const ry = layer.b + p.radialOffset * 0.6;
+                    const tx = -rx * Math.sin(totalAngle);
+                    const ty = ry * Math.cos(totalAngle);
+                    const cosT = Math.cos(layer.tilt);
+                    const sinT = Math.sin(layer.tilt);
+                    const localTx = tx * cosT - ty * sinT;
+                    const localTy = tx * sinT + ty * cosT;
+                    return Math.atan2(localTy, localTx);
+                }
+
+                detachParticle(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    p.detached = true;
+                    return p;
+                }
+
+                resetAllParticles() {
+                    for (const layer of this.ringLayers) {
+                        for (const p of layer.particles) {
+                            p.detached = false;
+                        }
+                    }
+                }
+
+                getAvailableParticles() {
+                    const list = [];
+                    for (let li = 0; li < this.ringLayers.length; li++) {
+                        const layer = this.ringLayers[li];
+                        for (let pi = 0; pi < layer.particles.length; pi++) {
+                            const p = layer.particles[pi];
+                            if (!p.detached) {
+                                list.push({ layerIndex: li, particleIndex: pi, particle: p });
+                            }
+                        }
+                    }
+                    return list;
+                }
+            }
+
+            // ---------- 创建碎石 ----------
+            function createRingParticles(count, a, b) {
+                const particles = [];
+                for (let i = 0; i < count; i++) {
+                    const angleOffset = (i / count) * Math.PI * 2 + Math.random() * 0.02;
+                    const size = 1.8 + Math.random() * 3.2;
+                    const radialOffset = (Math.random() - 0.5) * 15;
+                    particles.push({
+                        angleOffset: angleOffset,
+                        size: size,
+                        radialOffset: radialOffset,
+                        detached: false,
+                    });
+                }
+                return particles;
+            }
+
+            // ---------- 场景 ----------
+            let planets = [];
+            let mainPlanet = null;
+            // 陨石状态
+            let meteor = {
+                state: 'attached',
+                attachedPlanet: null,
+                attachedLayerIndex: 0,
+                attachedParticleIndex: 0,
+                orbitCounter: 0,
+                totalOrbits: 2,
+                detachFrame: 0,
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                speed: 0,
+                shadowBlur: 0,
+                history: [],
+                detachedParticleRef: null,
+                gravity: 0.06,
+                follow: false, // 是否持续跟踪
+            };
+
+            const FLIGHT_ANGLE = 30 * Math.PI / 180;
+            const START_SPEED = 3;
+            const MAX_SPEED = 11;
+            const START_BLUR = 15;
+            const MAX_BLUR = 55;
+            const ACCEL_FRAMES = 280;
+            const METEOR_HISTORY = 22;
+
+            // ---------- 初始化场景 ----------
+            function initScene() {
+                planets = [];
+                const minDim = Math.min(W, H);
+
+                const positions = [
+                    { x: W * 0.28, y: H * 0.38 },
+                    { x: W * 0.72, y: H * 0.22 },
+                    { x: W * 0.20, y: H * 0.78 },
+                    { x: W * 0.75, y: H * 0.72 },
+                    { x: W * 0.50, y: H * 0.15 }
+                ];
+
+                const configs = [
+                    { radius: minDim * 0.08, color: '#b8a088', layers: 3, tiltBase: 0.2 },
+                    { radius: minDim * 0.06, color: '#a09080', layers: 2, tiltBase: 0.8 },
+                    { radius: minDim * 0.055, color: '#908880', layers: 2, tiltBase: 1.0 },
+                    { radius: minDim * 0.07, color: '#8a9a7a', layers: 2, tiltBase: 0.5 },
+                    { radius: minDim * 0.05, color: '#9a8a8a', layers: 1, tiltBase: 1.2 }
+                ];
+
+                for (let idx = 0; idx < 5; idx++) {
+                    const pos = positions[idx];
+                    const cfg = configs[idx];
+                    const radius = cfg.radius;
+                    const color = cfg.color;
+                    const layerCount = cfg.layers;
+                    const tiltBase = cfg.tiltBase;
+
+                    const ringLayers = [];
+                    for (let i = 0; i < layerCount; i++) {
+                        const a = radius * (2.2 + i * 1.2);
+                        const b = a * (0.5 + Math.random() * 0.25);
+                        const tilt = tiltBase + (Math.random() - 0.5) * 0.8;
+                        const speed = (0.005 + Math.random() * 0.005) * (i + 1) * 0.5;
+                        const count = Math.floor(120 + Math.random() * 100);
+                        const colors = ['#8a7a6a', '#7a8a7a', '#9a8a7a', '#8a8a7a', '#7a7a7a'];
+                        const col = colors[Math.floor(Math.random() * colors.length)];
+                        const particles = createRingParticles(count, a, b);
+                        ringLayers.push({
+                            particles: particles,
+                            a: a,
+                            b: b,
+                            tilt: tilt,
+                            angle: Math.random() * Math.PI * 2,
+                            speed: speed,
+                            color: col,
+                        });
+                    }
+
+                    const planet = new Planet(pos.x, pos.y, radius, color, ringLayers, 25 + Math.floor(Math.random() * 20));
+                    planets.push(planet);
+                }
+
+                mainPlanet = planets[0];
+                resetMeteor();
+                viewport.cx = W / 2;
+                viewport.cy = H / 2;
+                viewport.scale = 1;
+                viewport.followMode = false;
+            }
+
+            // ---------- 重置陨石 ----------
+            function resetMeteor() {
+                for (const p of planets) {
+                    p.resetAllParticles();
+                }
+
+                if (!mainPlanet) {
+                    initScene();
+                    return;
+                }
+
+                const avail = mainPlanet.getAvailableParticles();
+                if (avail.length === 0) {
+                    mainPlanet.resetAllParticles();
+                    return resetMeteor();
+                }
+
+                // 筛选右偏上区域
+                const targetMinAngle = -Math.PI / 3;
+                const targetMaxAngle = -Math.PI / 6;
+                let candidates = avail.filter(item => {
+                    const layer = mainPlanet.ringLayers[item.layerIndex];
+                    const totalAngle = item.particle.angleOffset + layer.angle;
+                    let angle = totalAngle % (2 * Math.PI);
+                    if (angle > Math.PI) angle -= 2 * Math.PI;
+                    if (angle < -Math.PI) angle += 2 * Math.PI;
+                    return angle >= targetMinAngle && angle <= targetMaxAngle;
+                });
+
+                if (candidates.length === 0) candidates = avail;
+
+                const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+                meteor.state = 'attached';
+                meteor.attachedPlanet = mainPlanet;
+                meteor.attachedLayerIndex = chosen.layerIndex;
+                meteor.attachedParticleIndex = chosen.particleIndex;
+                meteor.orbitCounter = 0;
+                meteor.totalOrbits = 1.5 + Math.random() * 1.5;
+                meteor.detachFrame = 0;
+                meteor.history = [];
+                meteor.detachedParticleRef = null;
+                meteor.vx = 0;
+                meteor.vy = 0;
+                meteor.speed = START_SPEED;
+                meteor.shadowBlur = START_BLUR;
+                meteor.follow = false;
+
+                const pos = mainPlanet.getParticlePosition(chosen.layerIndex, chosen.particleIndex);
+                meteor.x = pos.x;
+                meteor.y = pos.y;
+                for (let i = 0; i < METEOR_HISTORY; i++) {
+                    const t = i * 2.2;
+                    meteor.history.push({
+                        x: meteor.x - t * Math.cos(FLIGHT_ANGLE),
+                        y: meteor.y - t * Math.sin(FLIGHT_ANGLE),
+                    });
+                }
+            }
+
+            // ---------- 更新陨石 ----------
+            function updateMeteor() {
+                if (meteor.state === 'attached') {
+                    if (!meteor.attachedPlanet) {
+                        resetMeteor();
+                        return;
+                    }
+                    const planet = meteor.attachedPlanet;
+                    const li = meteor.attachedLayerIndex;
+                    const pi = meteor.attachedParticleIndex;
+                    const pos = planet.getParticlePosition(li, pi);
+                    meteor.x = pos.x;
+                    meteor.y = pos.y;
+
+                    meteor.orbitCounter++;
+                    const layer = planet.ringLayers[li];
+                    if (!layer) {
+                        resetMeteor();
+                        return;
+                    }
+                    const speed = layer.speed;
+                    const framesPerOrbit = (2 * Math.PI) / speed;
+                    const totalFrames = framesPerOrbit * meteor.totalOrbits;
+                    if (meteor.orbitCounter > totalFrames) {
+                        triggerDetachFromAttached();
+                    }
+                } else if (meteor.state === 'detaching') {
+                    meteor.detachFrame++;
+                    const progress = Math.min(meteor.detachFrame / ACCEL_FRAMES, 1);
+                    meteor.speed = START_SPEED + (MAX_SPEED - START_SPEED) * progress;
+                    meteor.shadowBlur = START_BLUR + (MAX_BLUR - START_BLUR) * progress;
+
+                    meteor.vy += meteor.gravity;
+                    const angle = Math.atan2(meteor.vy, meteor.vx);
+                    const currentSpeed = meteor.speed;
+                    meteor.vx = currentSpeed * Math.cos(angle);
+                    meteor.vy = currentSpeed * Math.sin(angle);
+
+                    meteor.x += meteor.vx;
+                    meteor.y += meteor.vy;
+
+                    meteor.history.push({ x: meteor.x, y: meteor.y });
+                    if (meteor.history.length > METEOR_HISTORY) {
+                        meteor.history.shift();
+                    }
+
+                    // 如果处于跟随模式，更新视口目标为陨石位置
+                    if (meteor.follow) {
+                        updateFollowTarget(meteor.x, meteor.y);
+                    }
+
+                    const buffer = 150;
+                    if (meteor.x > W + buffer || meteor.y > H + buffer || meteor.x < -buffer || meteor.y < -buffer ||
+                        meteor.detachFrame > 1000) {
+                        // 恢复碎片
+                        if (meteor.detachedParticleRef && meteor.attachedPlanet) {
+                            const planet = meteor.attachedPlanet;
+                            const li = meteor.attachedLayerIndex;
+                            const pi = meteor.attachedParticleIndex;
+                            if (planet.ringLayers[li] && planet.ringLayers[li].particles[pi]) {
+                                planet.ringLayers[li].particles[pi].detached = false;
+                            }
+                            meteor.detachedParticleRef = null;
+                        }
+                        meteor.state = 'attached';
+                        meteor.orbitCounter = 0;
+                        meteor.follow = false;
+                        resetMeteor();
+                        resetViewport(40);
+                    }
+                }
+            }
+
+            // 触发脱离
+            function triggerDetachFromAttached() {
+                if (meteor.state !== 'attached') return;
+                if (!meteor.attachedPlanet) {
+                    resetMeteor();
+                    return;
+                }
+                const planet = meteor.attachedPlanet;
+                const li = meteor.attachedLayerIndex;
+                const pi = meteor.attachedParticleIndex;
+                planet.detachParticle(li, pi);
+                meteor.detachedParticleRef = planet.ringLayers[li].particles[pi];
+                const pos = planet.getParticlePosition(li, pi);
+                const tangent = planet.getParticleTangent(li, pi);
+                meteor.vx = START_SPEED * Math.cos(tangent);
+                meteor.vy = START_SPEED * Math.sin(tangent);
+                meteor.speed = START_SPEED;
+                meteor.shadowBlur = START_BLUR;
+                meteor.detachFrame = 0;
+                meteor.x = pos.x;
+                meteor.y = pos.y;
+                meteor.history = [];
+                for (let i = 0; i < METEOR_HISTORY; i++) {
+                    const t = i * 2.2;
+                    meteor.history.push({
+                        x: meteor.x - t * Math.cos(tangent),
+                        y: meteor.y - t * Math.sin(tangent),
+                    });
+                }
+                meteor.state = 'detaching';
+                meteor.orbitCounter = 0;
+
+                // 启动跟随模式
+                meteor.follow = true;
+                // 直接进入跟随模式，放大2.2倍
+                startFollowMode(meteor.x, meteor.y, 2.2);
+            }
+
+            // 手动触发
+            function triggerDetachManually() {
+                if (meteor.state === 'detaching') return;
+                if (meteor.state === 'attached') {
+                    triggerDetachFromAttached();
+                } else {
+                    resetMeteor();
+                }
+            }
+
+            // ---------- 绘图 ----------
+            function drawBackground() {
+                for (const b of bgStars) {
+                    const flicker = 0.6 + 0.4 * Math.sin(Date.now() * b.speed + b.phase);
+                    const alpha = b.baseAlpha * flicker;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.fill();
+                }
+                const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 100);
+                grad.addColorStop(0, 'rgba(255,220,180,0.10)');
+                grad.addColorStop(1, 'rgba(255,220,180,0)');
+                ctx.beginPath();
+                ctx.arc(W / 2, H / 2, 100, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+
+            function drawMeteor() {
+                if (meteor.state === 'attached') {
+                    if (!meteor.attachedPlanet) return;
+                    const pos = meteor.attachedPlanet.getParticlePosition(
+                        meteor.attachedLayerIndex,
+                        meteor.attachedParticleIndex
+                    );
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,200,150,0.5)';
+                    ctx.fill();
+                    return;
+                }
+
+                if (meteor.state !== 'detaching') return;
+                const hist = meteor.history;
+                const len = hist.length;
+                if (len === 0) return;
+
+                for (let i = 0; i < len; i++) {
+                    const pos = hist[i];
+                    const t = (i + 1) / len;
+                    const alpha = 0.08 + 0.82 * t;
+                    const radius = 0.8 + 2.8 * t;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.85})`;
+                    ctx.fill();
+                    if (t > 0.4) {
+                        const glowAlpha = (t - 0.4) / 0.6 * 0.15;
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                        ctx.shadowBlur = 14 * t;
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, radius * 2.8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${glowAlpha})`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+
+                const pos = hist[len - 1];
+                const blur = meteor.shadowBlur;
+
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+                ctx.shadowBlur = blur;
+
+                const grad = ctx.createRadialGradient(
+                    pos.x, pos.y, 0,
+                    pos.x, pos.y, 10
+                );
+                grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.95)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.shadowBlur = blur * 0.6;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                if (blur > 30) {
+                    const len2 = 16 + (blur - 30) / 25 * 18;
+                    const alpha = 0.06 + (blur - 30) / 25 * 0.14;
+                    ctx.save();
+                    ctx.translate(pos.x, pos.y);
+                    ctx.globalAlpha = alpha;
+                    for (let i = 0; i < 4; i++) {
+                        const angle = i * Math.PI / 2 + Date.now() * 0.0003;
+                        ctx.rotate(Math.PI / 2);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        const ex = len2 * Math.cos(angle);
+                        const ey = len2 * Math.sin(angle);
+                        ctx.lineTo(ex, ey);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                        ctx.lineWidth = 1.0 + (blur - 30) / 25 * 1.5;
+                        ctx.shadowColor = 'rgba(255,255,255,0.2)';
+                        ctx.shadowBlur = 15;
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                    ctx.shadowBlur = 0;
+                }
+
+                if (blur > 30) {
+                    for (let i = 0; i < 6; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = 5 + Math.random() * 14;
+                        const dx = Math.cos(angle) * dist;
+                        const dy = Math.sin(angle) * dist;
+                        ctx.beginPath();
+                        ctx.arc(pos.x + dx, pos.y + dy, 0.8 + Math.random() * 1.8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${0.15 + Math.random() * 0.3})`;
+                        ctx.fill();
+                    }
+                }
+            }
+
+            function drawUI() {
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.font = '14px sans-serif';
+                ctx.fillText('点击画面 · 触发陨石脱离（特写跟随）', 20, 30);
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                ctx.font = '12px sans-serif';
+                ctx.fillText('镜头持续跟随陨石直至飞出屏幕', 20, 50);
+            }
+
+            // ---------- 动画循环 ----------
+            function animate() {
+                for (const p of planets) {
+                    p.update();
+                }
+
+                updateMeteor();
+                updateViewport();
+
+                ctx.clearRect(0, 0, W, H);
+                drawBackground();
+
+                ctx.save();
+                ctx.translate(viewport.cx, viewport.cy);
+                ctx.scale(viewport.scale, viewport.scale);
+                ctx.translate(-viewport.cx, -viewport.cy);
+
+                for (const p of planets) {
+                    p.drawRings(ctx);
+                }
+                for (const p of planets) {
+                    p.draw(ctx);
+                }
+
+                drawMeteor();
+
+                ctx.restore();
+
+                drawUI();
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+
+            canvas.addEventListener('click', () => {
+                triggerDetachManually();
+            });
+
+            window.addEventListener('resize', () => {
+                resize();
+                initScene();
+            });
+
+            initScene();
+            console.log('🌌 陨石特写跟随已启动！点击画面触发。');
+        })();
+    </script>
+
+</body>
+
+</html>
