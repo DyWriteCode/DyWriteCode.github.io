@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市夜景 · 层次感光污染</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cityCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('cityCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ---- 固定辉光强度（0~1），值越大光污染越明显 ----
+        const GLOW_INTENSITY = 0.7;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawScene();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // ============================================================
+        //  主绘制
+        // ============================================================
+        function drawScene() {
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // ---- 夜空背景 ----
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+            bgGrad.addColorStop(0, '#020305');
+            bgGrad.addColorStop(0.15, '#040810');
+            bgGrad.addColorStop(0.4, '#08101c');
+            bgGrad.addColorStop(1, '#0a1220');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, w, h);
+
+            // ---- 生成建筑 ----
+            const buildings = generateBuildings(w, h);
+            buildings.sort((a, b) => (a.y + a.h) - (b.y + b.h));
+
+            // ---- 绘制建筑（含窗户灯光） ----
+            buildings.forEach(b => drawBuilding(b, h));
+
+            // ---- 绘制光污染：基于建筑位置的辉光（更稀疏、有层次） ----
+            drawGlowFromBuildings(buildings, w, h);
+        }
+
+        // ============================================================
+        //  光污染核心：从建筑顶部散发辉光（避免连片）
+        // ============================================================
+        function drawGlowFromBuildings(buildings, w, h) {
+            const glowFactor = GLOW_INTENSITY;
+            if (glowFactor < 0.005) return;
+
+            ctx.globalCompositeOperation = 'screen';
+
+            // 分组：近处、中间、远处
+            const nearBuildings = [];
+            const midBuildings = [];
+            const farBuildings = [];
+
+            buildings.forEach(b => {
+                if (b.type === 'near') nearBuildings.push(b);
+                else if (b.type === 'mid') midBuildings.push(b);
+                else farBuildings.push(b);
+            });
+
+            // 先画远处，再画近处（近处覆盖远处）
+            drawGlowBatch(farBuildings, glowFactor, w, h);
+            drawGlowBatch(midBuildings, glowFactor, w, h);
+            drawGlowBatch(nearBuildings, glowFactor, w, h);
+
+            // ---- 底部地面反射（轻微） ----
+            const groundGlow = ctx.createLinearGradient(0, h, 0, h * 0.5);
+            const alphaGround = 0.05 * glowFactor;
+            groundGlow.addColorStop(0, `rgba(255, 180, 90, ${alphaGround})`);
+            groundGlow.addColorStop(1, `rgba(255, 150, 60, 0)`);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = groundGlow;
+            ctx.fillRect(0, h * 0.5, w, h * 0.5);
+
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // ---- 批量绘制辉光（优化后：更小范围、随机跳过、衰减更快） ----
+        function drawGlowBatch(buildings, glowFactor, w, h) {
+            if (buildings.length === 0) return;
+
+            const isNear = buildings[0].type === 'near';
+            const isMid = buildings[0].type === 'mid';
+            const isFar = buildings[0].type === 'far';
+
+            // 调整基础参数：缩小半径、降低透明度
+            let baseRadiusMult, baseAlpha, radiusOffset, skipRate;
+            if (isNear) {
+                baseRadiusMult = 1.4; // 之前2.6
+                baseAlpha = 0.20; // 之前0.35
+                radiusOffset = 8;
+                skipRate = 0.25; // 25%建筑不发光
+            } else if (isMid) {
+                baseRadiusMult = 1.0;
+                baseAlpha = 0.12;
+                radiusOffset = 4;
+                skipRate = 0.35;
+            } else {
+                baseRadiusMult = 0.6;
+                baseAlpha = 0.06;
+                radiusOffset = 2;
+                skipRate = 0.5;
+            }
+
+            buildings.forEach((b, index) => {
+                // 随机跳过部分建筑
+                if (Math.random() < skipRate) return;
+
+                const t = b.t || 0.5;
+                const cx = b.x + b.w / 2;
+                const cy = b.y;
+
+                // 辉光半径：与建筑宽度相关，但大幅缩小
+                const sizeBase = Math.max(b.w * 0.4, b.h * 0.15);
+                const radius = sizeBase * (baseRadiusMult + t * 0.5) + radiusOffset;
+
+                // 透明度计算
+                const depthFactor = 0.5 + t * 0.5;
+                let alpha = baseAlpha * depthFactor * glowFactor;
+
+                // 近处建筑微随机
+                if (isNear) {
+                    alpha *= (0.8 + 0.2 * Math.sin(index * 2.1 + b.x * 0.02));
+                }
+                if (isFar) alpha *= 0.6;
+                alpha = Math.min(alpha, 0.35);
+
+                if (alpha < 0.002) return;
+
+                // 暖色辉光
+                const r = 255;
+                const g = 180 + Math.random() * 25;
+                const bl = 60 + Math.random() * 30;
+
+                // 径向渐变：更快的衰减（让边缘更锐利）
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                grad.addColorStop(0, `rgba(${r}, ${g}, ${bl}, ${alpha * 0.9})`);
+                grad.addColorStop(0.1, `rgba(${r}, ${g - 5}, ${bl - 5}, ${alpha * 0.7})`);
+                grad.addColorStop(0.3, `rgba(${r - 15}, ${g - 15}, ${bl - 10}, ${alpha * 0.35})`);
+                grad.addColorStop(0.6, `rgba(${r - 30}, ${g - 25}, ${bl - 15}, ${alpha * 0.12})`);
+                grad.addColorStop(1, `rgba(${r - 50}, ${g - 35}, ${bl - 20}, 0)`);
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 小核心高亮（仅近处随机）
+                if (isNear && alpha > 0.08 && Math.random() > 0.5) {
+                    const coreRadius = radius * 0.1;
+                    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius);
+                    coreGrad.addColorStop(0, `rgba(255, 230, 180, ${alpha * 0.4})`);
+                    coreGrad.addColorStop(1, `rgba(255, 200, 140, 0)`);
+                    ctx.fillStyle = coreGrad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+
+        // ============================================================
+        //  以下建筑生成和绘制函数（保持不变）
+        // ============================================================
+        function generateBuildings(w, h) {
+            const buildings = [];
+            const horizonY = h * 0.20;
+
+            function perspective(baseY) {
+                let t = (baseY - horizonY) / (h * 0.85 - horizonY);
+                t = Math.max(0, Math.min(1, t));
+                return t;
+            }
+
+            function fillRow(yRangeMin, yRangeMax, cellW, layerType) {
+                const rows = Math.max(1, Math.round((yRangeMax - yRangeMin) / (h * 0.045)));
+                const rowH = (yRangeMax - yRangeMin) / rows;
+                const layerPhase = Math.random() * cellW;
+                const cols = Math.ceil(w / cellW) + 1;
+                for (let r = 0; r < rows; r++) {
+                    const rowOffset = layerPhase + (r % 2 === 1 ? cellW * 0.5 : 0) + (Math.random() - 0.5) * cellW * 0.3;
+                    let prevBh = -1;
+                    for (let c = 0; c < cols; c++) {
+                        if (Math.random() < 0.08) continue;
+                        const baseY = yRangeMin + r * rowH + Math.random() * rowH;
+                        const t = perspective(baseY);
+                        let bw, bh;
+                        if (layerType === 'far') {
+                            bw = 5 + Math.random() * 5 + t * 6;
+                            const tFar = 1 - t;
+                            bh = (13 + Math.random() * 14) * (0.60 + tFar * 1.15);
+                            if (Math.random() < 0.07) bh *= 1.5 + Math.random() * 0.6;
+                        } else if (layerType === 'mid') {
+                            bw = 14 + Math.random() * 14 + t * 14;
+                            bh = (30 + Math.random() * 26) * (0.45 + t * 1.1);
+                        } else {
+                            bw = 34 + Math.random() * 26 + t * 24;
+                            bh = (60 + Math.random() * 46) * (0.5 + t * 0.9);
+                        }
+                        if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) {
+                            bh *= Math.random() > 0.5 ? 1.25 : 0.78;
+                        }
+                        prevBh = bh;
+                        bw = Math.min(bw, cellW * 0.85);
+                        const jitter = (Math.random() - 0.5) * cellW * 0.5;
+                        const bx = c * cellW + rowOffset + jitter;
+                        if (bx + bw < 0 || bx > w) continue;
+                        buildings.push({ type: layerType, x: bx, y: baseY - bh, w: bw, h: bh, t });
+                    }
+                }
+            }
+
+            fillRow(h * 0.20, h * 0.38, 14, 'far');
+            fillRow(h * 0.30, h * 0.62, 34, 'mid');
+            fillRow(h * 0.52, h * 0.98, 78, 'near');
+            return buildings;
+        }
+
+        function drawBuilding(b, canvasH) {
+            const { type, x, y, w, h, t } = b;
+            const fog = type === 'far' ? 0.55 : (type === 'mid' ? 0.30 : 0.10);
+            const depth = 0.35 + t * 0.65;
+
+            // 建筑主体
+            if (type === 'far') {
+                const base = 18 + t * 10;
+                ctx.fillStyle = `rgba(${base}, ${base + 8}, ${base + 22}, ${0.65 + t * 0.35})`;
+            } else if (type === 'mid') {
+                const r = (20 + Math.random() * 8) * depth + fog * 20;
+                const g = (32 + Math.random() * 10) * depth + fog * 26;
+                const bl = (52 + Math.random() * 14) * depth + fog * 38;
+                ctx.fillStyle = `rgb(${r | 0},${g | 0},${bl | 0})`;
+            } else {
+                ctx.fillStyle = `rgb(${(13 * depth) | 0},${(22 * depth + 6) | 0},${(36 * depth + 8) | 0})`;
+            }
+            ctx.fillRect(x, y, w, h);
+
+            // 边框
+            let borderAlpha, borderR, borderG, borderB, borderWidth;
+            if (type === 'far') {
+                borderAlpha = 0.08 + t * 0.10;
+                borderR = 100;
+                borderG = 140;
+                borderB = 190;
+                borderWidth = 0.4 + t * 0.3;
+            } else if (type === 'mid') {
+                borderAlpha = 0.12 + t * 0.12;
+                borderR = 120;
+                borderG = 160;
+                borderB = 210;
+                borderWidth = 0.5 + t * 0.3;
+            } else {
+                borderAlpha = 0.15 + t * 0.15;
+                borderR = 140;
+                borderG = 180;
+                borderB = 220;
+                borderWidth = 0.6 + t * 0.4;
+            }
+            ctx.strokeStyle = `rgba(${borderR}, ${borderG}, ${borderB}, ${borderAlpha})`;
+            ctx.lineWidth = borderWidth;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + h);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.stroke();
+
+            // 顶部高光线
+            if (type !== 'far') {
+                ctx.fillStyle = `rgba(160, 200, 240, ${0.15 + t * 0.20})`;
+                ctx.fillRect(x, y, w, 1.0);
+            } else {
+                ctx.fillStyle = `rgba(130, 180, 230, ${0.05 + t * 0.10})`;
+                ctx.fillRect(x, y, w, 0.8);
+            }
+
+            // 天线/装饰
+            if (type !== 'far' && Math.random() > 0.5) {
+                const ah = 4 + Math.random() * 8;
+                const ax = x + Math.random() * w;
+                ctx.fillStyle = `rgba(160, 200, 240, ${0.08 + t * 0.15})`;
+                ctx.fillRect(ax, y - ah, 1.0, ah);
+                ctx.fillStyle = `rgba(255, 240, 200, ${0.05 + Math.random() * 0.1})`;
+                ctx.fillRect(ax - 0.5, y - ah - 1, 2.0, 1.5);
+            } else if (type === 'far' && h > 40 && Math.random() > 0.4) {
+                ctx.fillStyle = `rgba(160, 200, 240, ${0.05 + t * 0.10})`;
+                ctx.fillRect(x + w * 0.5, y - (3 + Math.random() * 4), 1.0, 6);
+            }
+
+            // 窗户
+            if (type === 'far') drawFarWindows(x, y, w, h);
+            else if (type === 'mid') drawMidWindows(x, y, w, h, t);
+            else drawNearWindows(x, y, w, h, t);
+        }
+
+        // ---- 窗户绘制 ----
+        function drawGridWindows(bx, by, bw, bh, winW, winH, gapX, gapY, padX, padY, config) {
+            const stepX = winW + gapX;
+            const stepY = winH + gapY;
+            const cols = Math.max(1, Math.floor((bw - 2 * padX + gapX) / stepX));
+            const rows = Math.max(1, Math.floor((bh - 2 * padY + gapY) / stepY));
+            const totalW = cols * stepX - gapX;
+            const totalH = rows * stepY - gapY;
+            const startX = bx + padX + (bw - 2 * padX - totalW) / 2;
+            const startY = by + padY + (bh - 2 * padY - totalH) / 2;
+            const rowStates = [];
+            let cr = 0;
+            while (cr < rows) {
+                const lc = 3 + Math.floor(Math.random() * 3);
+                const dc = 2 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < lc && cr < rows; i++) {
+                    rowStates.push(true);
+                    cr++;
+                }
+                for (let i = 0; i < dc && cr < rows; i++) {
+                    rowStates.push(false);
+                    cr++;
+                }
+            }
+            for (let r = 0; r < rows; r++) {
+                if (!rowStates[r]) continue;
+                for (let c = 0; c < cols; c++) {
+                    if (Math.random() > config.lightRate) continue;
+                    const wx = startX + c * stepX;
+                    const wy = startY + r * stepY;
+                    const rand = Math.random();
+                    let color;
+                    if (rand < config.redRate) color = config.redColor;
+                    else if (rand < config.redRate + config.blueRate) color = config.blueColor;
+                    else color = Math.random() > 0.5 ? config.yellowColor1 : config.yellowColor2;
+                    ctx.fillStyle = `rgba(${color}, ${config.alphaMin + Math.random() * (config.alphaMax - config.alphaMin)})`;
+                    ctx.fillRect(wx, wy, winW, winH);
+                }
+            }
+        }
+
+        function drawFarWindows(x, y, w, h) {
+            const winCount = 3 + Math.floor(Math.random() * 6);
+            for (let i = 0; i < winCount; i++) {
+                const wx = x + 1 + Math.random() * (w - 2);
+                const wy = y + 1 + Math.random() * (h - 2);
+                const wh = Math.random() > 0.5 ? 2 : 1;
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.2 + Math.random() * 0.4})`;
+                ctx.fillRect(wx, wy, 1, wh);
+            }
+        }
+
+        function drawMidWindows(x, y, w, h, t) {
+            const scale = 0.8 + t * 0.4;
+            drawGridWindows(x, y, w, h, 3 * scale, 5 * scale, 4, 4, 4, 6, {
+                lightRate: 0.6 + Math.random() * 0.2,
+                redRate: 0.02,
+                blueRate: 0.08,
+                redColor: '248, 113, 113',
+                blueColor: '122, 183, 212',
+                yellowColor1: '251, 191, 36',
+                yellowColor2: '252, 211, 77',
+                alphaMin: 0.3,
+                alphaMax: 1.0
+            });
+        }
+
+        function drawNearWindows(x, y, w, h, t) {
+            const scale = 0.85 + t * 0.35;
+            drawGridWindows(x, y, w, h, 5 * scale, 7 * scale, 3, 3, 5, 8, {
+                lightRate: 0.35 + Math.random() * 0.15,
+                redRate: 0.01,
+                blueRate: 0.05,
+                redColor: '248, 113, 113',
+                blueColor: '122, 183, 212',
+                yellowColor1: '252, 211, 77',
+                yellowColor2: '253, 224, 100',
+                alphaMin: 0.7,
+                alphaMax: 1.0
+            });
+        }
+
+        // ---- 启动 ----
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+
+</html>

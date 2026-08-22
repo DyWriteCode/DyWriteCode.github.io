@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>睁眼动画 - 自动展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background: #1a1a2e;
+        }
+
+        /* ----- 底层场景（可替换为您的游戏/应用内容） ----- */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 2.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 30px rgba(100, 100, 255, 0.4);
+            user-select: none;
+            z-index: 0;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .scene small {
+            font-size: 1rem;
+            font-weight: normal;
+            opacity: 0.6;
+        }
+
+        /* ----- 透明图层 Canvas（睁眼遮罩） ----- */
+        #eyeLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none;
+            /* 让点击穿透到底层 */
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ====== 底层场景（演示内容） ====== -->
+    <div class="scene">
+        <span>🎮 你的游戏 / 应用场景</span>
+        <small>睁眼后这里会清晰显示</small>
+    </div>
+
+    <!-- ====== 透明图层 ====== -->
+    <canvas id="eyeLayer"></canvas>
+
+    <!-- ============================================================ -->
+    <!-- JavaScript 核心逻辑                                              -->
+    <!-- ============================================================ -->
+    <script>
+        (function () {
+            'use strict';
+
+            // ----------------------------------------------------------
+            // 1. Canvas 初始化（透明背景）
+            // ----------------------------------------------------------
+            const canvas = document.getElementById('eyeLayer');
+            const ctx = canvas.getContext('2d', { alpha: true });
+
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            let centerX = width / 2;
+            let centerY = height * 0.62;
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                centerX = width / 2;
+                centerY = height * 0.62;
+
+                // 如果当前没有动画，根据状态重绘
+                if (!animationRunning) {
+                    if (isOpen) {
+                        drawOpen();
+                    } else {
+                        drawClosed();
+                    }
+                }
+            }
+            window.addEventListener('resize', resizeCanvas);
+
+            // ----------------------------------------------------------
+            // 2. 状态变量
+            // ----------------------------------------------------------
+            let isOpen = false;
+            let animationRunning = false;
+            let animationId = null;
+            let startTime = null;
+            const duration = 2000;
+            let currentProgress = 0;
+
+            function getMaxR() {
+                return Math.sqrt(width * width + height * height) * 0.7;
+            }
+
+            // ----------------------------------------------------------
+            // 3. 核心绘制函数
+            // ----------------------------------------------------------
+
+            function drawClosed() {
+                ctx.clearRect(0, 0, width, height);
+                const maxR = getMaxR();
+                const rx = maxR * 1.15;
+                const ry = maxR;
+                ctx.filter = 'blur(20px)';
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.filter = 'none';
+                currentProgress = 0;
+            }
+
+            function drawOpen() {
+                ctx.clearRect(0, 0, width, height);
+                currentProgress = 1;
+            }
+
+            function drawProgress(progress) {
+                const p = Math.min(Math.max(progress, 0), 1);
+                ctx.clearRect(0, 0, width, height);
+
+                // 黑色遮罩
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, width, height);
+
+                const maxR = getMaxR();
+                const rx = p * maxR * 1.15;
+                const ry = p * maxR;
+                const blurAmount = 20 * (1 - p);
+
+                // 用 destination-out 挖洞
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.filter = `blur(${blurAmount}px)`;
+
+                const grad = ctx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, Math.max(rx, ry)
+                );
+                grad.addColorStop(0, 'rgba(255,255,255,1)');
+                grad.addColorStop(0.65, 'rgba(255,255,255,0.95)');
+                grad.addColorStop(0.92, 'rgba(255,255,255,0.4)');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.filter = 'none';
+                currentProgress = p;
+            }
+
+            // ----------------------------------------------------------
+            // 4. 缓动与动画
+            // ----------------------------------------------------------
+
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                let rawProgress = Math.min(elapsed / duration, 1);
+                const eased = easeOutCubic(rawProgress);
+
+                drawProgress(eased);
+
+                if (rawProgress < 1) {
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    drawOpen();
+                    isOpen = true;
+                    animationRunning = false;
+                    animationId = null;
+                    startTime = null;
+                }
+            }
+
+            function startOpenEyes() {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                    animationRunning = false;
+                }
+                if (isOpen) return;
+                drawClosed();
+                animationRunning = true;
+                startTime = null;
+                animationId = requestAnimationFrame(animate);
+            }
+
+            // ----------------------------------------------------------
+            // 5. 初始化 — 页面加载后自动播放
+            // ----------------------------------------------------------
+
+            function init() {
+                resizeCanvas();
+                isOpen = false;
+                drawClosed();
+                // 延迟一小帧后启动动画
+                requestAnimationFrame(() => {
+                    startOpenEyes();
+                });
+            }
+
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
+
+            window.addEventListener('resize', function () {
+                resizeCanvas();
+            });
+
+            window.addEventListener('beforeunload', function () {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            });
+
+        })();
+    </script>
+</body>
+
+</html>

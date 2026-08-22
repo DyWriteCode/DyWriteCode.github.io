@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>祝福化光 · 生日快乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #080b16;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #121b2f 0%, #070a12 100%);
+        }
+
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: #fffcf0;
+            opacity: 0;
+            z-index: 999;
+            transition: none;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 26px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 215, 140, 0.25);
+            font-size: 13px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            z-index: 100;
+            font-weight: 300;
+        }
+
+        .hint span {
+            display: inline-block;
+            padding: 4px 20px;
+            border: 1px solid rgba(255, 215, 140, 0.06);
+            border-radius: 30px;
+            background: rgba(8, 11, 22, 0.6);
+            backdrop-filter: blur(3px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="flash-overlay" id="flashOverlay"></div>
+    <canvas id="canvas"></canvas>
+    <div class="hint"><span>✦ 点击画面 · 重放 ✦</span></div>
+
+    <script>
+        // ================================================================
+        //  配置
+        // ================================================================
+        const CFG = {
+            flyDuration: 3200, // 飞行总时长 ms
+            fontSizeMin: 26,
+            fontSizeMax: 32,
+            textColor: '#f0f4f8',
+            glowColor: 'rgba(255, 215, 0, 0.45)',
+            particleGold: '#f7d44a',
+            targetFontSize: 100, // “生日快乐”字体大小
+            breatheSpeed: 0.016,
+            flashDuration: 200,
+            particleSizeMin: 2.8,
+            particleSizeMax: 5.0,
+            // 每句化为光点的过渡区间
+            fadeStart: 0.35,
+            fadeEnd: 0.75,
+        };
+
+        // ================================================================
+        //  祝福语基础列表 (复制多遍)
+        // ================================================================
+        const BASE_BLESSINGS = [
+            '愿你眼中有星辰大海',
+            '心中有繁花似锦',
+            '前路漫漫亦灿灿',
+            '做自己的光',
+            '温柔且坚定',
+            '未来皆可期',
+            '感谢青春有你',
+            '去更远的地方',
+            '永远年轻，永远热泪盈眶',
+            '生日快乐'
+        ];
+
+        // 复制 7 遍 → 70 句，让光点更多更密集
+        const REPEAT = 7;
+        let BLESSINGS = [];
+        for (let r = 0; r < REPEAT; r++) {
+            BASE_BLESSINGS.forEach((text, idx) => {
+                BLESSINGS.push(text + (r > 0 ? '' : ''));
+            });
+        }
+        // 再加一些额外的，凑到 80 句左右
+        const EXTRA = ['愿你所遇皆温柔', '岁月如歌', '前程似锦', '万事胜意', '未来可期', '平安喜乐', '得偿所愿'];
+        EXTRA.forEach(t => BLESSINGS.push(t));
+        // 再补一些
+        while (BLESSINGS.length < 80) {
+            BLESSINGS.push(BASE_BLESSINGS[BLESSINGS.length % BASE_BLESSINGS.length]);
+        }
+        // 打乱顺序，让不同方向的句子混合
+        for (let i = BLESSINGS.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [BLESSINGS[i], BLESSINGS[j]] = [BLESSINGS[j], BLESSINGS[i]];
+        }
+
+        // ================================================================
+        //  Canvas 设置
+        // ================================================================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const flashOverlay = document.getElementById('flashOverlay');
+        let W, H, dpr;
+
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener('resize', () => {
+            resize();
+            initStars();
+        });
+
+        // ================================================================
+        //  离屏 Canvas (像素提取)
+        // ================================================================
+        const offscreen = document.createElement('canvas');
+        const offCtx = offscreen.getContext('2d');
+
+        // ================================================================
+        //  工具函数
+        // ================================================================
+        const rand = (a, b) => Math.random() * (b - a) + a;
+        const randInt = (a, b) => Math.floor(rand(a, b + 1));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+        const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
+
+        function easeInOutQuad(t) {
+            return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        }
+
+        // ================================================================
+        //  提取“生日快乐”像素位置
+        // ================================================================
+        let targetPositions = [];
+
+        function extractTargetPixels(char, fontSize, targetCount) {
+            const pad = 14;
+            const size = fontSize + pad * 2;
+            offscreen.width = size;
+            offscreen.height = size;
+            offCtx.clearRect(0, 0, size, size);
+            offCtx.textAlign = 'center';
+            offCtx.textBaseline = 'middle';
+            offCtx.font = `bold ${fontSize}px "PingFang SC","Microsoft YaHei",sans-serif`;
+            offCtx.fillStyle = '#ffffff';
+            offCtx.fillText(char, size / 2, size / 2);
+
+            const imgData = offCtx.getImageData(0, 0, size, size);
+            const data = imgData.data;
+            const raw = [];
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const idx = (y * size + x) * 4;
+                    if (data[idx + 3] > 30) {
+                        raw.push({ x: x - pad, y: y - pad, r: data[idx], g: data[idx + 1], b: data[idx + 2] });
+                    }
+                }
+            }
+            if (raw.length === 0) {
+                for (let i = 0; i < targetCount; i++) {
+                    raw.push({
+                        x: rand(-fontSize / 2, fontSize / 2), y: rand(-fontSize / 2, fontSize / 2), r: 255, g: 215,
+                        b: 50
+                    });
+                }
+            }
+            // 采样 targetCount 个点
+            const result = [];
+            const shuffled = [...raw];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = randInt(0, i);
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            for (let i = 0; i < Math.min(targetCount, shuffled.length); i++) {
+                result.push(shuffled[i]);
+            }
+            // 如果不够，重复采样
+            while (result.length < targetCount) {
+                const p = raw[randInt(0, raw.length - 1)];
+                result.push({ x: p.x + rand(-3, 3), y: p.y + rand(-3, 3), r: p.r, g: p.g, b: p.b });
+            }
+            return result;
+        }
+
+        function buildTargetPositions(count) {
+            const targetText = '生日快乐';
+            const chars = targetText.split('');
+            const fs = CFG.targetFontSize;
+            const gap = 16;
+            const charWidth = fs * 0.62;
+            const totalW = chars.length * charWidth + (chars.length - 1) * gap;
+            const startX = W / 2 - totalW / 2;
+            const centerY = H / 2 + 2;
+
+            let allPixels = [];
+            chars.forEach((ch, ci) => {
+                const px = extractTargetPixels(ch, fs, Math.ceil(count / chars.length));
+                const cx = startX + ci * (charWidth + gap) + charWidth / 2;
+                px.forEach(p => {
+                    allPixels.push({
+                        x: cx + p.x,
+                        y: centerY + p.y,
+                        r: p.r || 255,
+                        g: p.g || 215,
+                        b: p.b || 50,
+                    });
+                });
+            });
+
+            // 打乱
+            for (let i = allPixels.length - 1; i > 0; i--) {
+                const j = randInt(0, i);
+                [allPixels[i], allPixels[j]] = [allPixels[j], allPixels[i]];
+            }
+
+            // 取前 count 个
+            const result = [];
+            for (let i = 0; i < Math.min(count, allPixels.length); i++) {
+                result.push(allPixels[i]);
+            }
+            while (result.length < count) {
+                const p = allPixels[randInt(0, allPixels.length - 1)];
+                result.push({ x: p.x + rand(-4, 4), y: p.y + rand(-4, 4), r: p.r, g: p.g, b: p.b });
+            }
+            return result;
+        }
+
+        // ================================================================
+        //  星星背景
+        // ================================================================
+        let stars = [];
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 120; i++) {
+                stars.push({
+                    x: rand(0, W), y: rand(0, H), r: rand(0.3, 1.5), a: rand(0.12, 0.6), speed: rand(0.001,
+                        0.005), phase: rand(0, Math.PI * 2)
+                });
+            }
+        }
+        initStars();
+
+        function drawStars(time) {
+            stars.forEach(s => {
+                const alpha = s.a * (0.6 + 0.4 * Math.sin(time * s.speed + s.phase));
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fill();
+            });
+        }
+
+        // ================================================================
+        //  祝福语对象
+        // ================================================================
+        function createBlessingItem(text, index, total, targetPos) {
+            const fs = rand(CFG.fontSizeMin, CFG.fontSizeMax);
+            // 随机方向
+            const dirs = ['left', 'right', 'top', 'bottom'];
+            const dir = dirs[index % dirs.length];
+
+            let sx, sy;
+            const margin = 40;
+            switch (dir) {
+                case 'left':
+                    sx = -margin - fs * text.length * 0.35;
+                    sy = rand(H * 0.08, H * 0.92);
+                    break;
+                case 'right':
+                    sx = W + margin + fs * text.length * 0.35;
+                    sy = rand(H * 0.08, H * 0.92);
+                    break;
+                case 'top':
+                    sx = rand(W * 0.05, W * 0.95);
+                    sy = -margin - fs;
+                    break;
+                case 'bottom':
+                    sx = rand(W * 0.05, W * 0.95);
+                    sy = H + margin + fs;
+                    break;
+            }
+
+            const tx = targetPos.x;
+            const ty = targetPos.y;
+
+            // 弯曲路径控制点
+            const cpX = (sx + tx) / 2 + rand(-W * 0.18, W * 0.18);
+            const cpY = (sy + ty) / 2 + rand(-H * 0.18, H * 0.18);
+
+            return {
+                text,
+                fontSize: fs,
+                startX: sx,
+                startY: sy,
+                targetX: tx,
+                targetY: ty,
+                cpX,
+                cpY,
+                index,
+                progress: 0, // 0-1
+                done: false,
+                // 光点属性
+                particleSize: rand(CFG.particleSizeMin, CFG.particleSizeMax),
+                color: {
+                    r: targetPos.r || 255,
+                    g: targetPos.g || 215,
+                    b: targetPos.b || 50,
+                },
+                // 随机延迟 (让飞入更有层次)
+                delay: rand(0, 0.25),
+            };
+        }
+
+        // ================================================================
+        //  状态管理
+        // ================================================================
+        let blessings = [];
+        let allParticles = [];
+        let state = 'flying'; // flying | converging | breathing
+        let flyStartTime = 0;
+        let convergeStartTime = 0;
+        let flashDone = false;
+        let breathePhase = 0;
+        let animTime = 0;
+        let lastTimestamp = 0;
+        let animationId = null;
+
+        // ================================================================
+        //  初始化
+        // ================================================================
+        function init() {
+            const count = BLESSINGS.length;
+            // 生成目标位置
+            targetPositions = buildTargetPositions(count);
+
+            // 创建祝福语
+            blessings = [];
+            BLESSINGS.forEach((text, i) => {
+                const pos = targetPositions[i % targetPositions.length];
+                const b = createBlessingItem(text, i, count, pos);
+                blessings.push(b);
+            });
+
+            // 收集所有光点引用
+            allParticles = blessings.map(b => ({
+                x: 0,
+                y: 0,
+                targetX: b.targetX,
+                targetY: b.targetY,
+                size: b.particleSize,
+                r: b.color.r,
+                g: b.color.g,
+                b: b.color.b,
+                alpha: 0,
+                progress: 0,
+                delay: b.delay,
+            }));
+
+            state = 'flying';
+            flyStartTime = 0;
+            convergeStartTime = 0;
+            flashDone = false;
+            breathePhase = 0;
+            animTime = 0;
+            lastTimestamp = 0;
+
+            blessings.forEach(b => {
+                b.progress = 0;
+                b.done = false;
+            });
+            allParticles.forEach(p => {
+                p.alpha = 0;
+                p.progress = 0;
+            });
+
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // ================================================================
+        //  绘制函数
+        // ================================================================
+        function drawTextGlow(text, x, y, fs, alpha = 1) {
+            if (alpha < 0.01 || fs < 2) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `bold ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+            ctx.shadowColor = CFG.glowColor;
+            ctx.shadowBlur = 22;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.fillStyle = CFG.textColor;
+            ctx.fillText(text, x, y);
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = 'rgba(255, 200, 60, 0.15)';
+            ctx.fillText(text, x, y);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+
+        function drawParticle(p) {
+            if (p.alpha < 0.01) return;
+            const size = p.size;
+            const r = size / 2;
+            ctx.save();
+            ctx.globalAlpha = clamp(p.alpha, 0, 1);
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+            const cr = p.r || 255,
+                cg = p.g || 215,
+                cb = p.b || 50;
+            grad.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 1)`);
+            grad.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, 0.85)`);
+            grad.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // 核心亮点
+            if (size > 2.5) {
+                ctx.beginPath();
+                ctx.arc(p.x - size * 0.1, p.y - size * 0.1, size * 0.16, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 240, ${0.5 * clamp(p.alpha, 0, 1)})`;
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawParticles() {
+            allParticles.forEach(p => drawParticle(p));
+        }
+
+        // ================================================================
+        //  闪光效果 (柔和)
+        // ================================================================
+        function triggerFlash() {
+            flashOverlay.style.transition = 'none';
+            flashOverlay.style.opacity = '0';
+            void flashOverlay.offsetHeight;
+            flashOverlay.style.transition = `opacity ${CFG.flashDuration}ms ease-out`;
+            flashOverlay.style.opacity = '0.4';
+            setTimeout(() => {
+                flashOverlay.style.transition = `opacity ${CFG.flashDuration * 0.6}ms ease-in`;
+                flashOverlay.style.opacity = '0';
+            }, CFG.flashDuration);
+        }
+
+        // ================================================================
+        //  动画循环
+        // ================================================================
+        function animate(timestamp) {
+            const dt = lastTimestamp ? Math.min((timestamp - lastTimestamp) / 16.667, 3) : 1;
+            lastTimestamp = timestamp;
+            animTime += dt * 16.667;
+
+            ctx.clearRect(0, 0, W, H);
+            drawStars(animTime);
+
+            switch (state) {
+                case 'flying':
+                    updateFlying(timestamp);
+                    break;
+                case 'converging':
+                    updateConverging(timestamp);
+                    break;
+                case 'breathing':
+                    updateBreathing(timestamp);
+                    break;
+            }
+
+            // 环境光晕
+            ctx.save();
+            const glowGrad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.45);
+            glowGrad.addColorStop(0, 'rgba(255, 200, 80, 0.035)');
+            glowGrad.addColorStop(0.6, 'rgba(255, 180, 60, 0.015)');
+            glowGrad.addColorStop(1, 'rgba(255, 180, 60, 0)');
+            ctx.fillStyle = glowGrad;
+            ctx.fillRect(0, 0, W, H);
+            ctx.restore();
+
+            requestAnimationFrame(animate);
+        }
+
+        // ================================================================
+        //  Flying 阶段：飞入 + 化为光点
+        // ================================================================
+        function updateFlying(timestamp) {
+            if (flyStartTime === 0) flyStartTime = timestamp;
+            const elapsed = timestamp - flyStartTime;
+
+            let allDone = true;
+
+            blessings.forEach((b, idx) => {
+                const delayMs = b.delay * CFG.flyDuration;
+                const localElapsed = Math.max(0, elapsed - delayMs);
+                const rawProgress = clamp(localElapsed / CFG.flyDuration, 0, 1);
+                const eased = easeInOutCubic(rawProgress);
+                b.progress = eased;
+
+                // 计算位置 (贝塞尔)
+                const t = eased;
+                const mt = 1 - t;
+                const cx = mt * mt * b.startX + 2 * mt * t * b.cpX + t * t * b.targetX;
+                const cy = mt * mt * b.startY + 2 * mt * t * b.cpY + t * t * b.targetY;
+
+                // ---- 文字到光点的过渡 ----
+                const fadeStart = CFG.fadeStart;
+                const fadeEnd = CFG.fadeEnd;
+
+                // 文字：逐渐缩小并淡出
+                let textAlpha = 1;
+                let textScale = 1;
+                if (eased > fadeStart) {
+                    const fadeProgress = (eased - fadeStart) / (fadeEnd - fadeStart);
+                    textAlpha = 1 - easeOutQuad(clamp(fadeProgress, 0, 1));
+                    textScale = 1 - 0.5 * easeOutQuad(clamp(fadeProgress, 0, 1));
+                }
+                textAlpha = clamp(textAlpha, 0, 1);
+                textScale = Math.max(textScale, 0.05);
+                const currentFs = b.fontSize * textScale;
+
+                // 光点：逐渐出现并移动
+                let particleAlpha = 0;
+                let particleProgress = 0;
+                if (eased > fadeStart * 0.7) {
+                    const pStart = fadeStart * 0.7;
+                    const pEnd = fadeEnd * 1.1;
+                    const pProgress = clamp((eased - pStart) / (pEnd - pStart), 0, 1);
+                    particleAlpha = easeOutQuad(clamp(pProgress, 0, 1));
+                    particleProgress = pProgress;
+                }
+                particleAlpha = clamp(particleAlpha, 0, 1);
+
+                // 更新光点位置 (平滑跟随)
+                const p = allParticles[idx];
+                if (p) {
+                    // 光点位置在文字位置和目标位置之间插值
+                    const mixPos = clamp((eased - fadeStart * 0.5) / (fadeEnd * 1.2 - fadeStart * 0.5), 0, 1);
+                    const posEased = easeOutQuad(mixPos);
+                    p.x = lerp(cx, b.targetX, posEased);
+                    p.y = lerp(cy, b.targetY, posEased);
+                    p.alpha = particleAlpha;
+                    p.progress = eased;
+                    p.size = b.particleSize * (0.6 + 0.4 * particleAlpha);
+                }
+
+                // 绘制文字 (在光点出现之前)
+                if (textAlpha > 0.01 && currentFs > 3) {
+                    drawTextGlow(b.text, cx, cy, currentFs, textAlpha * 0.9);
+                }
+
+                // 绘制光点 (在文字之后，叠加)
+                if (p && p.alpha > 0.01) {
+                    drawParticle(p);
+                }
+
+                if (eased >= 1) {
+                    b.done = true;
+                    if (p) {
+                        p.x = b.targetX;
+                        p.y = b.targetY;
+                        p.alpha = 1;
+                        p.size = b.particleSize;
+                    }
+                } else {
+                    allDone = false;
+                }
+            });
+
+            // 检查是否全部完成
+            allDone = blessings.every(b => b.done);
+            if (allDone) {
+                // 确保所有粒子在目标位置
+                allParticles.forEach((p, i) => {
+                    p.x = blessings[i].targetX;
+                    p.y = blessings[i].targetY;
+                    p.alpha = 1;
+                    p.size = blessings[i].particleSize;
+                });
+                state = 'converging';
+                convergeStartTime = timestamp;
+                // 触发一次柔和闪光
+                if (!flashDone) {
+                    flashDone = true;
+                    setTimeout(() => triggerFlash(), 200);
+                }
+            }
+        }
+
+        // ================================================================
+        //  Converging 阶段：光点汇聚融合，呈现“生日快乐”
+        // ================================================================
+        function updateConverging(timestamp) {
+            const elapsed = timestamp - convergeStartTime;
+            const duration = 1800;
+            let progress = clamp(elapsed / duration, 0, 1);
+            const eased = easeInOutQuad(progress);
+
+            // 光点逐渐稳定，增加尺寸和亮度
+            allParticles.forEach((p, idx) => {
+                const targetX = blessings[idx].targetX;
+                const targetY = blessings[idx].targetY;
+                // 微小的随机抖动，逐渐消失
+                const jitter = (1 - eased) * 1.0;
+                p.x = targetX + (Math.random() - 0.5) * jitter * (1 - eased * 0.8);
+                p.y = targetY + (Math.random() - 0.5) * jitter * (1 - eased * 0.8);
+                p.alpha = Math.min(1, 0.8 + 0.2 * eased);
+                p.size = blessings[idx].particleSize * (0.9 + 0.15 * eased);
+                drawParticle(p);
+            });
+
+            // 光晕逐渐显现
+            const glowAlpha = eased * 0.12;
+            if (glowAlpha > 0.005) {
+                ctx.save();
+                ctx.globalAlpha = glowAlpha;
+                const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.35);
+                grad.addColorStop(0, 'rgba(255, 215, 80, 0.25)');
+                grad.addColorStop(0.6, 'rgba(255, 200, 60, 0.08)');
+                grad.addColorStop(1, 'rgba(255, 200, 60, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+            }
+
+            if (progress >= 1) {
+                // 最终稳定
+                allParticles.forEach((p, idx) => {
+                    p.x = blessings[idx].targetX;
+                    p.y = blessings[idx].targetY;
+                    p.alpha = 1;
+                    p.size = blessings[idx].particleSize * 1.05;
+                });
+                state = 'breathing';
+                breathePhase = 0;
+                // 再闪一次柔和
+                setTimeout(() => triggerFlash(), 150);
+            }
+        }
+
+        // ================================================================
+        //  Breathing 阶段：呼吸发光
+        // ================================================================
+        function updateBreathing(timestamp) {
+            breathePhase += CFG.breatheSpeed * (timestamp - lastTimestamp) / 16.667;
+
+            const breatheScale = 1 + 0.06 * Math.sin(breathePhase);
+            const breatheAlpha = 0.88 + 0.12 * Math.sin(breathePhase * 0.7 + 0.5);
+
+            allParticles.forEach((p, idx) => {
+                const baseSize = blessings[idx].particleSize;
+                const size = baseSize * breatheScale;
+                const alpha = p.alpha * breatheAlpha;
+                drawParticle({ ...p, size, alpha });
+            });
+
+            // 环境光晕呼吸
+            const glowIntensity = 0.05 + 0.035 * Math.sin(breathePhase * 0.5);
+            ctx.save();
+            ctx.globalAlpha = glowIntensity;
+            const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.4);
+            grad.addColorStop(0, 'rgba(255, 215, 80, 0.2)');
+            grad.addColorStop(0.5, 'rgba(255, 200, 60, 0.06)');
+            grad.addColorStop(1, 'rgba(255, 200, 60, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+            ctx.restore();
+
+            // 偶尔的闪烁光点 (增加灵动)
+            if (Math.random() < 0.02) {
+                const idx = randInt(0, allParticles.length - 1);
+                const p = allParticles[idx];
+                const flashSize = p.size * 2.0;
+                ctx.save();
+                ctx.globalAlpha = 0.2;
+                const grad2 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, flashSize);
+                grad2.addColorStop(0, 'rgba(255, 240, 180, 0.5)');
+                grad2.addColorStop(1, 'rgba(255, 240, 180, 0)');
+                ctx.fillStyle = grad2;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, flashSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ================================================================
+        //  重新开始
+        // ================================================================
+        function restart() {
+            flashOverlay.style.opacity = '0';
+            flashDone = false;
+            init();
+        }
+
+        // ================================================================
+        //  启动
+        // ================================================================
+        canvas.addEventListener('click', restart);
+
+        window.addEventListener('resize', () => {
+            resize();
+            initStars();
+            // 延迟重新初始化，避免频繁重建
+            clearTimeout(window._resizeTimer);
+            window._resizeTimer = setTimeout(() => {
+                if (state === 'breathing' || state === 'converging') {
+                    // 如果已经完成，重新初始化
+                    restart();
+                }
+            }, 300);
+        });
+
+        // 启动
+        init();
+
+        console.log('✨ 祝福化光 · 生日快乐 ✨');
+        console.log(`📌 ${BLESSINGS.length} 句祝福语，从四周飞向中央，化为光点组成"生日快乐"`);
+        console.log('🔄 点击画面可重新播放');
+    </script>
+</body>
+
+</html>

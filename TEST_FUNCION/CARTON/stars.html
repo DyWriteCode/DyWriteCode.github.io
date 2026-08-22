@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>繁星 · 静谧夜空</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .info {
+            position: fixed;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            letter-spacing: 2px;
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+            font-family: 'Georgia', serif;
+            text-shadow: 0 0 12px rgba(0, 20, 80, 0.3);
+            opacity: 0;
+            transition: opacity 3s ease;
+        }
+
+        .info.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .info {
+                font-size: 10px;
+                bottom: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="info" id="info">✦ 整个宇宙 · 为你闪烁 ✦</div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            let W, H;
+
+            // ---------- 配置 ----------
+            const STAR_COUNT_MIN = 60;
+            const STAR_COUNT_MAX = 80;
+            const BRIGHT_STAR_MIN = 6;
+            const BRIGHT_STAR_MAX = 8;
+            // 闪烁速度范围 (低频)
+            const SPEED_MIN = 0.5;
+            const SPEED_MAX = 0.9;
+
+            // ---------- 颜色调色板 (来自 meteor.html) ----------
+            const starColors = [
+                { r: 255, g: 255, b: 255 }, // 纯白
+                { r: 240, g: 245, b: 255 }, // 淡蓝白
+                { r: 255, g: 248, b: 235 }, // 淡黄白
+                { r: 230, g: 240, b: 255 }, // 蓝白
+                { r: 255, g: 240, b: 220 }, // 暖白
+            ];
+
+            // ---------- 工具函数 ----------
+            function rand(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            function randInt(min, max) {
+                return Math.floor(rand(min, max + 1));
+            }
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
+
+            // ---------- 生成星星 (融合 meteor 风格) ----------
+            let stars = [];
+
+            function generateStars() {
+                stars = [];
+                const count = randInt(STAR_COUNT_MIN, STAR_COUNT_MAX);
+                const brightCount = randInt(BRIGHT_STAR_MIN, BRIGHT_STAR_MAX);
+
+                for (let i = 0; i < count; i++) {
+                    const isBright = i < brightCount;
+                    // 大小分布模仿 meteor: 大部分小，少量大
+                    let size;
+                    if (isBright) {
+                        size = rand(5.0, 7.5);
+                    } else {
+                        const rnd = Math.random();
+                        if (rnd < 0.4) size = rand(0.6, 1.4);
+                        else if (rnd < 0.7) size = rand(1.4, 2.6);
+                        else if (rnd < 0.9) size = rand(2.6, 3.8);
+                        else size = rand(3.8, 5.0);
+                    }
+
+                    const color = starColors[randInt(0, starColors.length - 1)];
+                    const speed = rand(SPEED_MIN, SPEED_MAX);
+                    const phase = rand(0, Math.PI * 2);
+                    // 基础透明度 (0.4~1.0)
+                    const baseAlpha = rand(0.4, 1.0);
+
+                    // 亮星特有：星芒长度
+                    let spikeLength = 0;
+                    if (isBright) {
+                        spikeLength = rand(18, 30);
+                    }
+
+                    stars.push({
+                        x: rand(5, W - 5),
+                        y: rand(5, H - 5),
+                        size: size,
+                        baseAlpha: baseAlpha,
+                        alpha: 1,
+                        speed: speed,
+                        phase: phase,
+                        color: color,
+                        isBright: isBright,
+                        spikeLength: spikeLength,
+                        spikeAngle: rand(0, Math.PI / 4),
+                    });
+                }
+            }
+
+            // ---------- 更新星星闪烁 (采用 meteor 的公式) ----------
+            function updateStars(time) {
+                for (const star of stars) {
+                    // 正弦波闪烁
+                    const flicker = Math.sin(time * star.speed + star.phase);
+                    const alphaFactor = 0.5 + 0.5 * flicker;
+                    star.alpha = star.baseAlpha * (0.35 + 0.65 * alphaFactor);
+                    star.alpha = Math.max(0.05, Math.min(1.0, star.alpha));
+                }
+            }
+
+            // ---------- 绘制星星 (带光晕和星芒) ----------
+            function drawStars() {
+                // 先绘制普通星星，再绘制亮星（上层）
+                const sorted = [...stars].sort((a, b) => {
+                    if (a.isBright && !b.isBright) return 1;
+                    if (!a.isBright && b.isBright) return -1;
+                    return 0;
+                });
+
+                for (const star of sorted) {
+                    const { x, y, size, color, alpha, isBright, spikeLength, spikeAngle } = star;
+                    const { r, g, b } = color;
+
+                    // 1. 光晕 (来自 meteor 的大星星光晕)
+                    if (size > 1.5 && alpha > 0.2) {
+                        const glowRadius = size * 3.0;
+                        const grad = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+                        grad.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.5})`);
+                        grad.addColorStop(0.5, `rgba(${r},${g},${b},${alpha * 0.15})`);
+                        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // 2. 星核
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 3. 亮星星芒
+                    if (isBright && spikeLength > 0 && alpha > 0.15) {
+                        drawSpike(ctx, x, y, spikeLength, r, g, b, alpha, spikeAngle);
+                    }
+
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // 绘制星芒 (四个方向，渐变光柱)
+            function drawSpike(ctx, x, y, length, r, g, b, opacity, angleOffset) {
+                const count = 4;
+                const baseAngle = angleOffset;
+                for (let i = 0; i < count; i++) {
+                    const ang = baseAngle + (i * Math.PI) / 2;
+                    const cosA = Math.cos(ang);
+                    const sinA = Math.sin(ang);
+                    const grad = ctx.createLinearGradient(x, y, x + cosA * length, y + sinA * length);
+                    const peakOpacity = opacity * 0.65;
+                    grad.addColorStop(0, `rgba(${r},${g},${b},${peakOpacity})`);
+                    grad.addColorStop(0.2, `rgba(${r},${g},${b},${peakOpacity * 0.5})`);
+                    grad.addColorStop(0.6, `rgba(${r},${g},${b},${peakOpacity * 0.15})`);
+                    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                    ctx.globalAlpha = 0.85;
+                    ctx.fillStyle = grad;
+
+                    // 绘制两条细长三角形构成光柱
+                    const tipWidth = 0.5;
+                    const baseWidth = 2.2;
+                    const pAng = ang + Math.PI / 2;
+                    const pCos = Math.cos(pAng);
+                    const pSin = Math.sin(pAng);
+
+                    ctx.beginPath();
+                    ctx.moveTo(x + cosA * length, y + sinA * length);
+                    ctx.lineTo(x + cosA * length * 0.15 + pCos * tipWidth, y + sinA * length * 0.15 + pSin * tipWidth);
+                    ctx.lineTo(x + pCos * baseWidth / 2, y + pSin * baseWidth / 2);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(x + cosA * length, y + sinA * length);
+                    ctx.lineTo(x + cosA * length * 0.15 - pCos * tipWidth, y + sinA * length * 0.15 - pSin * tipWidth);
+                    ctx.lineTo(x - pCos * baseWidth / 2, y - pSin * baseWidth / 2);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 核心细线
+                    ctx.globalAlpha = peakOpacity * 0.4;
+                    ctx.strokeStyle = `rgba(${Math.min(255, r + 30)},${Math.min(255, g + 30)},${Math.min(255, b + 30)},${peakOpacity * 0.4})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.beginPath();
+                    ctx.moveTo(x + cosA * 1.5, y + sinA * 1.5);
+                    ctx.lineTo(x + cosA * length * 0.85, y + sinA * length * 0.85);
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // ---------- 银河带背景 (半透明椭圆) ----------
+            let galaxyEllipses = [];
+
+            function generateGalaxyEllipses() {
+                const count = 18;
+                galaxyEllipses = [];
+                const cx = W / 2;
+                const cy = H / 2;
+                const angle = Math.PI / 4 + rand(-0.05, 0.05);
+                for (let i = 0; i < count; i++) {
+                    const t = (i + rand(-0.3, 0.3)) / count;
+                    const dist = t * Math.min(W, H) * 0.9;
+                    const x = cx + dist * Math.cos(angle) + rand(-40, 40);
+                    const y = cy + dist * Math.sin(angle) + rand(-40, 40);
+                    const rx = rand(150, 320);
+                    const ry = rand(40, 90);
+                    const rot = angle + rand(-0.15, 0.15);
+                    const alpha = rand(0.005, 0.025);
+                    const r = rand(170, 200);
+                    const g = rand(190, 215);
+                    const b = rand(240, 260);
+                    galaxyEllipses.push({ x, y, rx, ry, rot, alpha, r, g, b });
+                }
+            }
+
+            function drawGalaxy() {
+                for (const el of galaxyEllipses) {
+                    ctx.save();
+                    ctx.globalAlpha = el.alpha;
+                    ctx.translate(el.x, el.y);
+                    ctx.rotate(el.rot);
+                    ctx.fillStyle = `rgba(${el.r},${el.g},${el.b},${el.alpha})`;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, el.rx, el.ry, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                // 极淡全局光晕
+                const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.6);
+                grad.addColorStop(0, 'rgba(180,200,255,0.012)');
+                grad.addColorStop(0.5, 'rgba(150,180,240,0.018)');
+                grad.addColorStop(1, 'rgba(100,130,200,0)');
+                ctx.fillStyle = grad;
+                ctx.globalAlpha = 0.5;
+                ctx.fillRect(0, 0, W, H);
+                ctx.globalAlpha = 1;
+            }
+
+            // ---------- 四角遮罩 (极淡) ----------
+            function drawVignette() {
+                ctx.save();
+                const cornerSize = Math.min(W, H) * 0.25;
+                const cornerAlpha = 0.08;
+                // 左上
+                let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, cornerSize);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(1, `rgba(0,0,0,${cornerAlpha})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, cornerSize, cornerSize);
+                // 右上
+                grad = ctx.createRadialGradient(W, 0, 0, W, 0, cornerSize);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(1, `rgba(0,0,0,${cornerAlpha})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(W - cornerSize, 0, cornerSize, cornerSize);
+                // 左下
+                grad = ctx.createRadialGradient(0, H, 0, 0, H, cornerSize);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(1, `rgba(0,0,0,${cornerAlpha})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, H - cornerSize, cornerSize, cornerSize);
+                // 右下
+                grad = ctx.createRadialGradient(W, H, 0, W, H, cornerSize);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(1, `rgba(0,0,0,${cornerAlpha})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(W - cornerSize, H - cornerSize, cornerSize, cornerSize);
+                ctx.restore();
+            }
+
+            // ---------- 动画循环 ----------
+            let startTime = 0;
+
+            function animate(timestamp) {
+                const elapsed = (timestamp - startTime) / 1000; // seconds
+
+                // 清空
+                ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, W, H);
+
+                // 1. 银河背景
+                drawGalaxy();
+
+                // 2. 更新星星
+                updateStars(elapsed);
+
+                // 3. 绘制星星
+                drawStars();
+
+                // 4. 四角遮罩
+                drawVignette();
+
+                // 5. 淡入效果 (前3秒)
+                const fadeIn = Math.min(1, elapsed / 2.5);
+                if (fadeIn < 1) {
+                    ctx.save();
+                    ctx.globalAlpha = 1 - fadeIn;
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, W, H);
+                    ctx.restore();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // ---------- 初始化与尺寸自适应 ----------
+            function resize() {
+                W = window.innerWidth;
+                H = window.innerHeight;
+                canvas.width = W;
+                canvas.height = H;
+                generateStars();
+                generateGalaxyEllipses();
+            }
+
+            window.addEventListener('resize', resize);
+
+            // 点击重置相位
+            canvas.addEventListener('click', () => {
+                startTime = performance.now();
+                for (const star of stars) {
+                    star.phase = rand(0, Math.PI * 2);
+                }
+            });
+
+            // 启动
+            function init() {
+                resize();
+                startTime = performance.now();
+                // 显示提示文字
+                setTimeout(() => {
+                    document.getElementById('info').classList.add('show');
+                }, 3000);
+                requestAnimationFrame(animate);
+            }
+
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
+
+            console.log('✦ 繁星闪烁 · 参考流星风格 ✦');
+        })();
+    </script>
+</body>
+
+</html>

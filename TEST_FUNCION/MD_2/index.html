@@ -4,20 +4,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vditor + MathLive + 高级表格 (最终修复版)</title>
-
-    <!-- Vditor 样式 -->
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css?v=20260820153925" />
-    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css?v=20260820153925" />
-
-    <!-- MathLive 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css?v=20260820153925" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css?v=20260820153925" />
-
-    <!-- Handsontable 样式 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css?v=20260820153925" />
-
+    <title>Vditor + 代码执行 + LaTeX 计算（点击浮动按钮）</title>
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/vditor@3.10.9/dist/js/highlight.js/styles/github.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.core.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js">
+    </script>
     <style>
+        /* ===== 全局重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -28,7 +26,7 @@
         body {
             height: 100%;
             background: #f8f9fa;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow: hidden;
         }
 
@@ -39,7 +37,6 @@
             max-width: 1000px;
             margin: 0 auto;
             background: #ffffff;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             position: relative;
         }
@@ -68,13 +65,16 @@
             line-height: 1.8;
         }
 
-        /* 表格样式：去掉表格自身边框，只依赖单元格边框 */
         .vditor-preview table,
         .vditor-reset table {
             border-collapse: collapse !important;
             width: 100% !important;
             font-size: 14px !important;
             border: none !important;
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+            max-width: 100%;
         }
 
         .vditor-preview table td,
@@ -86,6 +86,72 @@
             vertical-align: middle !important;
         }
 
+        /* ===== 浮动按钮容器 ===== */
+        .edit-float-container {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            display: flex;
+            gap: 4px;
+            z-index: 9999;
+            pointer-events: auto;
+        }
+
+        .edit-float-btn {
+            background: #0969da;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
+            line-height: 30px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(9, 105, 218, 0.4);
+            transition: transform 0.15s, background 0.2s;
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-float-btn:hover {
+            background: #0550ae;
+            transform: scale(1.1);
+        }
+
+        .edit-float-btn:active {
+            transform: scale(0.95);
+        }
+
+        .edit-float-btn.exec {
+            background: #2da44e;
+        }
+
+        .edit-float-btn.exec:hover {
+            background: #1a7f37;
+        }
+
+        .edit-float-btn.calc {
+            background: #8250df;
+        }
+
+        .edit-float-btn.calc:hover {
+            background: #6639ba;
+        }
+
+        .editable-object {
+            position: relative;
+        }
+
+        .editable-object.edit-hover {
+            outline: 2px dashed rgba(9, 105, 218, 0.4);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        /* ===== 公式面板 ===== */
         #formula-panel {
             position: fixed;
             bottom: 0;
@@ -95,11 +161,7 @@
             background: #ffffff;
             border-top: 2px solid #e9ecf0;
             padding: 14px 20px 18px 20px;
-            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease,
-                padding 0.3s ease,
-                border-color 0.2s ease,
-                bottom 0.3s ease;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.3s ease, border-color 0.2s ease, bottom 0.3s ease;
             max-height: 0;
             opacity: 0;
             overflow: hidden;
@@ -272,6 +334,7 @@
             flex-shrink: 0;
         }
 
+        /* ===== 表格模态框 ===== */
         #table-modal-overlay {
             position: fixed;
             inset: 0;
@@ -524,28 +587,29 @@
             background: #0550ae;
         }
 
-        #table-source-modal-overlay {
+        /* ===== 结果弹窗 ===== */
+        #result-overlay {
             position: fixed;
             inset: 0;
             z-index: 300;
-            background: rgba(0, 0, 0, 0.50);
-            backdrop-filter: blur(3px);
+            background: rgba(0, 0, 0, 0.40);
+            backdrop-filter: blur(2px);
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
-        #table-source-modal-overlay.open {
+        #result-overlay.open {
             display: flex;
         }
 
-        #table-source-modal {
+        #result-modal {
             background: #ffffff;
             border-radius: 16px;
-            max-width: 780px;
+            max-width: 720px;
             width: 100%;
-            max-height: 85vh;
+            max-height: 80vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 24px 64px rgba(0, 0, 0, 0.20);
@@ -553,7 +617,7 @@
             animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .source-modal-header {
+        .result-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -562,7 +626,7 @@
             flex-shrink: 0;
         }
 
-        .source-modal-header h3 {
+        .result-header h3 {
             font-size: 17px;
             font-weight: 600;
             color: #1f2328;
@@ -571,7 +635,7 @@
             gap: 8px;
         }
 
-        .source-modal-close {
+        .result-close {
             background: none;
             border: none;
             font-size: 22px;
@@ -580,85 +644,102 @@
             padding: 0 6px;
             line-height: 1;
             transition: color 0.2s;
-            touch-action: manipulation;
         }
 
-        .source-modal-close:hover {
+        .result-close:hover {
             color: #1f2328;
         }
 
-        .source-modal-body {
-            flex: 1 1 auto;
-            padding: 16px 24px 12px 24px;
+        .result-body {
+            padding: 16px 24px 20px 24px;
             overflow-y: auto;
-            min-height: 160px;
-        }
-
-        .source-modal-body textarea {
-            width: 100%;
-            height: 260px;
-            padding: 12px 14px;
-            border: 2px solid #d0d7de;
-            border-radius: 8px;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 14px;
+            flex: 1;
+            font-size: 15px;
             line-height: 1.7;
-            resize: vertical;
-            background: #fafbfc;
-            transition: border-color 0.2s;
-            color: #1f2328;
-            tab-size: 2;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .source-modal-body textarea:focus {
-            border-color: #0969da;
-            outline: none;
-            background: #ffffff;
-        }
-
-        .source-modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            padding: 12px 24px 18px 24px;
-            border-top: 1px solid #e9ecf0;
-            flex-shrink: 0;
-        }
-
-        .source-modal-footer button {
-            padding: 8px 28px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            touch-action: manipulation;
-            min-height: 38px;
-            font-weight: 500;
-        }
-
-        .source-modal-footer button:active {
-            transform: scale(0.97);
-        }
-
-        .source-modal-footer .btn-source-cancel {
+        .result-body .code-block {
             background: #f6f8fa;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border: 1px solid #e9ecf0;
+        }
+
+        .result-body .label-tag {
+            display: inline-block;
+            background: #ddf4ff;
+            color: #0550ae;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .result-body .latex-output {
+            background: #fafbfc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #e9ecf0;
+            font-size: 18px;
+        }
+
+        .result-body .error-text {
+            color: #cf222e;
+            background: #ffebe9;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border-left: 4px solid #cf222e;
+        }
+
+        .result-body .success-text {
+            color: #1a7f37;
+            background: #dafbe1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border-left: 4px solid #1a7f37;
+        }
+
+        /* ===== 工具栏语言选择器 ===== */
+        .vditor-toolbar .vditor-toolbar__item--custom select {
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            background: #fff;
             color: #24292f;
+            height: 26px;
+            outline: none;
+            cursor: pointer;
         }
 
-        .source-modal-footer .btn-source-cancel:hover {
-            background: #eaeef2;
+        .vditor-toolbar .vditor-toolbar__item--custom select:focus {
+            border-color: #0969da;
         }
 
-        .source-modal-footer .btn-source-update {
-            background: #0969da;
-            color: #fff;
+        .vditor-toolbar .vditor-toolbar__item--custom .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+            line-height: 1;
+            color: #24292f;
+            transition: color 0.2s;
         }
 
-        .source-modal-footer .btn-source-update:hover {
-            background: #0550ae;
+        .vditor-toolbar .vditor-toolbar__item--custom .btn-icon:hover {
+            color: #0969da;
         }
 
+        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             #app {
                 max-width: 100%;
@@ -751,24 +832,21 @@
                 font-size: 12px;
             }
 
-            #table-source-modal {
+            .edit-float-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+                line-height: 28px;
+            }
+
+            #result-modal {
+                max-width: 95%;
                 max-height: 90vh;
-                border-radius: 12px;
             }
 
-            .source-modal-body textarea {
-                height: 180px;
-                font-size: 13px;
-            }
-
-            .source-modal-header h3 {
-                font-size: 15px;
-            }
-
-            .source-modal-footer button {
-                font-size: 13px;
-                padding: 6px 18px;
-                min-height: 34px;
+            .result-body {
+                font-size: 14px;
+                padding: 12px 16px 16px 16px;
             }
         }
 
@@ -823,24 +901,11 @@
                 padding: 4px 6px 6px 6px;
             }
 
-            .source-modal-body textarea {
-                height: 140px;
+            .edit-float-btn {
+                width: 24px;
+                height: 24px;
                 font-size: 12px;
-                padding: 8px 10px;
-            }
-
-            .source-modal-body {
-                padding: 10px 14px 8px 14px;
-            }
-
-            .source-modal-footer {
-                padding: 8px 14px 12px 14px;
-            }
-
-            .source-modal-footer button {
-                font-size: 12px;
-                padding: 4px 14px;
-                min-height: 30px;
+                line-height: 24px;
             }
         }
 
@@ -868,8 +933,22 @@
             background: #b0b7be;
         }
 
-        #handsontable-container .wtHolder {
-            overflow: auto !important;
+        .toast-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2328;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            text-align: center;
+            transition: opacity 0.4s;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -880,78 +959,46 @@
         <div id="vditor-wrapper">
             <div id="vditor"></div>
         </div>
-
+        <!-- 公式面板 -->
         <div id="formula-panel">
             <div class="panel-header">
-                <h3>
-                    🧮 公式编辑
-                    <small>· 虚拟键盘 · 支持 \exponentialE 和 \imaginaryI</small>
-                </h3>
+                <h3 id="panel-title">🧮 公式编辑 <small>· 虚拟键盘 · 支持 \exponentialE 和 \imaginaryI</small></h3>
                 <button class="panel-close-btn" id="panel-close" aria-label="关闭面板">✕</button>
             </div>
             <div class="math-field-container" id="math-field-container"></div>
-            <div class="panel-hint">
-                💡 使用虚拟键盘输入 · Enter 插入 · Esc 取消 · 编辑时 \exponentialE 自动转为 \mathrm{e}
-            </div>
+            <div class="panel-hint">💡 使用虚拟键盘输入 · Enter 插入 · Esc 取消 · 编辑时 \exponentialE 自动转为 \mathrm{e}</div>
             <div class="panel-actions">
                 <button class="btn-cancel-panel" id="panel-cancel">取消</button>
                 <button class="btn-insert-panel" id="panel-insert">插入公式</button>
             </div>
         </div>
-
+        <!-- 表格模态框 -->
         <div id="table-modal-overlay">
             <div id="table-modal">
                 <div class="table-modal-header">
-                    <h2>
-                        📊 高级表格编辑器
-                        <small>· 类似 Excel 的编辑体验</small>
-                    </h2>
+                    <h2 id="table-modal-title">📊 高级表格编辑器 <small>· 类似 Excel 的编辑体验</small></h2>
                     <button class="table-modal-close" id="table-modal-close" aria-label="关闭表格编辑器">✕</button>
                 </div>
-
                 <div class="table-modal-toolbar">
-                    <label>
-                        行:
-                        <input type="number" id="ht-rows" value="5" min="1" max="50" />
-                    </label>
-                    <label>
-                        列:
-                        <input type="number" id="ht-cols" value="5" min="1" max="30" />
-                    </label>
+                    <label>行: <input type="number" id="ht-rows" value="5" min="1" max="50" /></label>
+                    <label>列: <input type="number" id="ht-cols" value="5" min="1" max="30" /></label>
                     <button class="btn-sm primary" id="ht-resize-btn">调整大小</button>
-
                     <span class="sep"></span>
-
-                    <label>
-                        🎨 背景色:
-                        <input type="color" id="ht-bgcolor" value="#e6f0fa" />
-                    </label>
+                    <label>🎨 背景色: <input type="color" id="ht-bgcolor" value="#e6f0fa" /></label>
                     <button class="btn-sm" id="ht-apply-bg">应用到选中</button>
                     <button class="btn-sm danger" id="ht-clear-bg">清除选中背景</button>
-
                     <span class="sep"></span>
-
-                    <label>
-                        📏 列宽:
-                        <input type="number" id="ht-colwidth" value="100" min="20" max="400" style="width:52px;" />
-                    </label>
+                    <label>📏 列宽: <input type="number" id="ht-colwidth" value="100" min="20" max="400"
+                            style="width:52px;" /></label>
                     <button class="btn-sm" id="ht-apply-colwidth">应用到选中列</button>
-
                     <span class="sep"></span>
-
-                    <label>
-                        📐 行高:
-                        <input type="number" id="ht-rowheight" value="32" min="16" max="200" style="width:52px;" />
-                    </label>
+                    <label>📐 行高: <input type="number" id="ht-rowheight" value="32" min="16" max="200"
+                            style="width:52px;" /></label>
                     <button class="btn-sm" id="ht-apply-rowheight">应用到选中行</button>
                 </div>
-
                 <div id="handsontable-container"></div>
-
                 <div class="table-modal-footer">
-                    <div class="hint">
-                        💡 双击单元格可编辑文字；调整结构/样式请重新打开本编辑器。
-                    </div>
+                    <div class="hint">💡 双击单元格可编辑文字；调整结构/样式后点击「插入表格」。</div>
                     <div class="actions">
                         <button class="btn-cancel" id="table-cancel">取消</button>
                         <button class="btn-insert" id="table-insert">✅ 插入表格</button>
@@ -959,92 +1006,723 @@
                 </div>
             </div>
         </div>
-
-        <div id="table-source-modal-overlay">
-            <div id="table-source-modal">
-                <div class="source-modal-header">
-                    <h3>📝 编辑表格 HTML 源码</h3>
-                    <button class="source-modal-close" id="source-modal-close" aria-label="关闭源码编辑器">✕</button>
+        <!-- 结果弹窗 -->
+        <div id="result-overlay">
+            <div id="result-modal">
+                <div class="result-header">
+                    <h3 id="result-title">📋 结果</h3>
+                    <button class="result-close" id="result-close">✕</button>
                 </div>
-                <div class="source-modal-body">
-                    <textarea id="table-source-editor" spellcheck="false"></textarea>
-                    <div style="margin-top:8px;font-size:13px;color:#57606a;">
-                        💡 编辑表格的 HTML 源码，点击「更新表格」保存。
-                    </div>
-                </div>
-                <div class="source-modal-footer">
-                    <button class="btn-source-cancel" id="source-modal-cancel">取消</button>
-                    <button class="btn-source-update" id="source-modal-update">✅ 更新表格</button>
-                </div>
+                <div class="result-body" id="result-body"></div>
             </div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js?v=20260820153925">
+    <!-- ============================================================ -->
+    <!-- 外部依赖 -->
+    <!-- ============================================================ -->
+    <script src="https://unpkg.com/vditor@3.10.9/dist/index.min.js">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathlive?v=20260820153925">
+    <script src="https://cdn.jsdelivr.net/npm/mathlive">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js?v=20260820153925">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js">
     </script>
 
+    <!-- ============================================================ -->
+    <!-- 1. Judge0 代码执行器 (内联) -->
+    <!-- ============================================================ -->
     <script>
-        // ================================================================
-        //  0. 等待 MathLive 加载
-        // ================================================================
-        function waitForMathLive(callback) {
-            if (typeof MathfieldElement !== 'undefined') {
-                callback();
-                return;
+        (function (global) {
+            'use strict';
+
+            var Language = {
+                PYTHON: 71,
+                PYTHON3: 71,
+                PYTHON2: 70,
+                JAVASCRIPT: 63,
+                NODEJS: 63,
+                JS: 63,
+                BASH: 46,
+                SHELL: 46,
+                C: 50,
+                CPP: 54,
+                C_PLUS_PLUS: 54,
+                JAVA: 62,
+                RUBY: 72,
+                RUST: 73,
+                TYPESCRIPT: 74,
+                TS: 74,
+                PHP: 68,
+                GO: 60,
+                SWIFT: 83,
+                R: 80,
+                PERL: 85,
+                LUA: 86,
+                HASKELL: 87,
+                ELIXIR: 88,
+                ERLANG: 89,
+                CLOJURE: 90,
+                KOTLIN: 91,
+                SCALA: 92,
+                DART: 93,
+                JULIA: 94,
+                CRYSTAL: 95,
+                ZIG: 96,
+                NIM: 97,
+                V: 98,
+                GROOVY: 99,
+                CSHARP: 51,
+                C_SHARP: 51,
+                FSHARP: 52,
+                VBNET: 53,
+                SQLITE: 55,
+                POSTGRESQL: 56,
+                MYSQL: 57,
+                RLANG: 80
+            };
+            var LANGUAGE_NAME_MAP = {
+                python: 71,
+                python3: 71,
+                python2: 70,
+                javascript: 63,
+                nodejs: 63,
+                js: 63,
+                bash: 46,
+                shell: 46,
+                c: 50,
+                cpp: 54,
+                'c++': 54,
+                java: 62,
+                ruby: 72,
+                rust: 73,
+                typescript: 74,
+                ts: 74,
+                php: 68,
+                go: 60,
+                swift: 83,
+                r: 80,
+                perl: 85,
+                lua: 86,
+                haskell: 87,
+                elixir: 88,
+                erlang: 89,
+                clojure: 90,
+                kotlin: 91,
+                scala: 92,
+                dart: 93,
+                julia: 94,
+                crystal: 95,
+                zig: 96,
+                nim: 97,
+                v: 98,
+                groovy: 99,
+                csharp: 51,
+                'c#': 51,
+                fsharp: 52,
+                vbnet: 53,
+                sqlite: 55,
+                postgresql: 56,
+                mysql: 57,
+                rlang: 80
+            };
+
+            function resolveLanguage(lang) {
+                if (typeof lang === 'number') return lang;
+                if (typeof lang === 'string') {
+                    var key = lang.toLowerCase().trim();
+                    var id = LANGUAGE_NAME_MAP[key];
+                    if (id === undefined) throw new Error('未知语言名称 "' + lang + '"');
+                    return id;
+                }
+                throw new Error('language 参数必须是数字或字符串');
             }
-            const check = setInterval(() => {
+
+            function utf8ToBase64(str) {
+                var bytes = new TextEncoder().encode(str);
+                var binary = '';
+                for (var i = 0; i < bytes.length; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function base64ToUtf8(base64) {
+                var binary = atob(base64);
+                var bytes = new Uint8Array(binary.length);
+                for (var i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return new TextDecoder().decode(bytes);
+            }
+
+            async function executeCode(params) {
+                var source_code = params.source_code,
+                    language = params.language,
+                    stdin = params.stdin || '',
+                    cpu_time_limit = params.cpu_time_limit || 5,
+                    memory_limit = params.memory_limit || 256000,
+                    apiBase = params.apiBase || 'https://ce.judge0.com';
+
+                if (!source_code || source_code.trim() === '') throw new Error('源代码不能为空');
+
+                var language_id = resolveLanguage(language);
+
+                var encoded_source = utf8ToBase64(source_code);
+                var encoded_stdin = stdin ? utf8ToBase64(stdin) : '';
+
+                var payload = {
+                    language_id: language_id,
+                    source_code: encoded_source,
+                    stdin: encoded_stdin,
+                    cpu_time_limit: cpu_time_limit,
+                    memory_limit: memory_limit
+                };
+
+                var url = apiBase + '/submissions?base64_encoded=true&wait=true';
+
+                var response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    var errMsg = 'HTTP ' + response.status;
+                    try {
+                        var errJson = await response.json();
+                        errMsg = errJson.error || errMsg;
+                    } catch (_) { }
+                    throw new Error('API 请求失败: ' + errMsg);
+                }
+
+                var result = await response.json();
+                if (result.error) throw new Error(result.error);
+
+                if (result.stdout) result.stdout = base64ToUtf8(result.stdout);
+                if (result.stderr) result.stderr = base64ToUtf8(result.stderr);
+                if (result.compile_output) result.compile_output = base64ToUtf8(result.compile_output);
+                if (result.message) result.message = base64ToUtf8(result.message);
+
+                return result;
+            }
+
+            var Judge0Executor = {
+                version: '1.0.1',
+                Language: Language,
+                execute: executeCode,
+                resolveLanguage: resolveLanguage,
+                languageNameMap: LANGUAGE_NAME_MAP,
+                utils: { utf8ToBase64: utf8ToBase64, base64ToUtf8: base64ToUtf8 }
+            };
+
+            if (typeof window !== 'undefined') window.Judge0Executor = Judge0Executor;
+            if (typeof module !== 'undefined' && module.exports) {
+                module.exports = Judge0Executor;
+                module.exports.default = Judge0Executor;
+            }
+            if (typeof define === 'function' && define.amd) { define([], function () { return Judge0Executor; }); }
+            return Judge0Executor;
+        })(this);
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- 2. LaTeX 公式计算器 (内联) -->
+    <!-- ============================================================ -->
+    <script>
+        (function (global) {
+            'use strict';
+            if (typeof math === 'undefined') console.warn('[LaTeXCalculator] 未找到 mathjs 全局对象');
+            if (typeof katex === 'undefined') console.warn('[LaTeXCalculator] 未找到 katex 全局对象');
+
+            function numericalIntegral(expr, varName, a, b, n) {
+                if (typeof math === 'undefined') throw new Error('mathjs 库未加载');
+                if (n === undefined || n < 2) n = 1000;
+                if (n % 2 === 1) n++;
+                var h = (b - a) / n,
+                    sum = 0,
+                    vars = {};
+                for (var i = 0; i <= n; i++) {
+                    var x = a + i * h;
+                    vars[varName] = x;
+                    var y = math.evaluate(expr, vars);
+                    if (i === 0 || i === n) sum += y;
+                    else if (i % 2 === 0) sum += 2 * y;
+                    else sum += 4 * y;
+                }
+                return (sum * h) / 3;
+            }
+
+            function latexToMathJS(latex) {
+                if (!latex || latex.trim() === '') return '';
+                var s = latex.trim();
+                s = s.replace(/\s+/g, ' ').replace(/\\limits/g, '').replace(/\\,/g, ' ');
+                var funcMap = {
+                    'sin': 'sin',
+                    'cos': 'cos',
+                    'tan': 'tan',
+                    'cot': 'cot',
+                    'sec': 'sec',
+                    'csc': 'csc',
+                    'arcsin': 'asin',
+                    'arccos': 'acos',
+                    'arctan': 'atan',
+                    'log': 'log',
+                    'ln': 'log',
+                    'lg': 'log10',
+                    'exp': 'exp',
+                    'sinh': 'sinh',
+                    'cosh': 'cosh',
+                    'tanh': 'tanh'
+                };
+                var prevTrig;
+                do {
+                    prevTrig = s;
+                    for (var f in funcMap) {
+                        var mfn = funcMap[f];
+                        s = s.replace(new RegExp('\\\\' + f + '\\{([^}]*)\\}', 'g'), function (m, args) {
+                            return mfn + '(' + latexToMathJS(args) + ')';
+                        });
+                        s = s.replace(new RegExp('\\\\' + f + '\\(([^)]*)\\)', 'g'), function (m, args) {
+                            return mfn + '(' + latexToMathJS(args) + ')';
+                        });
+                    }
+                } while (s !== prevTrig);
+                var prev;
+                do {
+                    prev = s;
+                    s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, function (m, num, den) {
+                        return latexToMathJS(num) + '/' + latexToMathJS(den);
+                    });
+                } while (s !== prev);
+                do {
+                    prev = s;
+                    s = s.replace(/\\sqrt\[([^{}]*)\]\{([^{}]*)\}/g, function (m, n, expr) {
+                        return '(' + latexToMathJS(expr) + ')^(1/(' + latexToMathJS(n) + '))';
+                    });
+                    s = s.replace(/\\sqrt\{([^{}]*)\}/g, function (m, expr) {
+                        return 'sqrt(' + latexToMathJS(expr) + ')';
+                    });
+                } while (s !== prev);
+                var constMap = {
+                    '\\pi': 'pi',
+                    '\\Pi': 'pi',
+                    '\\infty': 'Infinity',
+                    '\\e': 'e',
+                    '\\E': 'e',
+                    '\\mathrm{e}': 'e',
+                    '\\mathrm{E}': 'e'
+                };
+                for (var ck in constMap) {
+                    s = s.replace(new RegExp(ck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), constMap[ck]);
+                }
+                var greekMap = {
+                    '\\alpha': 'alpha',
+                    '\\beta': 'beta',
+                    '\\gamma': 'gamma',
+                    '\\delta': 'delta',
+                    '\\epsilon': 'epsilon',
+                    '\\zeta': 'zeta',
+                    '\\eta': 'eta',
+                    '\\theta': 'theta',
+                    '\\iota': 'iota',
+                    '\\kappa': 'kappa',
+                    '\\lambda': 'lambda',
+                    '\\mu': 'mu',
+                    '\\nu': 'nu',
+                    '\\xi': 'xi',
+                    '\\omicron': 'omicron',
+                    '\\pi': 'pi',
+                    '\\rho': 'rho',
+                    '\\sigma': 'sigma',
+                    '\\tau': 'tau',
+                    '\\upsilon': 'upsilon',
+                    '\\phi': 'phi',
+                    '\\chi': 'chi',
+                    '\\psi': 'psi',
+                    '\\omega': 'omega',
+                    '\\Gamma': 'Gamma',
+                    '\\Delta': 'Delta',
+                    '\\Theta': 'Theta',
+                    '\\Lambda': 'Lambda',
+                    '\\Xi': 'Xi',
+                    '\\Pi': 'Pi',
+                    '\\Sigma': 'Sigma',
+                    '\\Upsilon': 'Upsilon',
+                    '\\Phi': 'Phi',
+                    '\\Psi': 'Psi',
+                    '\\Omega': 'Omega'
+                };
+                for (var gk in greekMap) {
+                    s = s.replace(new RegExp(gk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), greekMap[gk]);
+                }
+                var prev2 = '',
+                    maxIter = 80;
+                while (maxIter-- > 0 && s !== prev2) {
+                    prev2 = s;
+                    s = replaceSumOrProd(s, 'sum');
+                    s = replaceSumOrProd(s, 'prod');
+                }
+                if (/\\sum|\\prod/.test(s)) throw new Error('转换失败，残留求和/连乘命令: ' + s);
+                s = processIntegrals(s);
+                var opMap = {
+                    '\\times': '*',
+                    '\\cdot': '*',
+                    '\\div': '/',
+                    '\\pm': '±',
+                    '\\mp': '∓',
+                    '\\left(': '(',
+                    '\\right)': ')',
+                    '\\left[': '[',
+                    '\\right]': ']',
+                    '\\left\\{': '{',
+                    '\\right\\}': '}',
+                    '\\left|': 'abs(',
+                    '\\right|': ')',
+                    '\\left.': '',
+                    '\\right.': '',
+                    '\\left': '',
+                    '\\right': ''
+                };
+                for (var ok in opMap) {
+                    s = s.replace(new RegExp(ok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), opMap[ok]);
+                }
+                s = s.replace(/([a-zA-Z0-9]+)\s*!/g, 'factorial($1)');
+                s = s.replace(/\{([^{}]*)\}/g, function (m, content) {
+                    if (!/[+\-*/^=<>]/.test(content)) return content;
+                    return '(' + content + ')';
+                });
+                return s.replace(/\s+/g, ' ').trim();
+            }
+
+            function replaceSumOrProd(s, type) {
+                if (typeof math === 'undefined') throw new Error('mathjs 库未加载');
+                var cmd = type === 'sum' ? 'sum' : 'prod';
+                var regex = new RegExp('\\\\' + cmd + '\\s*_\\s*\\{([^}]*)\\}\\s*\\^\\s*\\{([^}]*)\\}\\s*((?:\\{[^}]*\\})|\\S+)',
+                    'g');
+                var newS = s,
+                    match;
+                while ((match = regex.exec(newS)) !== null) {
+                    var fullMatch = match[0],
+                        lower = match[1],
+                        upper = match[2],
+                        expr = match[3];
+                    if (expr.startsWith('{') && expr.endsWith('}')) expr = expr.slice(1, -1);
+                    if (/\\sum|\\prod/.test(expr)) { regex.lastIndex = match.index + fullMatch.length; continue; }
+                    var lowerC = latexToMathJS(lower),
+                        upperC = latexToMathJS(upper),
+                        exprC = latexToMathJS(expr);
+                    var varName = 'x',
+                        lowerVal = lowerC,
+                        eqIdx = lowerC.indexOf('=');
+                    if (eqIdx !== -1) {
+                        varName = lowerC.substring(0, eqIdx).trim();
+                        lowerVal = lowerC.substring(eqIdx + 1).trim();
+                    } else {
+                        varName = 'i';
+                        lowerVal = lowerC;
+                    }
+                    var upperVal = upperC;
+
+                    function isNumeric(str) { return /^-?\d+(\.\d+)?$/.test(str.trim()); }
+                    var replacement = '';
+                    if (isNumeric(lowerVal) && isNumeric(upperVal)) {
+                        var lowerNum = parseFloat(lowerVal),
+                            upperNum = parseFloat(upperVal);
+                        if (lowerNum <= upperNum) {
+                            var exprWithVar = exprC.replace(new RegExp('\\b' + varName + '\\b', 'g'), 'x');
+                            var result;
+                            if (type === 'sum') {
+                                result = 0;
+                                for (var x = lowerNum; x <= upperNum; x++) {
+                                    result += math.evaluate(exprWithVar, { x: x });
+                                }
+                            } else {
+                                result = 1;
+                                for (var x = lowerNum; x <= upperNum; x++) { result *= math.evaluate(exprWithVar, { x: x }); }
+                            }
+                            replacement = result.toString();
+                        } else { replacement = type === 'sum' ? '0' : '1'; }
+                    } else {
+                        replacement = '(function(){ throw new Error("求和/积的上下限必须为数值"); })()';
+                    }
+                    newS = newS.replace(fullMatch, replacement);
+                    regex.lastIndex = 0;
+                    if (!newS.includes('\\' + cmd)) break;
+                }
+                return newS;
+            }
+
+            function processIntegrals(s) {
+                if (typeof math === 'undefined') throw new Error('mathjs 库未加载');
+                var newS = s,
+                    maxLoop = 50;
+                while (maxLoop-- > 0) {
+                    var idx = newS.indexOf('\\int');
+                    if (idx === -1) break;
+                    var rest = newS.slice(idx + 4).trimStart();
+                    if (!rest.startsWith('_')) break;
+                    rest = rest.slice(1);
+                    var lower = '',
+                        lowerEnd = 0;
+                    if (rest.startsWith('{')) {
+                        var braceCount = 1,
+                            i2 = 1;
+                        while (i2 < rest.length && braceCount > 0) {
+                            if (rest[i2] === '{') braceCount++;
+                            else if (rest[i2] === '}') braceCount--;
+                            i2++;
+                        }
+                        lower = rest.slice(1, i2 - 1);
+                        lowerEnd = i2;
+                    } else {
+                        var i2 = 0;
+                        while (i2 < rest.length && rest[i2] !== '^' && !/\s/.test(rest[i2])) i2++;
+                        lower = rest.slice(0, i2);
+                        lowerEnd = i2;
+                    }
+                    if (lowerEnd >= rest.length) break;
+                    rest = rest.slice(lowerEnd).trimStart();
+                    if (!rest.startsWith('^')) break;
+                    rest = rest.slice(1);
+                    var upper = '',
+                        upperEnd = 0;
+                    if (rest.startsWith('{')) {
+                        var braceCount = 1,
+                            i3 = 1;
+                        while (i3 < rest.length && braceCount > 0) {
+                            if (rest[i3] === '{') braceCount++;
+                            else if (rest[i3] === '}') braceCount--;
+                            i3++;
+                        }
+                        upper = rest.slice(1, i3 - 1);
+                        upperEnd = i3;
+                    } else {
+                        var i3 = 0;
+                        while (i3 < rest.length && !/\s/.test(rest[i3]) && rest[i3] !== 'd') i3++;
+                        upper = rest.slice(0, i3);
+                        upperEnd = i3;
+                    }
+                    if (upperEnd >= rest.length) break;
+                    rest = rest.slice(upperEnd);
+                    var dxIndex = rest.search(/\s*d\s*x\s*/);
+                    if (dxIndex === -1) break;
+                    var expr = rest.slice(0, dxIndex).trim();
+                    if (expr.startsWith('{') && expr.endsWith('}')) expr = expr.slice(1, -1);
+                    var lowerC2 = latexToMathJS(lower),
+                        upperC2 = latexToMathJS(upper),
+                        exprC2 = latexToMathJS(expr);
+                    var a, b;
+                    try {
+                        a = math.evaluate(lowerC2);
+                        b = math.evaluate(upperC2);
+                    } catch (_) {
+                        var aNum = parseFloat(lowerC2),
+                            bNum = parseFloat(upperC2);
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            a = aNum;
+                            b = bNum;
+                        } else break;
+                    }
+                    if (typeof a !== 'number' || typeof b !== 'number' || !isFinite(a) || !isFinite(b)) break;
+                    var result;
+                    try {
+                        result = numericalIntegral(exprC2, 'x', a, b);
+                        if (!isFinite(result)) break;
+                    } catch (_) { break; }
+                    var matchEnd = newS.indexOf('dx', idx) + 2;
+                    newS = newS.slice(0, idx) + result.toString() + newS.slice(matchEnd);
+                }
+                return newS;
+            }
+
+            function compute(latex, options) {
+                if (!latex || latex.trim() === '') return { success: false, error: '请输入 LaTeX 公式' };
+                try {
+                    var mathExpr = latexToMathJS(latex);
+                    if (!mathExpr || mathExpr.trim() === '') return { success: false, error: '转换后的表达式为空' };
+                    if (mathExpr.includes('throw new Error')) {
+                        var errMatch = mathExpr.match(/throw new Error\("([^"]*)"\)/);
+                        if (errMatch) return { success: false, error: errMatch[1] };
+                    }
+                    if (typeof math === 'undefined') return { success: false, error: 'mathjs 库未加载，无法计算' };
+                    var result = math.evaluate(mathExpr);
+                    var displayResult;
+                    if (typeof result === 'number') {
+                        if (Number.isInteger(result)) {
+                            displayResult = result.toString();
+                        } else { displayResult = parseFloat(result.toPrecision(12)).toString(); }
+                    } else if (typeof result === 'string') { displayResult = result; } else if (result && typeof result ===
+                        'object' && result.toString) { displayResult = result.toString(); } else {
+                        displayResult = String(result);
+                    }
+                    return { success: true, result: displayResult, mathExpr: mathExpr };
+                } catch (err) {
+                    var msg = err.message || '计算错误';
+                    if (msg.includes('undefined')) msg = '表达式包含未定义的变量，请确保所有变量都有数值';
+                    return { success: false, error: msg };
+                }
+            }
+
+            function parse(latex) { return latexToMathJS(latex); }
+
+            function render(latex, target, options) {
+                if (!target) return false;
+                if (!latex || latex.trim() === '') { target.innerHTML = ''; return false; }
+                if (typeof katex === 'undefined') {
+                    target.innerHTML = '<span style="color:#c0392b;">⚠️ KaTeX 库未加载</span>';
+                    return false;
+                }
+                try {
+                    var html = katex.renderToString(latex, Object.assign({
+                        throwOnError: false,
+                        displayMode: true,
+                        trust: true
+                    }, options || {}));
+                    target.innerHTML = html;
+                    return true;
+                } catch (err) {
+                    target.innerHTML = '<span style="color:#c0392b;font-size:16px;">⚠️ 渲染失败: ' + err.message + '</span>';
+                    return false;
+                }
+            }
+            var LaTeXCalculator = {
+                compute: compute,
+                parse: parse,
+                render: render,
+                integral: numericalIntegral,
+                version: '1.0.0',
+                deps: { mathjs: typeof math !== 'undefined', katex: typeof katex !== 'undefined' }
+            };
+            if (typeof window !== 'undefined') window.LaTeXCalculator = LaTeXCalculator;
+            if (typeof module !== 'undefined' && module.exports) {
+                module.exports = LaTeXCalculator;
+                module.exports.default = LaTeXCalculator;
+            }
+            if (typeof define === 'function' && define.amd) { define([], function () { return LaTeXCalculator; }); }
+            return LaTeXCalculator;
+        })(typeof globalThis !== 'undefined' ? globalThis :
+            typeof window !== 'undefined' ? window :
+                typeof global !== 'undefined' ? global :
+                    this);
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- 3. 主应用逻辑 -->
+    <!-- ============================================================ -->
+    <script>
+        // ===== 工具函数 =====
+        function showHint(text, duration) {
+            duration = duration || 4000;
+            var old = document.querySelector('.toast-hint');
+            if (old) old.remove();
+            var hint = document.createElement('div');
+            hint.className = 'toast-hint';
+            hint.textContent = text;
+            document.body.appendChild(hint);
+            setTimeout(function () {
+                hint.style.opacity = '0';
+                setTimeout(function () { hint.remove(); }, 500);
+            }, duration);
+        }
+
+        function safeExecute(fn, fallbackMsg) {
+            fallbackMsg = fallbackMsg || '操作失败，请重试';
+            try { return fn(); } catch (e) {
+                console.error('操作异常:', e);
+                showHint('❌ ' + fallbackMsg);
+                return null;
+            }
+        }
+
+        function waitForMathLive(callback) {
+            if (typeof MathfieldElement !== 'undefined') { callback(); return; }
+            var check = setInterval(function () {
                 if (typeof MathfieldElement !== 'undefined') {
                     clearInterval(check);
                     callback();
                 }
             }, 100);
-            setTimeout(() => {
+            setTimeout(function () {
                 clearInterval(check);
                 console.error('MathLive 加载超时');
-                alert('公式编辑器加载超时，请刷新页面重试。');
+                showHint('❌ 公式编辑器加载超时，请刷新页面重试。');
             }, 10000);
         }
 
-        // ================================================================
-        //  1. 默认内容
-        // ================================================================
-        const DEFAULT_CONTENT = [
-            '# 欢迎使用 Vditor + MathLive + 高级表格 🎉',
-            '点击工具栏的 **Σ** 按钮，在光标处插入 **块级公式**。',
-            '点击工具栏的 **📊 表格** 按钮，打开 **高级表格编辑器**（类似 Excel）。',
-            '## ✨ 支持自定义宏',
-            '现在支持 `\\exponentialE` 和 `\\imaginaryI`，会自动转换为 `\\mathrm{e}` 和 `\\mathrm{i}`。',
-            '## 示例矩阵',
-            '$$\\begin{pmatrix} \\mathrm{e} & \\mathrm{i} \\end{pmatrix}$$',
-            '## 高级表格示例',
-            '<table style="border-collapse:collapse;width:100%;font-size:14px;">',
+        var isHotLoading = false;
+
+        function waitForHandsontable(callback) {
+            if (typeof Handsontable !== 'undefined') { callback(); return; }
+            if (isHotLoading) {
+                var check = setInterval(function () {
+                    if (typeof Handsontable !== 'undefined') {
+                        clearInterval(check);
+                        callback();
+                    }
+                }, 100);
+                return;
+            }
+            isHotLoading = true;
+            var attempts = 0;
+            var check = setInterval(function () {
+                attempts++;
+                if (typeof Handsontable !== 'undefined') {
+                    clearInterval(check);
+                    isHotLoading = false;
+                    callback();
+                } else if (attempts > 60) {
+                    clearInterval(check);
+                    isHotLoading = false;
+                    console.error('Handsontable 加载超时');
+                    showHint('❌ 表格编辑器加载超时，请刷新页面重试。');
+                }
+            }, 150);
+        }
+
+        // ===== 默认内容 =====
+        var DEFAULT_CONTENT = [
+            '# 欢迎使用 Vditor + 代码执行 + LaTeX 计算（点击浮动按钮）🎉',
+            '## 🧮 LaTeX 公式',
+            '单击公式块会出现 **✎ 编辑** 和 **🧮 计算** 按钮。',
+            '$$\\sum_{i=1}^{10} i = 55$$',
+            '$$\\int_{0}^{1} {x^2} dx$$',
+            '## ▶ 代码块',
+            '单击代码块会出现 **▶ 执行** 按钮。',
+            '```python',
+            'print("Hello, Judge0!")',
+            'for i in range(3):',
+            '    print(i)',
+            '```',
+            '```javascript',
+            'console.log("Hello from JS");',
+            '```',
+            '## 📊 表格',
+            '单击表格块出现 **✎ 编辑** 按钮。',
+            '<div data-type="html-block" data-block="0" class="vditor-ir__node">',
+            '  <pre class="vditor-ir__marker--pre vditor-ir__marker"><code data-type="html-block">&lt;table style="border-collapse:collapse;width:100%;font-size:14px;"&gt;',
+            '&lt;thead&gt;&lt;tr style="background:#e6f0fa;"&gt;',
+            '&lt;th style="border:1px solid #ccc;padding:6px 10px;width:100px;"&gt;项目&lt;/th&gt;',
+            '&lt;th style="border:1px solid #ccc;padding:6px 10px;width:120px;"&gt;Q1&lt;/th&gt;',
+            '&lt;/tr&gt;&lt;/thead&gt;',
+            '&lt;tbody&gt;',
+            '&lt;tr&gt;&lt;td style="border:1px solid #ccc;padding:6px 10px;"&gt;营收&lt;/td&gt;',
+            '&lt;td style="border:1px solid #ccc;padding:6px 10px;text-align:right;"&gt;¥12.4万&lt;/td&gt;&lt;/tr&gt;',
+            '&lt;/tbody&gt;&lt;/table&gt;</code></pre>',
+            '  <pre class="vditor-ir__preview" data-render="1"><table style="border-collapse:collapse;width:100%;font-size:14px;">',
             '<thead><tr style="background:#e6f0fa;">',
             '<th style="border:1px solid #ccc;padding:6px 10px;width:100px;">项目</th>',
             '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q1</th>',
-            '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q2</th>',
-            '<th style="border:1px solid #ccc;padding:6px 10px;width:120px;">Q3</th>',
             '</tr></thead>',
             '<tbody>',
-            '<tr><td style="border:1px solid #ccc;padding:6px 10px;background:#f9f9f9;">营收</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥12.4万</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;background:#e6f7e6;">¥15.8万</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥18.2万</td></tr>',
-            '<tr><td style="border:1px solid #ccc;padding:6px 10px;background:#f9f9f9;">成本</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥8.1万</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;background:#fde8e8;">¥9.3万</td>',
-            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥10.5万</td></tr>',
-            '</tbody></table>',
-            '试试点击 **📊 表格** 按钮，创建你自己的高级表格吧！'
+            '<tr><td style="border:1px solid #ccc;padding:6px 10px;">营收</td>',
+            '<td style="border:1px solid #ccc;padding:6px 10px;text-align:right;">¥12.4万</td></tr>',
+            '</tbody></table></pre>',
+            '</div>',
+            '试试点击这些元素体验浮动按钮吧！'
         ].join('\n');
 
-        // ================================================================
-        //  2. 初始化 Vditor（关闭 sanitize）
-        // ================================================================
-        const vditor = new Vditor('vditor', {
+        // ===== 初始化 Vditor =====
+        var vditor = new Vditor('vditor', {
             mode: 'ir',
             theme: 'classic',
             icon: 'ant',
@@ -1057,7 +1735,7 @@
                 mode: 'both',
                 math: { engine: 'KaTeX' },
                 hljs: { style: 'github' },
-                sanitize: false // 关键：允许 HTML
+                sanitize: false
             },
             toolbar: [
                 'emoji', 'headings', 'bold', 'italic', 'strike', '|',
@@ -1067,9 +1745,13 @@
                     icon: '<span style="font-weight:bold;font-size:18px;">Σ</span>',
                     tip: '插入块级公式（内联编辑）',
                     tipPosition: 's',
-                    click: () => {
+                    click: function () {
                         saveCursorPosition();
-                        waitForMathLive(() => {
+                        waitForMathLive(function () {
+                            editingFormulaElement = null;
+                            document.getElementById('panel-insert').textContent = '插入公式';
+                            document.querySelector('#panel-title small').textContent =
+                                '· 虚拟键盘 · 支持 \\exponentialE 和 \\imaginaryI';
                             openFormulaPanel();
                         });
                     }
@@ -1078,8 +1760,13 @@
                     icon: '<span style="font-size:18px;">📊</span>',
                     tip: '高级表格编辑器（类似 Excel）',
                     tipPosition: 's',
-                    click: () => {
+                    click: function () {
                         saveCursorPosition();
+                        restoreCursorPosition();
+                        editingTableElement = null;
+                        document.getElementById('table-insert').textContent = '✅ 插入表格';
+                        document.querySelector('#table-modal-title small').textContent = '· 类似 Excel 的编辑体验';
+                        insertTablePlaceholder();
                         openTableEditor();
                     }
                 },
@@ -1092,46 +1779,96 @@
             counter: { enable: true, type: 'markdown' },
             upload: {
                 accept: 'image/*',
-                handler: (files) => {
-                    const file = files[0];
+                handler: function (files) {
+                    var file = files[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        vditor.insertValue(`![${file.name}](${e.target.result})`);
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        vditor.insertValue('![' + file.name + '](' + e.target.result + ')');
                     };
                     reader.readAsDataURL(file);
                 }
             },
             outline: { enable: true, position: 'left' },
             typewriterMode: true,
-            after: () => {
+            after: function () {
                 console.log('✅ Vditor 已启动！');
-                waitForMathLive(() => {
+                waitForMathLive(function () {
                     console.log('✅ MathLive 已就绪');
                     setupGlobalKeyboard();
                 });
-                setupTableDoubleClickEdit();
+                bindClickEdit();
+                injectLanguageSelector();
             }
         });
 
-        // ================================================================
-        //  3. 光标位置管理（仅用于公式面板）
-        // ================================================================
-        let savedCursorRange = null;
+        // ===== 注入语言选择器 =====
+        function injectLanguageSelector() {
+            var check = setInterval(function () {
+                var toolbar = document.querySelector('.vditor-toolbar');
+                if (!toolbar) return;
+                if (document.getElementById('exec-lang-select')) { clearInterval(check); return; }
+                var items = toolbar.querySelectorAll('.vditor-toolbar__item');
+                var targetItem = null;
+                for (var i = 0; i < items.length; i++) {
+                    var btn = items[i].querySelector('[data-name="advanced-table"]');
+                    if (btn) { targetItem = items[i]; break; }
+                }
+                if (!targetItem) return;
+                var container = document.createElement('span');
+                container.className = 'vditor-toolbar__item vditor-toolbar__item--custom';
+                container.style.marginLeft = '4px';
+                container.innerHTML =
+                    `
+                    <select id="exec-lang-select" style="border:1px solid #d0d7de;border-radius:4px;padding:2px 6px;font-size:12px;background:#fff;height:26px;outline:none;cursor:pointer;">
+                        <option value="71">Python 3</option>
+                        <option value="63">JavaScript (Node.js)</option>
+                        <option value="62">Java</option>
+                        <option value="54">C++</option>
+                        <option value="50">C</option>
+                        <option value="68">PHP</option>
+                        <option value="60">Go</option>
+                        <option value="72">Ruby</option>
+                        <option value="73">Rust</option>
+                        <option value="74">TypeScript</option>
+                        <option value="46">Bash</option>
+                        <option value="51">C#</option>
+                        <option value="83">Swift</option>
+                        <option value="80">R</option>
+                        <option value="85">Perl</option>
+                        <option value="86">Lua</option>
+                        <option value="91">Kotlin</option>
+                        <option value="92">Scala</option>
+                        <option value="93">Dart</option>
+                        <option value="94">Julia</option>
+                    </select>
+                `;
+                targetItem.parentNode.insertBefore(container, targetItem.nextSibling);
+                clearInterval(check);
+                console.log('✅ 语言选择器已注入');
+            }, 500);
+            setTimeout(function () { clearInterval(check); }, 8000);
+        }
+
+        // ===== 光标位置管理 =====
+        var savedCursorRange = null;
 
         function saveCursorPosition() {
             try {
-                const selection = window.getSelection();
+                var selection = window.getSelection();
                 if (selection && selection.rangeCount > 0) {
                     savedCursorRange = selection.getRangeAt(0).cloneRange();
-                }
-            } catch (e) { console.warn('保存光标位置失败:', e); }
+                } else { savedCursorRange = null; }
+            } catch (e) {
+                console.warn('保存光标位置失败:', e);
+                savedCursorRange = null;
+            }
         }
 
         function restoreCursorPosition() {
             try {
                 if (savedCursorRange) {
-                    const selection = window.getSelection();
+                    var selection = window.getSelection();
                     selection.removeAllRanges();
                     selection.addRange(savedCursorRange);
                     savedCursorRange = null;
@@ -1141,89 +1878,836 @@
             return false;
         }
 
+        // ===== 浮动按钮管理 =====
+        var currentFloatContainer = null;
+        var currentEditTarget = null;
+        var currentEditType = null;
+        var _isEditingTable = false;
+
+        function showFloatActions(targetEl, actions) {
+            console.log('[showFloatActions] 开始显示浮动按钮，目标元素:', targetEl);
+            hideFloatActions();
+
+            targetEl.style.position = 'relative';
+            targetEl.style.overflow = 'visible';
+            targetEl.classList.add('editable-object');
+            targetEl.classList.add('edit-hover');
+
+            var container = document.createElement('div');
+            container.className = 'edit-float-container';
+            container.style.pointerEvents = 'auto';
+            container.style.zIndex = '9999';
+
+            actions.forEach(function (action) {
+                var btn = document.createElement('button');
+                btn.className = 'edit-float-btn' + (action.className ? ' ' + action.className : '');
+                btn.innerHTML = action.icon;
+                btn.title = action.title;
+                btn.setAttribute('aria-label', action.title);
+                var handlerFn = function (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    console.log('[FloatBtn] 按钮被点击，执行操作:', action.title);
+                    action.handler(targetEl);
+                    hideFloatActions();
+                };
+                btn.addEventListener('mousedown', handlerFn);
+                btn.addEventListener('touchstart', handlerFn, { passive: false });
+                container.appendChild(btn);
+                console.log('[showFloatActions] 添加按钮:', action.title);
+            });
+
+            targetEl.appendChild(container);
+            console.log('[showFloatActions] 容器已添加到目标元素，子节点数:', container.children.length);
+
+            void container.offsetHeight;
+            void targetEl.offsetHeight;
+
+            currentFloatContainer = container;
+            currentEditTarget = targetEl;
+            currentEditType = 'custom';
+
+            setTimeout(function () {
+                var rect = container.getBoundingClientRect();
+                console.log('[showFloatActions] 按钮位置:', rect);
+            }, 50);
+
+            document.addEventListener('click', handleOutsideClick, true);
+            document.addEventListener('keydown', handleEscapeKey);
+        }
+
+        function hideFloatActions() {
+            console.log('[hideFloatActions] 被调用');
+            if (currentFloatContainer && currentFloatContainer.parentNode) {
+                currentFloatContainer.parentNode.removeChild(currentFloatContainer);
+                console.log('[hideFloatActions] 已移除浮动容器');
+            }
+            if (currentEditTarget) {
+                currentEditTarget.classList.remove('edit-hover');
+                if (currentEditTarget.style.overflow === 'visible') {
+                    currentEditTarget.style.overflow = '';
+                }
+            }
+            currentFloatContainer = null;
+            currentEditTarget = null;
+            currentEditType = null;
+            document.removeEventListener('click', handleOutsideClick, true);
+            document.removeEventListener('keydown', handleEscapeKey);
+        }
+
+        function handleOutsideClick(e) {
+            var target = e.target;
+            console.log('[handleOutsideClick] 点击目标:', target);
+            if (currentEditTarget && !currentEditTarget.contains(target) &&
+                !(currentFloatContainer && currentFloatContainer.contains(target))) {
+                console.log('[handleOutsideClick] 点击外部，隐藏浮动按钮');
+                hideFloatActions();
+            } else {
+                console.log('[handleOutsideClick] 点击内部，不隐藏');
+            }
+        }
+
+        function handleEscapeKey(e) {
+            if (e.key === 'Escape') { hideFloatActions(); }
+        }
+
+        // ===== 检测元素类型 =====
+
+        function findTableBlockFromElement(el) {
+            var block = el.closest('div[data-type="html-block"]');
+            if (block && block.closest('.vditor-ir')) return block;
+            return null;
+        }
+
+        function findFormulaBlockFromElement(el) {
+            var node = el;
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (node.textContent.trim() === '') return null;
+                node = node.parentElement;
+            } else if (node.nodeType !== Node.ELEMENT_NODE) return null;
+            while (node && node !== document.body) {
+                var classList = node.classList;
+                if (classList) {
+                    if (classList.contains('vditor-ir') || classList.contains('vditor-reset') || classList.contains(
+                        'vditor-preview')) return null;
+                }
+                if (node.closest && node.closest('[data-type="html-block"]')) return null;
+                var tag = node.tagName;
+                if (['P', 'DIV', 'LI', 'BLOCKQUOTE', 'SECTION', 'ARTICLE', 'TD', 'TH'].includes(tag)) {
+                    var textContent = node.textContent || '';
+                    if (/\$\$[^$]+\$\$/.test(textContent)) return node;
+                }
+                node = node.parentElement;
+            }
+            return null;
+        }
+
+        function findCodeBlockFromElement(el) {
+            var node = el;
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (node.textContent.trim() === '') return null;
+                node = node.parentElement;
+            } else if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+            var pre = node;
+            if (!pre) return null;
+
+            var ir = pre.closest('.vditor-ir');
+            if (!ir) return null;
+
+            var code = pre;
+            if (!code) return null;
+
+            if (code.getAttribute('data-type') === 'html-block') return null;
+
+            var hasLanguageClass = code.className && /\blanguage-[\w-]+\b/.test(code.className);
+            var isMarkerPre = pre.classList.contains('vditor-ir__marker--pre');
+
+            if (pre.classList.contains('vditor-ir__preview') && !hasLanguageClass) {
+                return null;
+            }
+
+            if (pre.classList.contains('vditor-ir__marker') && !isMarkerPre) {
+                return null;
+            }
+
+            if (!isMarkerPre && !hasLanguageClass) {
+                return null;
+            }
+
+            var codeText = code.textContent || '';
+            if (codeText.trim() === '') return null;
+
+            if ((/\$\$/.test(codeText) || /\\[a-zA-Z]+/.test(codeText)) && !hasLanguageClass) {
+                return null;
+            }
+
+            return pre;
+        }
+
+        // ===== 单击编辑触发 =====
+        function bindClickEdit() {
+            var checkEditor = setInterval(function () {
+                var editor = getEditorElement();
+                if (editor) {
+                    clearInterval(checkEditor);
+                    editor.addEventListener('click', handleClickEdit);
+                    console.log('✅ 单击编辑事件已绑定');
+                }
+            }, 300);
+            setTimeout(function () { clearInterval(checkEditor); }, 5000);
+        }
+
+        function getEditorElement() {
+            return document.querySelector('.vditor-ir');
+        }
+
+        function handleClickEdit(e) {
+            if (_isEditingTable) return;
+            var target = e.target;
+            console.log('[handleClickEdit] 点击目标:', target);
+
+            if (target.closest('.edit-float-container')) return;
+            var editor = getEditorElement();
+            if (!editor || !editor.contains(target)) {
+                if (currentEditTarget) hideFloatActions();
+                return;
+            }
+            if (target === editor || target === editor.parentNode) {
+                if (currentEditTarget) hideFloatActions();
+                return;
+            }
+
+            var isValid = false;
+            if (target.nodeType === Node.TEXT_NODE) {
+                if (target.textContent.trim() !== '') isValid = true;
+            } else if (target.nodeType === Node.ELEMENT_NODE) {
+                var classList = target.classList;
+                if (classList && (classList.contains('vditor-ir') || classList.contains('vditor-reset') || classList
+                    .contains('vditor-preview'))) {
+                    isValid = false;
+                } else {
+                    var text = target.textContent || '';
+                    if (text.trim() !== '' || target.querySelector('img, table, [data-type="html-block"]')) {
+                        isValid = true;
+                    }
+                }
+            }
+            if (!isValid) {
+                if (currentEditTarget) hideFloatActions();
+                return;
+            }
+
+            var tableBlock = findTableBlockFromElement(target);
+            if (tableBlock) {
+                console.log('[handleClickEdit] ✅ 识别为表格');
+                if (currentEditTarget === tableBlock) return;
+                hideFloatActions();
+                showFloatActions(tableBlock, [{
+                    icon: '✎',
+                    title: '编辑表格',
+                    className: '',
+                    handler: function (el) { handleEditTable(el); }
+                }]);
+                e.preventDefault();
+                return;
+            }
+
+            var formulaBlock = findFormulaBlockFromElement(target);
+            console.log('[handleClickEdit] 公式块检测结果:', formulaBlock);
+            if (formulaBlock) {
+                console.log('[handleClickEdit] ✅ 识别为公式');
+                if (currentEditTarget === formulaBlock) return;
+                hideFloatActions();
+                showFloatActions(formulaBlock, [{
+                    icon: '✎',
+                    title: '编辑公式',
+                    className: '',
+                    handler: function (el) { handleEditFormula(el); }
+                }, {
+                    icon: '🧮',
+                    title: '计算公式',
+                    className: 'calc',
+                    handler: function (el) { handleCalculateFormulaFromBlock(el); }
+                }]);
+                e.preventDefault();
+                return;
+            }
+
+            var codeBlock = findCodeBlockFromElement(target);
+            console.log('[handleClickEdit] 代码块检测结果:', codeBlock);
+            if (codeBlock) {
+                console.log('[handleClickEdit] ✅ 识别为代码块，即将显示浮动按钮');
+                if (currentEditTarget === codeBlock) return;
+                hideFloatActions();
+                showFloatActions(codeBlock, [{
+                    icon: '▶',
+                    title: '执行代码',
+                    className: 'exec',
+                    handler: function (el) {
+                        console.log('[handler] ▶ 执行代码被调用');
+                        handleExecuteCodeFromBlock(el);
+                    }
+                }]);
+                e.preventDefault();
+                return;
+            }
+
+            if (currentEditTarget) {
+                hideFloatActions();
+            }
+        }
+
         // ================================================================
-        //  4. 公式面板
+        // 最终修复：handleEditFormula 精确提取公式
+        // 不再 fallback 到 blockEl.textContent，避免混入预览区渲染文本
         // ================================================================
-        const panel = document.getElementById('formula-panel');
-        const container = document.getElementById('math-field-container');
-        let mathField = null;
-        let isPanelOpen = false;
+        function handleEditFormula(blockEl) {
+            console.log('[handleEditFormula] 开始处理，blockEl:', blockEl);
+
+            // 1. 确保 blockEl 是 vditor-ir__node（向上查找）
+            var irNode = blockEl.closest ? blockEl.closest('.vditor-ir__node') : null;
+            if (irNode) {
+                blockEl = irNode;
+                console.log('[handleEditFormula] 已定位到 vditor-ir__node:', blockEl);
+            } else {
+                // 如果 blockEl 本身是 vditor-ir__node，closest 也会返回自身
+                if (blockEl.classList && blockEl.classList.contains('vditor-ir__node')) {
+                    console.log('[handleEditFormula] blockEl 本身就是 vditor-ir__node');
+                } else {
+                    console.warn('[handleEditFormula] 未找到 vditor-ir__node，尝试使用 blockEl 自身');
+                }
+            }
+
+            // 2. 查找 marker（支持两种类名）
+            var marker = blockEl.querySelector('.vditor-ir__marker--pre, .vditor-ir__marker');
+            var fullText = '';
+            var formulaText = '';
+            var sourceElement = null;
+
+            if (marker) {
+                console.log('[handleEditFormula] 找到 marker:', marker);
+                // 优先从 code 元素中提取
+                var code = marker.querySelector('code');
+                if (code) {
+                    fullText = code.textContent || '';
+                    console.log('[handleEditFormula] 从 marker code 获取文本:', fullText);
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(fullText);
+                    if (match) {
+                        formulaText = match[1].trim();
+                        sourceElement = code;
+                        console.log('[handleEditFormula] 从 code 提取公式:', formulaText);
+                    } else {
+                        // code 中没有 $$...$$，尝试从 code.textContent 直接取（可能是裸 LaTeX）
+                        var trimmed = fullText.trim();
+                        if (trimmed && !trimmed.includes('$$')) {
+                            formulaText = trimmed;
+                            sourceElement = code;
+                            console.log('[handleEditFormula] 从 code 提取裸 LaTeX:', formulaText);
+                        }
+                    }
+                }
+
+                // 如果 code 中没有提取到，从 marker.textContent 中提取
+                if (!formulaText) {
+                    fullText = marker.textContent || '';
+                    console.log('[handleEditFormula] 从 marker.textContent 获取文本:', fullText);
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(fullText);
+                    if (match) {
+                        formulaText = match[1].trim();
+                        sourceElement = marker;
+                        console.log('[handleEditFormula] 从 marker.textContent 提取公式:', formulaText);
+                    } else {
+                        // marker.textContent 中没有 $$...$$，尝试直接取（可能是裸 LaTeX）
+                        var trimmed = fullText.trim();
+                        if (trimmed && !trimmed.includes('$$')) {
+                            formulaText = trimmed;
+                            sourceElement = marker;
+                            console.log('[handleEditFormula] 从 marker.textContent 提取裸 LaTeX:', formulaText);
+                        }
+                    }
+                }
+            } else {
+                console.warn('[handleEditFormula] 未找到 marker，尝试从 blockEl 中查找 code');
+                // 如果没有 marker，尝试从 blockEl 中查找任何包含 $$...$$ 的 code 或 pre
+                var candidates = blockEl.querySelectorAll('code, pre');
+                for (var i = 0; i < candidates.length; i++) {
+                    var el = candidates[i];
+                    var text = el.textContent || '';
+                    if (/\$\$[^$]+\$\$/.test(text)) {
+                        var regex = /\$\$([^$]*)\$\$/g;
+                        var match = regex.exec(text);
+                        if (match) {
+                            formulaText = match[1].trim();
+                            sourceElement = el;
+                            console.log('[handleEditFormula] 从候选元素提取公式:', formulaText);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 3. 如果仍然没有提取到，报错（不再 fallback 到 blockEl.textContent）
+            if (!formulaText) {
+                showHint('⚠️ 未找到公式内容，请确保公式以 $$...$$ 包裹');
+                return;
+            }
+
+            // 4. 清理转义字符
+            formulaText = formulaText.replace(/\\\\/g, '\\');
+            console.log('[handleEditFormula] 最终提取的公式内容:', formulaText);
+
+            // 5. 保存编辑信息
+            var editElement = {
+                block: blockEl,
+                marker: marker,
+                sourceElement: sourceElement,
+                formulaText: formulaText,
+                fullText: fullText
+            };
+
+            waitForMathLive(function () {
+                editingFormulaElement = editElement;
+                document.getElementById('panel-insert').textContent = '更新公式';
+                document.querySelector('#panel-title small').textContent = '· 编辑已有公式';
+                openFormulaPanel(formulaText);
+                hideFloatActions();
+            });
+        }
+
+        // ===== 计算公式 =====
+        function handleCalculateFormulaFromBlock(blockEl) {
+            var fullText = blockEl.children[1]?.children[0]?.textContent || blockEl.textContent || '';
+            var regex = /\$\$([^$]*)\$\$/g;
+            var match = regex.exec(fullText);
+            if (!match) { showHint('未找到公式内容'); return; }
+            var latex = match[1].trim();
+            if (!latex) { showHint('公式为空'); return; }
+            try {
+                var result = LaTeXCalculator.compute(latex);
+                if (result.success) {
+                    var content = '';
+                    content += '<div class="label-tag">✅ 计算结果</div>';
+                    content += '<div style="margin-top:6px;font-weight:500;color:#1a7f37;">' + result.result + '</div>';
+                    if (result.mathExpr) {
+                        content +=
+                            '<div style="margin-top:10px;font-size:13px;color:#57606a;">MathJS 表达式：<code>' + result
+                                .mathExpr + '</code></div>';
+                    }
+                    try {
+                        if (typeof katex !== 'undefined') {
+                            var katexHtml = katex.renderToString(latex, {
+                                throwOnError: false,
+                                displayMode: true,
+                                trust: true
+                            });
+                            content +=
+                                '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecf0;">';
+                            content += '<div style="font-size:13px;color:#57606a;margin-bottom:6px;">📐 公式预览</div>';
+                            content += '<div class="latex-output">' + katexHtml + '</div>';
+                            content += '</div>';
+                        }
+                    } catch (e) { /* 忽略 */ }
+                    showResult('🧮 LaTeX 计算结果', content, false);
+                } else {
+                    var errContent = '<div class="error-text">❌ ' + (result.error || '计算失败') + '</div>';
+                    showResult('🧮 LaTeX 计算失败', errContent, true);
+                }
+            } catch (e) {
+                var errContent = '<div class="error-text">❌ 计算异常: ' + (e.message || '未知错误') + '</div>';
+                showResult('🧮 LaTeX 计算失败', errContent, true);
+            }
+        }
+
+        // ================================================================
+        //  表格解析（保持不变）
+        // ================================================================
+        function parseTableFromHtmlBlock(htmlBlockElement) {
+            var preview = htmlBlockElement.querySelector('.vditor-ir__preview');
+            var table = preview ? preview.querySelector('table') : null;
+
+            if (!table) {
+                var code = htmlBlockElement.querySelector('code[data-type="html-block"]');
+                if (code) {
+                    var htmlStr = code.textContent || '';
+                    try {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(htmlStr, 'text/html');
+                        table = doc.querySelector('table');
+                    } catch (_) {
+                        htmlStr = htmlStr
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&amp;/g, '&')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&#39;/g, "'");
+                        var match = htmlStr.match(/<table[^>]*>[\s\S]*?<\/table>/i);
+                        if (match) {
+                            var tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = match[0];
+                            table = tempDiv.querySelector('table');
+                        }
+                    }
+                }
+            }
+
+            if (!table) {
+                console.warn('[parseTableFromHtmlBlock] 未找到表格，htmlBlockElement:', htmlBlockElement);
+                return null;
+            }
+
+            var rows = table.querySelectorAll('tr');
+            var data = [],
+                colHeaders = [],
+                rowHeaders = false,
+                colWidths = [],
+                rowHeights = [],
+                bgColors = {};
+
+            var thead = table.querySelector('thead');
+            if (thead) {
+                var headerRow = thead.querySelector('tr');
+                if (headerRow) {
+                    var ths = headerRow.querySelectorAll('th');
+                    var firstTh = ths[0];
+                    if (firstTh && firstTh.textContent.trim() === '#') {
+                        rowHeaders = true;
+                        ths.forEach(function (th, idx) {
+                            if (idx === 0) return;
+                            colHeaders.push(th.textContent.trim());
+                            var w = th.style.width;
+                            if (w) colWidths.push(parseInt(w) || 100);
+                            else colWidths.push(100);
+                        });
+                    } else {
+                        ths.forEach(function (th) {
+                            colHeaders.push(th.textContent.trim());
+                            var w = th.style.width;
+                            if (w) colWidths.push(parseInt(w) || 100);
+                            else colWidths.push(100);
+                        });
+                    }
+                }
+            }
+
+            var tbody = table.querySelector('tbody');
+            if (tbody) {
+                var trs = tbody.querySelectorAll('tr');
+                trs.forEach(function (tr, rowIdx) {
+                    var tds = tr.querySelectorAll('td');
+                    var rowData = [];
+                    tds.forEach(function (td, colIdx) {
+                        if (rowHeaders && colIdx === 0) return;
+                        var val = td.textContent.trim();
+                        rowData.push(val);
+                        var bg = td.style.backgroundColor;
+                        var key = rowIdx + ',' + (colIdx - (rowHeaders ? 1 : 0));
+                        if (bg) bgColors[key] = bg;
+                        else bgColors[key] = '#ffffff';
+                        var h = tr.style.height || td.style.height;
+                        if (h && !rowHeights[rowIdx]) rowHeights[rowIdx] = parseInt(h) || 32;
+                    });
+                    if (!rowHeights[rowIdx]) rowHeights[rowIdx] = 32;
+                    data.push(rowData);
+                });
+            }
+
+            if (data.length === 0) {
+                return {
+                    data: [
+                        []
+                    ],
+                    colHeaders: [],
+                    rowHeaders: false,
+                    colWidths: [],
+                    rowHeights: [],
+                    bgColors: {}
+                };
+            }
+
+            var cols = data[0]?.length || 0;
+            while (colWidths.length < cols) colWidths.push(100);
+            while (colHeaders.length < cols) colHeaders.push(String.fromCharCode(65 + colHeaders.length));
+
+            return {
+                data: data,
+                colHeaders: colHeaders,
+                rowHeaders: rowHeaders,
+                colWidths: colWidths,
+                rowHeights: rowHeights,
+                bgColors: bgColors
+            };
+        }
+
+        function handleEditTable(rectOrElement) {
+            console.log('[handleEditTable] 开始处理，输入参数:', rectOrElement);
+
+            var targetTable = null;
+            var sourceBlock = null;
+
+            if (rectOrElement instanceof DOMRect || (rectOrElement && typeof rectOrElement.left === 'number')) {
+                var rect = rectOrElement;
+                var centerX = rect.left + rect.width / 2;
+                var centerY = rect.top + rect.height / 2;
+
+                var element = document.elementFromPoint(centerX, centerY);
+
+                while (element) {
+                    if (element.nodeType === 1 && element.tagName === 'TABLE') {
+                        var style = window.getComputedStyle(element);
+                        if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                            targetTable = element;
+                            break;
+                        }
+                    }
+                    element = element.parentElement;
+                }
+
+                if (!targetTable) {
+                    console.warn('未找到有效的表格元素，坐标:', centerX, centerY);
+                    showHint('⚠️ 未找到有效的表格元素');
+                    return;
+                }
+
+                sourceBlock = targetTable.closest('[data-type="html-block"]') || targetTable.closest('.vditor-ir__node');
+
+            } else if (rectOrElement instanceof HTMLElement) {
+                var el = rectOrElement;
+                targetTable = el.querySelector('table') || (el.tagName === 'TABLE' ? el : null);
+                sourceBlock = el.closest('[data-type="html-block"]') || el.closest('.vditor-ir__node');
+                if (!targetTable && el.getAttribute('data-type') === 'html-block') {
+                    var preview = el.querySelector('.vditor-ir__preview');
+                    if (preview) targetTable = preview.querySelector('table');
+                    if (!targetTable) {
+                        var code = el.querySelector('code[data-type="html-block"]');
+                        if (code) {
+                            var htmlStr = code.textContent || '';
+                            try {
+                                var parser = new DOMParser();
+                                var doc = parser.parseFromString(htmlStr, 'text/html');
+                                targetTable = doc.querySelector('table');
+                            } catch (_) { }
+                        }
+                    }
+                }
+            } else {
+                console.error('[handleEditTable] 无效的参数类型');
+                return;
+            }
+
+            if (!sourceBlock && targetTable) {
+                var tempDiv = document.createElement('div');
+                tempDiv.className = 'vditor-ir__node';
+                tempDiv.setAttribute('data-type', 'html-block');
+                var pre = document.createElement('pre');
+                pre.className = 'vditor-ir__preview';
+                pre.appendChild(targetTable.cloneNode(true));
+                tempDiv.appendChild(pre);
+                sourceBlock = tempDiv;
+            }
+
+            var parsedData = null;
+            if (sourceBlock) {
+                parsedData = parseTableFromHtmlBlock(sourceBlock);
+            }
+
+            if (!parsedData) {
+                console.error('[handleEditTable] 表格解析失败，sourceBlock:', sourceBlock);
+                showHint('⚠️ 表格解析失败，请尝试切换到"所见即所得"模式后重试');
+                _isEditingTable = false;
+                try {
+                    if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
+                    if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview.render();
+                } catch (e) { /* 忽略 */ }
+                return;
+            }
+
+            hideFloatActions();
+            _isEditingTable = true;
+            editingTableElement = sourceBlock;
+
+            waitForHandsontable(function () {
+                document.getElementById('table-insert').textContent = '✅ 更新表格';
+                document.querySelector('#table-modal-title small').textContent = '· 编辑已有表格';
+                openTableEditor(parsedData, sourceBlock);
+            });
+        }
+
+        // ===== 执行代码 =====
+        function handleExecuteCodeFromBlock(blockEl) {
+            console.log('[handleExecuteCodeFromBlock] 被调用，blockEl:', blockEl);
+            var codeEl = blockEl;
+            var code = codeEl ? codeEl.textContent || '' : '';
+            code = code.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+            code = code.replace("▶", '').trim();
+
+            if (!code.trim()) { showHint('代码块为空'); return; }
+            var langSelect = document.getElementById('exec-lang-select');
+            var languageId = langSelect ? parseInt(langSelect.value) : 71;
+            var langName = langSelect ? langSelect.options[langSelect.selectedIndex]?.text || 'Python 3' : 'Python 3';
+
+            var content = '<div style="display:flex;align-items:center;gap:10px;color:#57606a;">';
+            content +=
+                '<span style="display:inline-block;width:20px;height:20px;border:3px solid #d0d7de;border-top-color:#0969da;border-radius:50%;animation:spin 0.8s linear infinite;"></span>';
+            content += '<span>⏳ 正在执行代码...</span>';
+            content += '</div><style>@keyframes spin{to{transform:rotate(360deg);}}</style>';
+            showResult('▶ 代码执行中', content, false);
+
+            Judge0Executor.execute({
+                source_code: code,
+                language: languageId,
+                cpu_time_limit: 5,
+                memory_limit: 256000,
+                apiBase: 'https://ce.judge0.com'
+            }).then(function (result) {
+                var output = '';
+                output += '<div class="label-tag">✅ 执行完成</div>';
+                output += '<div style="margin-top:8px;font-size:13px;color:#57606a;">语言：' + langName +
+                    ' (ID: ' + languageId + ')</div>';
+                if (result.stdout) {
+                    output +=
+                        '<div style="margin-top:10px;"><div style="font-weight:500;margin-bottom:4px;">📤 标准输出</div><div class="code-block">' +
+                        escapeHtml(result.stdout) + '</div></div>';
+                }
+                if (result.stderr) {
+                    output +=
+                        '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">⚠️ 错误输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
+                        escapeHtml(result.stderr) + '</div></div>';
+                }
+                if (result.compile_output) {
+                    output +=
+                        '<div style="margin-top:10px;"><div style="font-weight:500;color:#cf222e;margin-bottom:4px;">🔧 编译输出</div><div class="code-block" style="border-color:#cf222e;background:#ffebe9;">' +
+                        escapeHtml(result.compile_output) + '</div></div>';
+                }
+                if (result.status && result.status.description) {
+                    output += '<div style="margin-top:10px;font-size:13px;color:#57606a;">状态：' + result.status
+                        .description + '</div>';
+                }
+                if (result.time) {
+                    output += '<div style="font-size:13px;color:#57606a;">⏱️ 耗时：' + result.time + 's</div>';
+                }
+                if (result.memory) {
+                    output += '<div style="font-size:13px;color:#57606a;">💾 内存：' + result.memory + ' KB</div>';
+                }
+                if (!result.stdout && !result.stderr && !result.compile_output) {
+                    output += '<div style="margin-top:10px;color:#57606a;">（无输出）</div>';
+                }
+                output += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid #e9ecf0;">';
+                output += '<div style="font-size:13px;color:#57606a;margin-bottom:4px;">📄 源代码</div>';
+                output += '<div class="code-block" style="font-size:13px;">' + escapeHtml(code) + '</div>';
+                output += '</div>';
+                showResult('▶ 代码执行结果', output, false);
+            }).catch(function (err) {
+                var errContent = '<div class="error-text">❌ 执行失败: ' + escapeHtml(err.message || '未知错误') +
+                    '</div>';
+                errContent += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e9ecf0;">';
+                errContent += '<div style="font-size:13px;color:#57606a;margin-bottom:4px;">📄 源代码</div>';
+                errContent += '<div class="code-block" style="font-size:13px;">' + escapeHtml(code) + '</div>';
+                errContent += '</div>';
+                showResult('▶ 代码执行失败', errContent, true);
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        // ===== 结果弹窗 =====
+        var resultOverlay = document.getElementById('result-overlay');
+        var resultBody = document.getElementById('result-body');
+        var resultTitle = document.getElementById('result-title');
+
+        function showResult(title, content, isError) {
+            resultTitle.textContent = title || '📋 结果';
+            resultBody.innerHTML = content;
+            resultOverlay.classList.add('open');
+        }
+
+        function closeResult() {
+            resultOverlay.classList.remove('open');
+        }
+        document.getElementById('result-close').addEventListener('click', closeResult);
+        resultOverlay.addEventListener('click', function (e) {
+            if (e.target === e.currentTarget) closeResult();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && resultOverlay.classList.contains('open')) { closeResult(); }
+        });
+
+        // ================================================================
+        //  公式面板
+        // ================================================================
+        var panel = document.getElementById('formula-panel');
+        var container = document.getElementById('math-field-container');
+        var mathField = null;
+        var isPanelOpen = false;
+        var editingFormulaElement = null;
 
         function setupGlobalKeyboard() {
-            if (window.mathVirtualKeyboard) {
-                window.mathVirtualKeyboard.container = document.body;
-                console.log('✅ 全局键盘容器设置为 body');
-            } else {
-                const check = setInterval(() => {
+            if (window.mathVirtualKeyboard) { window.mathVirtualKeyboard.container = document.body; } else {
+                var check = setInterval(function () {
                     if (window.mathVirtualKeyboard) {
                         window.mathVirtualKeyboard.container = document.body;
                         clearInterval(check);
-                        console.log('✅ 全局键盘容器设置为 body (延迟)');
                     }
                 }, 100);
             }
         }
-
-        if (typeof MathfieldElement !== 'undefined') {
-            MathfieldElement.locale = 'zh-CN';
-        }
+        if (typeof MathfieldElement !== 'undefined') { MathfieldElement.locale = 'zh-CN'; }
 
         function createMathField() {
-            if (mathField) {
-                mathField.value = '';
-                return mathField;
-            }
+            if (mathField) { mathField.value = ''; return mathField; }
             mathField = new MathfieldElement();
             mathField.virtualKeyboardPolicy = 'on';
             mathField.virtualKeyboardMode = 'overlay';
             mathField.smartFence = true;
             mathField.readonly = false;
-            mathField.customLatexMacros = {
-                'exponentialE': '\\mathrm{e}',
-                'imaginaryI': '\\mathrm{i}'
-            };
-            mathField.style.position = 'relative';
-            mathField.style.zIndex = '10000';
-            mathField.style.width = '100%';
-            mathField.style.minHeight = '48px';
-            mathField.style.fontSize = '20px';
-            mathField.style.touchAction = 'manipulation';
-            mathField.style.outline = 'none';
+            mathField.customLatexMacros = { 'exponentialE': '\\mathrm{e}', 'imaginaryI': '\\mathrm{i}' };
+            mathField.style.cssText =
+                'position:relative;z-index:10000;width:100%;min-height:48px;font-size:20px;touch-action:manipulation;outline:none;';
             mathField.value = '';
-
-            mathField.addEventListener('keydown', (e) => {
-                const key = e.key;
-                if (key === 'Enter' || key === 'Escape') return;
-                e.preventDefault();
-                e.stopPropagation();
+            mathField.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    insertFormulaFromPanel();
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeFormulaPanel(true);
+                    return;
+                }
             }, true);
-            mathField.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter' || e.key === 'Escape') return;
-                e.preventDefault();
-                e.stopPropagation();
-            }, true);
-            mathField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' || e.key === 'Escape') return;
-                e.preventDefault();
-                e.stopPropagation();
-            }, true);
-
-            mathField.addEventListener('virtual-keyboard-show', () => {
-                if (isPanelOpen) setTimeout(() => adjustPanelForKeyboard(true), 50);
+            mathField.addEventListener('input', function () {
+                var latex = mathField.getValue();
+                var newLatex = latex.replace(/\\exponentialE/g, '\\mathrm{e}').replace(/\\imaginaryI/g, '\\mathrm{i}');
+                if (newLatex !== latex) mathField.value = newLatex;
             });
-            mathField.addEventListener('virtual-keyboard-hide', () => {
-                if (isPanelOpen) adjustPanelForKeyboard(false);
+            mathField.addEventListener('virtual-keyboard-show', function () {
+                if (isPanelOpen) setTimeout(function () {
+                    adjustPanelForKeyboard(true);
+                }, 50);
             });
-            mathField.addEventListener('focus', () => {
+            mathField.addEventListener('virtual-keyboard-hide', function () {
+                if (isPanelOpen)
+                    adjustPanelForKeyboard(false);
+            });
+            mathField.addEventListener('focus', function () {
                 if (isPanelOpen) {
-                    panel.classList.add('keyboard-visible');
-                    setTimeout(() => mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 150);
+                    panel.classList.add(
+                        'keyboard-visible');
+                    setTimeout(function () { mathField.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); },
+                        150);
                 }
             });
-            mathField.addEventListener('blur', () => {
-                panel.classList.remove('keyboard-visible');
-            });
-
+            mathField.addEventListener('blur', function () { panel.classList.remove('keyboard-visible'); });
             container.appendChild(mathField);
             return mathField;
         }
@@ -1231,22 +2715,18 @@
         function adjustPanelForKeyboard(show) {
             if (!isPanelOpen) return;
             if (show) {
-                let keyboardHeight = 0;
-                try {
-                    if (mathField && mathField.shadowRoot) {
-                        const el = mathField.shadowRoot.querySelector('[part="virtual-keyboard"]');
-                        if (el) keyboardHeight = el.clientHeight;
-                    }
-                } catch (e) { /* 忽略 */ }
-                if (!keyboardHeight) keyboardHeight = window.innerHeight < 600 ? 280 : 340;
-                let safeBottom = 0;
-                try {
-                    const env = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom');
-                    if (env) safeBottom = parseInt(env) || 0;
-                } catch (e) { /* 忽略 */ }
-                const totalOffset = keyboardHeight + safeBottom;
+                var keyboardHeight = 0;
+                if (window.visualViewport) {
+                    var vh = window.visualViewport.height,
+                        wh = window.innerHeight;
+                    keyboardHeight = Math.max(0, wh - vh);
+                }
+                if (!keyboardHeight) { keyboardHeight = window.innerHeight < 600 ? 280 : 340; }
+                var safeBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(
+                    '--safe-area-inset-bottom')) || 0;
+                var totalOffset = keyboardHeight + safeBottom + 8;
                 panel.style.bottom = totalOffset + 'px';
-                panel.style.maxHeight = `calc(100vh - ${totalOffset}px - 16px)`;
+                panel.style.maxHeight = 'calc(100vh - ' + totalOffset + 'px - 16px)';
                 panel.style.overflowY = 'auto';
             } else {
                 panel.style.bottom = '0px';
@@ -1254,86 +2734,90 @@
                 panel.style.overflowY = 'auto';
             }
         }
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', function () {
+                if (isPanelOpen) adjustPanelForKeyboard(
+                    true);
+            });
+        }
 
         function getCursorBlockInfo() {
-            const sel = window.getSelection();
+            var sel = window.getSelection();
             if (!sel || sel.rangeCount === 0) return null;
-            const range = sel.getRangeAt(0);
-            let node = range.startContainer;
-            let block = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+            var range = sel.getRangeAt(0);
+            var node = range.startContainer;
+            var block = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
             while (block && !['P', 'DIV', 'LI', 'BLOCKQUOTE', 'SECTION', 'ARTICLE', 'TD', 'TH'].includes(block.tagName)) {
                 block = block.parentElement;
             }
             if (!block) return null;
-            const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
-            const textNodes = [];
-            let total = 0,
+            var walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null, false);
+            var textNodes = [],
+                total = 0,
                 current = walker.nextNode();
             while (current) {
                 textNodes.push(current);
                 total += current.textContent.length;
                 current = walker.nextNode();
             }
-            let offset = 0;
-            for (let tn of textNodes) {
+            var offset = 0;
+            for (var i = 0; i < textNodes.length; i++) {
+                var tn = textNodes[i];
                 if (tn === range.startContainer) { offset += range.startOffset; break; } else {
                     offset += tn.textContent.length;
                 }
             }
-            return { block, text: block.textContent, offset, textNodes, html: block.innerHTML };
-        }
-
-        function isInsideFormulaBlock() {
-            const info = getCursorBlockInfo();
-            if (!info) return false;
-            const { text, offset } = info;
-            const regex = /\$\$[^$]*\$\$/g;
-            let match;
-            while ((match = regex.exec(text)) !== null) {
-                const start = match.index,
-                    end = match.index + match[0].length;
-                if (offset >= start && offset <= end) return true;
-            }
-            return false;
+            return { block: block, text: block.textContent, offset: offset, textNodes: textNodes, html: block.innerHTML };
         }
 
         function getFormulaBlockContent() {
-            const info = getCursorBlockInfo();
+            var info = getCursorBlockInfo();
             if (!info) return null;
-            const { text, offset, block, html } = info;
-            const regex = /\$\$([^$]*)\$\$/g;
-            let match;
+            var text = info.text,
+                offset = info.offset,
+                block = info.block,
+                html = info.html;
+            var regex = /\$\$([^$]*)\$\$/g;
+            var match;
             while ((match = regex.exec(text)) !== null) {
-                const start = match.index,
+                var start = match.index,
                     end = match.index + match[0].length;
                 if (offset >= start && offset <= end) {
-                    return { inner: match[1], start, end, fullText: text, block, html };
+                    return {
+                        inner: match[1],
+                        start: start,
+                        end: end,
+                        fullText: text,
+                        block: block,
+                        html: html
+                    };
                 }
             }
             return null;
         }
 
-        function openFormulaPanel() {
-            const mf = createMathField();
-            mf.value = '';
+        function openFormulaPanel(initialLatex) {
+            initialLatex = initialLatex || '';
+            var mf = createMathField();
+            mf.value = initialLatex;
             saveCursorPosition();
-            const blockInfo = getFormulaBlockContent();
-            if (blockInfo) mf.value = blockInfo.inner;
             panel.classList.add('open');
             isPanelOpen = true;
             panel.style.bottom = '0px';
             panel.style.maxHeight = '70vh';
-            setTimeout(() => {
+            setTimeout(function () {
                 mf.focus();
                 if (mf.showVirtualKeyboard) mf.showVirtualKeyboard();
-                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) window.mathVirtualKeyboard.show();
+                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.show) window.mathVirtualKeyboard
+                    .show();
                 setupGlobalKeyboard();
-                setTimeout(() => { if (mf.showVirtualKeyboard) mf.showVirtualKeyboard(); }, 200);
+                setTimeout(function () { if (mf.showVirtualKeyboard) mf.showVirtualKeyboard(); }, 200);
             }, 400);
-            setTimeout(() => panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
+            setTimeout(function () { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 300);
         }
 
-        function closeFormulaPanel(cancel = true) {
+        function closeFormulaPanel(cancel) {
+            cancel = (cancel !== undefined) ? cancel : true;
             panel.classList.remove('open');
             panel.classList.remove('keyboard-visible');
             isPanelOpen = false;
@@ -1342,80 +2826,159 @@
             if (mathField) {
                 mathField.blur();
                 if (mathField.hideVirtualKeyboard) mathField.hideVirtualKeyboard();
-                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) window.mathVirtualKeyboard.hide();
+                else if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.hide) window.mathVirtualKeyboard
+                    .hide();
                 mathField.value = '';
             }
-            setTimeout(() => {
+            if (editingFormulaElement) { editingFormulaElement = null; }
+            setTimeout(function () {
                 vditor.focus();
                 if (cancel) restoreCursorPosition();
             }, 150);
         }
 
+        // ================================================================
+        // ★★★ 修复的 insertFormulaFromPanel：支持通过 marker 精确更新 ★★★
+        // ================================================================
         function insertFormulaFromPanel() {
             if (!mathField) return;
-            const latex = mathField.getValue('latex-expanded');
-            if (!latex || !latex.trim()) { closeFormulaPanel(true); return; }
-            const trimmedLatex = latex.trim();
-            closeFormulaPanel(false);
-            setTimeout(() => {
-                const restored = restoreCursorPosition();
-                if (!restored) {
-                    vditor.insertValue(`$$${trimmedLatex}$$`);
-                    vditor.focus();
-                    return;
-                }
-                const sel = window.getSelection();
-                if (!sel || !sel.rangeCount) {
-                    vditor.insertValue(`$$${trimmedLatex}$$`);
-                    vditor.focus();
-                    return;
-                }
-                const inside = isInsideFormulaBlock();
-                if (inside) {
-                    const blockInfo = getFormulaBlockContent();
-                    if (blockInfo) {
-                        const { inner, start, end, fullText, block } = blockInfo;
-                        const newFullText = fullText.substring(0, start + 2) + trimmedLatex + fullText.substring(end - 2);
-                        block.textContent = newFullText;
-                        const newRange = document.createRange();
-                        const newNode = block.firstChild;
-                        if (newNode && newNode.nodeType === Node.TEXT_NODE) {
-                            const pos = start + 2 + trimmedLatex.length;
-                            newRange.setStart(newNode, Math.min(pos, newFullText.length));
-                            newRange.collapse(true);
-                        } else {
-                            newRange.selectNodeContents(block);
-                            newRange.collapse(false);
+            var latex = mathField.getValue('latex-expanded');
+            if (!latex || !latex.trim()) {
+                closeFormulaPanel(true);
+                return;
+            }
+            var trimmedLatex = latex.trim();
+
+            if (editingFormulaElement) {
+                var block = editingFormulaElement.block;
+                var marker = editingFormulaElement.marker;
+                var sourceElement = editingFormulaElement.sourceElement;
+
+                // 优先使用 sourceElement（marker 或 code）来更新
+                if (sourceElement) {
+                    var currentText = sourceElement.textContent || '';
+                    console.log('[insertFormulaFromPanel] 更新 sourceElement，当前文本:', currentText);
+                    var regex = /\$\$([^$]*)\$\$/g;
+                    var match = regex.exec(currentText);
+                    if (match) {
+                        var start = match.index;
+                        var end = start + match[0].length;
+                        var newText = currentText.substring(0, start + 2) + trimmedLatex + currentText.substring(end - 2);
+                        sourceElement.textContent = newText;
+                        console.log('[insertFormulaFromPanel] 更新后的 sourceElement 文本:', newText);
+
+                        // 如果有 marker 但 sourceElement 不是 marker，同步更新 marker
+                        if (marker && sourceElement !== marker) {
+                            var markerText = marker.textContent || '';
+                            var markerMatch = regex.exec(markerText);
+                            if (markerMatch) {
+                                var mStart = markerMatch.index;
+                                var mEnd = mStart + markerMatch[0].length;
+                                var mNewText = markerText.substring(0, mStart + 2) + trimmedLatex + markerText.substring(
+                                    mEnd - 2);
+                                marker.textContent = mNewText;
+                            }
                         }
-                        sel.removeAllRanges();
-                        sel.addRange(newRange);
+
+                        // 触发 Vditor 重新渲染
+                        setTimeout(function () {
+                            try {
+                                if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
+                                if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview
+                                    .render();
+                            } catch (e) { /* 忽略 */ }
+                        }, 100);
+
+                        editingFormulaElement = null;
+                        closeFormulaPanel(false);
                         vditor.focus();
+                        showHint('✅ 公式已更新');
                         return;
-                    } else { vditor.insertValue(`$$${trimmedLatex}$$`); }
-                } else { vditor.insertValue(`$$${trimmedLatex}$$`); }
+                    }
+                }
+
+                // 如果 sourceElement 更新失败，使用 block.textContent 更新（兼容旧逻辑）
+                if (block) {
+                    var fullText = block.textContent || '';
+                    var regex2 = /\$\$([^$]*)\$\$/g;
+                    var match2 = regex2.exec(fullText);
+                    if (match2) {
+                        var start2 = match2.index;
+                        var end2 = start2 + match2[0].length;
+                        var newText2 = fullText.substring(0, start2 + 2) + trimmedLatex + fullText.substring(end2 - 2);
+                        while (block.firstChild) {
+                            block.removeChild(block.firstChild);
+                        }
+                        block.appendChild(document.createTextNode(newText2));
+                        editingFormulaElement = null;
+                        closeFormulaPanel(false);
+                        vditor.focus();
+                        showHint('✅ 公式已更新（使用兼容模式）');
+                        return;
+                    }
+                }
+
+                // 如果都失败，提示
+                showHint('⚠️ 更新公式失败，请手动编辑');
+                editingFormulaElement = null;
+                closeFormulaPanel(true);
+                return;
+            }
+
+            // 插入新公式（非编辑模式）
+            closeFormulaPanel(false);
+            setTimeout(function () {
+                var restored = restoreCursorPosition();
+                if (!restored) {
+                    vditor.insertValue('$$' + trimmedLatex + '$$');
+                    vditor.focus();
+                    return;
+                }
+                var blockInfo = getFormulaBlockContent();
+                if (blockInfo) {
+                    var block = blockInfo.block,
+                        start = blockInfo.start,
+                        end = blockInfo.end,
+                        fullText = blockInfo.fullText;
+                    var newText = fullText.substring(0, start + 2) + trimmedLatex + fullText.substring(end - 2);
+                    while (block.firstChild) {
+                        block.removeChild(block.firstChild);
+                    }
+                    block.appendChild(document.createTextNode(newText));
+                    var sel = window.getSelection(),
+                        range = document.createRange(),
+                        pos = Math.min(start + 2 + trimmedLatex.length, newText.length);
+                    if (block.firstChild) {
+                        range.setStart(block.firstChild, pos);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                } else {
+                    vditor.insertValue('$$' + trimmedLatex + '$$');
+                }
                 vditor.focus();
             }, 100);
         }
 
-        document.getElementById('panel-insert').addEventListener('click', (e) => {
+        document.getElementById('panel-insert').addEventListener('click', function (e) {
             e.stopPropagation();
-            insertFormulaFromPanel();
+            safeExecute(insertFormulaFromPanel, '插入/更新公式失败');
         });
-        document.getElementById('panel-cancel').addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeFormulaPanel(true);
-        });
-        document.getElementById('panel-close').addEventListener('click', (e) => {
+        document.getElementById('panel-cancel').addEventListener('click', function (e) {
             e.stopPropagation();
             closeFormulaPanel(true);
         });
-
-        document.addEventListener('keydown', (e) => {
+        document.getElementById('panel-close').addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeFormulaPanel(true);
+        });
+        document.addEventListener('keydown', function (e) {
             if (!isPanelOpen) return;
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 e.stopPropagation();
-                insertFormulaFromPanel();
+                safeExecute(insertFormulaFromPanel, '插入/更新公式失败');
                 return;
             }
             if (e.key === 'Escape') {
@@ -1424,18 +2987,12 @@
                 closeFormulaPanel(true);
                 return;
             }
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'Tab') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
         }, true);
 
-        let resizeTimer = null;
-        window.addEventListener('resize', () => {
+        var resizeTimer = null;
+        window.addEventListener('resize', function () {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
+            resizeTimer = setTimeout(function () {
                 if (isPanelOpen && mathField) {
                     if (mathField.shadowRoot && mathField.shadowRoot.querySelector('[part="virtual-keyboard"]')) {
                         adjustPanelForKeyboard(true);
@@ -1443,206 +3000,322 @@
                 }
             }, 350);
         });
-
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
+        window.addEventListener('orientationchange', function () {
+            setTimeout(function () {
                 if (isPanelOpen && mathField) {
                     mathField.blur();
-                    setTimeout(() => {
+                    setTimeout(function () {
                         mathField.focus();
-                        if (mathField.showVirtualKeyboard) mathField.showVirtualKeyboard();
+                        if (mathField.showVirtualKeyboard) mathField
+                            .showVirtualKeyboard();
                     }, 350);
                 }
             }, 500);
         });
 
         // ================================================================
-        //  5. 高级表格编辑器
+        //  高级表格编辑器
         // ================================================================
-        let hotInstance = null;
-        let hotContainer = document.getElementById('handsontable-container');
-        let isHotLoading = false;
-        let lastSelectedRange = null;
+        var hotInstance = null;
+        var hotContainer = document.getElementById('handsontable-container');
+        var lastSelectedRange = null;
+        var tableMarkerElement = null;
+        var isHotDestroying = false;
+        var editingTableElement = null;
+        var isTableEditorOpening = false;
+        var _tableInited = false;
 
-        function isCellSelected(instance, row, col) {
-            if (!lastSelectedRange) return false;
-            const { rowStart, colStart, rowEnd, colEnd } = lastSelectedRange;
-            if (colStart === -1 && colEnd === -1) {
-                if (row >= rowStart && row <= rowEnd) return true;
-            } else if (rowStart === -1 && rowEnd === -1) {
-                if (col >= colStart && col <= colEnd) return true;
-            } else {
-                if (row >= rowStart && row <= rowEnd && col >= colStart && col <= colEnd) return true;
+        function insertTablePlaceholder() {
+            removeTablePlaceholder();
+            var editor = getEditorElement();
+            if (!editor) { vditor.insertValue('⬡'); return; }
+            var sel = window.getSelection(),
+                range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+            if (!range || !editor.contains(range.commonAncestorContainer)) {
+                range = document.createRange();
+                range.selectNodeContents(editor);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
             }
-            return false;
-        }
-
-        function bgRenderer(instance, td, row, col, prop, value, cellProperties) {
-            td.textContent = value !== undefined && value !== null ? value : '';
-            td.style.whiteSpace = 'pre-wrap';
-            td.style.wordWrap = 'break-word';
-            td.style.verticalAlign = 'middle';
-            td.style.textAlign = 'left';
-            td.style.padding = '6px 10px';
-
-            let bgColor = cellProperties.bgColor || '#ffffff';
-            if (row >= 0 && col >= 0 && isCellSelected(instance, row, col)) {
-                bgColor = '#c7e0f5';
-            }
-            td.style.backgroundColor = bgColor;
-            if (row === -1 || col === -1) {
-                td.style.backgroundColor = '#f0f2f5';
-            }
-        }
-
-        function initCellBgColors(instance, rows, cols, color) {
-            if (!instance) return;
-            const bg = color || '#ffffff';
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    instance.setCellMeta(r, c, 'bgColor', bg);
-                }
-            }
-        }
-
-        function waitForHandsontable(callback) {
-            if (typeof Handsontable !== 'undefined') {
-                callback();
-                return;
-            }
-            if (isHotLoading) {
-                const check = setInterval(() => {
-                    if (typeof Handsontable !== 'undefined') {
-                        clearInterval(check);
-                        callback();
-                    }
-                }, 100);
-                return;
-            }
-            isHotLoading = true;
-            console.log('⏳ 等待 Handsontable 加载...');
-            let attempts = 0;
-            const check = setInterval(() => {
-                attempts++;
-                if (typeof Handsontable !== 'undefined') {
-                    clearInterval(check);
-                    isHotLoading = false;
-                    console.log('✅ Handsontable 已加载');
-                    callback();
-                } else if (attempts > 60) {
-                    clearInterval(check);
-                    isHotLoading = false;
-                    console.error('❌ Handsontable 加载超时');
-                    alert('表格编辑器加载超时，请刷新页面重试。');
-                }
-            }, 150);
-        }
-
-        function openTableEditor() {
-            waitForHandsontable(() => {
-                const overlay = document.getElementById('table-modal-overlay');
-                overlay.classList.add('open');
-                document.body.style.overflow = 'hidden';
-
-                const containerEl = document.getElementById('handsontable-container');
-                if (containerEl) {
-                    containerEl.style.minHeight = '350px';
-                    containerEl.style.height = '100%';
-                    void containerEl.offsetHeight;
-                }
-
-                let initAttempts = 0;
-                const maxAttempts = 20;
-
-                function tryInitHot() {
-                    const rect = containerEl ? containerEl.getBoundingClientRect() : null;
-                    const hasSize = rect && rect.width > 10 && rect.height > 50;
-
-                    if (hasSize || initAttempts >= maxAttempts) {
-                        console.log(`📐 容器尺寸: ${rect?.width || '?'} x ${rect?.height || '?'}, 尝试初始化`);
-                        if (!hotInstance) {
-                            initHandsontable();
-                        } else {
-                            hotInstance.render();
-                            setTimeout(() => {
-                                if (hotInstance) hotInstance.render();
-                            }, 80);
+            var marker = document.createElement('span');
+            marker.dataset.marker = 'table';
+            marker.textContent = '⬡';
+            marker.style.display = 'inline';
+            marker.style.background = 'transparent';
+            try {
+                range.deleteContents();
+                range.insertNode(marker);
+                range.setStartAfter(marker);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                tableMarkerElement = marker;
+            } catch (e) {
+                vditor.insertValue('⬡');
+                setTimeout(function () {
+                    var walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+                    var node;
+                    while ((node = walker.nextNode())) {
+                        if (node.textContent === '⬡') {
+                            var span = document.createElement('span');
+                            span.dataset.marker = 'table';
+                            span.style.display = 'inline';
+                            span.style.background = 'transparent';
+                            span.textContent = '⬡';
+                            node.parentNode.replaceChild(span, node);
+                            tableMarkerElement = span;
+                            break;
                         }
-                        setTimeout(() => {
-                            if (hotInstance) {
-                                hotInstance.selectCell(0, 0);
-                                hotInstance.render();
-                            }
-                        }, 120);
-                        return;
                     }
+                }, 50);
+            }
+        }
 
-                    initAttempts++;
-                    console.log(`⏳ 等待容器渲染... (${initAttempts}/${maxAttempts})`);
-                    setTimeout(tryInitHot, 120);
+        function removeTablePlaceholder() {
+            if (tableMarkerElement && tableMarkerElement.parentNode) {
+                tableMarkerElement.parentNode.removeChild(tableMarkerElement);
+                tableMarkerElement = null;
+            }
+        }
+
+        function openTableEditor(editData, editElement) {
+            if (isTableEditorOpening) {
+                setTimeout(function () {
+                    if (!isTableEditorOpening) {
+                        openTableEditor(
+                            editData, editElement);
+                    } else { showHint('⏳ 编辑器正在打开，请稍候...'); }
+                }, 300);
+                return;
+            }
+            isTableEditorOpening = true;
+            var overlay = document.getElementById('table-modal-overlay');
+
+            function releaseLock() {
+                isTableEditorOpening = false;
+                _isEditingTable = false;
+            }
+            try {
+                if (overlay.classList.contains('open')) {
+                    if (editData && editElement) {
+                        editingTableElement = editElement;
+                        document.getElementById('table-insert').textContent = '✅ 更新表格';
+                        document.querySelector('#table-modal-title small').textContent = '· 编辑已有表格';
+                        var data = editData.data,
+                            colHeaders = editData.colHeaders,
+                            rowHeaders = editData.rowHeaders,
+                            colWidths = editData.colWidths,
+                            rowHeights = editData.rowHeights,
+                            bgColors = editData.bgColors;
+                        document.getElementById('ht-rows').value = data.length || 5;
+                        document.getElementById('ht-cols').value = (data[0]?.length) || 5;
+                        if (colWidths.length > 0) document.getElementById('ht-colwidth').value = colWidths[0] || 100;
+                        if (rowHeights.length > 0) document.getElementById('ht-rowheight').value = rowHeights[0] || 32;
+                        window._editTableData = {
+                            data: data,
+                            colHeaders: colHeaders,
+                            rowHeaders: rowHeaders,
+                            colWidths: colWidths,
+                            rowHeights: rowHeights,
+                            bgColors: bgColors
+                        };
+                        if (hotInstance) { updateHandsontableData(); } else { initHandsontable(); }
+                        overlay.classList.add('open');
+                        document.body.style.overflow = 'hidden';
+                        releaseLock();
+                        return;
+                    } else { closeTableEditor(); }
                 }
-
-                requestAnimationFrame(() => {
-                    setTimeout(tryInitHot, 200);
+                waitForHandsontable(function () {
+                    try {
+                        if (document.getElementById('table-modal-overlay').classList.contains('open')) {
+                            if (editData && editElement) {
+                                editingTableElement = editElement;
+                                document.getElementById('table-insert').textContent = '✅ 更新表格';
+                                document.querySelector('#table-modal-title small').textContent = '· 编辑已有表格';
+                                window._editTableData = {
+                                    data: editData.data,
+                                    colHeaders: editData.colHeaders,
+                                    rowHeaders: editData.rowHeaders,
+                                    colWidths: editData.colWidths,
+                                    rowHeights: editData.rowHeights,
+                                    bgColors: editData.bgColors
+                                };
+                                if (hotInstance) { updateHandsontableData(); } else { initHandsontable(); }
+                                overlay.classList.add('open');
+                                document.body.style.overflow = 'hidden';
+                            }
+                            releaseLock();
+                            return;
+                        }
+                        if (editData && editElement) {
+                            editingTableElement = editElement;
+                            document.getElementById('table-insert').textContent = '✅ 更新表格';
+                            document.querySelector('#table-modal-title small').textContent = '· 编辑已有表格';
+                            window._editTableData = {
+                                data: editData.data,
+                                colHeaders: editData.colHeaders,
+                                rowHeaders: editData.rowHeaders,
+                                colWidths: editData.colWidths,
+                                rowHeights: editData.rowHeights,
+                                bgColors: editData.bgColors
+                            };
+                        } else {
+                            editingTableElement = null;
+                            document.getElementById('table-insert').textContent = '✅ 插入表格';
+                            document.querySelector('#table-modal-title small').textContent = '· 类似 Excel 的编辑体验';
+                            window._editTableData = null;
+                        }
+                        overlay.classList.add('open');
+                        document.body.style.overflow = 'hidden';
+                        var containerEl = document.getElementById('handsontable-container');
+                        if (!containerEl) { releaseLock(); return; }
+                        containerEl.style.minHeight = '350px';
+                        containerEl.style.height = '100%';
+                        void containerEl.offsetHeight;
+                        var rect = containerEl.getBoundingClientRect();
+                        if (rect.width > 10 && rect.height > 50) {
+                            initHandsontable();
+                            releaseLock();
+                            return;
+                        }
+                        var initialized = false;
+                        var resizeObserver = new ResizeObserver(function (entries) {
+                            for (var i = 0; i < entries.length; i++) {
+                                var entry = entries[i];
+                                var width = entry.contentRect.width,
+                                    height = entry.contentRect.height;
+                                if (width > 10 && height > 50 && !initialized) {
+                                    initialized = true;
+                                    resizeObserver.disconnect();
+                                    initHandsontable();
+                                    releaseLock();
+                                    return;
+                                }
+                            }
+                        });
+                        resizeObserver.observe(containerEl);
+                        setTimeout(function () {
+                            if (!initialized) {
+                                initialized = true;
+                                resizeObserver.disconnect();
+                                initHandsontable();
+                                releaseLock();
+                            }
+                        }, 1500);
+                    } catch (e) {
+                        console.error('openTableEditor 异步执行出错:', e);
+                        showHint('❌ 打开表格编辑器失败，请刷新页面重试');
+                        releaseLock();
+                    }
                 });
+            } catch (e) {
+                console.error('openTableEditor 执行出错:', e);
+                showHint('❌ 打开表格编辑器失败，请刷新页面重试');
+                releaseLock();
+            }
+        }
+
+        function updateHandsontableData() {
+            var editData = window._editTableData;
+            if (!editData || !hotInstance) return;
+            var rows = editData.data.length,
+                cols = editData.data[0]?.length || 1;
+            var colHeaders = editData.colHeaders || [],
+                rowHeaders = editData.rowHeaders || false;
+            var colWidths = editData.colWidths || new Array(cols).fill(100);
+            var rowHeights = editData.rowHeights || new Array(rows).fill(32);
+            var bgColors = editData.bgColors || {};
+            while (colHeaders.length < cols) colHeaders.push(String.fromCharCode(65 + colHeaders.length));
+            while (colWidths.length < cols) colWidths.push(100);
+            while (rowHeights.length < rows) rowHeights.push(32);
+            hotInstance.updateSettings({
+                data: editData.data,
+                colHeaders: colHeaders,
+                rowHeaders: rowHeaders,
+                colWidths: colWidths,
+                rowHeights: rowHeights
             });
+            var rowsCount = hotInstance.countRows(),
+                colsCount = hotInstance.countCols();
+            for (var r = 0; r < rowsCount; r++) {
+                for (var c = 0; c < colsCount; c++) {
+                    var key = r + ',' + c;
+                    var bg = bgColors[key] || '#ffffff';
+                    hotInstance.setCellMeta(r, c, 'bgColor', bg);
+                }
+            }
+            hotInstance.render();
         }
 
         function closeTableEditor() {
-            const overlay = document.getElementById('table-modal-overlay');
+            if (isHotDestroying) return;
+            isHotDestroying = true;
+            var overlay = document.getElementById('table-modal-overlay');
             overlay.classList.remove('open');
             document.body.style.overflow = '';
             if (hotInstance) {
-                setTimeout(() => {
-                    if (hotInstance) {
-                        hotInstance.destroy();
-                        hotInstance = null;
-                        console.log('🧹 Handsontable 实例已销毁');
-                    }
-                }, 300);
+                try { hotInstance.destroy(); } catch (e) {
+                    console.warn('销毁 Handsontable 实例时出错:',
+                        e);
+                }
+                hotInstance = null;
             }
+            window._editTableData = null;
+            editingTableElement = null;
+            _isEditingTable = false;
+            _tableInited = false;
+            isTableEditorOpening = false;
+            setTimeout(function () { isHotDestroying = false; }, 150);
         }
 
         function initHandsontable() {
-            const rows = parseInt(document.getElementById('ht-rows').value) || 5;
-            const cols = parseInt(document.getElementById('ht-cols').value) || 5;
-
-            const data = [];
-            for (let r = 0; r < rows; r++) {
-                const row = [];
-                for (let c = 0; c < cols; c++) {
-                    row.push('');
+            if (_tableInited) { updateHandsontableData(); return; }
+            _tableInited = true;
+            var editData = window._editTableData || null;
+            var rows, cols, initialData, colHeaders, rowHeaders, colWidths, rowHeights, bgColors;
+            if (editData) {
+                rows = editData.data.length;
+                cols = editData.data[0]?.length || 1;
+                initialData = editData.data;
+                colHeaders = editData.colHeaders || [];
+                rowHeaders = editData.rowHeaders || false;
+                colWidths = editData.colWidths || new Array(cols).fill(100);
+                rowHeights = editData.rowHeights || new Array(rows).fill(32);
+                bgColors = editData.bgColors || {};
+            } else {
+                rows = parseInt(document.getElementById('ht-rows').value) || 5;
+                cols = parseInt(document.getElementById('ht-cols').value) || 5;
+                initialData = [];
+                for (var r = 0; r < rows; r++) {
+                    var row = [];
+                    for (var c = 0; c < cols; c++) row.push('');
+                    initialData.push(row);
                 }
-                data.push(row);
+                colHeaders = [];
+                for (var c = 0; c < cols; c++) colHeaders.push(String.fromCharCode(65 + c));
+                rowHeaders = false;
+                colWidths = new Array(cols).fill(parseInt(document.getElementById('ht-colwidth').value) || 100);
+                rowHeights = new Array(rows).fill(parseInt(document.getElementById('ht-rowheight').value) || 32);
+                bgColors = {};
+                for (var r = 0; r < rows; r++) { for (var c = 0; c < cols; c++) bgColors[r + ',' + c] = '#ffffff'; }
             }
-
-            const colHeaders = [];
-            for (let c = 0; c < cols; c++) {
-                colHeaders.push(String.fromCharCode(65 + c));
-            }
-
-            const defaultWidth = parseInt(document.getElementById('ht-colwidth').value) || 100;
-            const defaultHeight = parseInt(document.getElementById('ht-rowheight').value) || 32;
-            const colWidths = new Array(cols).fill(defaultWidth);
-            const rowHeights = new Array(rows).fill(defaultHeight);
-
-            const containerEl = document.getElementById('handsontable-container');
+            while (colHeaders.length < cols) colHeaders.push(String.fromCharCode(65 + colHeaders.length));
+            while (colWidths.length < cols) colWidths.push(100);
+            while (rowHeights.length < rows) rowHeights.push(32);
+            var containerEl = document.getElementById('handsontable-container');
             if (containerEl) {
-                const rect = containerEl.getBoundingClientRect();
+                var rect = containerEl.getBoundingClientRect();
                 if (rect.height < 100) {
                     containerEl.style.minHeight = '350px';
                     containerEl.style.height = '100%';
                 }
             }
-
-            if (hotInstance) {
-                try { hotInstance.destroy(); } catch (e) { /* 忽略 */ }
-                hotInstance = null;
-            }
-
+            if (hotInstance) { updateHandsontableData(); return; }
             hotInstance = new Handsontable(hotContainer, {
-                data: data,
-                rowHeaders: true,
+                data: initialData,
+                rowHeaders: rowHeaders,
                 colHeaders: colHeaders,
                 contextMenu: true,
                 licenseKey: 'non-commercial-and-evaluation',
@@ -1660,22 +3333,30 @@
                 rowHeights: rowHeights,
                 renderer: bgRenderer,
                 afterInit: function () {
-                    const rowsCount = this.countRows();
-                    const colsCount = this.countCols();
-                    initCellBgColors(this, rowsCount, colsCount, '#ffffff');
+                    var rowsCount = this.countRows(),
+                        colsCount = this.countCols();
+                    for (var r = 0; r < rowsCount; r++) {
+                        for (var c = 0; c < colsCount; c++) {
+                            var key = r +
+                                ',' + c;
+                            var bg = bgColors[key] || '#ffffff';
+                            this.setCellMeta(r, c, 'bgColor', bg);
+                        }
+                    }
                     this.render();
-                    console.log('✅ Handsontable 初始化完成');
                 },
                 afterChange: function (changes, source) {
                     if (changes) {
-                        const instance = this;
-                        const rowsCount = instance.countRows();
-                        const colsCount = instance.countCols();
-                        for (let r = 0; r < rowsCount; r++) {
-                            for (let c = 0; c < colsCount; c++) {
-                                const meta = instance.getCellMeta(r, c);
+                        var instance = this;
+                        var rowsCount = instance.countRows(),
+                            colsCount = instance.countCols();
+                        for (var r = 0; r < rowsCount; r++) {
+                            for (var c = 0; c < colsCount; c++) {
+                                var meta =
+                                    instance.getCellMeta(r, c);
                                 if (!meta.bgColor) {
-                                    instance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                                    instance.setCellMeta(r, c,
+                                        'bgColor', '#ffffff');
                                 }
                             }
                         }
@@ -1684,90 +3365,103 @@
                 },
                 afterSelection: function (row, col, row2, col2) {
                     lastSelectedRange = { rowStart: row, colStart: col, rowEnd: row2, colEnd: col2 };
-                    console.log('📌 选中更新:', lastSelectedRange);
                     if (this) this.render();
                 },
-                afterDeselect: function () {
-                    console.log('📌 取消选中');
-                }
+                afterDeselect: function () { }
             });
-
-            setTimeout(() => {
-                if (hotInstance) {
-                    const rowsCount = hotInstance.countRows();
-                    const colsCount = hotInstance.countCols();
-                    for (let r = 0; r < rowsCount; r++) {
-                        for (let c = 0; c < colsCount; c++) {
-                            const meta = hotInstance.getCellMeta(r, c);
-                            if (!meta.bgColor) {
-                                hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
-                            }
-                        }
-                    }
-                    hotInstance.render();
-                }
-            }, 80);
-
             document.getElementById('ht-rows').value = rows;
             document.getElementById('ht-cols').value = cols;
+        }
 
-            console.log('✅ Handsontable 初始化完成');
+        function isCellSelected(instance, row, col) {
+            if (!lastSelectedRange) return false;
+            var rowStart = lastSelectedRange.rowStart,
+                colStart = lastSelectedRange.colStart;
+            var rowEnd = lastSelectedRange.rowEnd,
+                colEnd = lastSelectedRange.colEnd;
+            if (colStart === -1 && colEnd === -1) { if (row >= rowStart && row <= rowEnd) return true; } else if (
+                rowStart === -1 && rowEnd === -1) { if (col >= colStart && col <= colEnd) return true; } else {
+                if (
+                    row >= rowStart && row <= rowEnd && col >= colStart && col <= colEnd) return true;
+            }
+            return false;
+        }
+
+        function bgRenderer(instance, td, row, col, prop, value, cellProperties) {
+            td.textContent = (value !== undefined && value !== null) ? value : '';
+            td.style.cssText =
+                'white-space:pre-wrap;word-wrap:break-word;vertical-align:middle;text-align:left;padding:6px 10px;';
+            var bgColor = cellProperties.bgColor || '#ffffff';
+            if (row >= 0 && col >= 0 && isCellSelected(instance, row, col)) { bgColor = '#c7e0f5'; }
+            td.style.backgroundColor = bgColor;
+            if (row === -1 || col === -1) { td.style.backgroundColor = '#f0f2f5'; }
         }
 
         function getSelectedRange() {
             if (!hotInstance) return null;
             try {
-                const ranges = hotInstance.getSelectedRange();
+                var ranges = hotInstance.getSelectedRange();
                 if (ranges && ranges.length > 0) {
-                    const range = ranges[0];
+                    var range = ranges[0];
                     if (range) {
-                        const r1 = range.from.row,
-                            c1 = range.from.col;
-                        const r2 = range.to.row,
+                        var r1 = range.from.row,
+                            c1 = range.from.col,
+                            r2 = range.to.row,
                             c2 = range.to.col;
-                        if (typeof r1 === 'number' && typeof c1 === 'number' &&
-                            typeof r2 === 'number' && typeof c2 === 'number') {
-                            lastSelectedRange = { rowStart: r1, colStart: c1, rowEnd: r2, colEnd: c2 };
-                            return lastSelectedRange;
-                        }
+                        if (typeof r1 === 'number' && typeof c1 === 'number' && typeof r2 === 'number' && typeof c2 ===
+                            'number') { lastSelectedRange = { rowStart: r1, colStart: c1, rowEnd: r2, colEnd: c2 }; return lastSelectedRange; }
                     }
                 }
             } catch (e) { /* 忽略 */ }
-
-            let sel = hotInstance.getSelected();
+            var sel = hotInstance.getSelected();
             if (sel && sel.length > 0 && sel[0]) {
-                const [rowStart, colStart, rowEnd, colEnd] = sel[0];
-                if (typeof rowStart === 'number' && typeof colStart === 'number' &&
-                    typeof rowEnd === 'number' && typeof colEnd === 'number') {
-                    lastSelectedRange = { rowStart, colStart, rowEnd, colEnd };
+                var rowStart = sel[0][0],
+                    colStart = sel[0][1],
+                    rowEnd = sel[0][2],
+                    colEnd = sel[0][3];
+                if (typeof rowStart === 'number' && typeof colStart === 'number' && typeof rowEnd === 'number' &&
+                    typeof colEnd === 'number') {
+                    lastSelectedRange = {
+                        rowStart: rowStart,
+                        colStart: colStart,
+                        rowEnd: rowEnd,
+                        colEnd: colEnd
+                    };
                     return lastSelectedRange;
                 }
             }
-
-            const lastSel = hotInstance.getSelectedLast();
+            var lastSel = hotInstance.getSelectedLast();
             if (lastSel) {
-                const [rowStart, colStart, rowEnd, colEnd] = lastSel;
-                if (typeof rowStart === 'number' && typeof colStart === 'number' &&
-                    typeof rowEnd === 'number' && typeof colEnd === 'number') {
-                    lastSelectedRange = { rowStart, colStart, rowEnd, colEnd };
+                var rowStart = lastSel[0],
+                    colStart = lastSel[1],
+                    rowEnd = lastSel[2],
+                    colEnd = lastSel[3];
+                if (typeof rowStart === 'number' && typeof colStart === 'number' && typeof rowEnd === 'number' &&
+                    typeof colEnd === 'number') {
+                    lastSelectedRange = {
+                        rowStart: rowStart,
+                        colStart: colStart,
+                        rowEnd: rowEnd,
+                        colEnd: colEnd
+                    };
                     return lastSelectedRange;
                 }
             }
-
             return lastSelectedRange || null;
         }
 
         function normalizeRange(range) {
             if (!range) return null;
-            let { rowStart, colStart, rowEnd, colEnd } = range;
-            const totalRows = hotInstance.countRows();
-            const totalCols = hotInstance.countCols();
-
+            var rowStart = range.rowStart,
+                colStart = range.colStart,
+                rowEnd = range.rowEnd,
+                colEnd = range.colEnd;
+            var totalRows = hotInstance.countRows(),
+                totalCols = hotInstance.countCols();
             if (typeof rowStart !== 'number') rowStart = 0;
             if (typeof colStart !== 'number') colStart = 0;
             if (typeof rowEnd !== 'number') rowEnd = rowStart;
             if (typeof colEnd !== 'number') colEnd = colStart;
-
             if (rowStart === -1) {
                 rowStart = 0;
                 rowEnd = totalRows - 1;
@@ -1780,41 +3474,45 @@
             if (colStart < 0) colStart = 0;
             if (rowEnd >= totalRows) rowEnd = totalRows - 1;
             if (colEnd >= totalCols) colEnd = totalCols - 1;
-
-            return { rowStart, colStart, rowEnd, colEnd };
+            return { rowStart: rowStart, colStart: colStart, rowEnd: rowEnd, colEnd: colEnd };
         }
 
         function resizeTable() {
             if (!hotInstance) { initHandsontable(); return; }
-            const rows = parseInt(document.getElementById('ht-rows').value) || 1;
-            const cols = parseInt(document.getElementById('ht-cols').value) || 1;
-            const currentData = hotInstance.getData();
-            const newData = [];
-            for (let r = 0; r < rows; r++) {
-                const row = [];
-                for (let c = 0; c < cols; c++) {
-                    row.push((currentData[r] && currentData[r][c] !== undefined) ? currentData[r][c] : '');
+            var rows = parseInt(document.getElementById('ht-rows').value) || 1;
+            var cols = parseInt(document.getElementById('ht-cols').value) || 1;
+            var currentData = hotInstance.getData();
+            var newData = [];
+            for (var r = 0; r < rows; r++) {
+                var row = [];
+                for (var c = 0; c < cols; c++) {
+                    row.push((currentData[
+                        r] && currentData[r][c] !== undefined) ? currentData[r][c] : '');
                 }
                 newData.push(row);
             }
-
-            const colHeaders = [];
-            for (let c = 0; c < cols; c++) colHeaders.push(String.fromCharCode(65 + c));
-
-            const defaultWidth = parseInt(document.getElementById('ht-colwidth').value) || 100;
-            const defaultHeight = parseInt(document.getElementById('ht-rowheight').value) || 32;
-            const colWidths = new Array(cols).fill(defaultWidth);
-            const rowHeights = new Array(rows).fill(defaultHeight);
-
-            hotInstance.updateSettings({ data: newData, colHeaders, colWidths, rowHeights });
-            setTimeout(() => {
+            var colHeaders = [];
+            for (var c = 0; c < cols; c++) colHeaders.push(String.fromCharCode(65 + c));
+            var defaultWidth = parseInt(document.getElementById('ht-colwidth').value) || 100;
+            var defaultHeight = parseInt(document.getElementById('ht-rowheight').value) || 32;
+            var colWidths = new Array(cols).fill(defaultWidth);
+            var rowHeights = new Array(rows).fill(defaultHeight);
+            hotInstance.updateSettings({
+                data: newData,
+                colHeaders: colHeaders,
+                colWidths: colWidths,
+                rowHeights: rowHeights
+            });
+            setTimeout(function () {
                 if (hotInstance) {
-                    const rowsCount = hotInstance.countRows();
-                    const colsCount = hotInstance.countCols();
-                    for (let r = 0; r < rowsCount; r++) {
-                        for (let c = 0; c < colsCount; c++) {
-                            const meta = hotInstance.getCellMeta(r, c);
-                            if (!meta.bgColor) hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
+                    var rowsCount = hotInstance.countRows(),
+                        colsCount = hotInstance.countCols();
+                    for (var r = 0; r < rowsCount; r++) {
+                        for (var c = 0; c < colsCount; c++) {
+                            var meta =
+                                hotInstance.getCellMeta(r, c);
+                            if (!meta.bgColor) hotInstance.setCellMeta(r, c,
+                                'bgColor', '#ffffff');
                         }
                     }
                     hotInstance.render();
@@ -1823,127 +3521,138 @@
         }
 
         function applyBgToSelected() {
-            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
-            const range = getSelectedRange();
-            if (!range) { alert('请先选中一个或多个单元格！'); return; }
-            const norm = normalizeRange(range);
+            if (!hotInstance) { showHint('请先打开表格编辑器！'); return; }
+            var range = getSelectedRange();
+            if (!range) { showHint('请先选中一个或多个单元格！'); return; }
+            var norm = normalizeRange(range);
             if (!norm) return;
-            const { rowStart, colStart, rowEnd, colEnd } = norm;
-            const color = document.getElementById('ht-bgcolor').value;
-            for (let r = rowStart; r <= rowEnd; r++) {
-                for (let c = colStart; c <= colEnd; c++) {
-                    hotInstance.setCellMeta(r, c, 'bgColor', color);
+            var rowStart = norm.rowStart,
+                colStart = norm.colStart,
+                rowEnd = norm.rowEnd,
+                colEnd = norm.colEnd;
+            var color = document.getElementById('ht-bgcolor').value;
+            for (var r = rowStart; r <= rowEnd; r++) {
+                for (var c = colStart; c <= colEnd; c++) {
+                    hotInstance
+                        .setCellMeta(r, c, 'bgColor', color);
                 }
             }
             hotInstance.render();
-            alert(`✅ 已应用背景色到 ${rowEnd - rowStart + 1} 行 × ${colEnd - colStart + 1} 列`);
+            showHint('✅ 已应用背景色到 ' + (rowEnd - rowStart + 1) + ' 行 × ' + (colEnd - colStart + 1) + ' 列');
         }
 
         function clearBgFromSelected() {
-            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
-            const range = getSelectedRange();
-            if (!range) { alert('请先选中一个或多个单元格！'); return; }
-            const norm = normalizeRange(range);
+            if (!hotInstance) { showHint('请先打开表格编辑器！'); return; }
+            var range = getSelectedRange();
+            if (!range) { showHint('请先选中一个或多个单元格！'); return; }
+            var norm = normalizeRange(range);
             if (!norm) return;
-            const { rowStart, colStart, rowEnd, colEnd } = norm;
-            for (let r = rowStart; r <= rowEnd; r++) {
-                for (let c = colStart; c <= colEnd; c++) {
-                    hotInstance.setCellMeta(r, c, 'bgColor', '#ffffff');
+            var rowStart = norm.rowStart,
+                colStart = norm.colStart,
+                rowEnd = norm.rowEnd,
+                colEnd = norm.colEnd;
+            for (var r = rowStart; r <= rowEnd; r++) {
+                for (var c = colStart; c <= colEnd; c++) {
+                    hotInstance
+                        .setCellMeta(r, c, 'bgColor', '#ffffff');
                 }
             }
             hotInstance.render();
-            alert('✅ 已清除选中区域背景色');
+            showHint('✅ 已清除选中区域背景色');
         }
 
         function applyColWidthToSelected() {
-            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
-            const range = getSelectedRange();
-            if (!range) { alert('请先选中一个或多个单元格！'); return; }
-            const norm = normalizeRange(range);
+            if (!hotInstance) { showHint('请先打开表格编辑器！'); return; }
+            var range = getSelectedRange();
+            if (!range) { showHint('请先选中一个或多个单元格！'); return; }
+            var norm = normalizeRange(range);
             if (!norm) return;
-            const { colStart, colEnd } = norm;
-            const width = parseInt(document.getElementById('ht-colwidth').value) || 100;
-            const currentColWidths = hotInstance.getSettings().colWidths || [];
-            const newColWidths = [...currentColWidths];
-            for (let c = colStart; c <= colEnd; c++) newColWidths[c] = width;
+            var colStart = norm.colStart,
+                colEnd = norm.colEnd;
+            var width = parseInt(document.getElementById('ht-colwidth').value) || 100;
+            var currentColWidths = hotInstance.getSettings().colWidths || [];
+            var newColWidths = currentColWidths.slice();
+            for (var c = colStart; c <= colEnd; c++) newColWidths[c] = width;
             hotInstance.updateSettings({ colWidths: newColWidths });
             hotInstance.render();
-            alert(`✅ 已应用列宽 ${width}px 到 ${colEnd - colStart + 1} 列`);
+            showHint('✅ 已应用列宽 ' + width + 'px 到 ' + (colEnd - colStart + 1) + ' 列');
         }
 
         function applyRowHeightToSelected() {
-            if (!hotInstance) { alert('请先打开表格编辑器！'); return; }
-            const range = getSelectedRange();
-            if (!range) { alert('请先选中一个或多个单元格！'); return; }
-            const norm = normalizeRange(range);
+            if (!hotInstance) { showHint('请先打开表格编辑器！'); return; }
+            var range = getSelectedRange();
+            if (!range) { showHint('请先选中一个或多个单元格！'); return; }
+            var norm = normalizeRange(range);
             if (!norm) return;
-            const { rowStart, rowEnd } = norm;
-            const height = parseInt(document.getElementById('ht-rowheight').value) || 32;
-            const currentRowHeights = hotInstance.getSettings().rowHeights || [];
-            const newRowHeights = [...currentRowHeights];
-            for (let r = rowStart; r <= rowEnd; r++) newRowHeights[r] = height;
+            var rowStart = norm.rowStart,
+                rowEnd = norm.rowEnd;
+            var height = parseInt(document.getElementById('ht-rowheight').value) || 32;
+            var currentRowHeights = hotInstance.getSettings().rowHeights || [];
+            var newRowHeights = currentRowHeights.slice();
+            for (var r = rowStart; r <= rowEnd; r++) newRowHeights[r] = height;
             hotInstance.updateSettings({ rowHeights: newRowHeights });
             hotInstance.render();
-            alert(`✅ 已应用行高 ${height}px 到 ${rowEnd - rowStart + 1} 行`);
+            showHint('✅ 已应用行高 ' + height + 'px 到 ' + (rowEnd - rowStart + 1) + ' 行');
         }
 
-        // ================================================================
-        //  生成带完整样式的 HTML 表格（去掉表格自身边框）
-        // ================================================================
         function generateHTMLTable() {
             if (!hotInstance) return '<table><tr><td>空表格</td></tr></table>';
-            const data = hotInstance.getData();
-            const settings = hotInstance.getSettings();
-            const colHeaders = settings.colHeaders || [];
-            const rowHeaders = settings.rowHeaders || false;
-            const colWidths = settings.colWidths || [];
-            const rowHeights = settings.rowHeights || [];
-
-            const bgColors = {};
-            const rowsCount = data.length;
-            const colsCount = rowsCount > 0 ? data[0]?.length || 0 : 0;
-
-            for (let r = 0; r < rowsCount; r++) {
-                for (let c = 0; c < (data[r]?.length || 0); c++) {
+            var data = hotInstance.getData();
+            var settings = hotInstance.getSettings();
+            var colHeaders = settings.colHeaders || [],
+                rowHeaders = settings.rowHeaders || false;
+            var colWidths = settings.colWidths || [],
+                rowHeights = settings.rowHeights || [];
+            var bgColors = {};
+            var rowsCount = data.length,
+                colsCount = rowsCount > 0 ? data[0]?.length || 0 : 0;
+            for (var r = 0; r < rowsCount; r++) {
+                for (var c = 0; c < (data[r]?.length || 0); c++) {
                     try {
-                        const meta = hotInstance.getCellMeta(r, c);
-                        bgColors[`${r},${c}`] = meta.bgColor || '#ffffff';
-                    } catch (e) { bgColors[`${r},${c}`] = '#ffffff'; }
+                        var meta =
+                            hotInstance.getCellMeta(r, c);
+                        bgColors[r + ',' + c] = meta.bgColor || '#ffffff';
+                    } catch (e) {
+                        bgColors[r + ',' + c] =
+                            '#ffffff';
+                    }
                 }
             }
-
-            if (rowsCount === 0 || colsCount === 0) {
-                return '<table style="border-collapse:collapse;width:100%;font-size:14px;"><tr><td style="border:1px solid #ccc;padding:6px 10px;">空表格</td></tr></table>';
-            }
-
-            let html = '<table style="border-collapse:collapse;width:100%;font-size:14px;">';
-            if (colHeaders && colHeaders.length > 0) {
+            if (rowsCount === 0 || colsCount === 0) { return '<table style="border-collapse:collapse;width:100%;font-size:14px;"><tr><td style="border:1px solid #ccc;padding:6px 10px;">空表格</td></tr></table>'; }
+            var colHeadersFull = [];
+            for (var c = 0; c < colsCount; c++) { colHeadersFull.push(colHeaders[c] || String.fromCharCode(65 + c)); }
+            var html = '<table style="border-collapse:collapse;width:100%;font-size:14px;">';
+            if (colHeadersFull.length > 0) {
                 html += '<thead><tr>';
                 if (rowHeaders) {
-                    html += '<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;text-align:center;">#</th>';
+                    html +=
+                        '<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;text-align:center;">#</th>';
                 }
-                for (let c = 0; c < Math.min(colHeaders.length, colsCount); c++) {
-                    const width = colWidths[c] ? `width:${colWidths[c]}px;` : '';
-                    html += `<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;${width}">${colHeaders[c] || ''}</th>`;
+                for (var c = 0; c < colHeadersFull.length; c++) {
+                    var width = colWidths[c] ? 'width:' + colWidths[c] +
+                        'px;' : '';
+                    html += '<th style="border:1px solid #ccc;padding:6px 10px;background:#f0f2f5;font-weight:600;' +
+                        width + '">' + (colHeadersFull[c] || '') + '</th>';
                 }
                 html += '</tr></thead>';
             }
-
             html += '<tbody>';
-            for (let r = 0; r < rowsCount; r++) {
-                const row = data[r] || [];
-                const height = rowHeights[r] ? `height:${rowHeights[r]}px;` : '';
+            for (var r = 0; r < rowsCount; r++) {
+                var row = data[r] || [];
+                var height = rowHeights[r] ? 'height:' + rowHeights[r] + 'px;' : '';
                 html += '<tr>';
                 if (rowHeaders) {
-                    html += `<td style="border:1px solid #ccc;padding:6px 10px;background:#f9fafb;font-weight:500;text-align:center;${height}">${r + 1}</td>`;
+                    html += '<td style="border:1px solid #ccc;padding:6px 10px;background:#f9fafb;font-weight:500;text-align:center;' +
+                        height + '">' + (r + 1) + '</td>';
                 }
-                for (let c = 0; c < Math.min(row.length, colsCount); c++) {
-                    const bgKey = `${r},${c}`;
-                    const bg = bgColors[bgKey] || '#ffffff';
-                    const bgStyle = `background-color:${bg};`;
-                    const width = colWidths[c] ? `width:${colWidths[c]}px;` : '';
-                    const val = (row[c] !== undefined && row[c] !== null) ? String(row[c]) : '';
-                    html += `<td style="border:1px solid #ccc;padding:6px 10px;${bgStyle}${width}${height}">${val}</td>`;
+                for (var c = 0; c < Math.min(row.length, colsCount); c++) {
+                    var bgKey = r + ',' + c;
+                    var bg = bgColors[bgKey] || '#ffffff';
+                    var bgStyle = 'background-color:' + bg + ';';
+                    var width = colWidths[c] ? 'width:' + colWidths[c] + 'px;' : '';
+                    var val = (row[c] !== undefined && row[c] !== null) ? String(row[c]) : '';
+                    html += '<td style="border:1px solid #ccc;padding:6px 10px;' + bgStyle + width + height + '">' +
+                        val + '</td>';
                 }
                 html += '</tr>';
             }
@@ -1951,183 +3660,103 @@
             return html;
         }
 
-        // ================================================================
-        //  插入表格到 Vditor（使用 insertValue + html:true）
-        // ================================================================
         function insertTableToVditor() {
-            if (!hotInstance) { alert('请先编辑表格内容！'); return; }
-
-            const htmlTable = generateHTMLTable();
-            if (!htmlTable) { alert('生成表格失败，请重试。'); return; }
-
-            // 用 div 包裹，前后加换行，确保被识别为 HTML 块
-            const wrappedHtml = '\n\n<div style="margin:12px 0;">' + htmlTable + '</div>\n\n';
-
-            // 关闭表格编辑器
+            if (!hotInstance) { showHint('请先编辑表格内容！'); return; }
+            var htmlTable = generateHTMLTable();
+            if (!htmlTable) { showHint('生成表格失败，请重试。'); return; }
+            var escapedHtml = htmlTable.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var htmlBlock = '<div data-type="html-block" data-block="0" class="vditor-ir__node">\n  <pre class="vditor-ir__marker--pre vditor-ir__marker"><code data-type="html-block">' +
+                escapedHtml + '</code></pre>\n  <pre class="vditor-ir__preview" data-render="1">' + htmlTable +
+                '</pre>\n</div>';
+            if (editingTableElement) {
+                var parent = editingTableElement.parentNode;
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlBlock;
+                var fragment = document.createDocumentFragment();
+                while (tempDiv.firstChild) { fragment.appendChild(tempDiv.firstChild); }
+                parent.replaceChild(fragment, editingTableElement);
+                editingTableElement = null;
+                closeTableEditor();
+                showHint('✅ 表格已更新');
+                vditor.focus();
+                return;
+            }
             closeTableEditor();
-
-            setTimeout(() => {
-                // 使用 insertValue 并指定 html:true，插入到光标位置且不转义
-                vditor.insertValue(wrappedHtml, { html: true });
-
-                // 强制刷新预览
-                setTimeout(() => {
+            setTimeout(function () {
+                var marker = tableMarkerElement;
+                if (marker && marker.parentNode) {
+                    var tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlBlock;
+                    var fragment = document.createDocumentFragment();
+                    while (tempDiv.firstChild) { fragment.appendChild(tempDiv.firstChild); }
+                    marker.parentNode.replaceChild(fragment, marker);
+                    tableMarkerElement = null;
+                } else {
+                    restoreCursorPosition();
+                    var success = insertHTMLFallback(htmlBlock);
+                    if (!success) { vditor.insertValue(htmlBlock); }
+                }
+                var editorEl = getEditorElement();
+                if (editorEl) { editorEl.dispatchEvent(new Event('input', { bubbles: true, cancelable: true })); }
+                setTimeout(function () {
                     try {
-                        const event = new Event('input', { bubbles: true });
-                        const editorEl = document.querySelector('.vditor-reset');
-                        if (editorEl) editorEl.dispatchEvent(event);
                         if (typeof vditor.renderPreview === 'function') vditor.renderPreview();
                         if (vditor.preview && typeof vditor.preview.render === 'function') vditor.preview.render();
-                    } catch (e) { console.warn('刷新预览失败:', e); }
-                }, 150);
-
-                vditor.focus();
-
-                // 提示
-                const hint = document.createElement('div');
-                hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2328;color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90%;text-align:center;transition:opacity 0.4s;';
-                hint.textContent = '✅ 表格已插入到光标位置！预览模式下显示完整样式。';
-                document.body.appendChild(hint);
-                setTimeout(() => {
-                    hint.style.opacity = '0';
-                    setTimeout(() => hint.remove(), 500);
-                }, 4000);
+                    } catch (e) { /* 忽略 */ }
+                    vditor.focus();
+                }, 120);
+                showHint('✅ 表格已插入（单击表格可弹出编辑按钮）');
             }, 200);
         }
 
-        // ================================================================
-        //  6. 双击表格编辑 HTML 源码
-        // ================================================================
-        let sourceEditorTarget = null;
-
-        function setupTableDoubleClickEdit() {
-            const resetEl = document.querySelector('.vditor-reset');
-            if (!resetEl) { setTimeout(setupTableDoubleClickEdit, 500); return; }
-
-            resetEl.removeEventListener('dblclick', handleTableDblClick);
-            resetEl.addEventListener('dblclick', handleTableDblClick);
-
-            const observer = new MutationObserver(() => {
-                if (resetEl && !resetEl._listenerAttached) {
-                    resetEl.addEventListener('dblclick', handleTableDblClick);
-                    resetEl._listenerAttached = true;
-                }
-            });
-            observer.observe(resetEl, { childList: true, subtree: true });
-            resetEl._listenerAttached = true;
-            console.log('✅ 表格双击编辑源码功能已启用');
-        }
-
-        function handleTableDblClick(e) {
-            const target = e.target;
-            let table = target.closest('table');
-            if (!table) return;
-            if (table.closest('#table-modal-overlay') || table.closest('#table-modal')) return;
-            if (table.closest('#table-source-modal-overlay')) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            sourceEditorTarget = table;
-            const outerHTML = table.outerHTML;
-
-            const overlay = document.getElementById('table-source-modal-overlay');
-            const textarea = document.getElementById('table-source-editor');
-            textarea.value = outerHTML;
-            overlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => {
-                textarea.focus();
-                textarea.select();
-            }, 100);
-        }
-
-        function closeSourceModal(cancel = true) {
-            const overlay = document.getElementById('table-source-modal-overlay');
-            overlay.classList.remove('open');
-            document.body.style.overflow = '';
-            if (cancel) sourceEditorTarget = null;
-        }
-
-        function updateTableFromSource() {
-            const textarea = document.getElementById('table-source-editor');
-            const newHTML = textarea.value.trim();
-            if (!newHTML) { alert('表格源码不能为空！'); return; }
-            if (!sourceEditorTarget) {
-                alert('没有找到要更新的表格，请重新双击表格。');
-                closeSourceModal(true); return;
-            }
-
+        function insertHTMLFallback(html) {
             try {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = newHTML;
-                const newTable = tempDiv.querySelector('table');
-                if (!newTable) { alert('无效的表格 HTML，请确保内容包含 <table> 标签。'); return; }
-
-                const parent = sourceEditorTarget.parentNode;
-                if (parent) {
-                    parent.replaceChild(newTable, sourceEditorTarget);
-                    sourceEditorTarget = newTable;
-                } else {
-                    alert('表格已不存在，请重新双击表格编辑。');
-                    closeSourceModal(true);
-                    return;
+                if (vditor.caret && typeof vditor.caret.insertHTML === 'function') {
+                    vditor.caret.insertHTML(html);
+                    var editor = getEditorElement();
+                    if (editor) { editor.dispatchEvent(new Event('input', { bubbles: true, cancelable: true })); }
+                    return true;
                 }
-
-                closeSourceModal(false);
-                try {
-                    const vditorEl = document.querySelector('.vditor-reset');
-                    if (vditorEl) {
-                        const evt = new Event('input', { bubbles: true });
-                        vditorEl.dispatchEvent(evt);
+            } catch (e) { console.warn('caret.insertHTML 失败', e); }
+            try {
+                var sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) {
+                    var editor = getEditorElement();
+                    if (editor) {
+                        var range = document.createRange();
+                        range.selectNodeContents(editor);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
                     }
-                    if (window.vditor && window.vditor.render) window.vditor.render();
-                } catch (e) { console.warn('触发重新渲染失败:', e); }
-                console.log('✅ 表格源码已更新并重新渲染');
-            } catch (err) {
-                console.error('更新表格失败:', err);
-                alert('更新表格失败: ' + err.message);
-            }
+                }
+                var success = document.execCommand('insertHTML', false, html);
+                if (success) {
+                    var editor = getEditorElement();
+                    if (editor) { editor.dispatchEvent(new Event('input', { bubbles: true, cancelable: true })); }
+                    return true;
+                }
+            } catch (e) { console.warn('execCommand 失败', e); }
+            return false;
         }
 
-        document.getElementById('source-modal-close').addEventListener('click', () => closeSourceModal(true));
-        document.getElementById('source-modal-cancel').addEventListener('click', () => closeSourceModal(true));
-        document.getElementById('source-modal-update').addEventListener('click', updateTableFromSource);
-        document.getElementById('table-source-modal-overlay').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) closeSourceModal(true);
-        });
-
-        document.addEventListener('keydown', (e) => {
-            const overlay = document.getElementById('table-source-modal-overlay');
-            if (!overlay.classList.contains('open')) return;
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                closeSourceModal(true);
-            }
-            if ((e.key === 'Enter' || e.key === 's') && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                updateTableFromSource();
-            }
-        });
-
-        // ================================================================
-        //  7. 事件绑定
-        // ================================================================
-
+        // 表格事件绑定
         document.getElementById('table-modal-close').addEventListener('click', closeTableEditor);
         document.getElementById('table-cancel').addEventListener('click', closeTableEditor);
-        document.getElementById('table-modal-overlay').addEventListener('click', (e) => {
+        document.getElementById('table-modal-overlay').addEventListener('click', function (e) {
             if (e.target === e.currentTarget) closeTableEditor();
         });
-        document.getElementById('table-insert').addEventListener('click', insertTableToVditor);
+        document.getElementById('table-insert').addEventListener('click', function () {
+            safeExecute(insertTableToVditor, '表格插入/更新失败');
+        });
         document.getElementById('ht-resize-btn').addEventListener('click', resizeTable);
         document.getElementById('ht-apply-bg').addEventListener('click', applyBgToSelected);
         document.getElementById('ht-clear-bg').addEventListener('click', clearBgFromSelected);
         document.getElementById('ht-apply-colwidth').addEventListener('click', applyColWidthToSelected);
         document.getElementById('ht-apply-rowheight').addEventListener('click', applyRowHeightToSelected);
 
-        document.addEventListener('keydown', (e) => {
-            const overlay = document.getElementById('table-modal-overlay');
+        document.addEventListener('keydown', function (e) {
+            var overlay = document.getElementById('table-modal-overlay');
             if (!overlay.classList.contains('open')) return;
             if (e.key === 'Escape') {
                 e.preventDefault();
@@ -2135,19 +3764,17 @@
             }
             if ((e.key === 'Enter' || e.key === 'Insert') && e.ctrlKey) {
                 e.preventDefault();
-                insertTableToVditor();
+                safeExecute(insertTableToVditor, '表格插入/更新失败');
             }
         });
 
-        let hotResizeTimer = null;
-        window.addEventListener('resize', () => {
+        var hotResizeTimer = null;
+        window.addEventListener('resize', function () {
             clearTimeout(hotResizeTimer);
-            hotResizeTimer = setTimeout(() => { if (hotInstance) hotInstance.render(); }, 300);
+            hotResizeTimer = setTimeout(function () { if (hotInstance) hotInstance.render(); }, 300);
         });
 
-        // ================================================================
-        //  8. 暴露全局变量
-        // ================================================================
+        // ===== 暴露全局 =====
         window.resetEditorContent = function () {
             vditor.setValue(DEFAULT_CONTENT);
             console.log('✅ 编辑器内容已重置为默认内容');
@@ -2155,11 +3782,12 @@
         window.vditor = vditor;
         window.mathField = mathField;
         window.hotInstance = hotInstance;
+        window.Judge0Executor = Judge0Executor;
+        window.LaTeXCalculator = LaTeXCalculator;
 
-        console.log('✅ 高级表格编辑器已启动 (最终修复版)');
-        console.log('💡 点击「插入表格」会将表格插入到光标当前位置，预览模式下显示完整样式。');
+        console.log('✅ 完整版已加载：支持代码执行 + LaTeX 计算 + 高级表格（点击浮动按钮）');
+        console.log('💡 公式提取逻辑已彻底修复：精确从 marker/code 提取，不再混入预览区文本。');
     </script>
-
 </body>
 
 </html>

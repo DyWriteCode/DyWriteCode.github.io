@@ -1,6 +1,15 @@
 [
     {
         "msgs": [
+            "<birthday/>"
+        ],
+        "msgInputSpeed": 80,
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
+    },
+    {
+        "msgs": [
             "本条消息用户输入包括[1]才能进入下一步，多次将强行跳过"
         ],
         "msgInputSpeed": 8,
@@ -10,7 +19,9 @@
                 "resolveKeyTexts": [
                     "1"
                 ],
-                "rejectKeyTexts": ["2"],
+                "rejectKeyTexts": [
+                    "2"
+                ],
                 "rejectHitTexts": [
                     "输入好，听不懂吗？？？",
                     "触发强行跳过"
@@ -30,7 +41,7 @@
         "msgs": [
             "标签字体1"
         ],
-        "id":"test",
+        "id": "test",
         "msgInputSpeed": 1
     },
     {

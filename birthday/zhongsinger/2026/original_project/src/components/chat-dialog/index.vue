@@ -175,6 +175,7 @@
       </div>
     </Teleport>
   </div>
+  <BirthdayExplosion v-if="showBirthday" @finished="onBirthdayFinished" />
 </template>
 
 <script>
@@ -182,6 +183,7 @@ import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import voice from './voice/index.vue'
 import VoiceRecorderButton from './voice/VoiceRecorderButton.vue'
+import BirthdayExplosion from './BirthdayExplosion.vue'
 import MessageDetail from './MessageDetail.vue'
 import './css/main.scss'
 import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis'
@@ -203,6 +205,7 @@ export default {
     voice,
     VoiceRecorderButton,
     MessageDetail,
+    BirthdayExplosion
   },
   props: {
     title: String,
@@ -284,6 +287,8 @@ export default {
       isTouchMoved: false,
       isUserAtBottom: true,        // 用户是否在底部
       scrollThreshold: 20,          // 判定底部的阈值（像素）
+      showBirthday: false,
+      birthdayResolve: null,
     }
   },
   watch: {
@@ -497,6 +502,15 @@ export default {
 
         el.innerHTML = ''
         const hasHtml = /<[^>]+>/.test(message)
+
+        if (messageType === 'birthday') {
+          // 显示全屏组件
+          this.showBirthday = true
+          // 保存 resolve，等待组件完成
+          this.birthdayResolve = resolve
+          // 不向消息列表添加内容
+          return
+        }
 
         if (messageType === 'text') {
           let strings = ['']
@@ -912,6 +926,8 @@ export default {
       const isLetter = /<letter[^>]+>/.test(message)
       const isVlog = /<vlog[^>]+>/.test(message)
       const isVoice = /<voice[^>]+>/.test(message)
+      const isBirthday = /<birthday[^>]*>/.test(message)
+      if (isBirthday) return 'birthday'
       if (isImg) return 'img'
       if (isLetter) return 'letter'
       if (isVlog) return 'vlog'
@@ -1476,6 +1492,16 @@ export default {
     this.voiceBlobUrls = []
     this.clearQuote()
     this.closeMsgMenu()
+  },
+  onBirthdayFinished() {
+    this.showBirthday = false
+    // 追加“生日快乐！”消息
+    this.addTipMessage('🎂 生日快乐！')
+    // 如果有等待的 resolve，执行它
+    if (this.birthdayResolve) {
+      this.birthdayResolve()
+      this.birthdayResolve = null
+    }
   }
 }
 
