@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>✨ 许愿 · 生日快乐 ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #000;
+            cursor: pointer;
+        }
+
+        #hint {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 215, 140, 0.2);
+            font-size: 13px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            z-index: 10;
+            font-weight: 300;
+            opacity: 0;
+            transition: opacity 2s ease;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        #hint.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            #hint {
+                font-size: 10px;
+                bottom: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="hint">✦ 点击屏幕 · 吹灭蜡烛 ✦</div>
+
+    <script>
+        // ================================================================
+        //  1. 画布 & 尺寸
+        // ================================================================
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let W, H, dpr;
+
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener('resize', () => { resize(); });
+
+        // ================================================================
+        //  2. 工具函数
+        // ================================================================
+        const rand = (a, b) => Math.random() * (b - a) + a;
+        const randInt = (a, b) => Math.floor(rand(a, b + 1));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+        const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+        const easeInOutQuad = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const easeOutQuad = t => 1 - (1 - t) * (1 - t);
+
+        function hsl(h, s, l, a = 1) { return `hsla(${h % 360}, ${s}%, ${l}%, ${a})`; }
+
+        function randomColor() { return { h: rand(0, 360), s: rand(65, 92), l: rand(50, 78) }; }
+
+        function colorVariant(c, dh = 25, ds = 15, dl = 20) {
+            return {
+                h: (c.h + rand(-dh, dh) + 360) % 360, s: clamp(c.s + rand(-ds, ds), 50, 100), l: clamp(c.l + rand(-dl,
+                    dl), 30, 85)
+            };
+        }
+
+        function colorLerp(c1, c2, t) {
+            return { h: (c1.h + (c2.h - c1.h) * t + 360) % 360, s: lerp(c1.s, c2.s, t), l: lerp(c1.l, c2.l, t) };
+        }
+
+        // ================================================================
+        //  3. 状态管理
+        // ================================================================
+        const STATE = {
+            CLOSED: 'closed',
+            OPENING: 'opening',
+            FIREWORKS: 'fireworks',
+            BLOWING: 'blowing',
+            BLESSING: 'blessing'
+        };
+
+        let state = STATE.CLOSED;
+        let openingProgress = 0;
+        let blowProgress = 0;
+        let blessingProgress = 0;
+        let animTime = 0;
+        let lastTimestamp = 0;
+        let animId = null;
+        let hasBlown = false;
+        let startTime = 0;
+        let candleLit = true;
+        let flameFlicker = 0;
+        let smokeParticles = [];
+        let fireworksActive = true;
+
+        // ================================================================
+        //  4. 🎆 烟花系统 —— 原版 cake.html 照抄
+        // ================================================================
+        let particles = [];
+        let rockets = [];
+        let flashEffect = null;
+        let lastLaunchTime = 0;
+        let launchInterval = 800;
+
+        // ---- 粒子类 ----
+        class Particle {
+            constructor(x, y, vx, vy, opts = {}) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.z = opts.z !== undefined ? opts.z : rand(-0.7, 0.7);
+                this.startColor = opts.startColor || randomColor();
+                this.endColor = opts.endColor || colorVariant(this.startColor, 30, 15, 25);
+                this.size = opts.size || rand(1.5, 4.2);
+                this.baseSize = this.size;
+                this.life = opts.life || randInt(45, 100);
+                this.maxLife = this.life;
+                this.age = 0;
+                this.gravity = opts.gravity || rand(0.03, 0.09);
+                this.drag = opts.drag || rand(0.970, 0.995);
+                this.turbulence = opts.turbulence || rand(0.01, 0.03);
+                this.trail = [];
+                this.maxTrail = opts.maxTrail !== undefined ? opts.maxTrail : randInt(4, 10);
+                this.dead = false;
+                this.isGold = opts.isGold || false;
+                this.isSpark = opts.isSpark || false;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.age++;
+                this.vx *= this.drag;
+                this.vy *= this.drag;
+                this.vy += this.gravity;
+                this.vx += (Math.random() - 0.5) * this.turbulence;
+                this.vy += (Math.random() - 0.5) * this.turbulence * 0.5;
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > this.maxTrail) this.trail.shift();
+
+                const progress = this.age / this.maxLife;
+                this.size = this.baseSize * (1 - progress * 0.65);
+                this.alpha = 1 - progress * progress;
+
+                if (this.age >= this.maxLife || this.size < 0.2 || this.y > H + 50) {
+                    this.dead = true;
+                }
+            }
+
+            getColor() {
+                const t = this.age / this.maxLife;
+                if (this.isGold) {
+                    const g1 = { h: 42, s: 85, l: 70 };
+                    const g2 = { h: 28, s: 70, l: 50 };
+                    return colorLerp(g1, g2, t);
+                }
+                return colorLerp(this.startColor, this.endColor, t);
+            }
+
+            draw(ctx) {
+                const alpha = this.alpha * clamp(1 - this.age / this.maxLife, 0, 1);
+                if (alpha < 0.015) return;
+                const depthScale = 1 + this.z * 0.3;
+                const size = Math.max(0.3, this.size * depthScale);
+                const color = this.getColor();
+
+                // 拖尾
+                if (this.trail.length > 2) {
+                    const trailLen = this.trail.length;
+                    for (let i = 1; i < trailLen; i += 2) {
+                        const t = i / trailLen;
+                        const trailAlpha = alpha * t * 0.35;
+                        const trailSize = size * (0.2 + 0.8 * t) * 0.5;
+                        const tc = colorLerp(this.startColor, this.endColor, t * 0.7);
+                        ctx.beginPath();
+                        ctx.arc(this.trail[i].x, this.trail[i].y, trailSize, 0, Math.PI * 2);
+                        ctx.fillStyle = hsl(tc.h, tc.s, tc.l, trailAlpha * 0.5);
+                        ctx.fill();
+                    }
+                }
+
+                // 主粒子光晕
+                const glowSize = size * (2.0 + this.z * 0.3);
+                const grad = ctx.createRadialGradient(this.x, this.y, size * 0.1, this.x, this.y, glowSize);
+                const brightL = Math.min(90, color.l + 12);
+                grad.addColorStop(0, hsl(color.h, color.s, brightL, alpha * 0.85));
+                grad.addColorStop(0.3, hsl(color.h, color.s, color.l, alpha * 0.65));
+                grad.addColorStop(0.8, hsl(color.h, color.s * 0.8, color.l * 0.8, alpha * 0.2));
+                grad.addColorStop(1, hsl(color.h, color.s * 0.6, color.l * 0.5, 0));
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // 核心亮点
+                if (size > 0.5 && alpha > 0.25) {
+                    const coreSize = size * 0.2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, coreSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,240,${alpha * 0.35})`;
+                    ctx.fill();
+                }
+            }
+
+            isDead() { return this.dead; }
+        }
+
+        // ---- 火箭类 ----
+        class Rocket {
+            constructor(startX, targetY, type) {
+                this.x = startX || rand(W * 0.04, W * 0.96);
+                this.y = H * 0.94 + rand(0, 30);
+                this.targetY = targetY || rand(H * 0.02, H * 0.38);
+                this.type = type || ['sphere', 'willow', 'ring', 'chrysanthemum', 'peony', 'dahlia'][randInt(0, 5)];
+                this.speed = rand(6.5, 11.5);
+                this.angle = -Math.PI / 2 + rand(-0.03, 0.03);
+                this.alive = true;
+                this.exploded = false;
+                this.color = randomColor();
+                this.trail = [];
+                this.maxTrail = 16;
+                this.flameParticles = [];
+                this.wobble = rand(0.002, 0.008);
+                this.wobblePhase = rand(0, Math.PI * 2);
+            }
+
+            update() {
+                if (this.exploded) return;
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > this.maxTrail) this.trail.shift();
+
+                const progress = 1 - (this.y - this.targetY) / (H * 0.94 - this.targetY);
+                const speedFactor = 1 - progress * 0.35;
+                const currentSpeed = this.speed * speedFactor;
+                this.wobblePhase += this.wobble;
+                const wobbleOffset = Math.sin(this.wobblePhase) * 0.3;
+                this.x += Math.sin(this.angle + wobbleOffset * 0.05) * currentSpeed * 0.2;
+                this.y -= currentSpeed;
+                this.angle += rand(-0.003, 0.003);
+
+                // 尾焰
+                if (this.y < H * 0.85 && Math.random() < 0.35 && fireworksActive) {
+                    const size = rand(0.8, 3.2);
+                    const vx = rand(-0.8, 0.8);
+                    const vy = rand(0.3, 2.0);
+                    const life = randInt(8, 16);
+                    const h = rand(25, 50);
+                    const l = rand(55, 85);
+                    const fp = new Particle(this.x + rand(-4, 4), this.y + 3, vx, vy, {
+                        startColor: { h, s: 95, l },
+                        endColor: { h: h + 25, s: 75, l: l * 0.3 },
+                        size,
+                        life,
+                        gravity: 0.015,
+                        drag: 0.94,
+                        z: rand(-0.3, 0.3),
+                        maxTrail: 2,
+                        turbulence: 0.02
+                    });
+                    this.flameParticles.push(fp);
+                }
+
+                for (let i = this.flameParticles.length - 1; i >= 0; i--) {
+                    this.flameParticles[i].update();
+                    if (this.flameParticles[i].isDead()) this.flameParticles.splice(i, 1);
+                }
+
+                if (this.y <= this.targetY) this.explode();
+                if (this.y < -50) this.alive = false;
+            }
+
+            explode() {
+                if (this.exploded) return;
+                this.exploded = true;
+                this.alive = false;
+                if (!fireworksActive) return;
+                const newParticles = createExplosion(this.x, this.y, this.type, this.color);
+                particles.push(...newParticles);
+                flashEffect = {
+                    x: this.x, y: this.y, radius: 0, maxRadius: rand(40, 80), life: 12, maxLife: 12,
+                    active: true
+                };
+                for (let i = 0; i < randInt(8, 18); i++) {
+                    const angle = rand(0, Math.PI * 2);
+                    const speed = rand(0.2, 1.6);
+                    const p = new Particle(this.x + rand(-10, 10), this.y + rand(-10, 10),
+                        Math.cos(angle) * speed, Math.sin(angle) * speed * 0.4 + rand(0.2, 0.8), {
+                        startColor: { h: rand(25, 45), s: 60, l: 60 },
+                        endColor: { h: rand(10, 30), s: 35, l: 25 },
+                        size: rand(0.4, 1.6),
+                        life: randInt(35, 70),
+                        gravity: rand(0.01, 0.03),
+                        drag: rand(0.98, 0.995),
+                        z: rand(-0.4, 0.4),
+                        maxTrail: randInt(3, 7),
+                        turbulence: 0.005
+                    });
+                    particles.push(p);
+                }
+            }
+
+            draw(ctx) {
+                for (const fp of this.flameParticles) fp.draw(ctx);
+                if (this.trail.length > 2) {
+                    for (let i = 1; i < this.trail.length; i += 2) {
+                        const t = i / this.trail.length;
+                        const alpha = t * 0.18;
+                        const size = (1 - t) * 2.2 + 0.2;
+                        const h = rand(30, 50);
+                        ctx.beginPath();
+                        ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsla(${h}, 80%, 55%, ${alpha * 0.25})`;
+                        ctx.fill();
+                    }
+                }
+                if (!this.exploded && this.y > 0) {
+                    const grad = ctx.createRadialGradient(this.x, this.y - 4, 1, this.x, this.y - 4, 10);
+                    grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+                    grad.addColorStop(0.2, 'rgba(255,225,170,0.7)');
+                    grad.addColorStop(0.6, 'rgba(255,190,90,0.25)');
+                    grad.addColorStop(1, 'rgba(255,150,50,0)');
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y - 4, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(255,200,100,0.15)';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y - 5, 1.3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        // ---- 烟花类型工厂 ----
+        const FireworkTypes = {
+            SPHERE: 'sphere', WILLOW: 'willow', RING: 'ring', CHRYSANTHEMUM: 'chrysanthemum',
+            PEONY: 'peony', DAHLIA: 'dahlia'
+        };
+
+        function createExplosion(x, y, type, mainColor) {
+            const list = [];
+            const c = mainColor || randomColor();
+            const count = randInt(160, 300);
+            const speedBase = rand(5.0, 11.5);
+            const sizeBase = rand(1.6, 4.5);
+            const lifeBase = randInt(50, 110);
+            const params = { count, speedBase, sizeBase, lifeBase };
+
+            switch (type) {
+                case 'sphere':
+                    createSphere(x, y, c, params, list);
+                    break;
+                case 'willow':
+                    createWillow(x, y, c, params, list);
+                    break;
+                case 'ring':
+                    createRing(x, y, c, params, list);
+                    break;
+                case 'chrysanthemum':
+                    createChrysanthemum(x, y, c, params, list);
+                    break;
+                case 'peony':
+                    createPeony(x, y, c, params, list);
+                    break;
+                case 'dahlia':
+                    createDahlia(x, y, c, params, list);
+                    break;
+                default:
+                    createSphere(x, y, c, params, list);
+            }
+
+            const goldCount = randInt(12, 35);
+            for (let i = 0; i < goldCount; i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = rand(1.5, 5.5);
+                const p = new Particle(x, y, Math.cos(angle) * speed + rand(-0.5, 0.5), Math.sin(angle) * speed * 0.6 - 0.3, {
+                    startColor: { h: rand(35, 50), s: 85, l: 75 },
+                    endColor: { h: rand(20, 40), s: 65, l: 50 },
+                    size: rand(0.6, 2.0),
+                    life: randInt(25, 55),
+                    gravity: rand(0.02, 0.06),
+                    drag: rand(0.97, 0.99),
+                    z: rand(-0.5, 0.5),
+                    maxTrail: randInt(3, 7),
+                    turbulence: 0.015,
+                    isGold: true
+                });
+                list.push(p);
+            }
+
+            const sparkCount = randInt(10, 30);
+            for (let i = 0; i < sparkCount; i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = rand(1.0, 4.5);
+                const p = new Particle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed * 0.5 - 0.2, {
+                    startColor: { h: 0, s: 0, l: 96 },
+                    endColor: { h: 30, s: 15, l: 65 },
+                    size: rand(0.4, 1.6),
+                    life: randInt(20, 45),
+                    gravity: rand(0.02, 0.06),
+                    drag: rand(0.97, 0.99),
+                    z: rand(-0.4, 0.4),
+                    maxTrail: randInt(2, 5),
+                    turbulence: 0.01,
+                    isSpark: true
+                });
+                list.push(p);
+            }
+            return list;
+        }
+
+        function createSphere(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            for (let i = 0; i < count; i++) {
+                const theta = rand(0, Math.PI * 2);
+                const phi = rand(0, Math.PI);
+                const speed = speedBase * (0.5 + 0.5 * Math.pow(rand(0, 1), 0.6));
+                const vx = Math.sin(phi) * Math.cos(theta) * speed;
+                const vy = Math.sin(phi) * Math.sin(theta) * speed * 0.8 - 0.2;
+                const color = colorVariant(c, 25, 15, 20);
+                list.push(new Particle(x, y, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant(color, 30, 18, 25),
+                    size: sizeBase * rand(0.5, 1.2),
+                    life: lifeBase * rand(0.7, 1.3),
+                    gravity: rand(0.03, 0.09),
+                    drag: rand(0.970, 0.995),
+                    z: rand(-0.7, 0.7),
+                    maxTrail: randInt(4, 10),
+                    turbulence: rand(0.01, 0.035)
+                }));
+            }
+        }
+
+        function createWillow(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            for (let i = 0; i < count; i++) {
+                const angle = rand(-Math.PI * 0.85, Math.PI * 0.85);
+                const speed = speedBase * rand(0.3, 0.8);
+                const vx = Math.sin(angle) * speed * rand(0.5, 1.2);
+                const vy = -Math.cos(angle) * speed * 0.35 + rand(0.3, 1.8);
+                const color = colorVariant(c, 20, 15, 18);
+                list.push(new Particle(x, y, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant({ h: c.h + 20, s: c.s * 0.7, l: c.l * 0.5 }, 30, 20, 20),
+                    size: sizeBase * rand(0.4, 1.0),
+                    life: lifeBase * rand(0.9, 1.5),
+                    gravity: rand(0.05, 0.13),
+                    drag: rand(0.955, 0.990),
+                    z: rand(-0.7, 0.7),
+                    maxTrail: randInt(6, 14),
+                    turbulence: rand(0.005, 0.025)
+                }));
+            }
+        }
+
+        function createRing(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            const ringCount = Math.floor(count * 0.7);
+            for (let i = 0; i < ringCount; i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = speedBase * rand(0.6, 1.1);
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed * 0.7;
+                const color = colorVariant(c, 25, 15, 20);
+                list.push(new Particle(x, y, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant(color, 30, 18, 25),
+                    size: sizeBase * rand(0.5, 1.1),
+                    life: lifeBase * rand(0.7, 1.2),
+                    gravity: rand(0.02, 0.07),
+                    drag: rand(0.975, 0.995),
+                    z: rand(-0.7, 0.7),
+                    maxTrail: randInt(4, 10),
+                    turbulence: rand(0.01, 0.03)
+                }));
+            }
+            for (let i = 0; i < count * 0.25; i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = speedBase * rand(0.1, 0.5);
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed * 0.4 - 0.3;
+                const color = colorVariant(c, 25, 15, 18);
+                list.push(new Particle(x, y, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant(color, 30, 18, 22),
+                    size: sizeBase * rand(0.3, 0.7),
+                    life: lifeBase * rand(0.5, 0.8),
+                    gravity: rand(0.03, 0.08),
+                    drag: rand(0.970, 0.990),
+                    z: rand(-0.5, 0.5),
+                    maxTrail: randInt(3, 6),
+                    turbulence: rand(0.01, 0.03)
+                }));
+            }
+        }
+
+        function createChrysanthemum(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            const rays = randInt(24, 40);
+            const perRay = Math.floor(count / rays);
+            for (let r = 0; r < rays; r++) {
+                const angle = (r / rays) * Math.PI * 2 + rand(-0.04, 0.04);
+                for (let j = 0; j < perRay; j++) {
+                    const t = j / perRay;
+                    const speed = speedBase * (0.5 + 0.5 * t * t);
+                    const vx = Math.cos(angle) * speed * rand(0.8, 1.2);
+                    const vy = Math.sin(angle) * speed * 0.8 + rand(-0.3, 0.3);
+                    const color = colorVariant(c, 20 + t * 20, 15, 15 + t * 15);
+                    list.push(new Particle(x, y, vx, vy, {
+                        startColor: color,
+                        endColor: colorVariant({ h: c.h + 35, s: c.s * 0.6, l: c.l * 0.5 }, 35, 20, 25),
+                        size: sizeBase * (0.4 + 0.6 * (1 - t * 0.5)) * rand(0.6, 1.2),
+                        life: lifeBase * (0.7 + 0.3 * (1 - t)) * rand(0.8, 1.2),
+                        gravity: rand(0.02, 0.08),
+                        drag: rand(0.965, 0.995),
+                        z: rand(-0.7, 0.7),
+                        maxTrail: randInt(4, 12 + Math.floor(t * 5)),
+                        turbulence: rand(0.01, 0.035)
+                    }));
+                }
+            }
+            for (let i = 0; i < randInt(20, 45); i++) {
+                const angle = rand(0, Math.PI * 2);
+                const dist = rand(18, 40);
+                const sx = x + Math.cos(angle) * dist;
+                const sy = y + Math.sin(angle) * dist * 0.7 - 5;
+                const speed = rand(1.5, 4.0);
+                const vx = Math.cos(angle + rand(-0.3, 0.3)) * speed;
+                const vy = Math.sin(angle + rand(-0.3, 0.3)) * speed * 0.6 + rand(0.2, 0.8);
+                const color = colorVariant(c, 30, 18, 22);
+                list.push(new Particle(sx, sy, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant({ h: c.h + 45, s: c.s * 0.5, l: c.l * 0.4 }, 35, 20, 25),
+                    size: rand(0.6, 2.2),
+                    life: randInt(25, 55),
+                    gravity: rand(0.04, 0.10),
+                    drag: rand(0.955, 0.990),
+                    z: rand(-0.6, 0.6),
+                    maxTrail: randInt(3, 7),
+                    turbulence: rand(0.01, 0.04)
+                }));
+            }
+        }
+
+        function createPeony(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            for (let i = 0; i < count; i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = speedBase * (0.5 + 0.5 * Math.pow(rand(0, 1), 0.5));
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed * 0.7 - 0.2;
+                const color = colorVariant(c, 20, 15, 18);
+                list.push(new Particle(x, y, vx, vy, {
+                    startColor: color,
+                    endColor: colorVariant(color, 30, 18, 22),
+                    size: sizeBase * rand(0.5, 1.2),
+                    life: lifeBase * rand(0.8, 1.4),
+                    gravity: rand(0.02, 0.07),
+                    drag: rand(0.970, 0.995),
+                    z: rand(-0.7, 0.7),
+                    maxTrail: randInt(4, 10),
+                    turbulence: rand(0.01, 0.035)
+                }));
+            }
+            for (let i = 0; i < randInt(12, 30); i++) {
+                const angle = rand(0, Math.PI * 2);
+                const speed = rand(0.5, 2.8);
+                const p = new Particle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed * 0.4 - 0.2, {
+                    startColor: { h: rand(38, 52), s: 90, l: 80 },
+                    endColor: { h: rand(25, 42), s: 75, l: 55 },
+                    size: rand(0.5, 1.8),
+                    life: randInt(20, 45),
+                    gravity: rand(0.01, 0.04),
+                    drag: rand(0.98, 0.995),
+                    z: rand(-0.3, 0.3),
+                    maxTrail: randInt(2, 5),
+                    isGold: true
+                });
+                list.push(p);
+            }
+        }
+
+        function createDahlia(x, y, c, p, list) {
+            const { count, speedBase, sizeBase, lifeBase } = p;
+            const layers = randInt(3, 5);
+            const perLayer = Math.floor(count / layers);
+            for (let layer = 0; layer < layers; layer++) {
+                const layerScale = 0.4 + (layer / layers) * 0.8;
+                const layerSpeed = speedBase * layerScale;
+                const layerSize = sizeBase * (0.6 + (layer / layers) * 0.7);
+                const angleOffset = (layer / layers) * Math.PI * 0.5;
+                for (let i = 0; i < perLayer; i++) {
+                    const angle = (i / perLayer) * Math.PI * 2 + angleOffset + rand(-0.06, 0.06);
+                    const speed = layerSpeed * rand(0.7, 1.3);
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed * 0.7;
+                    const color = colorVariant(c, 15 + layer * 10, 12, 12 + layer * 10);
+                    list.push(new Particle(x, y, vx, vy, {
+                        startColor: color,
+                        endColor: colorVariant(color, 30, 18, 22),
+                        size: layerSize * rand(0.5, 1.1),
+                        life: lifeBase * rand(0.7, 1.3),
+                        gravity: rand(0.02, 0.07),
+                        drag: rand(0.970, 0.995),
+                        z: rand(-0.7, 0.7),
+                        maxTrail: randInt(4, 10),
+                        turbulence: rand(0.01, 0.03)
+                    }));
+                }
+            }
+        }
+
+        // ---- 发射火箭 ----
+        function launchFirework(x, targetY, type) {
+            if (!fireworksActive) return;
+            const startX = x || rand(W * 0.04, W * 0.96);
+            const target = targetY || rand(H * 0.02, H * 0.38);
+            const t = type || ['sphere', 'willow', 'ring', 'chrysanthemum', 'peony', 'dahlia'][randInt(0, 5)];
+            const rocket = new Rocket(startX, target, t);
+            rockets.push(rocket);
+        }
+
+        function autoLaunch(time) {
+            if (!fireworksActive) return;
+            if (time - lastLaunchTime > launchInterval + rand(-350, 450)) {
+                const count = Math.random() < 0.15 ? randInt(2, 3) : 1;
+                for (let i = 0; i < count; i++) {
+                    const x = rand(W * 0.04, W * 0.96);
+                    const y = rand(H * 0.02, H * 0.38);
+                    const type = ['sphere', 'willow', 'ring', 'chrysanthemum', 'peony', 'dahlia'][randInt(0, 5)];
+                    setTimeout(() => launchFirework(x, y, type), i * rand(80, 180));
+                }
+                lastLaunchTime = time;
+                launchInterval = rand(600, 2000);
+            }
+        }
+
+        // ================================================================
+        //  5. 🎂 蛋糕 & 蜡烛
+        // ================================================================
+        function drawCake(cx, cy, scale) {
+            const s = scale || 1;
+            const layers = [
+                { y: 0, h: 28 * s, w: 160 * s, color: '#d4a373' },
+                { y: -28 * s, h: 24 * s, w: 130 * s, color: '#e9c9a0' },
+                { y: -52 * s, h: 22 * s, w: 100 * s, color: '#f0d5b0' },
+            ];
+
+            for (const layer of layers) {
+                const y = cy + layer.y;
+                const w = layer.w;
+                const h = layer.h;
+                ctx.fillStyle = layer.color;
+                ctx.beginPath();
+                ctx.roundRect(cx - w / 2, y, w, h, 4 * s);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,240,0.12)';
+                ctx.beginPath();
+                ctx.roundRect(cx - w / 2 + 4 * s, y + 2 * s, w * 0.3, h * 0.15, 2 * s);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.06)';
+                ctx.beginPath();
+                ctx.roundRect(cx - w / 2 + 2 * s, y + h - 3 * s, w - 4 * s, 3 * s, 1 * s);
+                ctx.fill();
+                const creamColor = '#f8edd8';
+                const step = 10 * s;
+                for (let x = -w / 2 + 6 * s; x < w / 2 - 6 * s; x += step) {
+                    const r = 3.5 * s + rand(-0.5, 0.5) * s;
+                    ctx.beginPath();
+                    ctx.arc(cx + x, y + h - 1 * s, r, 0, Math.PI * 2);
+                    ctx.fillStyle = creamColor;
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                    ctx.beginPath();
+                    ctx.arc(cx + x - r * 0.3, y + h - 1 * s - r * 0.3, r * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 蜡烛
+            const candleX = cx;
+            const candleY = cy - 52 * s - 22 * s;
+            const candleH = 48 * s;
+            const candleW = 6 * s;
+
+            const candleGrad = ctx.createLinearGradient(candleX - candleW / 2, candleY, candleX + candleW / 2, candleY);
+            candleGrad.addColorStop(0, '#f5a0a0');
+            candleGrad.addColorStop(0.3, '#f7c0c0');
+            candleGrad.addColorStop(0.7, '#f7c0c0');
+            candleGrad.addColorStop(1, '#e08080');
+            ctx.fillStyle = candleGrad;
+            ctx.beginPath();
+            ctx.roundRect(candleX - candleW / 2, candleY - candleH, candleW, candleH, 2 * s);
+            ctx.fill();
+
+            for (let i = 0; i < 3; i++) {
+                const yy = candleY - candleH + 8 * s + i * 12 * s;
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.fillRect(candleX - candleW / 2 + 1 * s, yy, candleW - 2 * s, 2 * s);
+            }
+
+            ctx.fillStyle = '#3d2b1f';
+            ctx.fillRect(candleX - 0.8 * s, candleY - candleH - 2 * s, 1.6 * s, 4 * s);
+
+            if (candleLit) {
+                drawFlame(candleX, candleY - candleH - 4 * s, s);
+                const glowR = 60 * s;
+                const grad = ctx.createRadialGradient(candleX, candleY - candleH - 10 * s, 0, candleX, candleY - candleH -
+                    10 * s, glowR);
+                grad.addColorStop(0, 'rgba(255,200,100,0.15)');
+                grad.addColorStop(0.4, 'rgba(255,180,80,0.08)');
+                grad.addColorStop(1, 'rgba(255,150,50,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(candleX, candleY - candleH - 10 * s, glowR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawFlame(x, y, s) {
+            const flicker = Math.sin(animTime * 0.015 + flameFlicker) * 0.08 + 1;
+            const h1 = 14 * s * flicker;
+            const h2 = 10 * s * flicker * 0.7;
+            const w1 = 5 * s * flicker;
+            const w2 = 3.5 * s * flicker;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - h1);
+            ctx.quadraticCurveTo(x + w1, y - h1 * 0.5, x + w2 * 0.5, y);
+            ctx.quadraticCurveTo(x + w1 * 0.3, y + h1 * 0.1, x, y + h1 * 0.05);
+            ctx.quadraticCurveTo(x - w1 * 0.3, y + h1 * 0.1, x - w2 * 0.5, y);
+            ctx.quadraticCurveTo(x - w1, y - h1 * 0.5, x, y - h1);
+            ctx.fillStyle = 'rgba(255,180,50,0.9)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - h2 * 0.9);
+            ctx.quadraticCurveTo(x + w2 * 0.7, y - h2 * 0.3, x + w2 * 0.3, y);
+            ctx.quadraticCurveTo(x + w2 * 0.15, y + h2 * 0.1, x, y + h2 * 0.05);
+            ctx.quadraticCurveTo(x - w2 * 0.15, y + h2 * 0.1, x - w2 * 0.3, y);
+            ctx.quadraticCurveTo(x - w2 * 0.7, y - h2 * 0.3, x, y - h2 * 0.9);
+            ctx.fillStyle = 'rgba(255,240,180,0.95)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(x, y - h2 * 0.65, w2 * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fill();
+
+            const glowR = 18 * s * flicker;
+            const grad = ctx.createRadialGradient(x, y - h1 * 0.5, 0, x, y - h1 * 0.5, glowR);
+            grad.addColorStop(0, 'rgba(255,200,100,0.15)');
+            grad.addColorStop(1, 'rgba(255,150,50,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y - h1 * 0.5, glowR, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // ---- 烟雾粒子 ----
+        class SmokeParticle {
+            constructor(x, y) {
+                this.x = x + rand(-6, 6);
+                this.y = y + rand(-4, 4);
+                this.vx = rand(-0.4, 0.4);
+                this.vy = rand(-1.8, -0.6);
+                this.size = rand(4, 14);
+                this.maxLife = randInt(40, 90);
+                this.life = this.maxLife;
+                this.alpha = 0.6 + rand(0, 0.3);
+                this.gravity = -0.008;
+                this.drag = 0.99;
+            }
+            update() {
+                this.life--;
+                this.vx *= this.drag;
+                this.vy *= this.drag;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.size += 0.06;
+                this.alpha *= 0.992;
+                return this.life > 0 && this.alpha > 0.01;
+            }
+            draw(ctx) {
+                const a = this.alpha * (this.life / this.maxLife);
+                if (a < 0.01) return;
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                grad.addColorStop(0, `rgba(200,200,210,${a * 0.4})`);
+                grad.addColorStop(0.5, `rgba(180,180,195,${a * 0.25})`);
+                grad.addColorStop(1, `rgba(150,150,170,0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function blowCandle() {
+            if (state !== STATE.FIREWORKS || !candleLit || hasBlown) return;
+            hasBlown = true;
+            candleLit = false;
+            state = STATE.BLOWING;
+            blowProgress = 0;
+            fireworksActive = false;
+            const cx = W / 2;
+            const cy = H * 0.72 - 52 * 0.7 - 22 * 0.7 - 48 * 0.7 - 10;
+            for (let i = 0; i < 60; i++) {
+                smokeParticles.push(new SmokeParticle(cx + rand(-10, 10), cy + rand(-6, 6)));
+            }
+            document.getElementById('hint').textContent = '✦ 许愿 · 祝福降临 ✦';
+            setTimeout(() => document.getElementById('hint').classList.add('show'), 400);
+        }
+
+        // ================================================================
+        //  6. ✨ 祝福系统 —— 原版 bless.html 照抄
+        // ================================================================
+        let blessingParticles = [];
+        let blessingTargets = [];
+        let blessingReady = false;
+        const BLESSING_TEXTS = ['生', '日', '快', '乐'];
+        const BASE_BLESSINGS = [
+            '愿你眼中有星辰大海', '心中有繁花似锦', '前路漫漫亦灿灿', '做自己的光', '温柔且坚定',
+            '未来皆可期', '感谢青春有你', '去更远的地方', '永远年轻，永远热泪盈眶', '生日快乐',
+            '愿你所遇皆温柔', '岁月如歌', '前程似锦', '万事胜意', '未来可期', '平安喜乐',
+            '得偿所愿', '光芒万丈', '不负韶华', '以梦为马', '乘风破浪', '星河长明',
+            '万事顺遂', '人间值得', '山河无恙', '人间皆安'
+        ];
+
+        function buildBlessingTargets() {
+            const fs = 120;
+            const charWidth = fs * 0.62;
+            const gap = 50;
+            const totalW = 4 * charWidth + 3 * gap;
+            const startX = (W - totalW) / 2;
+            const centerY = H / 2 + 10;
+            const targets = [];
+            const perChar = 500;
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            BLESSING_TEXTS.forEach((ch, ci) => {
+                const pad = 20;
+                const size = fs + pad * 2;
+                tempCanvas.width = size;
+                tempCanvas.height = size;
+                tempCtx.clearRect(0, 0, size, size);
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.font = `bold ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+                tempCtx.fillStyle = '#ffffff';
+                tempCtx.fillText(ch, size / 2, size / 2);
+
+                const imgData = tempCtx.getImageData(0, 0, size, size);
+                const data = imgData.data;
+                const raw = [];
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        const idx = (y * size + x) * 4;
+                        if (data[idx + 3] > 30) raw.push({ x: x - pad, y: y - pad });
+                    }
+                }
+                if (raw.length === 0) {
+                    for (let i = 0; i < perChar; i++) raw.push({ x: rand(-fs / 2, fs / 2), y: rand(-fs / 2, fs / 2) });
+                }
+                const shuffled = [...raw];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = randInt(0, i);
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                const cx = startX + ci * (charWidth + gap) + charWidth / 2;
+                const count = Math.min(perChar, shuffled.length);
+                for (let i = 0; i < count; i++) {
+                    const p = shuffled[i];
+                    targets.push({
+                        x: cx + p.x, y: centerY + p.y, charIndex: ci, targetX: cx + p.x, targetY: centerY + p
+                            .y
+                    });
+                }
+                while (targets.filter(t => t.charIndex === ci).length < perChar) {
+                    const p = raw[randInt(0, raw.length - 1)] || { x: rand(-fs / 2, fs / 2), y: rand(-fs / 2, fs / 2) };
+                    targets.push({
+                        x: cx + p.x, y: centerY + p.y, charIndex: ci, targetX: cx + p.x, targetY: centerY + p
+                            .y
+                    });
+                }
+            });
+            return targets;
+        }
+
+        function initBlessingParticles() {
+            blessingTargets = buildBlessingTargets();
+            blessingParticles = [];
+            const colors = [
+                { h: 45, s: 90, l: 65 },
+                { h: 35, s: 85, l: 60 },
+                { h: 50, s: 80, l: 70 },
+                { h: 30, s: 70, l: 55 },
+            ];
+            blessingTargets.forEach((t, i) => {
+                const angle = rand(0, Math.PI * 2);
+                const dist = rand(W * 0.3, W * 0.9);
+                const startX = W / 2 + Math.cos(angle) * dist;
+                const startY = H / 2 + Math.sin(angle) * dist * 0.6;
+                const c = colors[t.charIndex % colors.length];
+                blessingParticles.push({
+                    x: startX,
+                    y: startY,
+                    targetX: t.targetX,
+                    targetY: t.targetY,
+                    size: rand(2.0, 4.5),
+                    color: c,
+                    progress: 0,
+                    delay: rand(0, 0.6),
+                    charIndex: t.charIndex,
+                    alpha: 0,
+                    done: false
+                });
+            });
+            for (let i = blessingParticles.length - 1; i > 0; i--) {
+                const j = randInt(0, i);
+                [blessingParticles[i], blessingParticles[j]] = [blessingParticles[j], blessingParticles[i]];
+            }
+            blessingReady = true;
+        }
+
+        function updateBlessingParticles(delta) {
+            const duration = 3.0;
+            let allDone = true;
+            blessingParticles.forEach(p => {
+                if (p.done) return;
+                p.progress += delta / duration;
+                if (p.progress >= 1) {
+                    p.progress = 1;
+                    p.done = true;
+                    p.x = p.targetX;
+                    p.y = p.targetY;
+                    p.alpha = 1;
+                    return;
+                }
+                allDone = false;
+                const ease = easeOutCubic(p.progress);
+                p.x = lerp(p.x, p.targetX, ease * 0.08);
+                p.y = lerp(p.y, p.targetY, ease * 0.08);
+                p.alpha = clamp(ease * 1.2, 0, 1);
+            });
+            return allDone;
+        }
+
+        function drawBlessingScene() {
+            // 背景 - 深空 (bless.html 风格)
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#070b1a');
+            bgGrad.addColorStop(0.5, '#0e1a2e');
+            bgGrad.addColorStop(1, '#080c1a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // 星星
+            const starCount = 120;
+            for (let i = 0; i < starCount; i++) {
+                const seed = i * 127.1 + 311.7;
+                const sx = ((seed * 137.5) % W + W) % W;
+                const sy = ((seed * 269.1 + 42.3) % H + H) % H;
+                const br = 0.2 + 0.8 * (((seed * 73.7) % 100) / 100);
+                const twinkle = 0.6 + 0.4 * Math.sin(animTime * 0.005 + i * 1.7);
+                const size = 0.3 + br * 1.8;
+                ctx.globalAlpha = br * twinkle * 0.7;
+                ctx.fillStyle = `rgba(255,255,255,${br * twinkle * 0.6})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                ctx.fill();
+                if (br > 0.7) {
+                    ctx.globalAlpha = br * twinkle * 0.15;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, size * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.globalAlpha = 1;
+
+            // 绘制祝福粒子
+            blessingParticles.forEach(p => {
+                const alpha = p.alpha * 0.85;
+                if (alpha < 0.01) return;
+                const size = p.size * (0.6 + 0.4 * p.progress);
+                const c = p.color;
+                const glow = size * 3;
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
+                grad.addColorStop(0, hsl(c.h, c.s, Math.min(90, c.l + 15), alpha * 0.5));
+                grad.addColorStop(0.4, hsl(c.h, c.s, c.l, alpha * 0.2));
+                grad.addColorStop(1, hsl(c.h, c.s, c.l, 0));
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, glow, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = hsl(c.h, c.s, Math.min(92, c.l + 10));
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                if (size > 1.5 && alpha > 0.3) {
+                    ctx.globalAlpha = alpha * 0.3;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(p.x - size * 0.2, p.y - size * 0.2, size * 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            // 文字轮廓辉光
+            const fs = 120;
+            const charWidth = fs * 0.62;
+            const gap = 50;
+            const totalW = 4 * charWidth + 3 * gap;
+            const startX = (W - totalW) / 2;
+            const centerY = H / 2 + 10;
+            const hues = [45, 35, 50, 30];
+            BLESSING_TEXTS.forEach((ch, ci) => {
+                const cx = startX + ci * (charWidth + gap) + charWidth / 2;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `bold ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+                const grad = ctx.createLinearGradient(cx - fs / 2, centerY, cx + fs / 2, centerY);
+                const h = hues[ci % hues.length];
+                grad.addColorStop(0, hsl(h, 80, 20, 0.08));
+                grad.addColorStop(0.5, hsl(h, 90, 35, 0.12));
+                grad.addColorStop(1, hsl(h, 80, 20, 0.08));
+                ctx.shadowColor = hsl(h, 90, 50, 0.15);
+                ctx.shadowBlur = 60;
+                ctx.fillStyle = grad;
+                ctx.fillText(ch, cx, centerY);
+                ctx.restore();
+            });
+        }
+
+        // ================================================================
+        //  7. 👁️ 睁眼动画
+        // ================================================================
+        function drawEyeMask(progress) {
+            const p = Math.min(Math.max(progress, 0), 1);
+            const cx = W / 2;
+            const cy = H * 0.62;
+            const maxR = Math.max(W, H) * 0.8;
+            const radius = p * maxR;
+
+            // 先画黑色背景
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+
+            // 用clip实现圆形遮罩，显示烟花场景
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, radius, radius * 0.72, 0, 0, Math.PI * 2);
+            ctx.clip();
+
+            // 绘制烟花场景（此时 fireworksActive 为 true）
+            drawFireworksScene();
+            ctx.restore();
+
+            // 边缘柔光
+            if (p < 0.98) {
+                const grad = ctx.createRadialGradient(cx, cy, radius * 0.85, cx, cy, radius);
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(0.7, 'rgba(0,0,0,0)');
+                grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, W, H);
+            }
+        }
+
+        // ================================================================
+        //  8. 🎨 场景绘制
+        // ================================================================
+        function drawFireworksScene() {
+            // 背景
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#050810');
+            bgGrad.addColorStop(0.4, '#0c1628');
+            bgGrad.addColorStop(0.7, '#121e30');
+            bgGrad.addColorStop(1, '#080c18');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // 星星
+            const starCount = 80;
+            for (let i = 0; i < starCount; i++) {
+                const seed = i * 173.1 + 211.7;
+                const sx = ((seed * 137.5) % W + W) % W;
+                const sy = ((seed * 269.1 + 42.3) % H + H) % H;
+                const br = 0.15 + 0.85 * (((seed * 73.7) % 100) / 100);
+                const twinkle = 0.5 + 0.5 * Math.sin(animTime * 0.004 + i * 2.1);
+                const size = 0.2 + br * 1.2;
+                ctx.globalAlpha = br * twinkle * 0.5;
+                ctx.fillStyle = `rgba(255,255,255,${br * twinkle * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            // 粒子
+            for (const p of particles) p.draw(ctx);
+            // 火箭
+            for (const r of rockets) r.draw(ctx);
+
+            // 闪光
+            if (flashEffect && flashEffect.active) {
+                const progress = 1 - flashEffect.life / flashEffect.maxLife;
+                const radius = flashEffect.maxRadius * (1 - Math.pow(1 - progress, 0.4));
+                const alpha = (1 - progress) * 0.6;
+                const grad = ctx.createRadialGradient(flashEffect.x, flashEffect.y, 0, flashEffect.x, flashEffect.y,
+                    radius);
+                grad.addColorStop(0, `rgba(255,255,255,${alpha * 0.8})`);
+                grad.addColorStop(0.2, `rgba(255,240,210,${alpha * 0.4})`);
+                grad.addColorStop(0.6, `rgba(255,220,180,${alpha * 0.12})`);
+                grad.addColorStop(1, `rgba(255,200,160,0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(flashEffect.x, flashEffect.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                flashEffect.life--;
+                if (flashEffect.life <= 0) flashEffect.active = false;
+            }
+
+            // 蛋糕
+            const cakeScale = Math.min(W, H) / 900;
+            drawCake(W / 2, H * 0.72, cakeScale);
+
+            // 烟雾
+            for (const s of smokeParticles) s.draw(ctx);
+
+            // 底部辉光
+            const glowGrad = ctx.createRadialGradient(W / 2, H * 0.85, 0, W / 2, H * 0.85, H * 0.5);
+            glowGrad.addColorStop(0, 'rgba(255,180,100,0.04)');
+            glowGrad.addColorStop(1, 'rgba(255,150,80,0)');
+            ctx.fillStyle = glowGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // 暗角
+            const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.9);
+            vig.addColorStop(0, 'rgba(0,0,0,0)');
+            vig.addColorStop(1, 'rgba(0,0,0,0.25)');
+            ctx.fillStyle = vig;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        function drawFullScene() {
+            if (state === STATE.CLOSED) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                return;
+            }
+
+            if (state === STATE.OPENING) {
+                drawEyeMask(openingProgress);
+                return;
+            }
+
+            if (state === STATE.BLESSING) {
+                drawBlessingScene();
+                return;
+            }
+
+            if (state === STATE.FIREWORKS || state === STATE.BLOWING) {
+                drawFireworksScene();
+                // 吹灭过渡遮罩
+                if (state === STATE.BLOWING && blowProgress < 0.6) {
+                    const alpha = 0.25 * (1 - blowProgress / 0.6);
+                    ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+                    ctx.fillRect(0, 0, W, H);
+                }
+                return;
+            }
+        }
+
+        // ================================================================
+        //  9. 🔄 主循环
+        // ================================================================
+        function update(timestamp) {
+            const delta = lastTimestamp ? (timestamp - lastTimestamp) / 1000 : 0.016;
+            lastTimestamp = timestamp;
+            animTime += delta * 1000;
+
+            // ---- 睁眼 ----
+            if (state === STATE.OPENING) {
+                openingProgress += delta * 0.6;
+                if (openingProgress >= 1) {
+                    openingProgress = 1;
+                    state = STATE.FIREWORKS;
+                    fireworksActive = true;
+                    document.getElementById('hint').textContent = '✦ 点击屏幕 · 吹灭蜡烛 ✦';
+                    document.getElementById('hint').classList.add('show');
+                    for (let i = 0; i < 3; i++) {
+                        setTimeout(() => {
+                            launchFirework(rand(W * 0.1, W * 0.9), rand(H * 0.02, H * 0.35));
+                        }, i * 300 + 100);
+                    }
+                    lastLaunchTime = timestamp - 500;
+                }
+                return;
+            }
+
+            // ---- 烟花 ----
+            if (state === STATE.FIREWORKS) {
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    if (particles[i].isDead()) particles.splice(i, 1);
+                }
+                for (let i = rockets.length - 1; i >= 0; i--) {
+                    rockets[i].update();
+                    if (!rockets[i].alive || rockets[i].exploded) rockets.splice(i, 1);
+                }
+                autoLaunch(timestamp);
+                for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                    if (!smokeParticles[i].update()) smokeParticles.splice(i, 1);
+                }
+                flameFlicker += delta * 3 + rand(-0.5, 0.5);
+                return;
+            }
+
+            // ---- 吹灭过渡 ----
+            if (state === STATE.BLOWING) {
+                blowProgress += delta * 0.5;
+                for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                    if (!smokeParticles[i].update()) smokeParticles.splice(i, 1);
+                }
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    if (particles[i].isDead()) particles.splice(i, 1);
+                }
+                for (let i = rockets.length - 1; i >= 0; i--) {
+                    rockets[i].update();
+                    if (!rockets[i].alive || rockets[i].exploded) rockets.splice(i, 1);
+                }
+                if (!blessingReady && blowProgress > 0.3) {
+                    initBlessingParticles();
+                }
+                if (blowProgress > 0.7 && blessingReady) {
+                    state = STATE.BLESSING;
+                    blessingProgress = 0;
+                    document.getElementById('hint').textContent = '✦ 愿你 · 光芒万丈 ✦';
+                    document.getElementById('hint').classList.add('show');
+                }
+                return;
+            }
+
+            // ---- 祝福 ----
+            if (state === STATE.BLESSING) {
+                blessingProgress += delta;
+                updateBlessingParticles(delta);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    particles[i].update();
+                    if (particles[i].isDead()) particles.splice(i, 1);
+                }
+                for (let i = rockets.length - 1; i >= 0; i--) {
+                    rockets[i].update();
+                    if (!rockets[i].alive || rockets[i].exploded) rockets.splice(i, 1);
+                }
+                for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                    if (!smokeParticles[i].update()) smokeParticles.splice(i, 1);
+                }
+                return;
+            }
+        }
+
+        function loop(timestamp) {
+            update(timestamp);
+            drawFullScene();
+            animId = requestAnimationFrame(loop);
+        }
+
+        // ================================================================
+        //  10. 🖱️ 交互
+        // ================================================================
+        canvas.addEventListener('click', () => {
+            if (state === STATE.FIREWORKS && candleLit) {
+                blowCandle();
+            }
+        });
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (state === STATE.FIREWORKS && candleLit) {
+                blowCandle();
+            }
+        }, { passive: false });
+
+        // ================================================================
+        //  11. 🚀 初始化
+        // ================================================================
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+                const r = typeof radii === 'number' ? radii : (radii || 0);
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                return this;
+            };
+        }
+
+        function init() {
+            state = STATE.CLOSED;
+            openingProgress = 0;
+            blowProgress = 0;
+            blessingProgress = 0;
+            hasBlown = false;
+            candleLit = true;
+            fireworksActive = false;
+            particles = [];
+            rockets = [];
+            smokeParticles = [];
+            blessingParticles = [];
+            blessingTargets = [];
+            blessingReady = false;
+            flashEffect = null;
+            lastLaunchTime = 0;
+            document.getElementById('hint').classList.remove('show');
+
+            setTimeout(() => {
+                state = STATE.OPENING;
+                openingProgress = 0;
+            }, 400);
+        }
+
+        resize();
+        init();
+        animId = requestAnimationFrame(loop);
+
+        window.addEventListener('resize', () => {
+            resize();
+            if (state === STATE.BLESSING && blessingReady) {
+                blessingTargets = buildBlessingTargets();
+                blessingParticles.forEach((p, i) => {
+                    if (i < blessingTargets.length) {
+                        const t = blessingTargets[i];
+                        p.targetX = t.targetX;
+                        p.targetY = t.targetY;
+                    }
+                });
+            }
+        });
+
+        console.log('✨ 生日快乐 · 许愿页面 ✨');
+        console.log('   👁️ 睁眼 → 烟花盛宴');
+        console.log('   🕯️ 点击 → 吹灭蜡烛');
+        console.log('   ✨ 祝福 → 星光文字');
+    </script>
+</body>
+
+</html>

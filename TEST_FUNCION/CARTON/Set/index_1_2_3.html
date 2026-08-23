@@ -1,0 +1,2571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>星河入梦 · 花火</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            cursor: default;
+        }
+
+        #info {
+            position: fixed;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            letter-spacing: 4px;
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+            font-family: 'Georgia', serif;
+            text-shadow: 0 0 30px rgba(0, 20, 80, 0.3);
+            opacity: 0;
+            transition: opacity 2s ease;
+            z-index: 20;
+        }
+
+        #info.show {
+            opacity: 1;
+        }
+
+        #info.fireworks {
+            color: rgba(255, 255, 255, 0.30);
+            text-shadow: 0 0 40px rgba(200, 150, 255, 0.15);
+        }
+
+        @media (max-width:600px) {
+            #info {
+                font-size: 10px;
+                bottom: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="mainCanvas"></canvas>
+    <div id="info">✦ 华灯 · 陨星 · 星河 ✦</div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ================================================================
+            // 0. 工具函数
+            // ================================================================
+            function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            function rand(a, b) { return Math.random() * (b - a) + a; }
+
+            function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+
+            function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+            function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+            function easeInOutSine(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
+
+            function smoothstep(e0, e1, x) { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); }
+
+            function hash(x, y) {
+                let h = x * 374761393 + y * 668265263;
+                h = (h ^ (h >> 13)) * 1274126177;
+                return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff;
+            }
+
+            function lighten(hex, a) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.min(255, r + a);
+                g = Math.min(255, g + a);
+                b = Math.min(255, b + a);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function darken(hex, a) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.max(0, r - a);
+                g = Math.max(0, g - a);
+                b = Math.max(0, b - a);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            // ================================================================
+            // 1. Canvas 初始化
+            // ================================================================
+            const canvas = document.getElementById('mainCanvas');
+            const ctx = canvas.getContext('2d', { alpha: true });
+            const infoEl = document.getElementById('info');
+            let W, H;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                if (isNaN(H) || H <= 0) H = window.innerHeight || 600;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            // ================================================================
+            // 2. 全局状态 & 阶段管理
+            // ================================================================
+            const PHASE = {
+                EPIC: 'epic',
+                CLOSING: 'closing',
+                FIREWORKS: 'fireworks'
+            };
+
+            let currentPhase = PHASE.EPIC;
+            let phaseProgress = 0;
+            let phaseStartTime = 0;
+            let animId = null;
+            let epicEnded = false;
+            let closingDone = false;
+            let fireworksReady = false;
+            let closingTriggered = false; // 新增：防止多次触发闭眼
+
+            // ---------- 闭眼 ----------
+            let closeStartTime = 0;
+            const CLOSE_DURATION = 3500;
+            const CLOSE_DELAY = 800;
+
+            // ---------- 烟花 ----------
+            let fwStartTime = 0;
+            const FW_OPEN_DURATION = 2500;
+            let fwOpened = false;
+
+            // ================================================================
+            // 3. 阶段一：index_1_2 完整逻辑（精简整合）
+            // ================================================================
+
+            // ---------- 3.1 配置 ----------
+            const CONFIG = {
+                eye: { duration: 2000 },
+                rise: { duration: 4000, maxOffsetY: 1.2 },
+                fade: { duration: 3000, cityDrop: 1.2, viewportFollow: 0.08, startScale: 1.0, endScale: 1.0 },
+                spaceOpen: { duration: 4000, startScale: 1.0, endScale: 1.25 },
+                starAppear: { start: 0.15, end: 1, fadeRange: 0.06, randomOffset: 0.06, atmosphereStrength: 0.5 },
+                starFlicker: { speedMin: 0.2, speedMax: 0.8, amplitudeMin: 0.15, amplitudeMax: 0.35 },
+                meteor: {
+                    attachDuration: 2000,
+                    startSpeed: 4,
+                    maxSpeed: 15,
+                    startBlur: 15,
+                    maxBlur: 55,
+                    historyLength: 22,
+                    gravity: 0.06,
+                    flyDurationMin: 50,
+                    flyDurationMax: 80,
+                    pieceCountMin: 8,
+                    pieceCountMax: 13,
+                    pieceHistoryLen: 12,
+                },
+                shower: {
+                    maxCount: 20,
+                    angleMin: 0.55,
+                    angleMax: 0.85,
+                    speedMin: 9,
+                    speedMax: 16,
+                    tailMin: 200,
+                    tailMax: 400,
+                    lifeMin: 60,
+                    lifeMax: 100,
+                    spawnIntervalMin: 300,
+                    spawnIntervalMax: 800,
+                    duration: 15000,
+                    trailSegments: 60,
+                    baseWidthMin: 4.0,
+                    baseWidthMax: 7.0,
+                    brightnessMin: 0.8,
+                    brightnessMax: 1.0,
+                    fadeOutStart: 0.12,
+                },
+                glow: {
+                    intensity: 0.7,
+                    farAlpha: 0.06,
+                    midAlpha: 0.12,
+                    nearAlpha: 0.20,
+                    farRadius: 0.6,
+                    midRadius: 1.0,
+                    nearRadius: 1.4,
+                    farOffset: 2,
+                    midOffset: 4,
+                    nearOffset: 8,
+                    horizonAlpha: 0.06,
+                },
+                visual: { vignetteStrength: 0.18, lensGlowStart: 0.6, lensGlowAlpha: 0.04 }
+            };
+
+            // ---------- 3.2 城市星星 ----------
+            const CITY_STAR_COLORS = [
+                { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
+                { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
+                { r: 210, g: 220, b: 255 }, { r: 255, g: 210, b: 180 }
+            ];
+            let cityStars = [];
+
+            function generateCityStars() {
+                cityStars = [];
+                const count = 280 + Math.floor(Math.random() * 60);
+                const { speedMin, speedMax, amplitudeMin, amplitudeMax } = CONFIG.starFlicker;
+                for (let i = 0; i < count; i++) {
+                    let magnitude = Math.random();
+                    let brightness = Math.pow(magnitude, 2.5);
+                    brightness = clamp(brightness, 0.05, 1.0);
+                    const size = 0.3 + brightness * 2.7;
+                    const isBright = brightness > 0.7 && Math.random() < 0.3;
+                    let colorIdx;
+                    if (brightness > 0.7) colorIdx = Math.floor(Math.random() * 3);
+                    else if (brightness > 0.4) colorIdx = 3 + Math.floor(Math.random() * 2);
+                    else colorIdx = Math.floor(Math.random() * CITY_STAR_COLORS.length);
+                    const color = CITY_STAR_COLORS[colorIdx % CITY_STAR_COLORS.length];
+                    const speed = speedMin + Math.random() * (speedMax - speedMin);
+                    const phase = Math.random() * Math.PI * 2;
+                    const flickerAmt = amplitudeMin + brightness * (amplitudeMax - amplitudeMin);
+                    const x = Math.random() * (W - 20) + 10;
+                    const y = Math.random() * (H * 0.75) + 10;
+                    const randomDelay = (Math.random() - 0.5) * CONFIG.starAppear.randomOffset * 2;
+                    cityStars.push({
+                        x, y, size, brightness, baseAlpha: 0.6 + brightness * 0.4, alpha: 0, speed, phase,
+                        flickerAmt, color, isBright, randomDelay
+                    });
+                }
+            }
+            generateCityStars();
+
+            function updateCityStars(time) {
+                for (const star of cityStars) {
+                    const flicker = Math.sin(time * star.speed + star.phase);
+                    const af = 0.5 + 0.5 * flicker;
+                    const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                    star.alpha = star.baseAlpha * mod;
+                    star.alpha = clamp(star.alpha, 0.05, 1);
+                }
+            }
+
+            function drawCityStars(time, liftProgress, vp, alphaMul) {
+                const { start, end, fadeRange, atmosphereStrength } = CONFIG.starAppear;
+                if (liftProgress < start - fadeRange * 0.5) return;
+                updateCityStars(time);
+                const sorted = [...cityStars].sort((a, b) => b.brightness - a.brightness);
+                const scale = vp ? vp.scale : 1.0;
+                const ox = vp ? (W / 2 - vp.cx) * scale + W / 2 : W / 2;
+                const oy = vp ? (H / 2 - vp.cy) * scale + H / 2 : H / 2;
+                const alphaMult = (alphaMul !== undefined) ? alphaMul : 1.0;
+                for (const star of sorted) {
+                    const yNorm = star.y / (H * 0.75);
+                    const baseThreshold = start + (end - start) * yNorm;
+                    const threshold = clamp(baseThreshold + star.randomDelay, start - 0.05, end + 0.05);
+                    const fadeEnd2 = threshold + fadeRange;
+                    let visibility = smoothstep(threshold, fadeEnd2, liftProgress);
+                    if (liftProgress > end + fadeRange) visibility = 1;
+                    const heightFactor = 1 - yNorm;
+                    const atmosphere = (1 - atmosphereStrength) + atmosphereStrength * heightFactor;
+                    const sizeFactor = 0.6 + 0.4 * heightFactor;
+                    const finalAlpha = star.alpha * visibility * atmosphere * alphaMult;
+                    if (finalAlpha < 0.001) continue;
+                    const px = (star.x - W / 2) * scale + ox;
+                    const py = (star.y - H / 2) * scale + oy;
+                    const finalSize = star.size * sizeFactor * scale;
+                    const { color, isBright } = star;
+                    const { r, g, b } = color;
+                    if (finalSize > 0.8 && finalAlpha > 0.02) {
+                        const glowR = finalSize * 2.5;
+                        const grad = ctx.createRadialGradient(px, py, 0, px, py, glowR);
+                        grad.addColorStop(0, `rgba(${r},${g},${b},${finalAlpha * 0.35})`);
+                        grad.addColorStop(0.5, `rgba(${r},${g},${b},${finalAlpha * 0.10})`);
+                        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(px, py, glowR, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = finalAlpha;
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, finalSize * 0.85, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (isBright && finalAlpha > 0.2) {
+                        const len = 10 + finalSize * 4;
+                        for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                            const ca = Math.cos(ang),
+                                sa = Math.sin(ang);
+                            ctx.globalAlpha = finalAlpha * 0.25;
+                            ctx.strokeStyle = `rgba(${r},${g},${b},${finalAlpha * 0.25})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.beginPath();
+                            ctx.moveTo(px + ca * 1.5, py + sa * 1.5);
+                            ctx.lineTo(px + ca * len, py + sa * len);
+                            ctx.stroke();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // ---------- 3.3 太空星星 ----------
+            const SPACE_STAR_COLORS = [
+                { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
+                { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
+                { r: 210, g: 220, b: 255 }, { r: 255, g: 210, b: 180 }
+            ];
+            const SPACE_LAYERS = [
+                { name: '远层', parallax: 0.15, count: 300, sizeMin: 0.2, sizeMax: 1.2, alphaBase: 0.3 },
+                { name: '中层', parallax: 0.45, count: 250, sizeMin: 0.4, sizeMax: 2.0, alphaBase: 0.5 },
+                { name: '近层', parallax: 0.95, count: 150, sizeMin: 0.8, sizeMax: 3.5, alphaBase: 0.7 }
+            ];
+            let spaceStarLayers = [];
+
+            function initSpaceStars() {
+                spaceStarLayers = [];
+                for (let li = 0; li < SPACE_LAYERS.length; li++) {
+                    const cfg = SPACE_LAYERS[li];
+                    const stars = [];
+                    for (let i = 0; i < cfg.count; i++) {
+                        const mag = Math.random(),
+                            bri = Math.pow(mag, 1.8);
+                        const size = cfg.sizeMin + bri * (cfg.sizeMax - cfg.sizeMin);
+                        const isBright = bri > 0.7 && Math.random() < 0.2;
+                        const ci = Math.floor(Math.random() * SPACE_STAR_COLORS.length);
+                        const col = SPACE_STAR_COLORS[ci];
+                        const spd = 0.15 + Math.random() * 0.6,
+                            ph = Math.random() * Math.PI * 2;
+                        const fa = 0.1 + bri * 0.3;
+                        stars.push({
+                            x: Math.random() * W,
+                            y: Math.random() * H,
+                            size,
+                            brightness: bri,
+                            baseAlpha: cfg.alphaBase + bri * 0.5,
+                            alpha: 0,
+                            speed: spd,
+                            phase: ph,
+                            flickerAmt: fa,
+                            color: col,
+                            isBright,
+                            parallax: cfg.parallax
+                        });
+                    }
+                    spaceStarLayers.push(stars);
+                }
+            }
+            initSpaceStars();
+
+            function drawSpaceStars(time, vp, alphaMul) {
+                const scale = vp.scale;
+                const alphaMult = (alphaMul !== undefined) ? alphaMul : 1.0;
+                if (alphaMult < 0.001) return;
+                for (let li = 0; li < spaceStarLayers.length; li++) {
+                    const stars = spaceStarLayers[li];
+                    const parallax = SPACE_LAYERS[li].parallax;
+                    const offFactor = (scale - 0.05) * 0.8;
+                    const offX = (vp.cx - W / 2) * parallax * offFactor * 0.3;
+                    const offY = (vp.cy - H / 2) * parallax * offFactor * 0.3;
+                    for (const star of stars) {
+                        const flicker = Math.sin(time * star.speed + star.phase);
+                        const af = 0.5 + 0.5 * flicker;
+                        const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                        star.alpha = star.baseAlpha * mod;
+                        star.alpha = clamp(star.alpha, 0.05, 1);
+                        const px = star.x + offX * (1 + star.parallax * 0.5);
+                        const py = star.y + offY * (1 + star.parallax * 0.5);
+                        const szScale = 0.8 + 0.4 * (1 - parallax);
+                        const drawSize = star.size * szScale;
+                        const finalAlpha = star.alpha * alphaMult;
+                        if (finalAlpha < 0.001) continue;
+                        if (drawSize > 0.8 && finalAlpha > 0.02) {
+                            const glowR = drawSize * 2.5;
+                            const grad = ctx.createRadialGradient(px, py, 0, px, py, glowR);
+                            grad.addColorStop(0,
+                                `rgba(${star.color.r},${star.color.g},${star.color.b},${finalAlpha * 0.3})`);
+                            grad.addColorStop(0.5,
+                                `rgba(${star.color.r},${star.color.g},${star.color.b},${finalAlpha * 0.08})`);
+                            grad.addColorStop(1, `rgba(${star.color.r},${star.color.g},${star.color.b},0)`);
+                            ctx.fillStyle = grad;
+                            ctx.beginPath();
+                            ctx.arc(px, py, glowR, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = finalAlpha;
+                        ctx.fillStyle = `rgb(${star.color.r},${star.color.g},${star.color.b})`;
+                        ctx.beginPath();
+                        ctx.arc(px, py, drawSize * 0.85, 0, Math.PI * 2);
+                        ctx.fill();
+                        if (star.isBright && finalAlpha > 0.2) {
+                            const len = 10 + drawSize * 4;
+                            for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                                const ca = Math.cos(ang),
+                                    sa = Math.sin(ang);
+                                ctx.globalAlpha = finalAlpha * 0.2;
+                                ctx.strokeStyle =
+                                    `rgba(${star.color.r},${star.color.g},${star.color.b},${finalAlpha * 0.2})`;
+                                ctx.lineWidth = 0.6;
+                                ctx.beginPath();
+                                ctx.moveTo(px + ca * 1.5, py + sa * 1.5);
+                                ctx.lineTo(px + ca * len, py + sa * len);
+                                ctx.stroke();
+                            }
+                        }
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
+
+            // ---------- 3.4 悬浮粒子 ----------
+            let floatParticles = [];
+            const PARTICLE_COUNT = 120;
+
+            function initFloatParticles() {
+                floatParticles = [];
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    floatParticles.push({
+                        x: rand(0, W),
+                        y: rand(0, H),
+                        z: rand(0.1, 1.0),
+                        size: rand(0.5, 2.8),
+                        vx: rand(-0.15, 0.15),
+                        vy: rand(-0.10, 0.10),
+                        phase: rand(0, Math.PI * 2),
+                        alpha: rand(0.05, 0.25),
+                        color: { r: rand(180, 255), g: rand(180, 255), b: rand(200, 255) }
+                    });
+                }
+            }
+            initFloatParticles();
+
+            function updateFloatParticles(time) {
+                for (const p of floatParticles) {
+                    p.x += p.vx + Math.sin(time * 0.0003 + p.phase) * 0.04;
+                    p.y += p.vy + Math.cos(time * 0.0004 + p.phase * 1.3) * 0.03;
+                    if (p.x < -20) p.x = W + 20;
+                    if (p.x > W + 20) p.x = -20;
+                    if (p.y < -20) p.y = H + 20;
+                    if (p.y > H + 20) p.y = -20;
+                    p.alpha = p.alpha * 0.998 + (0.05 + 0.2 * (0.5 + 0.5 * Math.sin(time * 0.001 + p.phase))) * 0.002;
+                    p.alpha = clamp(p.alpha, 0.02, 0.35);
+                }
+            }
+
+            function drawFloatParticles() {
+                for (const p of floatParticles) {
+                    const depth = p.z,
+                        size = p.size * (0.4 + 0.6 * depth),
+                        alpha = p.alpha * (0.3 + 0.7 * depth);
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha})`;
+                    ctx.fill();
+                    if (size > 0.8 && alpha > 0.05) {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, size * 3);
+                        grad.addColorStop(0, `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha * 0.2})`);
+                        grad.addColorStop(1, `rgba(${p.color.r},${p.color.g},${p.color.b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, size * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // ---------- 3.5 星云 ----------
+            let clouds = [];
+
+            function initClouds() {
+                clouds = [];
+                const count = 30 + Math.floor(Math.random() * 30);
+                for (let i = 0; i < count; i++) {
+                    const cx = Math.random() * W,
+                        cy = Math.random() * H * 0.7;
+                    const radius = 80 + Math.random() * 300;
+                    const alpha = 0.015 + Math.random() * 0.035;
+                    let r, g, b;
+                    const s = Math.random();
+                    if (s < 0.33) {
+                        r = 80;
+                        g = 120;
+                        b = 200;
+                    } else if (s < 0.66) {
+                        r = 120;
+                        g = 100;
+                        b = 180;
+                    } else {
+                        r = 200;
+                        g = 180;
+                        b = 160;
+                    }
+                    clouds.push({ x: cx, y: cy, radius, alpha, r, g, b });
+                }
+            }
+            initClouds();
+
+            function drawClouds(scale) {
+                if (clouds.length === 0) return;
+                const ca = smoothstep(0.05, 0.6, scale);
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                for (const cloud of clouds) {
+                    const grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+                    const a = cloud.alpha * (0.3 + 0.7 * (1 - ca));
+                    grad.addColorStop(0, `rgba(${cloud.r},${cloud.g},${cloud.b},${a})`);
+                    grad.addColorStop(0.5, `rgba(${cloud.r},${cloud.g},${cloud.b},${a * 0.5})`);
+                    grad.addColorStop(1, `rgba(${cloud.r},${cloud.g},${cloud.b},0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // ---------- 3.6 建筑系统 ----------
+            let buildings = [];
+
+            function generateBuildings() {
+                buildings = [];
+                const horizonY = H * 0.20;
+
+                function perspective(baseY) {
+                    let t = (baseY - horizonY) / (H * 0.85 - horizonY);
+                    return Math.max(0, Math.min(1, t));
+                }
+
+                function fillRow(yMin, yMax, cellW, layerType) {
+                    const rows = Math.max(1, Math.round((yMax - yMin) / (H * 0.045)));
+                    const rowH = (yMax - yMin) / rows;
+                    const phase = Math.random() * cellW;
+                    const cols = Math.ceil(W / cellW) + 1;
+                    for (let r = 0; r < rows; r++) {
+                        const rowOff = phase + (r % 2 === 1 ? cellW * 0.5 : 0) + (Math.random() - 0.5) * cellW * 0.3;
+                        let prevBh = -1;
+                        for (let c = 0; c < cols; c++) {
+                            if (Math.random() < 0.08) continue;
+                            const baseY = yMin + r * rowH + Math.random() * rowH;
+                            const t = perspective(baseY);
+                            let bw, bh;
+                            if (layerType === 'far') {
+                                bw = 5 + Math.random() * 5 + t * 6;
+                                const tf = 1 - t;
+                                bh = (13 + Math.random() * 14) * (0.60 + tf * 1.15);
+                                if (Math.random() < 0.07) bh *= 1.5 + Math.random() * 0.6;
+                            } else if (layerType === 'mid') {
+                                bw = 14 + Math.random() * 14 + t * 14;
+                                bh = (30 + Math.random() * 26) * (0.45 + t * 1.1);
+                            } else {
+                                bw = 34 + Math.random() * 26 + t * 24;
+                                bh = (60 + Math.random() * 46) * (0.5 + t * 0.9);
+                            }
+                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) bh *= Math.random() > 0.5 ? 1.25 :
+                                0.78;
+                            prevBh = bh;
+                            bw = Math.min(bw, cellW * 0.85);
+                            const jit = (Math.random() - 0.5) * cellW * 0.5;
+                            const bx = c * cellW + rowOff + jit;
+                            if (bx + bw < 0 || bx > W) continue;
+                            const seed = hash(bx, baseY);
+                            const windows = [];
+                            if (layerType === 'far') {
+                                const cnt = 3 + Math.floor(seed * 6);
+                                for (let i = 0; i < cnt; i++) {
+                                    windows.push({
+                                        x: 1 + Math.random() * (bw - 2), y: 1 + Math.random() * (bh - 2),
+                                        w: 1, h: Math.random() > 0.5 ? 2 : 1, lit: true, alpha: 0.2 + Math
+                                            .random() * 0.4
+                                    });
+                                }
+                            } else {
+                                const scale = (layerType === 'mid') ? (0.8 + t * 0.4) : (0.85 + t * 0.35);
+                                const winW = (layerType === 'mid') ? 3 * scale : 5 * scale;
+                                const winH = (layerType === 'mid') ? 5 * scale : 7 * scale;
+                                const gapX = (layerType === 'mid') ? 4 : 3,
+                                    gapY = (layerType === 'mid') ? 4 : 3;
+                                const padX = (layerType === 'mid') ? 4 : 5,
+                                    padY = (layerType === 'mid') ? 6 : 8;
+                                const stepX = winW + gapX,
+                                    stepY = winH + gapY;
+                                const colsW = Math.max(1, Math.floor((bw - 2 * padX + gapX) / stepX));
+                                const rowsW = Math.max(1, Math.floor((bh - 2 * padY + gapY) / stepY));
+                                const totalW = colsW * stepX - gapX,
+                                    totalH = rowsW * stepY - gapY;
+                                const startX = padX + (bw - 2 * padX - totalW) / 2;
+                                const startY = padY + (bh - 2 * padY - totalH) / 2;
+                                const rowStates = [];
+                                let cr = 0;
+                                while (cr < rowsW) {
+                                    const lc = 3 + Math.floor(Math.random() * 3),
+                                        dc = 2 + Math.floor(Math.random() * 2);
+                                    for (let i = 0; i < lc && cr < rowsW; i++) {
+                                        rowStates.push(true);
+                                        cr++;
+                                    }
+                                    for (let i = 0; i < dc && cr < rowsW; i++) {
+                                        rowStates.push(false);
+                                        cr++;
+                                    }
+                                }
+                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math
+                                    .random() * 0.15);
+                                for (let r2 = 0; r2 < rowsW; r2++) {
+                                    if (!rowStates[r2]) continue;
+                                    for (let c2 = 0; c2 < colsW; c2++) {
+                                        if (Math.random() > lightRate) continue;
+                                        const wx = startX + c2 * stepX,
+                                            wy = startY + r2 * stepY;
+                                        const rnd = Math.random();
+                                        let color;
+                                        if (rnd < 0.02) color = '248,113,113';
+                                        else if (rnd < 0.07) color = '122,183,212';
+                                        else color = Math.random() > 0.5 ? '251,191,36' : '252,211,77';
+                                        let alpha = (layerType === 'mid') ? (0.3 + Math.random() * 0.7) : (0.7 +
+                                            Math.random() * 0.3);
+                                        windows.push({ x: wx, y: wy, w: winW, h: winH, lit: true, color, alpha });
+                                    }
+                                }
+                            }
+                            buildings.push({ type: layerType, x: bx, y: baseY - bh, w: bw, h: bh, t, windows, seed });
+                        }
+                    }
+                }
+                fillRow(H * 0.20, H * 0.38, 14, 'far');
+                fillRow(H * 0.30, H * 0.62, 34, 'mid');
+                fillRow(H * 0.52, H * 0.98, 78, 'near');
+            }
+            generateBuildings();
+
+            function drawBuilding(b, offY) {
+                const { type, x, y, w, h, t, windows } = b;
+                const by = y + offY;
+                const fog = type === 'far' ? 0.55 : (type === 'mid' ? 0.30 : 0.10);
+                const depth = 0.35 + t * 0.65;
+                let baseR, baseG, baseB;
+                if (type === 'far') {
+                    baseR = 18 + t * 10;
+                    baseG = baseR + 8;
+                    baseB = baseR + 22;
+                } else if (type === 'mid') {
+                    baseR = (20 + Math.random() * 8) * depth + fog * 20;
+                    baseG = (32 + Math.random() * 10) * depth + fog * 26;
+                    baseB = (52 + Math.random() * 14) * depth + fog * 38;
+                } else {
+                    baseR = (13 * depth) | 0;
+                    baseG = (22 * depth + 6) | 0;
+                    baseB = (36 * depth + 8) | 0;
+                }
+                ctx.fillStyle = `rgb(${baseR | 0},${baseG | 0},${baseB | 0})`;
+                ctx.fillRect(x, by, w, h);
+                const roofH = Math.max(2, h * (type === 'far' ? 0.03 : 0.06));
+                const roofR = Math.min(255, baseR + 25),
+                    roofG = Math.min(255, baseG + 30),
+                    roofB = Math.min(255, baseB + 35);
+                ctx.fillStyle = `rgb(${roofR | 0},${roofG | 0},${roofB | 0})`;
+                ctx.fillRect(x, by - roofH, w, roofH);
+                ctx.fillStyle = `rgba(200,220,255,${0.05 + t * 0.08})`;
+                ctx.fillRect(x, by - roofH, w, 0.8);
+                const sideW = Math.max(2, w * 0.08);
+                ctx.fillStyle =
+                    `rgb(${Math.max(0, baseR * 0.6) | 0},${Math.max(0, baseG * 0.6) | 0},${Math.max(0, baseB * 0.6) | 0})`;
+                ctx.fillRect(x + w, by, sideW, h);
+                ctx.fillStyle = `rgba(150,180,220,${0.03 + t * 0.06})`;
+                ctx.fillRect(x + w + sideW - 1, by, 1, h);
+                for (const win of windows) {
+                    if (!win.lit) continue;
+                    ctx.fillStyle = `rgba(${win.color || '251,191,36'}, ${win.alpha || 0.2})`;
+                    ctx.fillRect(x + win.x, by + win.y, win.w, win.h);
+                }
+                ctx.fillStyle = `rgba(160,200,240,${0.08 + t * 0.15})`;
+                ctx.fillRect(x, by, w, 1.2);
+                if (type !== 'far' && Math.random() > 0.5) {
+                    const ah = 4 + Math.random() * 10,
+                        ax = x + Math.random() * w;
+                    ctx.fillStyle = `rgba(160,200,240,${0.05 + t * 0.12})`;
+                    ctx.fillRect(ax, by - roofH - ah, 1.0, ah);
+                    ctx.fillStyle = `rgba(255,240,200,${0.03 + Math.random() * 0.06})`;
+                    ctx.fillRect(ax - 0.5, by - roofH - ah - 1, 2, 1.5);
+                }
+            }
+
+            function drawCityGlow(offY, intensity, liftProg) {
+                if (intensity < 0.01) return;
+                const g = CONFIG.glow;
+                const nearB = [],
+                    midB = [],
+                    farB = [];
+                buildings.forEach(b => {
+                    if (b.type === 'near') nearB.push(b);
+                    else if (b.type === 'mid') midB.push(b);
+                    else farB.push(b);
+                });
+                const drawBatch = (batch, alphaMul, radiusMul, off) => {
+                    if (batch.length === 0) return;
+                    const isNear = batch[0].type === 'near';
+                    for (const b of batch) {
+                        const t = b.t || 0.5,
+                            cx = b.x + b.w / 2,
+                            cy = b.y + offY;
+                        const sz = Math.max(b.w * 0.4, b.h * 0.15);
+                        const radius = sz * (radiusMul + t * 0.5) + off;
+                        const alpha = alphaMul * (0.5 + t * 0.5) * intensity * (1 - liftProg * 0.3);
+                        if (alpha < 0.002) continue;
+                        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                        grad.addColorStop(0, `rgba(255,180,60,${alpha * 0.9})`);
+                        grad.addColorStop(0.1, `rgba(250,175,55,${alpha * 0.7})`);
+                        grad.addColorStop(0.3, `rgba(240,165,50,${alpha * 0.35})`);
+                        grad.addColorStop(0.6, `rgba(225,155,45,${alpha * 0.12})`);
+                        grad.addColorStop(1, `rgba(205,145,40,0)`);
+                        ctx.globalCompositeOperation = 'screen';
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over';
+                        if (isNear && alpha > 0.08) {
+                            const cr = radius * 0.1,
+                                cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+                            cg.addColorStop(0, `rgba(255,230,180,${alpha * 0.4})`);
+                            cg.addColorStop(1, `rgba(255,200,140,0)`);
+                            ctx.globalCompositeOperation = 'screen';
+                            ctx.fillStyle = cg;
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.globalCompositeOperation = 'source-over';
+                        }
+                    }
+                };
+                drawBatch(farB, g.farAlpha, g.farRadius, g.farOffset);
+                drawBatch(midB, g.midAlpha, g.midRadius, g.midOffset);
+                drawBatch(nearB, g.nearAlpha, g.nearRadius, g.nearOffset);
+                const ha = g.horizonAlpha * intensity * (1 - liftProg * 0.6);
+                if (ha > 0.001) {
+                    const grad = ctx.createRadialGradient(W / 2, H * 0.75 + offY * 0.5, 0, W / 2, H * 0.75 + offY * 0.5,
+                        Math.max(W, H) * 0.5);
+                    grad.addColorStop(0, `rgba(255,200,150,${ha * 0.8})`);
+                    grad.addColorStop(0.5, `rgba(200,160,120,${ha * 0.3})`);
+                    grad.addColorStop(1, `rgba(100,80,60,0)`);
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(W / 2, H * 0.75 + offY * 0.5, Math.max(W, H) * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+            }
+
+            // ---------- 3.7 行星系统 ----------
+            class Planet {
+                constructor(x, y, radius, color, ringLayers, craterCount) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.color = color;
+                    this.ringLayers = ringLayers;
+                    this.craterCount = craterCount || 20;
+                    this.rotation = 0;
+                    this.origRadius = radius;
+                    this.craters = [];
+                    for (let i = 0; i < this.craterCount; i++) {
+                        const a = Math.random() * Math.PI * 2,
+                            d = Math.random() * this.radius * 0.85;
+                        const cx = Math.cos(a) * d,
+                            cy = Math.sin(a) * d,
+                            r = 1.5 + Math.random() * 6,
+                            dep = 0.3 + Math.random() * 0.7;
+                        this.craters.push({ x: cx, y: cy, r, depth: dep });
+                    }
+                }
+                update() { this.rotation += 0.001; for (const l of this.ringLayers) l.angle += l.speed; }
+                draw(ctx, cx, cy, radiusOverride, alpha, blurAmt) {
+                    const px = cx !== undefined ? cx : this.x,
+                        py = cy !== undefined ? cy : this.y;
+                    const r = radiusOverride !== undefined ? radiusOverride : this.radius;
+                    if (blurAmt && blurAmt > 0.5) {
+                        ctx.shadowBlur = blurAmt * 4;
+                        ctx.shadowColor = 'rgba(0,0,0,0)';
+                    }
+                    const grad = ctx.createRadialGradient(px - r * 0.3, py - r * 0.3, r * 0.1, px, py, r);
+                    const base = this.color;
+                    grad.addColorStop(0, lighten(base, 40));
+                    grad.addColorStop(0.5, base);
+                    grad.addColorStop(1, darken(base, 60));
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(px, py, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.shadowColor = 'rgba(180,200,255,0.12)';
+                    ctx.shadowBlur = 35;
+                    ctx.beginPath();
+                    ctx.arc(px, py, r * 0.98, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(200,220,255,0.04)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(this.rotation);
+                    const sf = r / this.origRadius;
+                    for (const c of this.craters) {
+                        const cr = c.r * sf;
+                        ctx.beginPath();
+                        ctx.ellipse(c.x * sf, c.y * sf, cr * 0.8, cr * 0.6, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0,0,0,${0.15 + c.depth * 0.2})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(c.x * sf - cr * 0.1, c.y * sf - cr * 0.1, cr * 0.7, cr * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.05 + c.depth * 0.1})`;
+                        ctx.fill();
+                        if (c.depth > 0.6) {
+                            ctx.beginPath();
+                            ctx.arc(c.x * sf - cr * 0.3, c.y * sf - cr * 0.3, cr * 0.2, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+                    ctx.save();
+                    ctx.translate(px, py);
+                    for (let i = 0; i < 5; i++) {
+                        const a = Math.random() * Math.PI * 2,
+                            d = r * (0.3 + Math.random() * 0.6);
+                        const x = Math.cos(a) * d,
+                            y = Math.sin(a) * d;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2 + Math.random() * 4, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.03 + Math.random() * 0.08})`;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                }
+                drawRings(ctx, cx, cy, radiusOverride, alpha, blurAmt) {
+                    const px = cx !== undefined ? cx : this.x,
+                        py = cy !== undefined ? cy : this.y;
+                    const r = radiusOverride !== undefined ? radiusOverride : this.radius;
+                    const sf = r / this.origRadius;
+                    for (const layer of this.ringLayers) {
+                        this.drawRingLayer(ctx, layer, px, py, sf, alpha, blurAmt);
+                    }
+                }
+                drawRingLayer(ctx, layer, px, py, sf, alpha, blurAmt) {
+                    const { particles, a, b, tilt, angle, color } = layer;
+                    const cosT = Math.cos(tilt),
+                        sinT = Math.sin(tilt);
+                    const aS = a * sf,
+                        bS = b * sf;
+                    if (blurAmt && blurAmt > 0.5) {
+                        ctx.shadowBlur = blurAmt * 3;
+                        ctx.shadowColor = 'rgba(0,0,0,0)';
+                    }
+                    for (const p of particles) {
+                        if (p.detached) continue;
+                        const totalA = p.angleOffset + angle;
+                        const rx = aS + p.radialOffset * sf,
+                            ry = bS + p.radialOffset * sf * 0.6;
+                        const x0 = rx * Math.cos(totalA),
+                            y0 = ry * Math.sin(totalA);
+                        const lx = x0 * cosT - y0 * sinT,
+                            ly = x0 * sinT + y0 * cosT;
+                        const wx = px + lx,
+                            wy = py + ly;
+                        const bri = 0.6 + 0.4 * (1 - Math.hypot(lx, ly) / (aS * 1.2));
+                        const sz = p.size * sf * 0.9;
+                        ctx.globalAlpha = alpha * (0.6 + 0.4 * bri);
+                        ctx.beginPath();
+                        ctx.arc(wx, wy, sz, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.fill();
+                        ctx.shadowColor = 'rgba(255,255,255,0.05)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.arc(wx - sz * 0.2, wy - sz * 0.2, sz * 0.3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                }
+                getParticlePosition(li, pi) {
+                    const layer = this.ringLayers[li],
+                        p = layer.particles[pi];
+                    const totalA = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset,
+                        ry = layer.b + p.radialOffset * 0.6;
+                    const x0 = rx * Math.cos(totalA),
+                        y0 = ry * Math.sin(totalA);
+                    const cosT = Math.cos(layer.tilt),
+                        sinT = Math.sin(layer.tilt);
+                    const lx = x0 * cosT - y0 * sinT,
+                        ly = x0 * sinT + y0 * cosT;
+                    return { x: this.x + lx, y: this.y + ly };
+                }
+                getParticleTangent(li, pi) {
+                    const layer = this.ringLayers[li],
+                        p = layer.particles[pi];
+                    const totalA = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset,
+                        ry = layer.b + p.radialOffset * 0.6;
+                    const tx = -rx * Math.sin(totalA),
+                        ty = ry * Math.cos(totalA);
+                    const cosT = Math.cos(layer.tilt),
+                        sinT = Math.sin(layer.tilt);
+                    const ltx = tx * cosT - ty * sinT,
+                        lty = tx * sinT + ty * cosT;
+                    return Math.atan2(lty, ltx);
+                }
+                detachParticle(li, pi) { this.ringLayers[li].particles[pi].detached = true; }
+                resetAllParticles() {
+                    for (const l of this.ringLayers)
+                        for (const p of l.particles) p.detached = false;
+                }
+            }
+
+            function createRingParticles(count, a, b) {
+                const ps = [];
+                for (let i = 0; i < count; i++) {
+                    ps.push({
+                        angleOffset: (i / count) * Math.PI * 2 + Math.random() * 0.02,
+                        size: 1.8 + Math.random() * 3.2,
+                        radialOffset: (Math.random() - 0.5) * 15,
+                        detached: false
+                    });
+                }
+                return ps;
+            }
+
+            let planets = [],
+                mainPlanet = null;
+            let attachInfo = { layerIndex: 0, angle: -0.6, x: 0, y: 0, tangentX: 1, tangentY: 0 };
+
+            function initPlanets() {
+                planets = [];
+                const minDim = Math.min(W, H);
+                const pos = [{ x: W * 0.28, y: H * 0.38 }, { x: W * 0.72, y: H * 0.22 }, { x: W * 0.20, y: H * 0.78 },
+                { x: W * 0.75, y: H * 0.72 }, { x: W * 0.50, y: H * 0.15 }];
+                const cfg = [{ radius: minDim * 0.08, color: '#b8a088', layers: 3, tiltBase: 0.2 },
+                { radius: minDim * 0.06, color: '#a09080', layers: 2, tiltBase: 0.8 },
+                { radius: minDim * 0.055, color: '#908880', layers: 2, tiltBase: 1.0 },
+                { radius: minDim * 0.07, color: '#8a9a7a', layers: 2, tiltBase: 0.5 },
+                { radius: minDim * 0.05, color: '#9a8a8a', layers: 1, tiltBase: 1.2 }];
+                for (let idx = 0; idx < 5; idx++) {
+                    const p = pos[idx],
+                        c = cfg[idx];
+                    const ringLayers = [];
+                    for (let i = 0; i < c.layers; i++) {
+                        const a = c.radius * (2.2 + i * 1.2),
+                            b = a * (0.5 + Math.random() * 0.25);
+                        const tilt = c.tiltBase + (Math.random() - 0.5) * 0.8;
+                        const speed = (0.005 + Math.random() * 0.005) * (i + 1) * 0.5;
+                        const count = Math.floor(120 + Math.random() * 100);
+                        const colors = ['#8a7a6a', '#7a8a7a', '#9a8a7a', '#8a8a7a', '#7a7a7a'];
+                        const col = colors[Math.floor(Math.random() * colors.length)];
+                        ringLayers.push({
+                            particles: createRingParticles(count, a, b),
+                            a,
+                            b,
+                            tilt,
+                            angle: Math.random() * Math.PI * 2,
+                            speed,
+                            color: col
+                        });
+                    }
+                    planets.push(new Planet(p.x, p.y, c.radius, c.color, ringLayers, 25 + Math.floor(Math.random() *
+                        20)));
+                }
+                mainPlanet = planets[0];
+                const li = 1,
+                    ang = -0.6;
+                let best = null,
+                    bestDiff = Infinity;
+                const layer = mainPlanet.ringLayers[li];
+                if (layer) {
+                    for (let pi = 0; pi < layer.particles.length; pi++) {
+                        const p = layer.particles[pi];
+                        const totalA = p.angleOffset + layer.angle;
+                        let diff = totalA - ang;
+                        diff = ((diff % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                        if (Math.abs(diff) < bestDiff) {
+                            bestDiff = Math.abs(diff);
+                            best = pi;
+                        }
+                    }
+                }
+                if (best !== null) {
+                    const pos2 = mainPlanet.getParticlePosition(li, best);
+                    const tangent = mainPlanet.getParticleTangent(li, best);
+                    attachInfo.x = pos2.x;
+                    attachInfo.y = pos2.y;
+                    attachInfo.layerIndex = li;
+                    attachInfo.angle = ang;
+                    attachInfo.tangentX = tangent ? Math.cos(tangent) : 1;
+                    attachInfo.tangentY = tangent ? Math.sin(tangent) : 0;
+                } else {
+                    const r = mainPlanet.radius * 2.5;
+                    attachInfo.x = mainPlanet.x + r * Math.cos(ang);
+                    attachInfo.y = mainPlanet.y + r * Math.sin(ang);
+                    attachInfo.tangentX = -Math.sin(ang);
+                    attachInfo.tangentY = Math.cos(ang);
+                }
+                resetMeteor();
+            }
+
+            // ---------- 3.8 陨星系统 ----------
+            let meteor = {
+                state: 'attached',
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                speed: 0,
+                shadowBlur: 0,
+                history: [],
+                gravity: CONFIG.meteor.gravity,
+                brokenPieces: [],
+                headColor: { r: 180, g: 160, b: 140 },
+                flyTimer: 0,
+                flyDuration: 60,
+                attachStartTime: 0,
+                attachDuration: CONFIG.meteor.attachDuration,
+            };
+
+            function resetMeteor() {
+                meteor.x = attachInfo.x;
+                meteor.y = attachInfo.y;
+                meteor.state = 'attached';
+                meteor.vx = 0;
+                meteor.vy = 0;
+                meteor.speed = 0;
+                meteor.shadowBlur = 0;
+                meteor.history = [];
+                meteor.brokenPieces = [];
+                meteor.flyTimer = 0;
+                meteor.attachStartTime = performance.now();
+                meteor.headColor = { r: 180, g: 160, b: 140 };
+                if (mainPlanet) mainPlanet.resetAllParticles();
+            }
+
+            function triggerDetach() {
+                if (meteor.state !== 'attached') return;
+                const tx = attachInfo.tangentX,
+                    ty = attachInfo.tangentY;
+                const dx = tx * 0.7 + 0.3,
+                    dy = ty * 0.7 + 0.3;
+                const len = Math.hypot(dx, dy),
+                    nx = dx / len,
+                    ny = dy / len;
+                const spd = rand(CONFIG.meteor.startSpeed, CONFIG.meteor.startSpeed + 2);
+                meteor.vx = nx * spd;
+                meteor.vy = ny * spd;
+                meteor.speed = spd;
+                meteor.shadowBlur = CONFIG.meteor.startBlur;
+                meteor.headColor = { r: 255, g: 200, b: 100 };
+                meteor.history = [];
+                for (let i = 0; i < CONFIG.meteor.historyLength; i++) {
+                    const t = i * 2.2;
+                    meteor.history.push({ x: meteor.x - t * nx, y: meteor.y - t * ny });
+                }
+                meteor.flyTimer = 0;
+                meteor.flyDuration = randInt(CONFIG.meteor.flyDurationMin, CONFIG.meteor.flyDurationMax);
+                meteor.state = 'flying';
+                viewport.targetCx = meteor.x;
+                viewport.targetCy = meteor.y;
+                viewport.targetScale = CONFIG.spaceOpen.endScale;
+                viewport.transitioning = false;
+                epicFlowState = 'flying';
+            }
+
+            function breakMeteor() {
+                if (meteor.state !== 'flying' || meteor.brokenPieces.length > 0) return;
+                const cx = meteor.x,
+                    cy = meteor.y;
+                const count = randInt(CONFIG.meteor.pieceCountMin, CONFIG.meteor.pieceCountMax);
+                const colors = [
+                    { r: 255, g: 200, b: 100 }, { r: 255, g: 160, b: 60 },
+                    { r: 240, g: 140, b: 50 }, { r: 255, g: 180, b: 80 },
+                    { r: 200, g: 220, b: 255 }
+                ];
+                const dir = Math.atan2(meteor.vy, meteor.vx),
+                    baseSpd = Math.hypot(meteor.vx, meteor.vy) || 3;
+                for (let i = 0; i < count; i++) {
+                    const off = rand(-Math.PI / 7, Math.PI / 7),
+                        a = dir + off,
+                        spd = rand(3, 6) + baseSpd * 0.5,
+                        sz = rand(5, 16),
+                        c = colors[randInt(0, colors.length - 1)];
+                    const piece = {
+                        x: cx + rand(-6, 6),
+                        y: cy + rand(-6, 6),
+                        vx: Math.cos(a) * spd,
+                        vy: Math.sin(a) * spd - rand(0.3, 1.5),
+                        size: sz,
+                        color: c,
+                        life: randInt(80, 150),
+                        alpha: 1,
+                        rotation: rand(0, Math.PI * 2),
+                        rotSpeed: rand(-0.06, 0.06),
+                        history: []
+                    };
+                    for (let j = 0; j < CONFIG.meteor.pieceHistoryLen; j++) {
+                        const t = j * 1.5;
+                        piece.history.push({ x: piece.x - Math.cos(a) * t, y: piece.y - Math.sin(a) * t });
+                    }
+                    meteor.brokenPieces.push(piece);
+                }
+                meteor.state = 'broken';
+                epicFlowState = 'broken';
+            }
+
+            function drawMeteor() {
+                if (meteor.state === 'attached') {
+                    const alpha = (epicFlowState === 'space_open' || epicFlowState === 'attached') ? 0.6 : 0.15;
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(meteor.x, meteor.y, 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#8a7a6a';
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    return;
+                }
+                if (meteor.state === 'flying') drawFlyingMeteor();
+                else if (meteor.state === 'broken') drawBrokenPieces();
+            }
+
+            function drawFlyingMeteor() {
+                const hist = meteor.history,
+                    len = hist.length;
+                if (len === 0) return;
+                const hc = meteor.headColor;
+                for (let i = 0; i < len; i++) {
+                    const pos = hist[i],
+                        t = (i + 1) / len;
+                    const alpha = 0.08 + 0.82 * t,
+                        radius = 0.8 + 2.8 * t;
+                    const col = { r: lerp(hc.r, 255, t), g: lerp(hc.g, 255, t), b: lerp(hc.b, 255, t) };
+                    ctx.globalAlpha = alpha * 0.85;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, Math.max(0.3, radius), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgb(${col.r | 0},${col.g | 0},${col.b | 0})`;
+                    ctx.fill();
+                    if (t > 0.4) {
+                        const ga = (t - 0.4) / 0.6 * 0.15;
+                        ctx.shadowColor = 'rgba(255,255,255,0.2)';
+                        ctx.shadowBlur = 14 * t;
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, radius * 2.8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${ga})`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                ctx.globalAlpha = 1;
+                const last = hist[len - 1];
+                if (last) {
+                    const blur = meteor.shadowBlur;
+                    const grad = ctx.createRadialGradient(last.x, last.y, 0, last.x, last.y, Math.max(10, blur * 0.6));
+                    const hr = Math.min(255, hc.r + 40),
+                        hg = Math.min(255, hc.g + 40),
+                        hb = Math.min(255, hc.b + 20);
+                    grad.addColorStop(0, `rgba(${hr},${hg},${hb},0.95)`);
+                    grad.addColorStop(0.3, `rgba(${hc.r},${hc.g},${hc.b},0.6)`);
+                    grad.addColorStop(1, `rgba(${hc.r * 0.3 | 0},${hc.g * 0.2 | 0},${hc.b * 0.1 | 0},0)`);
+                    ctx.shadowColor = `rgba(${hc.r},${hc.g},${hc.b},0.4)`;
+                    ctx.shadowBlur = blur * 0.8;
+                    ctx.beginPath();
+                    ctx.arc(last.x, last.y, Math.max(5, blur * 0.6), 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.arc(last.x, last.y, Math.max(2, 3), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,240,220,0.95)`;
+                    ctx.fill();
+                }
+            }
+
+            function drawBrokenPieces() {
+                for (const piece of meteor.brokenPieces) {
+                    if (piece.alpha < 0.01) continue;
+                    const hist = piece.history,
+                        len = hist.length;
+                    if (len < 2) continue;
+                    for (let i = 0; i < len; i++) {
+                        const pos = hist[i],
+                            t = (i + 1) / len;
+                        const alpha = 0.1 + 0.7 * t,
+                            radius = (0.3 + 1.5 * t) * (piece.size / 6);
+                        if (radius < 0.1) continue;
+                        const c = piece.color,
+                            fc = { r: lerp(c.r, 255, t), g: lerp(c.g, 255, t), b: lerp(c.b, 255, t) };
+                        ctx.globalAlpha = alpha * piece.alpha * 0.6;
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, Math.max(0.2, radius), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgb(${fc.r | 0},${fc.g | 0},${fc.b | 0})`;
+                        ctx.fill();
+                        if (t > 0.5) {
+                            const ga = (t - 0.5) / 0.5 * 0.08;
+                            ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.15)`;
+                            ctx.shadowBlur = 8 * t;
+                            ctx.beginPath();
+                            ctx.arc(pos.x, pos.y, radius * 2.0, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${ga * piece.alpha})`;
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+                for (const piece of meteor.brokenPieces) {
+                    const sz = piece.size;
+                    if (sz < 0.3 || piece.alpha < 0.01) continue;
+                    ctx.globalAlpha = piece.alpha;
+                    ctx.save();
+                    ctx.translate(piece.x, piece.y);
+                    ctx.rotate(piece.rotation);
+                    const grad = ctx.createRadialGradient(-sz * 0.2, -sz * 0.2, 0, 0, 0, sz);
+                    const c = piece.color;
+                    grad.addColorStop(0,
+                        `rgb(${Math.min(255, c.r + 60)},${Math.min(255, c.g + 40)},${Math.min(255, c.b + 30)})`);
+                    grad.addColorStop(0.6, `rgb(${c.r},${c.g},${c.b})`);
+                    grad.addColorStop(1, `rgb(${c.r * 0.4 | 0},${c.g * 0.3 | 0},${c.b * 0.2 | 0})`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    const pts = 5 + randInt(0, 3);
+                    for (let i = 0; i < pts; i++) {
+                        const a = (i / pts) * Math.PI * 2 + rand(-0.2, 0.2);
+                        const r = sz * (0.6 + rand(0, 0.4));
+                        if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                        else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.globalAlpha = piece.alpha * 0.25;
+                    ctx.beginPath();
+                    ctx.arc(-sz * 0.15, -sz * 0.15, sz * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // ---------- 3.9 流星雨 ----------
+            let showerMeteors = [];
+            let showerSpawnTimer = 0;
+            let showerActive = false,
+                showerGenerating = false,
+                showerStartTime = 0,
+                showerDuration = CONFIG.shower.duration;
+
+            function getShowerHeadColor() { return { r: rand(235, 255), g: rand(120, 190), b: rand(15, 60) }; }
+
+            function spawnShowerMeteor() {
+                const cfg = CONFIG.shower;
+                if (showerMeteors.length >= cfg.maxCount) return;
+                const angle = rand(cfg.angleMin, cfg.angleMax);
+                const speed = rand(cfg.speedMin, cfg.speedMax);
+                const vx = Math.cos(angle) * speed,
+                    vy = Math.sin(angle) * speed;
+                let x, y;
+                const side = rand(0, 1);
+                if (side < 0.55) {
+                    x = rand(-W * 0.1, W * 1.1);
+                    y = rand(-80, H * 0.25);
+                } else if (side < 0.8) {
+                    x = rand(-120, W * 0.15);
+                    y = rand(H * 0.05, H * 0.6);
+                } else {
+                    x = rand(W * 0.85, W + 120);
+                    y = rand(H * 0.05, H * 0.5);
+                }
+                if (x < -50) x = rand(-30, 60);
+                if (x > W + 50) x = rand(W - 60, W + 30);
+                if (y < -50) y = rand(-20, 40);
+                const brightness = rand(cfg.brightnessMin, cfg.brightnessMax);
+                showerMeteors.push({
+                    x,
+                    y,
+                    vx,
+                    vy,
+                    tailLength: rand(cfg.tailMin, cfg.tailMax),
+                    life: randInt(cfg.lifeMin, cfg.lifeMax),
+                    maxLife: cfg.lifeMax,
+                    brightness: brightness,
+                    headColor: getShowerHeadColor(),
+                    trailSegments: cfg.trailSegments,
+                });
+            }
+
+            function updateShowerMeteors() {
+                const cfg = CONFIG.shower;
+                for (let i = showerMeteors.length - 1; i >= 0; i--) {
+                    const m = showerMeteors[i];
+                    m.x += m.vx;
+                    m.y += m.vy;
+                    m.life--;
+                    const margin = 150;
+                    if (m.life <= 0 || m.x < -margin || m.x > W + margin || m.y < -margin || m.y > H + margin) {
+                        showerMeteors.splice(i, 1);
+                        continue;
+                    }
+                }
+                if (showerGenerating) {
+                    const now = performance.now();
+                    if (now - showerSpawnTimer > rand(cfg.spawnIntervalMin, cfg.spawnIntervalMax)) {
+                        const cnt = randInt(1, 2);
+                        for (let i = 0; i < cnt; i++) { if (showerMeteors.length < cfg.maxCount) spawnShowerMeteor(); }
+                        showerSpawnTimer = now;
+                    }
+                }
+            }
+
+            function drawShowerMeteors() {
+                for (const m of showerMeteors) drawShowerMeteor(m);
+            }
+
+            function drawShowerMeteor(m) {
+                const { x, y, vx, vy, tailLength, life, maxLife, brightness, headColor, trailSegments } = m;
+                const len = Math.hypot(vx, vy);
+                if (len < 0.001) return;
+                const dx = vx / len,
+                    dy = vy / len;
+                const lifeRatio = life / maxLife;
+                const fadeOutStart = CONFIG.shower.fadeOutStart;
+                let fadeAlpha = 1;
+                if (lifeRatio < fadeOutStart) { fadeAlpha = lifeRatio / fadeOutStart; }
+                const curTail = tailLength * (0.35 + 0.65 * lifeRatio);
+                const segs = trailSegments;
+                const baseW = rand(CONFIG.shower.baseWidthMin, CONFIG.shower.baseWidthMax);
+                const tailCol = { r: 255, g: 255, b: 255 };
+                for (let i = 0; i < segs; i++) {
+                    const t = i / segs,
+                        col = lerpColor(headColor, tailCol, t);
+                    const alpha = Math.pow(1 - t, 1.8) * brightness * 0.8 * fadeAlpha;
+                    const width = baseW * (1 - t * 0.92);
+                    const px = x - dx * t * curTail,
+                        py = y - dy * t * curTail;
+                    ctx.beginPath();
+                    ctx.arc(px, py, Math.max(0.4, width), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${col.r | 0},${col.g | 0},${col.b | 0},${alpha})`;
+                    ctx.fill();
+                    if (i < 4 && alpha > 0.1) {
+                        ctx.shadowColor = `rgba(${col.r | 0},${col.g | 0},${col.b | 0},${alpha * 0.15})`;
+                        ctx.shadowBlur = 15;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                const headR = baseW * 3.0 + 2.0;
+                const bright = Math.min(1.5, brightness * 0.9);
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, headR * 3.0);
+                const hr = Math.min(255, headColor.r + 40),
+                    hg = Math.min(255, headColor.g + 40),
+                    hb = Math.min(255, headColor.b + 20);
+                grad.addColorStop(0, `rgba(${hr},${hg},${hb},${bright * fadeAlpha})`);
+                grad.addColorStop(0.2,
+                    `rgba(${headColor.r},${headColor.g},${headColor.b},${bright * 0.8 * fadeAlpha})`);
+                grad.addColorStop(0.6,
+                    `rgba(${headColor.r * 0.6},${headColor.g * 0.5},${headColor.b * 0.3},${bright * 0.3 * fadeAlpha})`);
+                grad.addColorStop(1, `rgba(0,0,0,0)`);
+                ctx.shadowColor = `rgba(${headColor.r},${headColor.g},${headColor.b},${bright * 0.4 * fadeAlpha})`;
+                ctx.shadowBlur = 40;
+                ctx.beginPath();
+                ctx.arc(x, y, headR * 3.0, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.arc(x, y, headR * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,245,230,${bright * 0.95 * fadeAlpha})`;
+                ctx.shadowColor = `rgba(255,210,160,${bright * 0.3 * fadeAlpha})`;
+                ctx.shadowBlur = 25;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            function lerpColor(c1, c2, t) {
+                return { r: c1.r + (c2.r - c1.r) * t, g: c1.g + (c2.g - c1.g) * t, b: c1.b + (c2.b - c1.b) * t };
+            }
+
+            // ---------- 3.10 视口系统 ----------
+            let viewport = {
+                cx: W / 2,
+                cy: H / 2,
+                scale: 1.0,
+                targetCx: W / 2,
+                targetCy: H / 2,
+                targetScale: 1.0,
+                startCx: W / 2,
+                startCy: H / 2,
+                startScale: 1.0,
+                progress: 1,
+                duration: 60,
+                transitioning: false,
+                followMode: true,
+                smooth: 0.08
+            };
+
+            function updateViewport() {
+                if (viewport.transitioning) {
+                    viewport.progress += 1 / viewport.duration;
+                    if (viewport.progress >= 1) {
+                        viewport.progress = 1;
+                        viewport.transitioning = false;
+                    }
+                    const t = easeInOutQuad(viewport.progress);
+                    viewport.cx = viewport.startCx + (viewport.targetCx - viewport.startCx) * t;
+                    viewport.cy = viewport.startCy + (viewport.targetCy - viewport.startCy) * t;
+                    viewport.scale = viewport.startScale + (viewport.targetScale - viewport.startScale) * t;
+                } else if (viewport.followMode) {
+                    if (meteor.state === 'flying') {
+                        viewport.cx = viewport.targetCx;
+                        viewport.cy = viewport.targetCy;
+                        viewport.scale = viewport.targetScale;
+                    } else if (meteor.state === 'broken') {
+                        viewport.cx += (viewport.targetCx - viewport.cx) * viewport.smooth;
+                        viewport.cy += (viewport.targetCy - viewport.cy) * viewport.smooth;
+                        viewport.scale = viewport.targetScale;
+                    } else {
+                        viewport.cx = viewport.targetCx;
+                        viewport.cy = viewport.targetCy;
+                        viewport.scale = viewport.targetScale;
+                    }
+                }
+            }
+
+            function startTransition(toCx, toCy, toScale, dur) {
+                viewport.startCx = viewport.cx;
+                viewport.startCy = viewport.cy;
+                viewport.startScale = viewport.scale;
+                viewport.targetCx = toCx;
+                viewport.targetCy = toCy;
+                viewport.targetScale = toScale;
+                viewport.progress = 0;
+                viewport.duration = dur || 60;
+                viewport.transitioning = true;
+                viewport.followMode = true;
+            }
+
+            function setFollowTarget(cx, cy) {
+                if (viewport.followMode && !viewport.transitioning) {
+                    viewport.targetCx = cx;
+                    viewport.targetCy = cy;
+                }
+            }
+
+            // ---------- 3.11 Epic 状态机 ----------
+            let epicFlowState = 'city_open';
+            let cityOpen = { progress: 0, startTime: 0, duration: CONFIG.eye.duration };
+            let cityRise = {
+                progress: 0, startTime: 0, duration: CONFIG.rise.duration, maxOffset: CONFIG.rise
+                    .maxOffset
+            };
+            let cityFade = { progress: 0, startTime: 0, duration: CONFIG.fade.duration };
+            let spaceOpen = { progress: 0, startTime: 0, duration: CONFIG.spaceOpen.duration };
+            let cityOffsetY = 0;
+            let eyeProgress = 0;
+            let fadeStartOffset = 0;
+
+            function safeH() {
+                if (isNaN(H) || H <= 0) { resize(); if (isNaN(H) || H <= 0) H = window.innerHeight || 600; }
+                return H;
+            }
+
+            function initEpic() {
+                generateCityStars();
+                initSpaceStars();
+                initClouds();
+                initFloatParticles();
+                generateBuildings();
+                initPlanets();
+                resetMeteor();
+                epicFlowState = 'city_open';
+                cityOpen.progress = 0;
+                cityOpen.startTime = performance.now();
+                cityRise.progress = 0;
+                cityFade.progress = 0;
+                spaceOpen.progress = 0;
+                cityOffsetY = 0;
+                fadeStartOffset = 0;
+                eyeProgress = 0;
+                showerMeteors = [];
+                showerActive = false;
+                showerGenerating = false;
+                viewport.scale = 1.0;
+                viewport.cx = W / 2;
+                viewport.cy = H / 2;
+                viewport.targetCx = W / 2;
+                viewport.targetCy = H / 2;
+                viewport.targetScale = 1.0;
+                viewport.transitioning = false;
+                viewport.followMode = true;
+                epicEnded = false;
+                closingTriggered = false; // 重置
+            }
+
+            // ---------- 3.12 Epic 绘制 ----------
+            function drawCityScene(offY, liftProgress, time) {
+                drawCityStars(time, liftProgress);
+                drawClouds(1.0);
+                drawFloatParticles();
+                for (const b of buildings) drawBuilding(b, offY);
+                drawCityGlow(offY, CONFIG.glow.intensity, liftProgress);
+                const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vig.addColorStop(0, 'rgba(0,0,0,0)');
+                vig.addColorStop(1, `rgba(0,0,0,${CONFIG.visual.vignetteStrength})`);
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            function drawCrossFadeScene(offY, liftProgress, time, crossProgress) {
+                drawCityStars(time, liftProgress, viewport, 1 - crossProgress);
+                drawClouds(1.0);
+                drawFloatParticles();
+                for (const b of buildings) drawBuilding(b, offY);
+                drawCityGlow(offY, CONFIG.glow.intensity, liftProgress);
+                drawSpaceStars(time, viewport, crossProgress);
+                const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vig.addColorStop(0, 'rgba(0,0,0,0)');
+                vig.addColorStop(1, `rgba(0,0,0,${CONFIG.visual.vignetteStrength})`);
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            function drawSpaceScene(time) {
+                drawSpaceStars(time, viewport);
+                drawClouds(viewport.scale);
+                drawFloatParticles();
+                let planetScale = 1;
+                let planetAlpha = 1;
+                let meteorVisible = false;
+                if (epicFlowState === 'space_open') {
+                    planetScale = Math.max(0.02, smoothstep(0.02, 0.7, spaceOpen.progress));
+                    planetAlpha = smoothstep(0.1, 0.8, spaceOpen.progress);
+                    meteorVisible = false;
+                } else if (epicFlowState === 'attached' || epicFlowState === 'flying' || epicFlowState === 'broken') {
+                    planetScale = 1.0;
+                    planetAlpha = 1.0;
+                    meteorVisible = true;
+                } else if (epicFlowState === 'retreat' || epicFlowState === 'meteor_shower' || epicFlowState ===
+                    'ended') {
+                    const normalizedScale = viewport.scale / 1.25;
+                    planetScale = Math.max(0.02, normalizedScale);
+                    planetAlpha = clamp((planetScale - 0.02) / (0.25 - 0.02), 0, 1);
+                    meteorVisible = false;
+                } else {
+                    planetScale = 1.0;
+                    planetAlpha = 1.0;
+                    meteorVisible = false;
+                }
+                planetScale = Math.max(0.005, planetScale);
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+                ctx.scale(viewport.scale, viewport.scale);
+                ctx.translate(-viewport.cx, -viewport.cy);
+                const dof = clamp((viewport.scale - 0.5) * 1.2, 0, 3);
+                for (let i = 0; i < planets.length; i++) {
+                    const p = planets[i],
+                        blur = (i === 0) ? 0 : dof * (0.5 + 0.5 * Math.sin(i * 1.7));
+                    const radiusScaled = p.radius * planetScale;
+                    if (i === 0) { p.drawRings(ctx, p.x, p.y, radiusScaled, planetAlpha, 0); } else {
+                        p.drawRings(ctx,
+                            p.x, p.y, radiusScaled, planetAlpha * 0.7, blur);
+                    }
+                }
+                for (let i = 0; i < planets.length; i++) {
+                    const p = planets[i],
+                        blur = (i === 0) ? 0 : dof * (0.5 + 0.5 * Math.sin(i * 1.7 + 0.5));
+                    const radiusScaled = p.radius * planetScale;
+                    if (i === 0) { p.draw(ctx, p.x, p.y, radiusScaled, planetAlpha, 0); } else {
+                        p.draw(ctx, p.x, p.y,
+                            radiusScaled, planetAlpha * 0.6, blur);
+                    }
+                }
+                if (meteorVisible && (epicFlowState === 'flying' || epicFlowState === 'broken' || epicFlowState ===
+                    'attached')) { drawMeteor(); }
+                ctx.restore();
+                if (epicFlowState === 'meteor_shower' || epicFlowState === 'ended') { drawShowerMeteors(); }
+                const vstr = 0.08 + 0.12 * (1 - clamp((viewport.scale - 0.05) / 0.95, 0, 1));
+                const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vig.addColorStop(0, 'rgba(0,0,0,0)');
+                vig.addColorStop(1, `rgba(0,0,0,${vstr})`);
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+                if (viewport.scale > CONFIG.visual.lensGlowStart) {
+                    const ga = (viewport.scale - CONFIG.visual.lensGlowStart) / (1 - CONFIG.visual.lensGlowStart) *
+                        CONFIG.visual.lensGlowAlpha;
+                    const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.3);
+                    g.addColorStop(0, `rgba(200,180,255,${ga * 0.6})`);
+                    g.addColorStop(1, `rgba(200,180,255,0)`);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, 0, W, H);
+                }
+            }
+
+            function drawEyeMask(progress) {
+                const p = Math.min(Math.max(progress, 0), 1);
+                if (p >= 1) return;
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                const cx = W / 2,
+                    cy = H * 0.75;
+                const maxR = Math.max(W, H) * 0.75,
+                    ratio = 0.75;
+                const rx = p * maxR,
+                    ry = p * maxR * ratio;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                ctx.clip();
+                const liftProg = (epicFlowState === 'city_rise') ? cityRise.progress : 0;
+                drawCityScene(cityOffsetY, liftProg, performance.now() / 100);
+                ctx.restore();
+            }
+
+            // ---------- 3.13 Epic 更新（修改：流星雨80%触发闭眼） ----------
+            function updateEpic(timestamp) {
+                const h = safeH();
+                if (isNaN(h) || h <= 0) return;
+                const time = timestamp / 100;
+
+                switch (epicFlowState) {
+                    case 'city_open': {
+                        const elapsed = timestamp - cityOpen.startTime;
+                        cityOpen.progress = Math.min(elapsed / cityOpen.duration, 1);
+                        eyeProgress = easeOutCubic(cityOpen.progress);
+                        const riseT = easeInOutQuad(cityOpen.progress);
+                        const preOffset = riseT * CONFIG.rise.maxOffsetY * h * 0.4;
+                        cityOffsetY = isNaN(preOffset) ? 0 : preOffset;
+                        if (cityOpen.progress >= 1) {
+                            epicFlowState = 'city_rise';
+                            cityRise.startTime = timestamp;
+                            cityRise.progress = 0;
+                        }
+                        break;
+                    }
+                    case 'city_rise': {
+                        const elapsed = timestamp - cityRise.startTime;
+                        cityRise.progress = Math.min(elapsed / cityRise.duration, 1);
+                        const t = easeInOutQuad(cityRise.progress);
+                        const startOffset = CONFIG.rise.maxOffsetY * h * 0.4;
+                        const targetOffset = CONFIG.rise.maxOffsetY * h;
+                        cityOffsetY = startOffset + (targetOffset - startOffset) * t;
+                        if (isNaN(cityOffsetY)) cityOffsetY = 0;
+                        viewport.cy = H / 2 + cityOffsetY * CONFIG.fade.viewportFollow;
+                        viewport.cx = W / 2;
+                        viewport.scale = 1.0;
+                        if (cityRise.progress >= 1) {
+                            epicFlowState = 'city_fade';
+                            cityFade.startTime = timestamp;
+                            cityFade.progress = 0;
+                            fadeStartOffset = cityOffsetY;
+                        }
+                        break;
+                    }
+                    case 'city_fade': {
+                        const elapsed = timestamp - cityFade.startTime;
+                        cityFade.progress = Math.min(elapsed / cityFade.duration, 1);
+                        const t = easeInOutQuad(cityFade.progress);
+                        const dropAmount = t * h * CONFIG.fade.cityDrop;
+                        cityOffsetY = fadeStartOffset + dropAmount;
+                        if (isNaN(cityOffsetY)) cityOffsetY = fadeStartOffset;
+                        viewport.scale = 1.0;
+                        viewport.targetScale = 1.0;
+                        viewport.cx = W / 2;
+                        viewport.cy = H / 2 + cityOffsetY * CONFIG.fade.viewportFollow;
+                        if (cityFade.progress >= 1) {
+                            epicFlowState = 'space_open';
+                            spaceOpen.startTime = timestamp;
+                            spaceOpen.progress = 0;
+                            const durFrames = Math.round(CONFIG.spaceOpen.duration / 16.67);
+                            startTransition(attachInfo.x, attachInfo.y, CONFIG.spaceOpen.endScale, durFrames);
+                            resetMeteor();
+                        }
+                        break;
+                    }
+                    case 'space_open': {
+                        const elapsed = timestamp - spaceOpen.startTime;
+                        spaceOpen.progress = Math.min(elapsed / spaceOpen.duration, 1);
+                        if (!viewport.transitioning) {
+                            epicFlowState = 'attached';
+                            meteor.attachStartTime = performance.now();
+                            viewport.targetCx = attachInfo.x;
+                            viewport.targetCy = attachInfo.y;
+                            viewport.targetScale = CONFIG.spaceOpen.endScale;
+                            setTimeout(() => { infoEl.classList.add('show'); }, 500);
+                        }
+                        break;
+                    }
+                    case 'attached': {
+                        if (!viewport.transitioning) {
+                            viewport.targetCx = attachInfo.x;
+                            viewport.targetCy = attachInfo.y;
+                            viewport.targetScale = CONFIG.spaceOpen.endScale;
+                        }
+                        const elapsed = timestamp - meteor.attachStartTime;
+                        if (elapsed >= CONFIG.meteor.attachDuration) triggerDetach();
+                        break;
+                    }
+                    case 'flying': {
+                        meteor.flyTimer++;
+                        const prog = Math.min(meteor.flyTimer / 120, 1);
+                        meteor.speed = CONFIG.meteor.startSpeed + (CONFIG.meteor.maxSpeed - CONFIG.meteor.startSpeed) *
+                            prog * 0.6;
+                        meteor.shadowBlur = CONFIG.meteor.startBlur + (CONFIG.meteor.maxBlur - CONFIG.meteor.startBlur) *
+                            prog * 0.5;
+                        meteor.vy += CONFIG.meteor.gravity;
+                        const ang = Math.atan2(meteor.vy, meteor.vx);
+                        const spd = meteor.speed;
+                        meteor.vx = spd * Math.cos(ang);
+                        meteor.vy = spd * Math.sin(ang);
+                        meteor.x += meteor.vx;
+                        meteor.y += meteor.vy;
+                        meteor.history.push({ x: meteor.x, y: meteor.y });
+                        if (meteor.history.length > CONFIG.meteor.historyLength) meteor.history.shift();
+                        if (!viewport.transitioning) setFollowTarget(meteor.x, meteor.y);
+                        if (meteor.flyTimer > meteor.flyDuration) breakMeteor();
+                        break;
+                    }
+                    case 'broken': {
+                        for (const p of meteor.brokenPieces) {
+                            p.x += p.vx;
+                            p.y += p.vy;
+                            p.vy += 0.04;
+                            p.life--;
+                            p.alpha *= 0.993;
+                            p.history.push({ x: p.x, y: p.y });
+                            if (p.history.length > CONFIG.meteor.pieceHistoryLen) p.history.shift();
+                        }
+                        meteor.brokenPieces = meteor.brokenPieces.filter(p => p.life > 0 && p.alpha > 0.01);
+                        if (!viewport.transitioning) {
+                            if (meteor.brokenPieces.length > 0) {
+                                let cx = 0,
+                                    cy = 0;
+                                for (const p of meteor.brokenPieces) {
+                                    cx += p.x;
+                                    cy += p.y;
+                                }
+                                cx /= meteor.brokenPieces.length;
+                                cy /= meteor.brokenPieces.length;
+                                setFollowTarget(cx, cy);
+                            } else {
+                                epicFlowState = 'retreat';
+                                startTransition(viewport.cx, viewport.cy, 0.08, 120);
+                            }
+                        }
+                        break;
+                    }
+                    case 'retreat': {
+                        if (!viewport.transitioning && viewport.scale < 0.1) {
+                            epicFlowState = 'meteor_shower';
+                            showerActive = true;
+                            showerGenerating = true;
+                            showerStartTime = timestamp;
+                            showerDuration = CONFIG.shower.duration;
+                            showerSpawnTimer = timestamp;
+                        }
+                        break;
+                    }
+                    case 'meteor_shower': {
+                        // ★ 修改：在流星雨进行到约80%时触发闭眼
+                        if (showerActive) {
+                            const elapsed = timestamp - showerStartTime;
+                            // 若未触发闭眼且进度达到80%
+                            if (!closingTriggered && elapsed > showerDuration * 0.8) {
+                                closingTriggered = true;
+                                showerGenerating = false; // 停止生成新流星
+                                startClosing(); // 触发闭眼
+                            }
+                            // 原本的结束逻辑（若闭眼未触发，但时间已超过，也触发闭眼，但保留为安全）
+                            if (elapsed > showerDuration && !closingTriggered) {
+                                closingTriggered = true;
+                                showerGenerating = false;
+                                startClosing();
+                            }
+                            // 如果闭眼已触发，但还在流星雨状态（闭眼过程），我们仍然更新流星
+                            // 但不再生成新的
+                        }
+                        updateShowerMeteors(); // 更新现有流星
+                        if (!viewport.transitioning) {
+                            viewport.targetScale = 0.08;
+                            viewport.targetCx = attachInfo.x;
+                            viewport.targetCy = attachInfo.y;
+                        }
+                        // 如果闭眼已完成（closingDone为true），但当前阶段还是meteor_shower，我们可以在闭眼完成后自动切换到烟花？但闭眼完成后会由startClosing内的逻辑切换到烟花，所以这里不需要处理。
+                        break;
+                    }
+                    case 'ended': {
+                        updateShowerMeteors();
+                        if (!viewport.transitioning) {
+                            viewport.targetScale = 0.08;
+                            viewport.targetCx = attachInfo.x;
+                            viewport.targetCy = attachInfo.y;
+                        }
+                        if (showerMeteors.length === 0 && !epicEnded) {
+                            epicEnded = true;
+                            infoEl.classList.remove('show');
+                            // 如果还没触发闭眼（理论上不会），调用闭眼
+                            if (!closingTriggered) {
+                                closingTriggered = true;
+                                startClosing();
+                            }
+                        }
+                        break;
+                    }
+                }
+                for (const p of planets) p.update();
+                updateFloatParticles(time);
+                updateViewport();
+            }
+
+            // ---------- 3.14 Epic 绘制入口 ----------
+            function drawEpic(timestamp) {
+                const time = timestamp / 100;
+                const h = safeH();
+                if (isNaN(h) || h <= 0) return;
+                ctx.clearRect(0, 0, W, H);
+                if (epicFlowState === 'city_open' || epicFlowState === 'city_rise') {
+                    const offY = cityOffsetY || 0;
+                    const liftProg = (epicFlowState === 'city_rise') ? cityRise.progress : 0;
+                    drawCityScene(offY, liftProg, time);
+                    if (epicFlowState === 'city_open') drawEyeMask(eyeProgress);
+                } else if (epicFlowState === 'city_fade') {
+                    const offY = cityOffsetY || 0;
+                    const liftProg = 1;
+                    let crossProgress = cityFade.progress;
+                    crossProgress = easeInOutQuad(crossProgress);
+                    drawCrossFadeScene(offY, liftProg, time, crossProgress);
+                } else {
+                    drawSpaceScene(time);
+                }
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                ctx.font = '12px sans-serif';
+                let status = '';
+                if (epicFlowState === 'city_open') status = '✦ 华灯初上 ...';
+                else if (epicFlowState === 'city_rise') status = '✦ 仰望星河 ...';
+                else if (epicFlowState === 'city_fade') status = '✦ 飞向深空 ...';
+                else if (epicFlowState === 'space_open') status = '✦ 行星显现 ...';
+                else if (epicFlowState === 'attached') status = '✦ 附着于星环';
+                else if (epicFlowState === 'flying') status = '✦ 陨星飞行中';
+                else if (epicFlowState === 'broken') status = '✦ 陨星碎裂';
+                else if (epicFlowState === 'retreat') status = '✦ 镜头拉远 ...';
+                else if (epicFlowState === 'meteor_shower') status = '✦ 流星雨 ✦';
+                else if (epicFlowState === 'ended') status = '✦ 星 空 ✦';
+                ctx.fillText(status, 16, 26);
+            }
+
+            // ================================================================
+            // 4. 阶段二：闭眼
+            // ================================================================
+            let closingProgress = 0;
+
+            function startClosing() {
+                currentPhase = PHASE.CLOSING;
+                closeStartTime = performance.now();
+                closingProgress = 0;
+                closingDone = false;
+                infoEl.textContent = '✦ 晚安，好梦 ✦';
+                infoEl.classList.remove('fireworks');
+                infoEl.classList.add('show');
+            }
+
+            function updateClosing(timestamp) {
+                const elapsed = timestamp - closeStartTime;
+                if (elapsed < CLOSE_DELAY) {
+                    closingProgress = 0;
+                    return;
+                }
+                const raw = (elapsed - CLOSE_DELAY) / CLOSE_DURATION;
+                closingProgress = Math.min(raw, 1);
+                if (closingProgress >= 1) {
+                    closingDone = true;
+                    startFireworks();
+                }
+            }
+
+            function drawClosing(timestamp) {
+                drawEpic(timestamp);
+                if (closingProgress > 0 && closingProgress < 1) {
+                    const p = closingProgress;
+                    const cx = W / 2,
+                        cy = H / 2;
+                    const maxR = Math.max(W, H) * 0.8;
+                    const currentR = maxR * (1 - easeInOutSine(p));
+                    const blur = 180;
+                    const overlayGrad = ctx.createRadialGradient(cx, cy, Math.max(0, currentR - blur), cx, cy, currentR +
+                        blur);
+                    overlayGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                    overlayGrad.addColorStop(0.6, 'rgba(0,0,0,0.3)');
+                    overlayGrad.addColorStop(1, 'rgba(0,0,0,1)');
+                    ctx.fillStyle = overlayGrad;
+                    ctx.fillRect(0, 0, W, H);
+                    if (currentR + blur < Math.max(W, H) / 2) {
+                        ctx.beginPath();
+                        ctx.rect(0, 0, W, H);
+                        ctx.arc(cx, cy, currentR + blur, 0, Math.PI * 2, true);
+                        ctx.fillStyle = '#000';
+                        ctx.fill();
+                    }
+                } else if (closingProgress >= 1) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, W, H);
+                }
+            }
+
+            // ================================================================
+            // 5. 阶段三：烟花 (背景纯黑，尺寸增大，无交互)
+            // ================================================================
+
+            // ---------- 5.1 烟花星空 ----------
+            const FW_STAR_COLORS = [
+                { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
+                { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
+                { r: 210, g: 220, b: 255 }, { r: 255, g: 210, b: 180 }
+            ];
+            let fwStars = [];
+
+            function generateFwStars() {
+                fwStars = [];
+                const count = 260 + Math.floor(Math.random() * 40);
+                for (let i = 0; i < count; i++) {
+                    const magnitude = Math.random();
+                    const brightness = clamp(Math.pow(magnitude, 2.2), 0.05, 1.0);
+                    const size = 0.3 + brightness * 2.5;
+                    const isBright = brightness > 0.7 && Math.random() < 0.25;
+                    const colorIdx = Math.floor(Math.random() * FW_STAR_COLORS.length);
+                    const color = FW_STAR_COLORS[colorIdx];
+                    const speed = 0.15 + Math.random() * 0.7;
+                    const phase = Math.random() * Math.PI * 2;
+                    const flickerAmt = 0.12 + brightness * 0.35;
+                    const x = rand(10, W - 10);
+                    const y = rand(10, H * 0.85);
+                    fwStars.push({
+                        x, y, size, brightness, baseAlpha: 0.5 + brightness * 0.5, alpha: 0, speed, phase,
+                        flickerAmt, color, isBright
+                    });
+                }
+                fwStars.sort((a, b) => a.brightness - b.brightness);
+            }
+            generateFwStars();
+
+            function updateFwStars(time) {
+                for (const star of fwStars) {
+                    const flicker = Math.sin(time * star.speed + star.phase);
+                    const af = 0.5 + 0.5 * flicker;
+                    const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                    star.alpha = star.baseAlpha * mod;
+                    star.alpha = clamp(star.alpha, 0.04, 1);
+                }
+            }
+
+            function drawFwStars(time, alphaMul) {
+                const am = alphaMul || 1;
+                for (const star of fwStars) {
+                    const finalAlpha = star.alpha * am;
+                    if (finalAlpha < 0.001) continue;
+                    const { x, y, size, color, isBright } = star;
+                    const { r, g, b } = color;
+                    if (size > 0.6 && finalAlpha > 0.015) {
+                        const glowR = size * (2.2 + star.brightness * 1.5);
+                        const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+                        grad.addColorStop(0, `rgba(${r},${g},${b},${finalAlpha * 0.25})`);
+                        grad.addColorStop(0.5, `rgba(${r},${g},${b},${finalAlpha * 0.07})`);
+                        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(x, y, glowR, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = finalAlpha;
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (isBright && finalAlpha > 0.2 && size > 0.8) {
+                        const len = 8 + size * 3;
+                        ctx.globalAlpha = finalAlpha * 0.2;
+                        ctx.strokeStyle = `rgba(${r},${g},${b},${finalAlpha * 0.2})`;
+                        ctx.lineWidth = 0.5;
+                        for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                            const cosA = Math.cos(ang),
+                                sinA = Math.sin(ang);
+                            ctx.beginPath();
+                            ctx.moveTo(x + cosA * 1.2, y + sinA * 1.2);
+                            ctx.lineTo(x + cosA * len, y + sinA * len);
+                            ctx.stroke();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // ---------- 5.2 烟花粒子 (尺寸增大) ----------
+            let fwRockets = [];
+            let fwParticles = [];
+            let fwWind = 0;
+            let fwWindTarget = 0;
+            let fwTimerTick = 0;
+            const FW_MAX_PARTICLES = 3200;
+            const FW_AUTO_LAUNCH_RATE = 40;
+
+            class FWParticle {
+                constructor(x, y, vx, vy, opts = {}) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = vx;
+                    this.vy = vy;
+                    this.gravity = opts.gravity !== undefined ? opts.gravity : 0.025;
+                    this.drag = opts.drag !== undefined ? opts.drag : 0.93;
+                    this.hue = opts.hue !== undefined ? opts.hue : rand(0, 360);
+                    this.hueOffset = opts.hueOffset || rand(-18, 18);
+                    this.sat = opts.sat || 100;
+                    this.lit = opts.lit || rand(50, 72);
+                    this.size = opts.size || rand(2.6, 4.6);
+                    this.life = opts.life || rand(60, 100);
+                    this.maxLife = this.life;
+                    this.isGold = opts.isGold || false;
+                    this.isWhite = opts.isWhite || false;
+                    this.trail = [];
+                    this.trailLength = opts.trailLength || 12;
+                    this.twinkleSpeed = rand(0.08, 0.28);
+                    this.twinklePhase = rand(0, Math.PI * 2);
+                    this.windSensitivity = rand(0.4, 1.6);
+                    this.alive = true;
+                }
+                update() {
+                    this.life--;
+                    if (this.life <= 0) { this.alive = false; return false; }
+                    this.vx += (fwWind * this.windSensitivity) * 0.018;
+                    this.vy += this.gravity;
+                    this.vx *= this.drag;
+                    this.vy *= this.drag;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.trail.push({ x: this.x, y: this.y });
+                    if (this.trail.length > this.trailLength) this.trail.shift();
+                    return this.alive;
+                }
+                draw() {
+                    if (!this.alive) return;
+                    const progress = 1 - (this.life / this.maxLife);
+                    let alpha = 1 - Math.pow(progress, 0.45);
+                    if (alpha <= 0.001) return;
+                    const twinkle = 0.75 + 0.25 * Math.sin(performance.now() * 0.004 * this.twinkleSpeed + this
+                        .twinklePhase);
+                    alpha *= twinkle;
+                    let currentHue = this.hue;
+                    let currentLit = this.lit;
+                    if (this.isGold) {
+                        currentHue = 45;
+                        currentLit = 72;
+                    }
+                    if (this.isWhite) {
+                        currentHue = 0;
+                        currentLit = 100;
+                    }
+                    const hsl = (h, s, l, a) => `hsla(${h % 360}, ${s}%, ${l}%, ${a})`;
+                    for (let i = 0; i < this.trail.length; i++) {
+                        const t = i / this.trail.length;
+                        const p = this.trail[i];
+                        const trailAlpha = alpha * t * 0.45;
+                        const trailSize = this.size * t * 0.75;
+                        if (trailSize > 0.1) {
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, trailSize, 0, Math.PI * 2);
+                            ctx.fillStyle = hsl(currentHue, this.sat, currentLit + 10, trailAlpha);
+                            ctx.fill();
+                        }
+                    }
+                    const glowSize = this.size * (2.6 + (1 - progress) * 2.2);
+                    const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
+                    grad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.85})`);
+                    grad.addColorStop(0.25, hsl(currentHue, this.sat, Math.min(92, currentLit + 32), alpha * 0.9));
+                    grad.addColorStop(0.6, hsl(currentHue + this.hueOffset, this.sat, currentLit + 10, alpha * 0.5));
+                    grad.addColorStop(1, hsl(currentHue + this.hueOffset * 1.5, this.sat, currentLit - 10, 0));
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            class FWRocket {
+                constructor(sx, sy, tx, ty) {
+                    this.x = sx;
+                    this.y = sy;
+                    this.tx = tx;
+                    this.ty = ty;
+                    this.distTotal = Math.hypot(tx - sx, ty - sy);
+                    this.distTraveled = 0;
+                    this.angle = Math.atan2(ty - sy, tx - sx);
+                    this.speed = rand(1.8, 2.8);
+                    this.acc = 1.04;
+                    this.hue = rand(0, 360);
+                    this.type = randInt(0, 5);
+                    this.alive = true;
+                    this.trailCounter = 0;
+                }
+                update() {
+                    this.speed *= this.acc;
+                    const vx = Math.cos(this.angle) * this.speed;
+                    const vy = Math.sin(this.angle) * this.speed;
+                    this.x += vx;
+                    this.y += vy;
+                    this.distTraveled += this.speed;
+                    this.trailCounter++;
+                    if (this.trailCounter % 2 === 0 && Math.random() < 0.7) {
+                        const p = new FWParticle(
+                            this.x + rand(-2, 2),
+                            this.y + rand(-2, 2),
+                            rand(-0.6, 0.6),
+                            rand(0.3, 1.8), {
+                                hue: 35, sat: 100, lit: 60, life: rand(12, 22), size: rand(1.2,
+                                    2.2), gravity: 0.02, drag: 0.88, trailLength: 3
+                        }
+                        );
+                        if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                    }
+                    if (this.distTraveled >= this.distTotal * 0.92 || this.y < this.ty + 10) {
+                        this.explode();
+                        this.alive = false;
+                        return false;
+                    }
+                    return true;
+                }
+                draw() {
+                    ctx.globalCompositeOperation = 'lighter';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3.0, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsl(${this.hue}, 100%, 85%)`;
+                    ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+                explode() {
+                    const x = this.x,
+                        y = this.y,
+                        hue = this.hue;
+                    const type = this.type;
+                    for (let i = 0; i < 30; i++) {
+                        const angle = rand(0, Math.PI * 2);
+                        const speed = rand(0.3, 2.4);
+                        const p = new FWParticle(x, y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed, {
+                                hue: hue + rand(-10, 10), life: rand(40, 65), size: rand(
+                                    2.0, 3.6), drag: 0.88, hueOffset: 0, trailLength: 5
+                        }
+                        );
+                        if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                    }
+                    if (type === 0) {
+                        for (let i = 0; i < 120; i++) {
+                            const angle = rand(0, Math.PI * 2);
+                            const speed = rand(2.5, 10.0) * (Math.random() < 0.15 ? 1.6 : 1);
+                            const p = new FWParticle(x, y,
+                                Math.cos(angle) * speed,
+                                Math.sin(angle) * speed, {
+                                    hue: hue + rand(-22, 22), life: rand(70, 110),
+                                size: rand(2.4, 5.2), hueOffset: rand(12, 30), trailLength: rand(8, 14)
+                            }
+                            );
+                            if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                        }
+                    } else if (type === 1) {
+                        const count = 100;
+                        for (let i = 0; i < count; i++) {
+                            const angle = (i / count) * Math.PI * 2;
+                            if (Math.random() < 0.12) continue;
+                            const radiusNoise = rand(0.75, 1.25);
+                            const speed = 7.5 * radiusNoise;
+                            const p = new FWParticle(x, y,
+                                Math.cos(angle) * speed,
+                                Math.sin(angle) * speed, {
+                                    hue: hue + rand(-8, 8), life: rand(75, 110),
+                                size: rand(2.6, 4.5), drag: 0.95, hueOffset: -8, trailLength: rand(7, 12)
+                            }
+                            );
+                            if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                        }
+                    } else if (type === 2) {
+                        for (let i = 0; i < 100; i++) {
+                            const angle = rand(-Math.PI * 0.85, Math.PI * 0.85);
+                            const speed = rand(4.0, 9.5);
+                            const p = new FWParticle(x, y,
+                                Math.cos(angle) * speed,
+                                Math.sin(angle) * speed - 2.5, {
+                                    hue: hue + rand(-12, 12), life: rand(100,
+                                        160), size: rand(2.0, 3.6), gravity: 0.07, drag: 0.96, trailLength: rand(
+                                            12, 18), windSensitivity: rand(1.2, 2.2), isGold: Math.random() < 0.4
+                            }
+                            );
+                            if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                        }
+                    } else if (type === 3) {
+                        const rays = randInt(18, 30);
+                        for (let r = 0; r < rays; r++) {
+                            const angle = (r / rays) * Math.PI * 2;
+                            const perRay = randInt(5, 12);
+                            for (let j = 0; j < perRay; j++) {
+                                const speed = 2.0 + j * 1.5 + rand(-0.3, 0.3);
+                                const p = new FWParticle(x, y,
+                                    Math.cos(angle) * speed,
+                                    Math.sin(angle) * speed, {
+                                        hue: hue + j * 5 + rand(-5, 5), life: rand(80,
+                                            120), size: rand(2.6, 5.0), drag: 0.94, trailLength: rand(8, 14),
+                                    hueOffset: rand(4, 16)
+                                }
+                                );
+                                if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                            }
+                        }
+                    } else if (type === 4) {
+                        for (let i = 0; i < 150; i++) {
+                            const angle = rand(0, Math.PI * 2);
+                            const speed = rand(1.2, 11.0);
+                            const p = new FWParticle(x, y,
+                                Math.cos(angle) * speed,
+                                Math.sin(angle) * speed, {
+                                    hue: hue + rand(-40, 40), life: rand(55, 90),
+                                size: rand(1.6, 4.2), isWhite: Math.random() < 0.25, twinkleSpeed: rand(
+                                    0.15, 0.6), trailLength: rand(5, 10), hueOffset: rand(10, 30)
+                            }
+                            );
+                            if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                        }
+                    } else {
+                        for (let i = 0; i < 130; i++) {
+                            const t = rand(0, Math.PI * 2);
+                            const rBase = rand(3, 8);
+                            const xOff = rBase * 1.2 * Math.sin(t);
+                            const yOff = -rBase * 0.9 * Math.cos(t) - rBase * 0.4 * Math.sin(t) * Math.sin(t) + rBase *
+                                0.5;
+                            const speed = rand(1.8, 5.0);
+                            const angle2 = Math.atan2(yOff, xOff) + rand(-0.3, 0.3);
+                            const sp = speed * (0.6 + Math.random() * 0.5);
+                            const p = new FWParticle(x, y,
+                                Math.cos(angle2) * sp,
+                                Math.sin(angle2) * sp - 0.5, {
+                                    hue: hue + rand(-20, 20), life: rand(70, 110),
+                                size: rand(2.6, 4.5), drag: 0.93, trailLength: rand(8, 14), gravity: 0.03
+                            }
+                            );
+                            if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
+                        }
+                    }
+                }
+            }
+
+            function launchFwFirework(targetX, targetY) {
+                const sx = rand(W * 0.08, W * 0.92);
+                const tx = targetX !== undefined ? targetX : rand(W * 0.08, W * 0.92);
+                const ty = targetY !== undefined ? targetY : rand(H * 0.08, H * 0.42);
+                const rocket = new FWRocket(sx, H + rand(5, 20), tx, ty);
+                fwRockets.push(rocket);
+            }
+
+            function updateFwFireworks() {
+                for (let i = fwRockets.length - 1; i >= 0; i--) {
+                    const alive = fwRockets[i].update();
+                    if (!alive) fwRockets.splice(i, 1);
+                }
+                for (let i = fwParticles.length - 1; i >= 0; i--) {
+                    const alive = fwParticles[i].update();
+                    if (!alive) fwParticles.splice(i, 1);
+                }
+                fwTimerTick++;
+                if (fwTimerTick > FW_AUTO_LAUNCH_RATE) {
+                    const count = Math.random() < 0.12 ? 2 : 1;
+                    for (let k = 0; k < count; k++) { launchFwFirework(); }
+                    fwTimerTick = 0;
+                }
+                fwWind += (fwWindTarget - fwWind) * 0.004;
+                if (Math.random() < 0.004) fwWindTarget = rand(-1.8, 1.8);
+            }
+
+            function drawFwFireworks() {
+                ctx.globalCompositeOperation = 'lighter';
+                for (const rocket of fwRockets) { rocket.draw(); }
+                for (const p of fwParticles) { p.draw(); }
+                ctx.globalCompositeOperation = 'source-over';
+            }
+
+            // ---------- 5.3 烟花睁眼遮罩 ----------
+            function drawFwOpenMask(progress, time) {
+                const p = clamp(progress, 0, 1);
+                if (p >= 1) {
+                    drawFwScene(time);
+                    return;
+                }
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                const cx = W / 2,
+                    cy = H * 0.68;
+                const maxR = Math.max(W, H) * 0.75;
+                const ratio = 0.72;
+                const rx = p * maxR;
+                const ry = p * maxR * ratio;
+                ctx.save();
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                ctx.clip();
+                drawFwScene(time);
+                if (p > 0.05 && p < 0.95) {
+                    const glowAlpha = 0.035 * (1 - Math.abs(p - 0.5) * 2);
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.6);
+                    grad.addColorStop(0, `rgba(255, 240, 220, 0)`);
+                    grad.addColorStop(0.7, `rgba(255, 240, 220, 0)`);
+                    grad.addColorStop(0.88, `rgba(180, 200, 255, ${glowAlpha * 0.6})`);
+                    grad.addColorStop(1, `rgba(180, 200, 255, 0)`);
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, Math.max(W, H) * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+                ctx.restore();
+                const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vig.addColorStop(0, 'rgba(0,0,0,0)');
+                vig.addColorStop(1, `rgba(0,0,0,${0.08 + (1 - p) * 0.12})`);
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // ---------- 5.4 烟花场景 (背景纯黑) ----------
+            function drawFwScene(time) {
+                updateFwStars(time);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                drawFwStars(time, 1);
+                drawFwFireworks();
+                const vig = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vig.addColorStop(0, 'rgba(0,0,0,0)');
+                vig.addColorStop(1, 'rgba(0,0,0,0.15)');
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // ---------- 5.5 烟花启动 ----------
+            function startFireworks() {
+                currentPhase = PHASE.FIREWORKS;
+                fwStartTime = performance.now();
+                fwOpened = false;
+                fwRockets = [];
+                fwParticles = [];
+                fwWind = 0;
+                fwWindTarget = 0;
+                fwTimerTick = 0;
+                infoEl.textContent = '✦ 星夜 · 花火 ✦';
+                infoEl.classList.add('fireworks');
+                infoEl.classList.add('show');
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => launchFwFirework(), i * 120 + 80);
+                }
+            }
+
+            function updateFireworks(timestamp) {
+                const elapsed = timestamp - fwStartTime;
+                const raw = elapsed / FW_OPEN_DURATION;
+                const openProgress = Math.min(raw, 1);
+                if (openProgress >= 1) fwOpened = true;
+                updateFwFireworks();
+                return openProgress;
+            }
+
+            function drawFireworks(openProgress, time) {
+                if (openProgress < 1) {
+                    drawFwOpenMask(openProgress, time);
+                } else {
+                    drawFwScene(time);
+                }
+            }
+
+            // ================================================================
+            // 6. 交互 ———— 已完全取消
+            // ================================================================
+            function handleFwPointerDown(x, y) { /* 无互动 */ }
+
+            function handleFwPointerUp() { /* 无互动 */ }
+
+            function handleFwPointerMove(x, y) { /* 无互动 */ }
+
+            canvas.addEventListener('mousedown', e => { handleFwPointerDown(e.clientX, e.clientY); });
+            canvas.addEventListener('mousemove', e => { handleFwPointerMove(e.clientX, e.clientY); });
+            canvas.addEventListener('mouseup', handleFwPointerUp);
+            canvas.addEventListener('mouseleave', handleFwPointerUp);
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault(); const t = e.touches[0];
+                handleFwPointerDown(t.clientX, t.clientY);
+            }, { passive: false });
+            canvas.addEventListener('touchmove', e => {
+                e.preventDefault(); const t = e.touches[0];
+                handleFwPointerMove(t.clientX, t.clientY);
+            }, { passive: false });
+            canvas.addEventListener('touchend', e => {
+                e.preventDefault();
+                handleFwPointerUp();
+            }, { passive: false });
+
+            // ================================================================
+            // 7. 主渲染循环
+            // ================================================================
+            let masterStartTime = 0;
+            let fwOpenProgress = 0;
+
+            function masterRender(timestamp) {
+                if (!masterStartTime) {
+                    masterStartTime = timestamp;
+                    initEpic();
+                }
+                const time = timestamp / 100;
+                switch (currentPhase) {
+                    case PHASE.EPIC:
+                        updateEpic(timestamp);
+                        drawEpic(timestamp);
+                        break;
+                    case PHASE.CLOSING:
+                        updateEpic(timestamp);
+                        drawClosing(timestamp);
+                        updateClosing(timestamp);
+                        break;
+                    case PHASE.FIREWORKS:
+                        fwOpenProgress = updateFireworks(timestamp);
+                        drawFireworks(fwOpenProgress, time);
+                        break;
+                }
+                if (currentPhase === PHASE.FIREWORKS && fwOpened) {
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                    ctx.font = '12px sans-serif';
+                    ctx.fillText('✦ 花火自动绽放 ✦', 16, H - 20);
+                }
+                animId = requestAnimationFrame(masterRender);
+            }
+
+            // ================================================================
+            // 8. 启动 & 重置
+            // ================================================================
+            function initMaster() {
+                resize();
+                generateCityStars();
+                initSpaceStars();
+                initClouds();
+                initFloatParticles();
+                generateBuildings();
+                initPlanets();
+                generateFwStars();
+                currentPhase = PHASE.EPIC;
+                epicEnded = false;
+                closingDone = false;
+                fwOpened = false;
+                masterStartTime = 0;
+                fwOpenProgress = 0;
+                infoEl.textContent = '✦ 华灯 · 陨星 · 星河 ✦';
+                infoEl.classList.remove('fireworks');
+                infoEl.classList.remove('show');
+                if (animId) cancelAnimationFrame(animId);
+                animId = requestAnimationFrame(masterRender);
+            }
+
+            window.addEventListener('resize', () => {
+                resize();
+                generateCityStars();
+                initSpaceStars();
+                initClouds();
+                initFloatParticles();
+                generateBuildings();
+                generateFwStars();
+                const minDim = Math.min(W, H);
+                const pos = [{ x: W * 0.28, y: H * 0.38 }, { x: W * 0.72, y: H * 0.22 },
+                { x: W * 0.20, y: H * 0.78 }, { x: W * 0.75, y: H * 0.72 },
+                { x: W * 0.50, y: H * 0.15 }];
+                const rads = [0.08, 0.06, 0.055, 0.07, 0.05];
+                for (let i = 0; i < planets.length && i < pos.length; i++) {
+                    planets[i].x = pos[i].x;
+                    planets[i].y = pos[i].y;
+                    const r = rads[i] * minDim;
+                    planets[i].radius = r;
+                    planets[i].origRadius = r;
+                    for (let li = 0; li < planets[i].ringLayers.length; li++) {
+                        const layer = planets[i].ringLayers[li];
+                        const baseA = r * (2.2 + li * 1.2);
+                        layer.a = baseA;
+                        layer.b = baseA * (0.5 + Math.random() * 0.25);
+                    }
+                }
+                if (mainPlanet) {
+                    const li = 1,
+                        ang = -0.6;
+                    let best = null,
+                        bestDiff = Infinity;
+                    const layer = mainPlanet.ringLayers[li];
+                    if (layer) {
+                        for (let pi = 0; pi < layer.particles.length; pi++) {
+                            const p = layer.particles[pi];
+                            const totalA = p.angleOffset + layer.angle;
+                            let diff = totalA - ang;
+                            diff = ((diff % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                            if (Math.abs(diff) < bestDiff) {
+                                bestDiff = Math.abs(diff);
+                                best = pi;
+                            }
+                        }
+                    }
+                    if (best !== null) {
+                        const pos2 = mainPlanet.getParticlePosition(li, best);
+                        const tangent = mainPlanet.getParticleTangent(li, best);
+                        attachInfo.x = pos2.x;
+                        attachInfo.y = pos2.y;
+                        attachInfo.tangentX = tangent ? Math.cos(tangent) : 1;
+                        attachInfo.tangentY = tangent ? Math.sin(tangent) : 0;
+                    }
+                    if (meteor.state === 'attached' || epicFlowState === 'space_open') {
+                        meteor.x = attachInfo.x;
+                        meteor.y = attachInfo.y;
+                    }
+                }
+            });
+
+            if (document.readyState === 'complete') initMaster();
+            else window.addEventListener('load', initMaster);
+
+            console.log('✦ 星河入梦 · 花火 ✦ 三阶段整合完成 (无交互，背景纯黑，烟花增大，流星雨80%闭眼)');
+        })();
+    </script>
+</body>
+
+</html>

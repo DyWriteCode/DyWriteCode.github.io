@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>银河 · 陨星脱离 · 流星雨增强</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at 50% 50%, #0a0e1a, #000000);
+            cursor: default;
+        }
+
+        #info {
+            position: fixed;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            user-select: none;
+            font-family: 'Segoe UI', sans-serif;
+            text-shadow: 0 0 20px rgba(200, 100, 20, 0.15);
+            z-index: 10;
+            transition: opacity 1.5s ease;
+        }
+
+        #info.hidden {
+            opacity: 0;
+        }
+
+        @media (max-width:600px) {
+            #info {
+                font-size: 10px;
+                bottom: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="info">✦ 星环 · 陨星脱离 ✦</div>
+    <script>
+        (function () {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const infoEl = document.getElementById('info');
+
+            let W, H;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', () => {
+                resize();
+                initScene();
+            });
+            resize();
+
+            // ================================================================
+            // 0. 工具函数
+            // ================================================================
+            function lighten(hex, amt) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.min(255, r + amt);
+                g = Math.min(255, g + amt);
+                b = Math.min(255, b + amt);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function darken(hex, amt) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.max(0, r - amt);
+                g = Math.max(0, g - amt);
+                b = Math.max(0, b - amt);
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function rand(min, max) { return Math.random() * (max - min) + min; }
+
+            function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+            function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+
+            function smoothstep(edge0, edge1, x) {
+                const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+                return t * t * (3 - 2 * t);
+            }
+
+            // ================================================================
+            // 1. 多层视差星空 (3层)
+            // ================================================================
+            const STAR_COLORS = [
+                { r: 255, g: 255, b: 255 },
+                { r: 255, g: 245, b: 235 },
+                { r: 235, g: 240, b: 255 },
+                { r: 255, g: 230, b: 210 },
+                { r: 210, g: 220, b: 255 },
+                { r: 255, g: 210, b: 180 },
+            ];
+
+            const LAYERS = [
+                { name: '远层', parallax: 0.15, count: 300, sizeMin: 0.2, sizeMax: 1.2, alphaBase: 0.3 },
+                { name: '中层', parallax: 0.45, count: 250, sizeMin: 0.4, sizeMax: 2.0, alphaBase: 0.5 },
+                { name: '近层', parallax: 0.95, count: 150, sizeMin: 0.8, sizeMax: 3.5, alphaBase: 0.7 },
+            ];
+
+            let starLayers = [];
+
+            function initStarLayers() {
+                starLayers = [];
+                for (let li = 0; li < LAYERS.length; li++) {
+                    const cfg = LAYERS[li];
+                    const stars = [];
+                    for (let i = 0; i < cfg.count; i++) {
+                        const magnitude = Math.random();
+                        const brightness = Math.pow(magnitude, 1.8);
+                        const size = cfg.sizeMin + brightness * (cfg.sizeMax - cfg.sizeMin);
+                        const isBright = brightness > 0.7 && Math.random() < 0.2;
+                        const colorIdx = Math.floor(Math.random() * STAR_COLORS.length);
+                        const color = STAR_COLORS[colorIdx];
+                        const speed = 0.15 + Math.random() * 0.6;
+                        const phase = Math.random() * Math.PI * 2;
+                        const flickerAmt = 0.1 + brightness * 0.3;
+                        stars.push({
+                            x: Math.random() * W,
+                            y: Math.random() * H,
+                            size,
+                            brightness,
+                            baseAlpha: cfg.alphaBase + brightness * 0.5,
+                            alpha: 0,
+                            speed,
+                            phase,
+                            flickerAmt,
+                            color,
+                            isBright,
+                            layer: li,
+                            parallax: cfg.parallax,
+                        });
+                    }
+                    starLayers.push(stars);
+                }
+            }
+            initStarLayers();
+
+            // ================================================================
+            // 2. 悬浮粒子系统 (增加空间深度)
+            // ================================================================
+            let floatParticles = [];
+            const PARTICLE_COUNT = 120;
+
+            function initFloatParticles() {
+                floatParticles = [];
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    floatParticles.push({
+                        x: rand(0, W),
+                        y: rand(0, H),
+                        z: rand(0.1, 1.0),
+                        size: rand(0.5, 2.8),
+                        vx: rand(-0.15, 0.15),
+                        vy: rand(-0.10, 0.10),
+                        phase: rand(0, Math.PI * 2),
+                        alpha: rand(0.05, 0.25),
+                        color: {
+                            r: rand(180, 255),
+                            g: rand(180, 255),
+                            b: rand(200, 255),
+                        },
+                    });
+                }
+            }
+            initFloatParticles();
+
+            function updateFloatParticles(time) {
+                for (const p of floatParticles) {
+                    p.x += p.vx + Math.sin(time * 0.0003 + p.phase) * 0.04;
+                    p.y += p.vy + Math.cos(time * 0.0004 + p.phase * 1.3) * 0.03;
+                    if (p.x < -20) p.x = W + 20;
+                    if (p.x > W + 20) p.x = -20;
+                    if (p.y < -20) p.y = H + 20;
+                    if (p.y > H + 20) p.y = -20;
+                    p.alpha = p.alpha * 0.998 + (0.05 + 0.2 * (0.5 + 0.5 * Math.sin(time * 0.001 + p.phase))) * 0.002;
+                    p.alpha = clamp(p.alpha, 0.02, 0.35);
+                }
+            }
+
+            function drawFloatParticles() {
+                for (const p of floatParticles) {
+                    const depth = p.z;
+                    const size = p.size * (0.4 + 0.6 * depth);
+                    const alpha = p.alpha * (0.3 + 0.7 * depth);
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha})`;
+                    ctx.fill();
+                    if (size > 0.8 && alpha > 0.05) {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, size * 3);
+                        grad.addColorStop(0, `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha * 0.2})`);
+                        grad.addColorStop(1, `rgba(${p.color.r},${p.color.g},${p.color.b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, size * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // ================================================================
+            // 3. 星云 (随缩放变化透明度)
+            // ================================================================
+            let clouds = [];
+
+            function initClouds() {
+                clouds = [];
+                const count = 18 + Math.floor(Math.random() * 20);
+                for (let i = 0; i < count; i++) {
+                    const cx = Math.random() * W;
+                    const cy = Math.random() * H * 0.7;
+                    const radius = 80 + Math.random() * 280;
+                    const alpha = 0.004 + Math.random() * 0.018;
+                    let r, g, b;
+                    const shift = Math.random();
+                    if (shift < 0.33) {
+                        r = 80;
+                        g = 120;
+                        b = 200;
+                    } else if (shift < 0.66) {
+                        r = 120;
+                        g = 100;
+                        b = 180;
+                    } else {
+                        r = 200;
+                        g = 180;
+                        b = 160;
+                    }
+                    clouds.push({ x: cx, y: cy, radius, alpha, r, g, b });
+                }
+            }
+            initClouds();
+
+            // ================================================================
+            // 4. 行星类
+            // ================================================================
+            class Planet {
+                constructor(x, y, radius, color, ringLayers, craterCount) {
+                    this.x = x;
+                    this.y = y;
+                    this.radius = radius;
+                    this.color = color;
+                    this.ringLayers = ringLayers;
+                    this.craterCount = craterCount || 20;
+                    this.rotation = 0;
+                    this.origRadius = radius;
+                    this.craters = [];
+                    for (let i = 0; i < this.craterCount; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * this.radius * 0.85;
+                        const cx = Math.cos(angle) * dist;
+                        const cy = Math.sin(angle) * dist;
+                        const r = 1.5 + Math.random() * 6;
+                        const depth = 0.3 + Math.random() * 0.7;
+                        this.craters.push({ x: cx, y: cy, r, depth });
+                    }
+                }
+
+                update() {
+                    this.rotation += 0.001;
+                    for (const layer of this.ringLayers) {
+                        layer.angle += layer.speed;
+                    }
+                }
+
+                draw(ctx, cx, cy, radiusOverride, alpha, blurAmount) {
+                    const px = cx !== undefined ? cx : this.x;
+                    const py = cy !== undefined ? cy : this.y;
+                    const r = radiusOverride !== undefined ? radiusOverride : this.radius;
+
+                    if (blurAmount && blurAmount > 0.5) {
+                        ctx.shadowBlur = blurAmount * 4;
+                        ctx.shadowColor = 'rgba(0,0,0,0)';
+                    }
+
+                    const grad = ctx.createRadialGradient(
+                        px - r * 0.3, py - r * 0.3, r * 0.1,
+                        px, py, r
+                    );
+                    const base = this.color;
+                    grad.addColorStop(0, lighten(base, 40));
+                    grad.addColorStop(0.5, base);
+                    grad.addColorStop(1, darken(base, 60));
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(px, py, r, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    ctx.shadowColor = 'rgba(180,200,255,0.12)';
+                    ctx.shadowBlur = 35;
+                    ctx.beginPath();
+                    ctx.arc(px, py, r * 0.98, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(200,220,255,0.04)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(this.rotation);
+                    const sf = r / this.origRadius;
+                    for (const c of this.craters) {
+                        const cr = c.r * sf;
+                        ctx.beginPath();
+                        ctx.ellipse(c.x * sf, c.y * sf, cr * 0.8, cr * 0.6, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0,0,0,${0.15 + c.depth * 0.2})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(c.x * sf - cr * 0.1, c.y * sf - cr * 0.1, cr * 0.7, cr * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.05 + c.depth * 0.1})`;
+                        ctx.fill();
+                        if (c.depth > 0.6) {
+                            ctx.beginPath();
+                            ctx.arc(c.x * sf - cr * 0.3, c.y * sf - cr * 0.3, cr * 0.2, 0, Math.PI * 2);
+                            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                            ctx.fill();
+                        }
+                    }
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.translate(px, py);
+                    for (let i = 0; i < 5; i++) {
+                        const a = Math.random() * Math.PI * 2;
+                        const dist = r * (0.3 + Math.random() * 0.6);
+                        const x = Math.cos(a) * dist;
+                        const y = Math.sin(a) * dist;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2 + Math.random() * 4, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,240,${0.03 + Math.random() * 0.08})`;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                }
+
+                drawRings(ctx, cx, cy, radiusOverride, alpha, blurAmount) {
+                    const px = cx !== undefined ? cx : this.x;
+                    const py = cy !== undefined ? cy : this.y;
+                    const r = radiusOverride !== undefined ? radiusOverride : this.radius;
+                    const sf = r / this.origRadius;
+                    for (const layer of this.ringLayers) {
+                        this.drawRingLayer(ctx, layer, px, py, sf, alpha, blurAmount);
+                    }
+                }
+
+                drawRingLayer(ctx, layer, px, py, sf, alpha, blurAmount) {
+                    const { particles, a, b, tilt, angle, color } = layer;
+                    const cosT = Math.cos(tilt);
+                    const sinT = Math.sin(tilt);
+                    const aS = a * sf;
+                    const bS = b * sf;
+
+                    if (blurAmount && blurAmount > 0.5) {
+                        ctx.shadowBlur = blurAmount * 3;
+                        ctx.shadowColor = 'rgba(0,0,0,0)';
+                    }
+
+                    for (const p of particles) {
+                        if (p.detached) continue;
+                        const totalAngle = p.angleOffset + angle;
+                        const rx = aS + p.radialOffset * sf;
+                        const ry = bS + p.radialOffset * sf * 0.6;
+                        const x0 = rx * Math.cos(totalAngle);
+                        const y0 = ry * Math.sin(totalAngle);
+                        const localX = x0 * cosT - y0 * sinT;
+                        const localY = x0 * sinT + y0 * cosT;
+                        const wx = px + localX;
+                        const wy = py + localY;
+
+                        const brightness = 0.6 + 0.4 * (1 - Math.hypot(localX, localY) / (aS * 1.2));
+                        const size = p.size * sf * 0.9;
+                        ctx.globalAlpha = alpha * (0.6 + 0.4 * brightness);
+                        ctx.beginPath();
+                        ctx.arc(wx, wy, size, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.fill();
+                        ctx.shadowColor = 'rgba(255,255,255,0.05)';
+                        ctx.shadowBlur = 3;
+                        ctx.beginPath();
+                        ctx.arc(wx - size * 0.2, wy - size * 0.2, size * 0.3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                }
+
+                getParticlePosition(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    const totalAngle = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset;
+                    const ry = layer.b + p.radialOffset * 0.6;
+                    const x0 = rx * Math.cos(totalAngle);
+                    const y0 = ry * Math.sin(totalAngle);
+                    const cosT = Math.cos(layer.tilt);
+                    const sinT = Math.sin(layer.tilt);
+                    const localX = x0 * cosT - y0 * sinT;
+                    const localY = x0 * sinT + y0 * cosT;
+                    return { x: this.x + localX, y: this.y + localY };
+                }
+
+                getParticleTangent(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    const totalAngle = p.angleOffset + layer.angle;
+                    const rx = layer.a + p.radialOffset;
+                    const ry = layer.b + p.radialOffset * 0.6;
+                    const tx = -rx * Math.sin(totalAngle);
+                    const ty = ry * Math.cos(totalAngle);
+                    const cosT = Math.cos(layer.tilt);
+                    const sinT = Math.sin(layer.tilt);
+                    const localTx = tx * cosT - ty * sinT;
+                    const localTy = tx * sinT + ty * cosT;
+                    return Math.atan2(localTy, localTx);
+                }
+
+                detachParticle(layerIndex, particleIndex) {
+                    const layer = this.ringLayers[layerIndex];
+                    const p = layer.particles[particleIndex];
+                    p.detached = true;
+                    return p;
+                }
+
+                resetAllParticles() {
+                    for (const layer of this.ringLayers) {
+                        for (const p of layer.particles) {
+                            p.detached = false;
+                        }
+                    }
+                }
+            }
+
+            function createRingParticles(count, a, b) {
+                const particles = [];
+                for (let i = 0; i < count; i++) {
+                    const angleOffset = (i / count) * Math.PI * 2 + Math.random() * 0.02;
+                    const size = 1.8 + Math.random() * 3.2;
+                    const radialOffset = (Math.random() - 0.5) * 15;
+                    particles.push({ angleOffset, size, radialOffset, detached: false });
+                }
+                return particles;
+            }
+
+            // ================================================================
+            // 5. 场景 & 视口
+            // ================================================================
+            let planets = [];
+            let mainPlanet = null;
+
+            let viewport = {
+                cx: W / 2,
+                cy: H / 2,
+                scale: 0.05,
+                targetCx: W / 2,
+                targetCy: H / 2,
+                targetScale: 0.05,
+                startCx: W / 2,
+                startCy: H / 2,
+                startScale: 0.05,
+                transitionProgress: 1,
+                transitionDuration: 60,
+                isTransitioning: false,
+                followMode: true,
+                smoothFactor: 0.08,
+            };
+
+            function updateViewport() {
+                if (viewport.isTransitioning) {
+                    viewport.transitionProgress += 1 / viewport.transitionDuration;
+                    if (viewport.transitionProgress >= 1) {
+                        viewport.transitionProgress = 1;
+                        viewport.isTransitioning = false;
+                        if (flowState === 'retreat') {
+                            flowState = 'meteorShower';
+                            showerState.active = true;
+                            showerState.startTime = performance.now();
+                            showerState.generating = true;
+                            console.log('🌠 进入流星雨阶段');
+                        }
+                    }
+                    const t = easeInOut(viewport.transitionProgress);
+                    viewport.cx = viewport.startCx + (viewport.targetCx - viewport.startCx) * t;
+                    viewport.cy = viewport.startCy + (viewport.targetCy - viewport.startCy) * t;
+                    viewport.scale = viewport.startScale + (viewport.targetScale - viewport.startScale) * t;
+                } else if (viewport.followMode) {
+                    if (meteor.state === 'flying') {
+                        viewport.cx = viewport.targetCx;
+                        viewport.cy = viewport.targetCy;
+                        viewport.scale = viewport.targetScale;
+                    } else if (meteor.state === 'broken') {
+                        viewport.cx += (viewport.targetCx - viewport.cx) * viewport.smoothFactor;
+                        viewport.cy += (viewport.targetCy - viewport.cy) * viewport.smoothFactor;
+                        viewport.scale = viewport.targetScale;
+                    } else {
+                        viewport.cx = viewport.targetCx;
+                        viewport.cy = viewport.targetCy;
+                        viewport.scale = viewport.targetScale;
+                    }
+                }
+            }
+
+            function startFollowMode(toCx, toCy, toScale, duration) {
+                viewport.startCx = viewport.cx;
+                viewport.startCy = viewport.cy;
+                viewport.startScale = viewport.scale;
+                viewport.targetCx = toCx;
+                viewport.targetCy = toCy;
+                viewport.targetScale = toScale;
+                viewport.transitionProgress = 0;
+                viewport.transitionDuration = duration || 60;
+                viewport.isTransitioning = true;
+                viewport.followMode = true;
+            }
+
+            function updateFollowTarget(toCx, toCy) {
+                if (viewport.followMode && !viewport.isTransitioning) {
+                    viewport.targetCx = toCx;
+                    viewport.targetCy = toCy;
+                }
+            }
+
+            // ================================================================
+            // 6. 陨星系统
+            // ================================================================
+            let attachInfo = {
+                layerIndex: 0,
+                angle: -0.6,
+                x: 0,
+                y: 0,
+                tangentX: 1,
+                tangentY: 0,
+            };
+
+            let meteor = {
+                state: 'attached',
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                speed: 0,
+                shadowBlur: 0,
+                history: [],
+                gravity: 0.06,
+                brokenPieces: [],
+                headColor: { r: 180, g: 160, b: 140 },
+                flyTimer: 0,
+                flyDuration: 60,
+                attachStartTime: 0,
+                attachDuration: 2000,
+            };
+
+            const START_SPEED = 4;
+            const MAX_SPEED = 10;
+            const START_BLUR = 15;
+            const MAX_BLUR = 55;
+            const METEOR_HISTORY = 22;
+            const PIECE_HISTORY_LEN = 12;
+
+            // ================================================================
+            // 7. 流程控制
+            // ================================================================
+            let flowState = 'opening';
+
+            let opening = {
+                active: true,
+                progress: 0,
+                duration: 5.0,
+                startTime: 0,
+                done: false,
+            };
+
+            let showerState = {
+                active: false,
+                startTime: 0,
+                duration: 15000,
+                generating: false,
+                ended: false,
+            };
+
+            // ================================================================
+            // 8. 初始化场景
+            // ================================================================
+            function initScene() {
+                planets = [];
+                const minDim = Math.min(W, H);
+
+                const positions = [
+                    { x: W * 0.28, y: H * 0.38 },
+                    { x: W * 0.72, y: H * 0.22 },
+                    { x: W * 0.20, y: H * 0.78 },
+                    { x: W * 0.75, y: H * 0.72 },
+                    { x: W * 0.50, y: H * 0.15 }
+                ];
+
+                const configs = [
+                    { radius: minDim * 0.08, color: '#b8a088', layers: 3, tiltBase: 0.2 },
+                    { radius: minDim * 0.06, color: '#a09080', layers: 2, tiltBase: 0.8 },
+                    { radius: minDim * 0.055, color: '#908880', layers: 2, tiltBase: 1.0 },
+                    { radius: minDim * 0.07, color: '#8a9a7a', layers: 2, tiltBase: 0.5 },
+                    { radius: minDim * 0.05, color: '#9a8a8a', layers: 1, tiltBase: 1.2 }
+                ];
+
+                for (let idx = 0; idx < 5; idx++) {
+                    const pos = positions[idx];
+                    const cfg = configs[idx];
+                    const radius = cfg.radius;
+                    const color = cfg.color;
+                    const layerCount = cfg.layers;
+                    const tiltBase = cfg.tiltBase;
+
+                    const ringLayers = [];
+                    for (let i = 0; i < layerCount; i++) {
+                        const a = radius * (2.2 + i * 1.2);
+                        const b = a * (0.5 + Math.random() * 0.25);
+                        const tilt = tiltBase + (Math.random() - 0.5) * 0.8;
+                        const speed = (0.005 + Math.random() * 0.005) * (i + 1) * 0.5;
+                        const count = Math.floor(120 + Math.random() * 100);
+                        const colors = ['#8a7a6a', '#7a8a7a', '#9a8a7a', '#8a8a7a', '#7a7a7a'];
+                        const col = colors[Math.floor(Math.random() * colors.length)];
+                        const particles = createRingParticles(count, a, b);
+                        ringLayers.push({
+                            particles,
+                            a,
+                            b,
+                            tilt,
+                            angle: Math.random() * Math.PI * 2,
+                            speed,
+                            color: col,
+                        });
+                    }
+
+                    const planet = new Planet(pos.x, pos.y, radius, color, ringLayers, 25 + Math.floor(Math.random() * 20));
+                    planets.push(planet);
+                }
+
+                mainPlanet = planets[0];
+
+                const layerIdx = 1;
+                const angle = -0.6;
+                let best = null;
+                let bestDiff = Infinity;
+                const layer = mainPlanet.ringLayers[layerIdx];
+                if (layer) {
+                    for (let pi = 0; pi < layer.particles.length; pi++) {
+                        const p = layer.particles[pi];
+                        const totalAngle = p.angleOffset + layer.angle;
+                        let diff = totalAngle - angle;
+                        diff = ((diff % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+                        if (Math.abs(diff) < bestDiff) {
+                            bestDiff = Math.abs(diff);
+                            best = pi;
+                        }
+                    }
+                }
+                if (best !== null) {
+                    const pos2 = mainPlanet.getParticlePosition(layerIdx, best);
+                    const tangent = mainPlanet.getParticleTangent(layerIdx, best);
+                    attachInfo.x = pos2.x;
+                    attachInfo.y = pos2.y;
+                    attachInfo.layerIndex = layerIdx;
+                    attachInfo.angle = angle;
+                    attachInfo.tangentX = tangent ? Math.cos(tangent) : 1;
+                    attachInfo.tangentY = tangent ? Math.sin(tangent) : 0;
+                } else {
+                    const r = mainPlanet.radius * 2.5;
+                    attachInfo.x = mainPlanet.x + r * Math.cos(angle);
+                    attachInfo.y = mainPlanet.y + r * Math.sin(angle);
+                    attachInfo.tangentX = -Math.sin(angle);
+                    attachInfo.tangentY = Math.cos(angle);
+                }
+
+                resetToAttached();
+
+                viewport.cx = attachInfo.x;
+                viewport.cy = attachInfo.y;
+                viewport.scale = 0.05;
+                viewport.targetCx = attachInfo.x;
+                viewport.targetCy = attachInfo.y;
+                viewport.targetScale = 0.05;
+                viewport.followMode = true;
+                viewport.isTransitioning = false;
+
+                opening.active = true;
+                opening.progress = 0;
+                opening.startTime = performance.now();
+                opening.done = false;
+                flowState = 'opening';
+                infoEl.classList.remove('hidden');
+
+                meteor.brokenPieces = [];
+                meteor.history = [];
+                meteor.state = 'attached';
+                meteor.x = attachInfo.x;
+                meteor.y = attachInfo.y;
+                mainPlanet.resetAllParticles();
+
+                showerMeteors = [];
+                showerState.active = false;
+                showerState.generating = false;
+                showerState.ended = false;
+
+                console.log('🌌 开场镜头启动 (空间增强版)');
+            }
+
+            // ================================================================
+            // 9. 陨星逻辑
+            // ================================================================
+            function triggerDetach() {
+                if (meteor.state !== 'attached') return;
+                const tx = attachInfo.tangentX,
+                    ty = attachInfo.tangentY;
+                const dx = tx * 0.7 + 0.3;
+                const dy = ty * 0.7 + 0.3;
+                const len = Math.hypot(dx, dy);
+                const normX = dx / len,
+                    normY = dy / len;
+                const speed = rand(START_SPEED, START_SPEED + 2);
+                meteor.vx = normX * speed;
+                meteor.vy = normY * speed;
+                meteor.speed = speed;
+                meteor.shadowBlur = START_BLUR;
+                meteor.headColor = { r: 255, g: 200, b: 100 };
+                meteor.history = [];
+                for (let i = 0; i < METEOR_HISTORY; i++) {
+                    const t = i * 2.2;
+                    meteor.history.push({ x: meteor.x - t * normX, y: meteor.y - t * normY });
+                }
+                meteor.flyTimer = 0;
+                meteor.flyDuration = 50 + randInt(0, 30);
+                meteor.state = 'flying';
+                flowState = 'flying';
+                startFollowMode(meteor.x, meteor.y, 2.2, 60);
+                console.log('🔥 陨星脱离！');
+            }
+
+            function breakMeteor() {
+                if (meteor.state !== 'flying') return;
+                if (meteor.brokenPieces.length > 0) return;
+                const cx = meteor.x,
+                    cy = meteor.y;
+                const count = 8 + randInt(0, 5);
+                const colors = [
+                    { r: 255, g: 200, b: 100 },
+                    { r: 255, g: 160, b: 60 },
+                    { r: 240, g: 140, b: 50 },
+                    { r: 255, g: 180, b: 80 },
+                    { r: 200, g: 220, b: 255 },
+                ];
+                const dir = Math.atan2(meteor.vy, meteor.vx);
+                const baseSpeed = Math.hypot(meteor.vx, meteor.vy) || 3;
+
+                for (let i = 0; i < count; i++) {
+                    const angleOffset = rand(-Math.PI / 7, Math.PI / 7);
+                    const angle = dir + angleOffset;
+                    const speed = rand(3, 6) + baseSpeed * 0.5;
+                    const size = rand(5, 16);
+                    const c = colors[randInt(0, colors.length - 1)];
+                    const piece = {
+                        x: cx + rand(-6, 6),
+                        y: cy + rand(-6, 6),
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - rand(0.3, 1.5),
+                        size,
+                        color: c,
+                        life: randInt(80, 150),
+                        alpha: 1,
+                        rotation: rand(0, Math.PI * 2),
+                        rotSpeed: rand(-0.06, 0.06),
+                        history: [],
+                    };
+                    for (let j = 0; j < PIECE_HISTORY_LEN; j++) {
+                        const t = j * 1.5;
+                        piece.history.push({
+                            x: piece.x - Math.cos(angle) * t,
+                            y: piece.y - Math.sin(angle) * t
+                        });
+                    }
+                    meteor.brokenPieces.push(piece);
+                }
+                meteor.state = 'broken';
+                flowState = 'broken';
+                console.log('💥 陨星碎裂！');
+            }
+
+            function resetToAttached() {
+                meteor.x = attachInfo.x;
+                meteor.y = attachInfo.y;
+                meteor.state = 'attached';
+                meteor.vx = 0;
+                meteor.vy = 0;
+                meteor.speed = 0;
+                meteor.shadowBlur = 0;
+                meteor.history = [];
+                meteor.brokenPieces = [];
+                meteor.flyTimer = 0;
+                meteor.attachStartTime = performance.now();
+                meteor.headColor = { r: 180, g: 160, b: 140 };
+                flowState = 'attached';
+            }
+
+            // ================================================================
+            // 10. 流星雨系统 (增强版: 更大、更立体)
+            // ================================================================
+            let showerMeteors = [];
+            const SHOWER_MAX = 20;
+            const SHOWER_ANGLE_MIN = 0.55;
+            const SHOWER_ANGLE_MAX = 0.85;
+            const SHOWER_SPEED_MIN = 9.0;
+            const SHOWER_SPEED_MAX = 16.0;
+            const SHOWER_TAIL_MIN = 200; // 增加拖尾长度
+            const SHOWER_TAIL_MAX = 400;
+            const SHOWER_LIFE_MIN = 60;
+            const SHOWER_LIFE_MAX = 100;
+            let showerSpawnTimer = 0;
+            const SHOWER_SPAWN_INTERVAL_MIN = 300;
+            const SHOWER_SPAWN_INTERVAL_MAX = 800;
+
+            function getShowerHeadColor() {
+                return { r: rand(235, 255), g: rand(120, 190), b: rand(15, 60) };
+            }
+
+            function spawnShowerMeteor() {
+                if (showerMeteors.length >= SHOWER_MAX) return;
+                const angle = rand(SHOWER_ANGLE_MIN, SHOWER_ANGLE_MAX);
+                const speed = rand(SHOWER_SPEED_MIN, SHOWER_SPEED_MAX);
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                let x, y;
+                const side = rand(0, 1);
+                if (side < 0.55) {
+                    x = rand(-W * 0.1, W * 1.1);
+                    y = rand(-80, H * 0.25);
+                } else if (side < 0.8) {
+                    x = rand(-120, W * 0.15);
+                    y = rand(H * 0.05, H * 0.6);
+                } else {
+                    x = rand(W * 0.85, W + 120);
+                    y = rand(H * 0.05, H * 0.5);
+                }
+                if (x < -50) x = rand(-30, 60);
+                if (x > W + 50) x = rand(W - 60, W + 30);
+                if (y < -50) y = rand(-20, 40);
+                showerMeteors.push({
+                    x,
+                    y,
+                    vx,
+                    vy,
+                    tailLength: rand(SHOWER_TAIL_MIN, SHOWER_TAIL_MAX),
+                    life: randInt(SHOWER_LIFE_MIN, SHOWER_LIFE_MAX),
+                    maxLife: SHOWER_LIFE_MAX,
+                    brightness: rand(0.85, 1.0),
+                    headColor: getShowerHeadColor(),
+                    trailSegments: 60, // 增加分段数使拖尾更平滑
+                });
+            }
+
+            function updateShowerMeteors() {
+                for (let i = showerMeteors.length - 1; i >= 0; i--) {
+                    const m = showerMeteors[i];
+                    m.x += m.vx;
+                    m.y += m.vy;
+                    m.life--;
+                    const margin = 150;
+                    if (m.life <= 0 || m.x < -margin || m.x > W + margin || m.y < -margin || m.y > H + margin) {
+                        showerMeteors.splice(i, 1);
+                        continue;
+                    }
+                    if (m.life < m.maxLife * 0.25) {
+                        const fade = m.life / (m.maxLife * 0.25);
+                        m.brightness = fade * m.brightness;
+                        m.brightness = Math.max(0.05, m.brightness);
+                    }
+                }
+                if (showerState.generating) {
+                    const now = performance.now();
+                    if (now - showerSpawnTimer > rand(SHOWER_SPAWN_INTERVAL_MIN, SHOWER_SPAWN_INTERVAL_MAX)) {
+                        const count = randInt(1, 2);
+                        for (let i = 0; i < count; i++) {
+                            if (showerMeteors.length < SHOWER_MAX) spawnShowerMeteor();
+                        }
+                        showerSpawnTimer = now;
+                    }
+                }
+            }
+
+            function drawShowerMeteors() {
+                for (const m of showerMeteors) {
+                    drawShowerMeteor(m);
+                }
+            }
+
+            // ----- 增强的流星绘制：更大、更立体 -----
+            function drawShowerMeteor(m) {
+                const { x, y, vx, vy, tailLength, life, maxLife, brightness, headColor, trailSegments } = m;
+                const len = Math.sqrt(vx * vx + vy * vy);
+                if (len < 0.001) return;
+                const dx = vx / len,
+                    dy = vy / len;
+                const lifeRatio = life / maxLife;
+                const currentTail = tailLength * (0.35 + 0.65 * lifeRatio);
+                const segs = trailSegments;
+
+                // ---- 增大基础宽度 ----
+                const baseWidth = rand(4.0, 7.0); // 原来是 2.8~4.6
+                const tailColor = { r: 255, g: 255, b: 255 };
+
+                // 1. 绘制拖尾（渐变段）
+                for (let i = 0; i < segs; i++) {
+                    const t = i / segs;
+                    const color = lerpColor(headColor, tailColor, t);
+                    const alphaFactor = Math.pow(1 - t, 1.6);
+                    const alpha = alphaFactor * brightness * 0.9;
+                    const width = baseWidth * (1 - t * 0.92); // 尾部更粗
+                    const px = x - dx * t * currentTail;
+                    const py = y - dy * t * currentTail;
+                    const jitter = (1 - t) * 1.8; // 稍微增大抖动
+                    const jx = (Math.random() - 0.5) * jitter;
+                    const jy = (Math.random() - 0.5) * jitter;
+
+                    ctx.beginPath();
+                    ctx.arc(px + jx, py + jy, Math.max(0.4, width), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${color.r | 0}, ${color.g | 0}, ${color.b | 0}, ${alpha})`;
+                    ctx.fill();
+
+                    // 增加前段光晕
+                    if (i < 6) {
+                        ctx.shadowColor = `rgba(${color.r | 0}, ${color.g | 0}, ${color.b | 0}, ${alpha * 0.25})`;
+                        ctx.shadowBlur = 22;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+
+                // 2. 头部光晕（更大、更亮）
+                const headRadius = baseWidth * 3.2 + 3.0; // 原来是 2.6+2.0
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, headRadius * 3.5); // 扩大范围
+                const bright = Math.min(1, brightness * 1.2);
+                const hr = Math.min(255, headColor.r + 50);
+                const hg = Math.min(255, headColor.g + 50);
+                const hb = Math.min(255, headColor.b + 30);
+                grad.addColorStop(0, `rgba(${hr}, ${hg}, ${hb}, ${bright})`);
+                grad.addColorStop(0.15, `rgba(${headColor.r}, ${headColor.g}, ${headColor.b}, ${bright * 0.9})`);
+                grad.addColorStop(0.4, `rgba(${headColor.r * 0.7}, ${headColor.g * 0.6}, ${headColor.b * 0.4}, ${bright * 0.5})`);
+                grad.addColorStop(0.7,
+                    `rgba(${headColor.r * 0.4}, ${headColor.g * 0.3}, ${headColor.b * 0.2}, ${bright * 0.2})`);
+                grad.addColorStop(1, `rgba(0,0,0,0)`);
+
+                ctx.shadowColor = `rgba(${headColor.r}, ${headColor.g}, ${headColor.b}, ${bright * 0.6})`;
+                ctx.shadowBlur = 60;
+                ctx.beginPath();
+                ctx.arc(x, y, headRadius * 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // 3. 核心亮点（更亮、更大）
+                ctx.beginPath();
+                ctx.arc(x, y, headRadius * 0.7, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 245, 230, ${bright * 0.98})`;
+                ctx.shadowColor = `rgba(255, 210, 160, ${bright * 0.4})`;
+                ctx.shadowBlur = 40;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // 4. 第二层核心（增强立体感）
+                ctx.beginPath();
+                ctx.arc(x - headRadius * 0.15, y - headRadius * 0.15, headRadius * 0.35, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${bright * 0.5})`;
+                ctx.shadowBlur = 20;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // 5. 拖尾散落粒子（更多、稍大）
+                if (brightness > 0.4 && lifeRatio > 0.2) {
+                    const count = randInt(5, 10);
+                    for (let i = 0; i < count; i++) {
+                        const t = rand(0.05, 0.8);
+                        const color = lerpColor(headColor, tailColor, t);
+                        const a = (1 - t) * brightness * 0.4 * rand(0.3, 0.9);
+                        const px = x - dx * t * currentTail;
+                        const py = y - dy * t * currentTail;
+                        const sz = rand(0.8, 2.5) * (1 - t * 0.4);
+                        ctx.beginPath();
+                        ctx.arc(px + rand(-2.5, 2.5), py + rand(-2.5, 2.5), sz, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${color.r | 0}, ${color.g | 0}, ${color.b | 0}, ${a})`;
+                        ctx.fill();
+                    }
+                }
+            }
+
+            function lerpColor(c1, c2, t) {
+                return { r: c1.r + (c2.r - c1.r) * t, g: c1.g + (c2.g - c1.g) * t, b: c1.b + (c2.b - c1.b) * t };
+            }
+
+            // ================================================================
+            // 11. 更新逻辑
+            // ================================================================
+            function updateMeteor() {
+                if (meteor.state === 'attached') {
+                    if (flowState === 'attached') {
+                        const elapsed = performance.now() - meteor.attachStartTime;
+                        if (elapsed >= meteor.attachDuration) {
+                            triggerDetach();
+                        }
+                    }
+                } else if (meteor.state === 'flying') {
+                    meteor.flyTimer++;
+                    const progress = Math.min(meteor.flyTimer / 120, 1);
+                    meteor.speed = START_SPEED + (MAX_SPEED - START_SPEED) * progress * 0.6;
+                    meteor.shadowBlur = START_BLUR + (MAX_BLUR - START_BLUR) * progress * 0.5;
+                    meteor.vy += meteor.gravity;
+                    const angle = Math.atan2(meteor.vy, meteor.vx);
+                    const spd = meteor.speed;
+                    meteor.vx = spd * Math.cos(angle);
+                    meteor.vy = spd * Math.sin(angle);
+                    meteor.x += meteor.vx;
+                    meteor.y += meteor.vy;
+                    meteor.history.push({ x: meteor.x, y: meteor.y });
+                    if (meteor.history.length > METEOR_HISTORY) meteor.history.shift();
+                    if (!viewport.isTransitioning) updateFollowTarget(meteor.x, meteor.y);
+                    if (meteor.flyTimer > meteor.flyDuration) breakMeteor();
+                } else if (meteor.state === 'broken') {
+                    for (const piece of meteor.brokenPieces) {
+                        piece.x += piece.vx;
+                        piece.y += piece.vy;
+                        piece.vy += 0.04;
+                        piece.life--;
+                        piece.alpha *= 0.993;
+                        piece.history.push({ x: piece.x, y: piece.y });
+                        if (piece.history.length > PIECE_HISTORY_LEN) piece.history.shift();
+                    }
+                    meteor.brokenPieces = meteor.brokenPieces.filter(p => p.life > 0 && p.alpha > 0.01);
+                    if (!viewport.isTransitioning) {
+                        if (meteor.brokenPieces.length > 0) {
+                            let cx = 0,
+                                cy = 0;
+                            for (const p of meteor.brokenPieces) {
+                                cx += p.x;
+                                cy += p.y;
+                            }
+                            cx /= meteor.brokenPieces.length;
+                            cy /= meteor.brokenPieces.length;
+                            updateFollowTarget(cx, cy);
+                        } else {
+                            if (flowState === 'broken') {
+                                console.log('🔄 碎片消失，镜头拉远');
+                                flowState = 'retreat';
+                                const targetScale = 0.08;
+                                const targetCx = attachInfo.x;
+                                const targetCy = attachInfo.y;
+                                startFollowMode(viewport.cx, viewport.cy, targetScale, 120);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ================================================================
+            // 12. 绘制 (增强版)
+            // ================================================================
+            function drawStarsWithParallax(time, scale) {
+                for (let li = 0; li < starLayers.length; li++) {
+                    const stars = starLayers[li];
+                    const parallax = LAYERS[li].parallax;
+                    const offsetFactor = (scale - 0.05) * 0.8;
+                    const offsetX = (viewport.cx - W / 2) * parallax * offsetFactor * 0.3;
+                    const offsetY = (viewport.cy - H / 2) * parallax * offsetFactor * 0.3;
+
+                    for (const star of stars) {
+                        const flicker = Math.sin(time * star.speed + star.phase);
+                        const af = 0.5 + 0.5 * flicker;
+                        const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                        star.alpha = star.baseAlpha * mod;
+                        star.alpha = clamp(star.alpha, 0.05, 1);
+                        const px = star.x + offsetX * (1 + star.parallax * 0.5);
+                        const py = star.y + offsetY * (1 + star.parallax * 0.5);
+                        const sizeScale = 0.8 + 0.4 * (1 - parallax);
+                        const drawSize = star.size * sizeScale;
+
+                        if (star.alpha < 0.01) continue;
+                        if (drawSize > 0.8 && star.alpha > 0.02) {
+                            const glowR = drawSize * 2.5;
+                            const grad = ctx.createRadialGradient(px, py, 0, px, py, glowR);
+                            grad.addColorStop(0, `rgba(${star.color.r},${star.color.g},${star.color.b},${star.alpha * 0.3})`);
+                            grad.addColorStop(0.5,
+                                `rgba(${star.color.r},${star.color.g},${star.color.b},${star.alpha * 0.08})`);
+                            grad.addColorStop(1, `rgba(${star.color.r},${star.color.g},${star.color.b},0)`);
+                            ctx.fillStyle = grad;
+                            ctx.beginPath();
+                            ctx.arc(px, py, glowR, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = star.alpha;
+                        ctx.fillStyle = `rgb(${star.color.r},${star.color.g},${star.color.b})`;
+                        ctx.beginPath();
+                        ctx.arc(px, py, drawSize * 0.85, 0, Math.PI * 2);
+                        ctx.fill();
+                        if (star.isBright && star.alpha > 0.2) {
+                            const len = 10 + drawSize * 4;
+                            for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                                const cosA = Math.cos(ang),
+                                    sinA = Math.sin(ang);
+                                ctx.globalAlpha = star.alpha * 0.2;
+                                ctx.strokeStyle =
+                                    `rgba(${star.color.r},${star.color.g},${star.color.b},${star.alpha * 0.2})`;
+                                ctx.lineWidth = 0.6;
+                                ctx.beginPath();
+                                ctx.moveTo(px + cosA * 1.5, py + sinA * 1.5);
+                                ctx.lineTo(px + cosA * len, py + sinA * len);
+                                ctx.stroke();
+                            }
+                        }
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
+
+            function drawCloudsWithScale(scale) {
+                const cloudAlpha = smoothstep(0.05, 0.6, scale);
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                for (const cloud of clouds) {
+                    const grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+                    const a = cloud.alpha * (0.3 + 0.7 * (1 - cloudAlpha));
+                    grad.addColorStop(0, `rgba(${cloud.r},${cloud.g},${cloud.b},${a})`);
+                    grad.addColorStop(0.5, `rgba(${cloud.r},${cloud.g},${cloud.b},${a * 0.5})`);
+                    grad.addColorStop(1, `rgba(${cloud.r},${cloud.g},${cloud.b},0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            function drawMeteor() {
+                if (meteor.state === 'attached') {
+                    const alpha = (flowState === 'opening') ? 0.15 : 0.6;
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.arc(meteor.x, meteor.y, 2.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#8a7a6a';
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    return;
+                }
+                if (meteor.state === 'flying') drawFlyingMeteor();
+                else if (meteor.state === 'broken') drawBrokenPieces();
+            }
+
+            function drawFlyingMeteor() {
+                const hist = meteor.history;
+                const len = hist.length;
+                if (len === 0) return;
+                const headColor = meteor.headColor;
+
+                for (let i = 0; i < len; i++) {
+                    const pos = hist[i];
+                    const t = (i + 1) / len;
+                    const alpha = 0.08 + 0.82 * t;
+                    const radius = (0.8 + 2.8 * t);
+                    const color = {
+                        r: lerp(headColor.r, 255, t), g: lerp(headColor.g, 255, t), b: lerp(headColor.b, 255,
+                            t)
+                    };
+                    ctx.globalAlpha = alpha * 0.85;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, Math.max(0.3, radius), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgb(${color.r | 0},${color.g | 0},${color.b | 0})`;
+                    ctx.fill();
+                    if (t > 0.4) {
+                        const ga = (t - 0.4) / 0.6 * 0.15;
+                        ctx.shadowColor = 'rgba(255,255,255,0.2)';
+                        ctx.shadowBlur = 14 * t;
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, radius * 2.8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255,255,255,${ga})`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                ctx.globalAlpha = 1;
+
+                const last = hist[len - 1];
+                if (last) {
+                    const blur = meteor.shadowBlur;
+                    const grad = ctx.createRadialGradient(last.x, last.y, 0, last.x, last.y, Math.max(10, blur * 0.6));
+                    const hr = Math.min(255, headColor.r + 40);
+                    const hg = Math.min(255, headColor.g + 40);
+                    const hb = Math.min(255, headColor.b + 20);
+                    grad.addColorStop(0, `rgba(${hr},${hg},${hb},0.95)`);
+                    grad.addColorStop(0.3, `rgba(${headColor.r},${headColor.g},${headColor.b},0.6)`);
+                    grad.addColorStop(1, `rgba(${headColor.r * 0.3},${headColor.g * 0.2},${headColor.b * 0.1},0)`);
+                    ctx.shadowColor = `rgba(${headColor.r},${headColor.g},${headColor.b},0.4)`;
+                    ctx.shadowBlur = blur * 0.8;
+                    ctx.beginPath();
+                    ctx.arc(last.x, last.y, Math.max(5, blur * 0.6), 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.arc(last.x, last.y, Math.max(2, 3), 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,240,220,0.95)`;
+                    ctx.fill();
+                }
+            }
+
+            function drawBrokenPieces() {
+                for (const piece of meteor.brokenPieces) {
+                    if (piece.alpha < 0.01) continue;
+                    const hist = piece.history;
+                    const len = hist.length;
+                    if (len < 2) continue;
+                    for (let i = 0; i < len; i++) {
+                        const pos = hist[i];
+                        const t = (i + 1) / len;
+                        const alpha = 0.1 + 0.7 * t;
+                        const radius = (0.3 + 1.5 * t) * (piece.size / 6);
+                        if (radius < 0.1) continue;
+                        const c = piece.color;
+                        const fadeColor = { r: lerp(c.r, 255, t), g: lerp(c.g, 255, t), b: lerp(c.b, 255, t) };
+                        ctx.globalAlpha = alpha * piece.alpha * 0.6;
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, Math.max(0.2, radius), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgb(${fadeColor.r | 0},${fadeColor.g | 0},${fadeColor.b | 0})`;
+                        ctx.fill();
+                        if (t > 0.5) {
+                            const ga = (t - 0.5) / 0.5 * 0.08;
+                            ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.15)`;
+                            ctx.shadowBlur = 8 * t;
+                            ctx.beginPath();
+                            ctx.arc(pos.x, pos.y, radius * 2.0, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${ga * piece.alpha})`;
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+
+                for (const piece of meteor.brokenPieces) {
+                    const size = piece.size;
+                    if (size < 0.3 || piece.alpha < 0.01) continue;
+                    ctx.globalAlpha = piece.alpha;
+                    ctx.save();
+                    ctx.translate(piece.x, piece.y);
+                    ctx.rotate(piece.rotation);
+                    const grad = ctx.createRadialGradient(-size * 0.2, -size * 0.2, 0, 0, 0, size);
+                    const c = piece.color;
+                    grad.addColorStop(0,
+                        `rgb(${Math.min(255, c.r + 60)},${Math.min(255, c.g + 40)},${Math.min(255, c.b + 30)})`);
+                    grad.addColorStop(0.6, `rgb(${c.r},${c.g},${c.b})`);
+                    grad.addColorStop(1, `rgb(${c.r * 0.4 | 0},${c.g * 0.3 | 0},${c.b * 0.2 | 0})`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    const pts = 5 + randInt(0, 3);
+                    for (let i = 0; i < pts; i++) {
+                        const a = (i / pts) * Math.PI * 2 + rand(-0.2, 0.2);
+                        const r = size * (0.6 + rand(0, 0.4));
+                        if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+                        else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.globalAlpha = piece.alpha * 0.25;
+                    ctx.beginPath();
+                    ctx.arc(-size * 0.15, -size * 0.15, size * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                    ctx.restore();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawUI() {
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                ctx.font = '13px sans-serif';
+                let status = '';
+                if (flowState === 'opening') status = '✦ 穿越星海 ...';
+                else if (flowState === 'attached') status = '✦ 附着于星环 (即将脱离)';
+                else if (flowState === 'flying') status = '✦ 陨星飞行中';
+                else if (flowState === 'broken') status = '✦ 陨星碎裂';
+                else if (flowState === 'retreat') status = '✦ 镜头拉远 ...';
+                else if (flowState === 'meteorShower') status = '✦ 流星雨 ✦';
+                else if (flowState === 'ended') status = '✦ 星 空 ✦';
+                ctx.fillText(status, 20, 30);
+                if (flowState === 'attached') {
+                    const elapsed = performance.now() - meteor.attachStartTime;
+                    const remain = Math.max(0, Math.ceil((meteor.attachDuration - elapsed) / 1000));
+                    ctx.fillText(`脱离倒计时 ${remain} 秒`, 20, 50);
+                }
+            }
+
+            // ================================================================
+            // 13. 主循环
+            // ================================================================
+            function animate(timestamp) {
+                const time = timestamp / 100;
+
+                if (flowState === 'opening') {
+                    const elapsed = (timestamp - opening.startTime) / 1000;
+                    opening.progress = Math.min(elapsed / opening.duration, 1);
+                    const t = easeInOut(opening.progress);
+                    const currentScale = 0.05 + (1.0 - 0.05) * t;
+                    viewport.scale = currentScale;
+                    viewport.targetScale = currentScale;
+                    if (opening.progress >= 1) {
+                        opening.active = false;
+                        opening.done = true;
+                        flowState = 'attached';
+                        meteor.attachStartTime = performance.now();
+                        startFollowMode(viewport.cx, viewport.cy, 1.0, 50);
+                        setTimeout(() => { infoEl.classList.add('hidden'); }, 1500);
+                        console.log('🎬 开场结束，进入附着状态');
+                    }
+                }
+
+                for (const p of planets) p.update();
+                updateMeteor();
+                updateFloatParticles(time);
+
+                if (flowState === 'meteorShower') {
+                    if (showerState.active) {
+                        const elapsed = timestamp - showerState.startTime;
+                        if (elapsed > showerState.duration) {
+                            showerState.generating = false;
+                            if (showerMeteors.length === 0) {
+                                flowState = 'ended';
+                                console.log('🌌 流星雨结束');
+                            }
+                        }
+                    }
+                    updateShowerMeteors();
+                } else if (flowState === 'ended') {
+                    updateShowerMeteors();
+                }
+
+                updateViewport();
+
+                ctx.clearRect(0, 0, W, H);
+
+                const scale = viewport.scale;
+
+                drawStarsWithParallax(time, scale);
+                drawCloudsWithScale(scale);
+                drawFloatParticles();
+
+                ctx.save();
+                ctx.translate(W / 2, H / 2);
+                ctx.scale(scale, scale);
+                ctx.translate(-viewport.cx, -viewport.cy);
+
+                let planetAlpha = 1;
+                if (flowState === 'opening') planetAlpha = smoothstep(0.25, 0.9, opening.progress);
+                else if (flowState === 'retreat' || flowState === 'meteorShower' || flowState === 'ended') {
+                    planetAlpha = smoothstep(0.15, 0.5, scale);
+                }
+
+                const dofAmount = clamp((scale - 0.5) * 1.2, 0, 3);
+
+                for (let i = 0; i < planets.length; i++) {
+                    const p = planets[i];
+                    const blur = (i === 0) ? 0 : dofAmount * (0.5 + 0.5 * Math.sin(i * 1.7));
+                    if (i === 0) p.drawRings(ctx, p.x, p.y, p.radius, planetAlpha, 0);
+                    else p.drawRings(ctx, p.x, p.y, p.radius, planetAlpha * 0.7, blur);
+                }
+
+                for (let i = 0; i < planets.length; i++) {
+                    const p = planets[i];
+                    const blur = (i === 0) ? 0 : dofAmount * (0.5 + 0.5 * Math.sin(i * 1.7 + 0.5));
+                    if (i === 0) p.draw(ctx, p.x, p.y, p.radius, planetAlpha, 0);
+                    else p.draw(ctx, p.x, p.y, p.radius, planetAlpha * 0.6, blur);
+                }
+
+                if (flowState === 'flying' || flowState === 'broken' || flowState === 'attached') {
+                    drawMeteor();
+                }
+
+                ctx.restore();
+
+                if (flowState === 'meteorShower' || flowState === 'ended') {
+                    drawShowerMeteors();
+                }
+
+                drawUI();
+
+                const vignetteStrength = 0.08 + 0.12 * (1 - clamp((scale - 0.05) / 0.95, 0, 1));
+                const vignette = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, `rgba(0,0,0,${vignetteStrength})`);
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, W, H);
+
+                if (scale > 0.6) {
+                    const glowAlpha = (scale - 0.6) * 0.5 * 0.12;
+                    const glow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.min(W, H) * 0.3);
+                    glow.addColorStop(0, `rgba(200,180,255,${glowAlpha * 0.3})`);
+                    glow.addColorStop(1, `rgba(200,180,255,0)`);
+                    ctx.fillStyle = glow;
+                    ctx.fillRect(0, 0, W, H);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // ================================================================
+            // 14. 启动
+            // ================================================================
+            function init() {
+                resize();
+                initStarLayers();
+                initClouds();
+                initFloatParticles();
+                initScene();
+                opening.active = true;
+                opening.progress = 0;
+                opening.startTime = performance.now();
+                opening.done = false;
+                flowState = 'opening';
+                infoEl.classList.remove('hidden');
+                showerMeteors = [];
+                showerState.active = false;
+                showerState.generating = false;
+                showerState.ended = false;
+                showerSpawnTimer = 0;
+                requestAnimationFrame(animate);
+                console.log('🌌 银河 · 陨星脱离 · 流星雨增强版 已启动');
+                console.log('✨ 流星雨升级: 体积更大 · 光晕更饱满 · 拖尾更丰富');
+            }
+
+            window.addEventListener('resize', () => {
+                resize();
+                initStarLayers();
+                initClouds();
+                initFloatParticles();
+            });
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

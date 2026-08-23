@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>华灯初上 · 万家灯火</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        #info {
+            position: fixed;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            user-select: none;
+            font-weight: 300;
+            font-family: 'Georgia', serif;
+            text-shadow: 0 0 20px rgba(0, 20, 80, 0.3);
+            opacity: 0;
+            transition: opacity 4s ease;
+            z-index: 20;
+        }
+
+        #info.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            #info {
+                font-size: 10px;
+                bottom: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="mainCanvas"></canvas>
+    <div id="info">✦ 华灯初上 · 仰望星河 ✦</div>
+    <script>
+        (function () {
+            'use strict';
+
+            // ============================================================
+            // 1. Canvas 初始化
+            // ============================================================
+            const canvas = document.getElementById('mainCanvas');
+            const ctx = canvas.getContext('2d', { alpha: true });
+            let W, H;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+
+            // ============================================================
+            // 2. 配置参数
+            // ============================================================
+            const CONFIG = {
+                eyeDuration: 2000,
+                liftDuration: 4000,
+                maxOffsetY: 0.90,
+                glowIntensity: 0.7,
+                starAppearStart: 0.85,
+                starAppearEnd: 1,
+                starFadeRange: 0.1,
+                starRandomOffset: 0.04,
+            };
+
+            // ============================================================
+            // 3. 工具函数
+            // ============================================================
+            function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+            function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+            function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+            function smoothstep(edge0, edge1, x) {
+                const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+                return t * t * (3 - 2 * t);
+            }
+
+            function hash(x, y) {
+                let h = x * 374761393 + y * 668265263;
+                h = (h ^ (h >> 13)) * 1274126177;
+                return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff;
+            }
+
+            // ============================================================
+            // 4. 建筑系统（窗户亮度已对齐 city.html）
+            // ============================================================
+            let buildings = [];
+
+            function generateBuildings(w, h) {
+                const list = [];
+                const horizonY = h * 0.20;
+
+                function perspective(baseY) {
+                    let t = (baseY - horizonY) / (h * 0.85 - horizonY);
+                    return Math.max(0, Math.min(1, t));
+                }
+
+                function fillRow(yMin, yMax, cellW, layerType) {
+                    const rows = Math.max(1, Math.round((yMax - yMin) / (h * 0.045)));
+                    const rowH = (yMax - yMin) / rows;
+                    const phase = Math.random() * cellW;
+                    const cols = Math.ceil(w / cellW) + 1;
+                    for (let r = 0; r < rows; r++) {
+                        const rowOff = phase + (r % 2 === 1 ? cellW * 0.5 : 0) + (Math.random() - 0.5) * cellW * 0.3;
+                        let prevBh = -1;
+                        for (let c = 0; c < cols; c++) {
+                            if (Math.random() < 0.08) continue;
+                            const baseY = yMin + r * rowH + Math.random() * rowH;
+                            const t = perspective(baseY);
+                            let bw, bh;
+                            if (layerType === 'far') {
+                                bw = 5 + Math.random() * 5 + t * 6;
+                                const tf = 1 - t;
+                                bh = (13 + Math.random() * 14) * (0.60 + tf * 1.15);
+                                if (Math.random() < 0.07) bh *= 1.5 + Math.random() * 0.6;
+                            } else if (layerType === 'mid') {
+                                bw = 14 + Math.random() * 14 + t * 14;
+                                bh = (30 + Math.random() * 26) * (0.45 + t * 1.1);
+                            } else {
+                                bw = 34 + Math.random() * 26 + t * 24;
+                                bh = (60 + Math.random() * 46) * (0.5 + t * 0.9);
+                            }
+                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) {
+                                bh *= Math.random() > 0.5 ? 1.25 : 0.78;
+                            }
+                            prevBh = bh;
+                            bw = Math.min(bw, cellW * 0.85);
+                            const jit = (Math.random() - 0.5) * cellW * 0.5;
+                            const bx = c * cellW + rowOff + jit;
+                            if (bx + bw < 0 || bx > w) continue;
+                            const seed = hash(bx, baseY);
+                            const windows = [];
+
+                            // ---- far 层：随机散点窗户 ----
+                            if (layerType === 'far') {
+                                const cnt = 3 + Math.floor(seed * 6);
+                                for (let i = 0; i < cnt; i++) {
+                                    windows.push({
+                                        x: 1 + Math.random() * (bw - 2),
+                                        y: 1 + Math.random() * (bh - 2),
+                                        w: 1,
+                                        h: Math.random() > 0.5 ? 2 : 1,
+                                        lit: true,
+                                        alpha: 0.2 + Math.random() * 0.4
+                                    });
+                                }
+                            } else {
+                                // ---- mid / near 层：网格窗户 ----
+                                const scale = (layerType === 'mid') ? (0.8 + t * 0.4) : (0.85 + t * 0.35);
+                                const winW = (layerType === 'mid') ? 3 * scale : 5 * scale;
+                                const winH = (layerType === 'mid') ? 5 * scale : 7 * scale;
+                                const gapX = (layerType === 'mid') ? 4 : 3;
+                                const gapY = (layerType === 'mid') ? 4 : 3;
+                                const padX = (layerType === 'mid') ? 4 : 5;
+                                const padY = (layerType === 'mid') ? 6 : 8;
+                                const stepX = winW + gapX;
+                                const stepY = winH + gapY;
+                                const colsW = Math.max(1, Math.floor((bw - 2 * padX + gapX) / stepX));
+                                const rowsW = Math.max(1, Math.floor((bh - 2 * padY + gapY) / stepY));
+                                const totalW = colsW * stepX - gapX;
+                                const totalH = rowsW * stepY - gapY;
+                                const startX = padX + (bw - 2 * padX - totalW) / 2;
+                                const startY = padY + (bh - 2 * padY - totalH) / 2;
+
+                                const rowStates = [];
+                                let cr = 0;
+                                while (cr < rowsW) {
+                                    const lc = 3 + Math.floor(Math.random() * 3);
+                                    const dc = 2 + Math.floor(Math.random() * 2);
+                                    for (let i = 0; i < lc && cr < rowsW; i++) {
+                                        rowStates.push(true);
+                                        cr++;
+                                    }
+                                    for (let i = 0; i < dc && cr < rowsW; i++) {
+                                        rowStates.push(false);
+                                        cr++;
+                                    }
+                                }
+
+                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math
+                                    .random() * 0.15);
+
+                                for (let r = 0; r < rowsW; r++) {
+                                    if (!rowStates[r]) continue;
+                                    for (let c = 0; c < colsW; c++) {
+                                        if (Math.random() > lightRate) continue;
+                                        const wx = startX + c * stepX;
+                                        const wy = startY + r * stepY;
+                                        const rand = Math.random();
+                                        let color;
+                                        if (rand < 0.02) color = '248,113,113';
+                                        else if (rand < 0.07) color = '122,183,212';
+                                        else color = Math.random() > 0.5 ? '251,191,36' : '252,211,77';
+
+                                        let alpha;
+                                        if (layerType === 'mid') {
+                                            alpha = 0.3 + Math.random() * 0.7;
+                                        } else { // 'near'
+                                            alpha = 0.7 + Math.random() * 0.3;
+                                        }
+
+                                        windows.push({
+                                            x: wx,
+                                            y: wy,
+                                            w: winW,
+                                            h: winH,
+                                            lit: true,
+                                            color,
+                                            alpha
+                                        });
+                                    }
+                                }
+                            }
+                            list.push({ type: layerType, x: bx, y: baseY - bh, w: bw, h: bh, t, windows, seed });
+                        }
+                    }
+                }
+                fillRow(h * 0.20, h * 0.38, 14, 'far');
+                fillRow(h * 0.30, h * 0.62, 34, 'mid');
+                fillRow(h * 0.52, h * 0.98, 78, 'near');
+                return list;
+            }
+
+            // ============================================================
+            // ★★★ 方案二：伪3D建筑绘制（顶面 + 正面 + 右侧面）★★★
+            // ============================================================
+            function drawBuilding(b, offsetY) {
+                const { type, x, y, w, h, t, windows } = b;
+                const by = y + offsetY;
+                const fog = type === 'far' ? 0.55 : (type === 'mid' ? 0.30 : 0.10);
+                const depth = 0.35 + t * 0.65;
+
+                // —— 基础颜色（正面） ——
+                let baseR, baseG, baseB;
+                if (type === 'far') {
+                    baseR = 18 + t * 10;
+                    baseG = baseR + 8;
+                    baseB = baseR + 22;
+                } else if (type === 'mid') {
+                    baseR = (20 + Math.random() * 8) * depth + fog * 20;
+                    baseG = (32 + Math.random() * 10) * depth + fog * 26;
+                    baseB = (52 + Math.random() * 14) * depth + fog * 38;
+                } else {
+                    baseR = (13 * depth) | 0;
+                    baseG = (22 * depth + 6) | 0;
+                    baseB = (36 * depth + 8) | 0;
+                }
+
+                // —— 1. 正面主体 ——
+                ctx.fillStyle = `rgb(${baseR | 0},${baseG | 0},${baseB | 0})`;
+                ctx.fillRect(x, by, w, h);
+
+                // —— 2. 顶面（亮色，模拟光照） ——
+                const roofH = Math.max(2, h * (type === 'far' ? 0.03 : 0.06));
+                const roofR = Math.min(255, baseR + 25);
+                const roofG = Math.min(255, baseG + 30);
+                const roofB = Math.min(255, baseB + 35);
+                ctx.fillStyle = `rgb(${roofR | 0},${roofG | 0},${roofB | 0})`;
+                ctx.fillRect(x, by - roofH, w, roofH);
+
+                // 顶面高光线
+                ctx.fillStyle = `rgba(200, 220, 255, ${0.05 + t * 0.08})`;
+                ctx.fillRect(x, by - roofH, w, 0.8);
+
+                // —— 3. 右侧面（暗色，模拟背光） ——
+                const sideW = Math.max(2, w * 0.08);
+                const sideR = Math.max(0, baseR * 0.6);
+                const sideG = Math.max(0, baseG * 0.6);
+                const sideB = Math.max(0, baseB * 0.6);
+                ctx.fillStyle = `rgb(${sideR | 0},${sideG | 0},${sideB | 0})`;
+                ctx.fillRect(x + w, by, sideW, h);
+
+                // —— 4. 右侧面边缘高光（强化立体感） ——
+                ctx.fillStyle = `rgba(150, 180, 220, ${0.03 + t * 0.06})`;
+                ctx.fillRect(x + w + sideW - 1, by, 1, h);
+
+                // —— 5. 窗户（在正面区域内） ——
+                for (const win of windows) {
+                    if (!win.lit) continue;
+                    ctx.fillStyle = `rgba(${win.color || '251,191,36'}, ${win.alpha || 0.2})`;
+                    ctx.fillRect(x + win.x, by + win.y, win.w, win.h);
+                }
+
+                // —— 6. 顶部高光线（正面顶部） ——
+                ctx.fillStyle = `rgba(160, 200, 240, ${0.08 + t * 0.15})`;
+                ctx.fillRect(x, by, w, 1.2);
+
+                // —— 7. 天线/装饰（仅近处） ——
+                if (type !== 'far' && Math.random() > 0.5) {
+                    const ah = 4 + Math.random() * 10;
+                    const ax = x + Math.random() * w;
+                    ctx.fillStyle = `rgba(160, 200, 240, ${0.05 + t * 0.12})`;
+                    ctx.fillRect(ax, by - roofH - ah, 1.0, ah);
+                    ctx.fillStyle = `rgba(255, 240, 200, ${0.03 + Math.random() * 0.06})`;
+                    ctx.fillRect(ax - 0.5, by - roofH - ah - 1, 2, 1.5);
+                }
+            }
+
+            // ============================================================
+            // 5. 光晕系统（稳定无闪烁）
+            // ============================================================
+            function drawGlowFromBuildings(buildings, offsetY, glowIntensity, w, h, liftProgress) {
+                if (glowIntensity < 0.01) return;
+
+                const nearB = [],
+                    midB = [],
+                    farB = [];
+                buildings.forEach(b => {
+                    if (b.type === 'near') nearB.push(b);
+                    else if (b.type === 'mid') midB.push(b);
+                    else farB.push(b);
+                });
+
+                drawGlowBatch(farB, offsetY, glowIntensity, w, h, liftProgress);
+                drawGlowBatch(midB, offsetY, glowIntensity * 0.7, w, h, liftProgress);
+                drawGlowBatch(nearB, offsetY, glowIntensity, w, h, liftProgress);
+
+                // 地平线辉光
+                const horizonAlpha = 0.06 * glowIntensity * (1 - liftProgress * 0.6);
+                if (horizonAlpha > 0.001) {
+                    const cx = w / 2;
+                    const cy = h * 0.75 + offsetY * 0.5;
+                    const radius = Math.max(w, h) * 0.5;
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                    grad.addColorStop(0, `rgba(255, 200, 150, ${horizonAlpha * 0.8})`);
+                    grad.addColorStop(0.5, `rgba(200, 160, 120, ${horizonAlpha * 0.3})`);
+                    grad.addColorStop(1, `rgba(100, 80, 60, 0)`);
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+            }
+
+            function drawGlowBatch(batch, offsetY, intensity, w, h, liftProgress) {
+                if (batch.length === 0 || intensity < 0.001) return;
+
+                const isNear = batch[0].type === 'near';
+                const isMid = batch[0].type === 'mid';
+
+                let baseRadiusMult, baseAlpha, radiusOffset;
+                if (isNear) {
+                    baseRadiusMult = 1.4;
+                    baseAlpha = 0.20;
+                    radiusOffset = 8;
+                } else if (isMid) {
+                    baseRadiusMult = 1.0;
+                    baseAlpha = 0.12;
+                    radiusOffset = 4;
+                } else {
+                    baseRadiusMult = 0.6;
+                    baseAlpha = 0.06;
+                    radiusOffset = 2;
+                }
+
+                const progressFactor = 1 - liftProgress * 0.3;
+
+                batch.forEach((b) => {
+                    const t = b.t || 0.5;
+                    const cx = b.x + b.w / 2;
+                    const cy = b.y + offsetY;
+                    const sizeBase = Math.max(b.w * 0.4, b.h * 0.15);
+                    const radius = sizeBase * (baseRadiusMult + t * 0.5) + radiusOffset;
+                    const depthFactor = 0.5 + t * 0.5;
+                    let alpha = baseAlpha * depthFactor * intensity * progressFactor;
+                    alpha = Math.min(alpha, 0.35);
+                    if (alpha < 0.002) return;
+
+                    const r = 255,
+                        g = 180,
+                        bl = 60;
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                    grad.addColorStop(0, `rgba(${r}, ${g}, ${bl}, ${alpha * 0.9})`);
+                    grad.addColorStop(0.1, `rgba(${r - 5}, ${g - 5}, ${bl - 5}, ${alpha * 0.7})`);
+                    grad.addColorStop(0.3, `rgba(${r - 15}, ${g - 15}, ${bl - 10}, ${alpha * 0.35})`);
+                    grad.addColorStop(0.6, `rgba(${r - 30}, ${g - 25}, ${bl - 15}, ${alpha * 0.12})`);
+                    grad.addColorStop(1, `rgba(${r - 50}, ${g - 35}, ${bl - 20}, 0)`);
+
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalCompositeOperation = 'source-over';
+
+                    if (isNear && alpha > 0.08) {
+                        const coreRadius = radius * 0.1;
+                        const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius);
+                        coreGrad.addColorStop(0, `rgba(255, 230, 180, ${alpha * 0.4})`);
+                        coreGrad.addColorStop(1, `rgba(255, 200, 140, 0)`);
+                        ctx.globalCompositeOperation = 'screen';
+                        ctx.fillStyle = coreGrad;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                });
+            }
+
+            // ============================================================
+            // 6. 繁星系统 + 方案四（透视感星空）
+            // ============================================================
+            const STAR_COLORS = [
+                { r: 255, g: 255, b: 255 },
+                { r: 255, g: 245, b: 235 },
+                { r: 235, g: 240, b: 255 },
+                { r: 255, g: 230, b: 210 },
+                { r: 210, g: 220, b: 255 },
+                { r: 255, g: 210, b: 180 },
+            ];
+            let stars = [];
+
+            function generateStars(w, h) {
+                stars = [];
+                const count = 280 + Math.floor(Math.random() * 60);
+                for (let i = 0; i < count; i++) {
+                    let magnitude = Math.random();
+                    let brightness = Math.pow(magnitude, 2.5);
+                    brightness = clamp(brightness, 0.05, 1.0);
+                    const size = 0.3 + brightness * 2.7;
+                    const isBright = brightness > 0.7 && Math.random() < 0.3;
+                    let colorIdx;
+                    if (brightness > 0.7) colorIdx = Math.floor(Math.random() * 3);
+                    else if (brightness > 0.4) colorIdx = 3 + Math.floor(Math.random() * 2);
+                    else colorIdx = Math.floor(Math.random() * STAR_COLORS.length);
+                    const color = STAR_COLORS[colorIdx % STAR_COLORS.length];
+                    const speed = 0.2 + Math.random() * 0.8;
+                    const phase = Math.random() * Math.PI * 2;
+                    const flickerAmt = 0.15 + brightness * 0.35;
+                    const x = Math.random() * (w - 20) + 10;
+                    const y = Math.random() * (h * 0.75) + 10;
+                    const randomDelay = (Math.random() - 0.5) * CONFIG.starRandomOffset * 2;
+                    stars.push({
+                        x,
+                        y,
+                        size,
+                        brightness,
+                        baseAlpha: 0.6 + brightness * 0.4,
+                        alpha: 0,
+                        speed,
+                        phase,
+                        flickerAmt,
+                        color,
+                        isBright,
+                        randomDelay,
+                    });
+                }
+            }
+
+            function updateStars(time) {
+                for (const star of stars) {
+                    const flicker = Math.sin(time * star.speed + star.phase);
+                    const af = 0.5 + 0.5 * flicker;
+                    const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                    star.alpha = star.baseAlpha * mod;
+                    star.alpha = clamp(star.alpha, 0.05, 1);
+                }
+            }
+
+            function drawStarsLayer(liftProgress, time) {
+                const { starAppearStart, starAppearEnd, starFadeRange } = CONFIG;
+                if (liftProgress < starAppearStart - starFadeRange) return;
+                updateStars(time);
+                const sorted = [...stars].sort((a, b) => b.brightness - a.brightness);
+                for (const star of sorted) {
+                    const yNorm = star.y / (H * 0.75); // 0~1，底部到顶部
+                    const baseThreshold = starAppearStart + (starAppearEnd - starAppearStart) * yNorm;
+                    const threshold = baseThreshold + star.randomDelay;
+                    const fadeEnd = threshold + starFadeRange;
+                    let visibility = smoothstep(threshold, fadeEnd, liftProgress);
+
+                    // ---- 方案四：大气消光因子（底部暗、小） ----
+                    const heightFactor = 1 - yNorm; // 1在顶部，0在底部
+                    const atmosphere = 0.5 + 0.5 * heightFactor; // 底部透明度0.5，顶部1.0
+                    const sizeFactor = 0.6 + 0.4 * heightFactor; // 底部尺寸0.6，顶部1.0
+
+                    const finalAlpha = star.alpha * visibility * atmosphere;
+                    if (finalAlpha < 0.001) continue;
+                    const finalSize = star.size * sizeFactor;
+
+                    const { x, y, color, isBright } = star;
+                    const { r, g, b } = color;
+                    if (finalSize > 0.8 && finalAlpha > 0.02) {
+                        const glowR = finalSize * 2.5;
+                        const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+                        grad.addColorStop(0, `rgba(${r},${g},${b},${finalAlpha * 0.35})`);
+                        grad.addColorStop(0.5, `rgba(${r},${g},${b},${finalAlpha * 0.10})`);
+                        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(x, y, glowR, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = finalAlpha;
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, finalSize * 0.85, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (isBright && finalAlpha > 0.2) {
+                        const len = 10 + finalSize * 4;
+                        for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                            const cosA = Math.cos(ang),
+                                sinA = Math.sin(ang);
+                            ctx.globalAlpha = finalAlpha * 0.25;
+                            ctx.strokeStyle = `rgba(${r},${g},${b},${finalAlpha * 0.25})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.beginPath();
+                            ctx.moveTo(x + cosA * 1.5, y + sinA * 1.5);
+                            ctx.lineTo(x + cosA * len, y + sinA * len);
+                            ctx.stroke();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // ============================================================
+            // ★★★ 方案三：星云/云层纹理 ★★★
+            // ============================================================
+            let clouds = [];
+
+            function generateClouds(w, h) {
+                clouds = [];
+                const count = 25 + Math.floor(Math.random() * 25);
+                for (let i = 0; i < count; i++) {
+                    const cx = Math.random() * w;
+                    const cy = Math.random() * h * 0.6;
+                    const radius = 60 + Math.random() * 250;
+                    const alpha = 0.008 + Math.random() * 0.03;
+                    const colorShift = Math.random();
+                    let r, g, b;
+                    if (colorShift < 0.33) {
+                        r = 80;
+                        g = 120;
+                        b = 200;
+                    } else if (colorShift < 0.66) {
+                        r = 120;
+                        g = 100;
+                        b = 180;
+                    } else {
+                        r = 200;
+                        g = 180;
+                        b = 160;
+                    }
+                    clouds.push({ x: cx, y: cy, radius, alpha, r, g, b });
+                }
+            }
+
+            function drawClouds() {
+                if (clouds.length === 0) return;
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                for (const cloud of clouds) {
+                    const grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+                    grad.addColorStop(0, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, ${cloud.alpha})`);
+                    grad.addColorStop(0.5, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, ${cloud.alpha * 0.5})`);
+                    grad.addColorStop(1, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, 0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // ============================================================
+            // 7. 场景绘制
+            // ============================================================
+            function drawFullScene(offsetY, glowIntensity, liftProgress, time) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                buildings.forEach(b => drawBuilding(b, offsetY));
+
+                drawGlowFromBuildings(buildings, offsetY, glowIntensity, W, H, liftProgress);
+
+                drawStarsLayer(liftProgress, time);
+
+                // ---- 星云/云层纹理（方案三） ----
+                drawClouds();
+
+                const vignette = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.18)');
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            function drawEyeOpenMask(progress, offsetY, glowIntensity, liftProgress, time) {
+                const p = Math.min(Math.max(progress, 0), 1);
+                if (p >= 1) return;
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                const cx = W / 2,
+                    cy = H * 0.75;
+                const maxR = Math.max(W, H) * 0.75;
+                const ratio = 0.75;
+                const rx = p * maxR;
+                const ry = p * maxR * ratio;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                ctx.clip();
+                drawFullScene(offsetY, glowIntensity, liftProgress, time);
+                ctx.restore();
+            }
+
+            // ============================================================
+            // 8. 渲染循环
+            // ============================================================
+            function regenerateScene() {
+                buildings = generateBuildings(W, H);
+                generateStars(W, H);
+                generateClouds(W, H);
+            }
+
+            let startTime = 0;
+            let animId = null;
+            let liftStartTime = null;
+
+            function render(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                const eyeRaw = Math.min(elapsed / CONFIG.eyeDuration, 1);
+                const eyeProgress = easeOutCubic(eyeRaw);
+
+                if (eyeProgress >= 1 && liftStartTime === null) {
+                    liftStartTime = timestamp;
+                }
+
+                let liftProgress = 0;
+                if (liftStartTime !== null) {
+                    const liftElapsed = timestamp - liftStartTime;
+                    const raw = Math.min(liftElapsed / CONFIG.liftDuration, 1);
+                    liftProgress = easeInOutQuad(raw);
+                }
+
+                const offsetY = liftProgress * CONFIG.maxOffsetY * H;
+                const glowIntensity = CONFIG.glowIntensity;
+                const time = timestamp / 100;
+
+                ctx.clearRect(0, 0, W, H);
+                drawFullScene(offsetY, glowIntensity, liftProgress, time);
+
+                if (eyeProgress < 1) {
+                    drawEyeOpenMask(eyeProgress, offsetY, glowIntensity, liftProgress, time);
+                }
+
+                if (eyeProgress >= 1 && liftProgress >= 1) {
+                    document.getElementById('info').classList.add('show');
+                }
+
+                animId = requestAnimationFrame(render);
+            }
+
+            // ============================================================
+            // 9. 启动
+            // ============================================================
+            function init() {
+                resize();
+                regenerateScene();
+                startTime = 0;
+                liftStartTime = null;
+                if (animId) cancelAnimationFrame(animId);
+                animId = requestAnimationFrame(render);
+                window.addEventListener('resize', () => {
+                    resize();
+                    regenerateScene();
+                    startTime = 0;
+                    liftStartTime = null;
+                    document.getElementById('info').classList.remove('show');
+                });
+            }
+
+            if (document.readyState === 'complete') init();
+            else window.addEventListener('load', init);
+
+            console.log('✦ 华灯初上 · 方案二+三+四 · 立体城市·星云·透视星空 ✦');
+        })();
+    </script>
+</body>
+
+</html>

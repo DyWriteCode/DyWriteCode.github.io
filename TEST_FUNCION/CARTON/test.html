@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日祝福动画 · 音效生成器 v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin: 20px 0 10px;
+            background: linear-gradient(135deg, #f8d06b, #f87171, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .version-badge {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .version-badge span {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: #0a0a1a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-title .icon {
+            margin-right: 8px;
+        }
+
+        .card-scene {
+            font-size: 12px;
+            color: #a78bfa;
+            background: rgba(167, 139, 250, 0.15);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .improve-tag {
+            display: inline-block;
+            font-size: 10px;
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.12);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .param-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .param-label {
+            font-size: 12px;
+            color: #bbb;
+            min-width: 110px;
+            flex-shrink: 0;
+        }
+
+        .param-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+        }
+
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #a78bfa;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+        }
+
+        .param-value {
+            font-size: 11px;
+            color: #a78bfa;
+            min-width: 55px;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 11px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .play-btn:active {
+            transform: scale(0.97);
+        }
+
+        .play-btn.playing {
+            animation: pulse 0.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4);
+            }
+
+            to {
+                box-shadow: 0 0 20px 4px rgba(167, 139, 250, 0.2);
+            }
+        }
+
+        .btn-firework {
+            background: linear-gradient(135deg, #f87171, #fbbf24);
+            color: #1a1a2e;
+        }
+
+        .btn-meteor {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+            color: #1a1a2e;
+        }
+
+        .btn-city {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: #fff;
+        }
+
+        .btn-stars {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            color: #fff;
+        }
+
+        .btn-candle {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #1a1a2e;
+        }
+
+        .btn-bless {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+            color: #fff;
+        }
+
+        .btn-transition {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: #1a1a2e;
+        }
+
+        .global-controls {
+            max-width: 1400px;
+            margin: 0 auto 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .global-btn {
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #e0e0e0;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .global-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .master-vol {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .master-vol input {
+            width: 120px;
+        }
+
+        @media (max-width: 500px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .param-label {
+                min-width: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎂 生日祝福动画 · 音效生成器</h1>
+    <p class="subtitle">所有音效均由 Web Audio API 程序化合成，拖动滑块实时调参，点击按钮试听</p>
+    <div class="version-badge"><span>v2 · 多层叠加 + 空间混响 + 非线性包络</span></div>
+
+    <div class="global-controls">
+        <div class="master-vol">
+            <span>🔊 主音量</span>
+            <input type="range" class="param-slider" id="masterVol" min="0" max="100" value="70">
+            <span id="masterVolVal" class="param-value">70%</span>
+        </div>
+        <button class="global-btn" onclick="stopAll()">⏹ 停止全部</button>
+    </div>
+
+    <div class="grid" id="cardGrid"></div>
+
+    <script>
+        // ==================== 全局状态 ====================
+        let masterVolume = 0.7;
+        let activeNodes = [];
+        let activeTimeouts = [];
+
+        document.getElementById('masterVol').addEventListener('input', e => {
+            masterVolume = e.target.value / 100;
+            document.getElementById('masterVolVal').textContent = e.target.value + '%';
+        });
+
+        function stopAll() {
+            activeNodes.forEach(n => {
+                try { n.stop && n.stop(); } catch (e) { }
+                try { n.disconnect && n.disconnect(); } catch (e) { }
+            });
+            activeNodes = [];
+            activeTimeouts.forEach(t => clearTimeout(t));
+            activeTimeouts = [];
+        }
+
+        function getCtx() {
+            if (!window._audioCtx) {
+                window._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (window._audioCtx.state === 'suspended') window._audioCtx.resume();
+            return window._audioCtx;
+        }
+
+        // ==================== 噪声生成工具 ====================
+        function createNoiseBuffer(ctx, duration, type) {
+            const len = Math.ceil(ctx.sampleRate * duration);
+            const buf = ctx.createBuffer(2, len, ctx.sampleRate); // 立体声
+            for (let ch = 0; ch < 2; ch++) {
+                const data = buf.getChannelData(ch);
+                if (type === 'white') {
+                    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+                } else if (type === 'pink') {
+                    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                    for (let i = 0; i < len; i++) {
+                        const w = Math.random() * 2 - 1;
+                        b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
+                        b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
+                        b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
+                        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+                        b6 = w * 0.115926;
+                    }
+                } else if (type === 'brown') {
+                    let last = 0;
+                    for (let i = 0; i < len; i++) {
+                        const w = Math.random() * 2 - 1;
+                        last = (last + 0.02 * w) / 1.02;
+                        data[i] = last * 3.5;
+                    }
+                } else if (type === 'velvet') {
+                    // 天鹅绒噪声：极低频棕噪声 + 微弱白噪声混合
+                    let last = 0;
+                    for (let i = 0; i < len; i++) {
+                        const w = Math.random() * 2 - 1;
+                        last = (last + 0.01 * w) / 1.01;
+                        data[i] = last * 4.0 + w * 0.02;
+                    }
+                }
+            }
+            return buf;
+        }
+
+        // 创建简易卷积混响（用指数衰减噪声模拟房间脉冲响应）
+        function createReverb(ctx, duration, decay) {
+            const len = Math.ceil(ctx.sampleRate * duration);
+            const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+            for (let ch = 0; ch < 2; ch++) {
+                const data = buf.getChannelData(ch);
+                for (let i = 0; i < len; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+                }
+            }
+            const convolver = ctx.createConvolver();
+            convolver.buffer = buf;
+            return convolver;
+        }
+
+        // 非线性包络：模拟真实物理衰减曲线
+        function applyEnvelope(gainNode, ctx, now, attack, hold, decay, sustain, release, peak) {
+            const g = gainNode.gain;
+            g.cancelScheduledValues(now);
+            g.setValueAtTime(0, now);
+            g.linearRampToValueAtTime(peak, now + attack);
+            if (hold > 0) g.setValueAtTime(peak, now + attack + hold);
+            g.exponentialRampToValueAtTime(Math.max(peak * sustain, 0.0001), now + attack + hold + decay);
+            g.setValueAtTime(Math.max(peak * sustain, 0.0001), now + attack + hold + decay);
+            g.exponentialRampToValueAtTime(0.0001, now + attack + hold + decay + release);
+        }
+
+        // ==================== 音效定义 ====================
+        const sounds = [
+
+            // ========== 1. 烟花爆炸声 ==========
+            {
+                id: 'firework',
+                icon: '🎆',
+                title: '烟花爆炸声',
+                scene: '镜头7：烟花盛大绽放',
+                desc: '升空哨声 → 爆裂冲击波 → 多层碎片散射 → 空间余韵',
+                improve: '多层碎片声 + 卷积混响模拟室外空间 + 非线性衰减',
+                btnClass: 'btn-firework',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 65, unit: '%' },
+                    { key: 'launchPitch', label: '升空起始音高', min: 300, max: 3000, val: 1200, unit: 'Hz' },
+                    { key: 'launchEndPitch', label: '升空终止音高', min: 2000, max: 12000, val: 6000, unit: 'Hz' },
+                    { key: 'launchDur', label: '升空时长', min: 0.3, max: 2.5, val: 1.0, step: 0.1, unit: 's' },
+                    { key: 'boomFreq', label: '冲击波频率', min: 30, max: 150, val: 60, unit: 'Hz' },
+                    { key: 'boomSharpness', label: '冲击锐度', min: 2000, max: 12000, val: 6000, unit: 'Hz' },
+                    { key: 'shrapnelCount', label: '碎片散射层数', min: 2, max: 10, val: 6, step: 1, unit: '层' },
+                    { key: 'reverbSize', label: '空间混响大小', min: 0.5, max: 4, val: 2.0, step: 0.1, unit: 's' },
+                    { key: 'reverbDecay', label: '混响衰减速度', min: 1, max: 5, val: 2.5, step: 0.1, unit: '' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const masterGain = ctx.createGain();
+                    masterGain.gain.value = 1;
+
+                    // 混响总线
+                    const reverb = createReverb(ctx, p.reverbSize, p.reverbDecay);
+                    const reverbGain = ctx.createGain();
+                    reverbGain.gain.value = 0.35;
+                    reverb.connect(reverbGain).connect(masterGain);
+                    masterGain.connect(ctx.destination);
+
+                    // === 升空哨声：窄带噪声 + 频率上扫 ===
+                    const launchNoiseBuf = createNoiseBuffer(ctx, p.launchDur + 0.3, 'pink');
+                    const launchNoise = ctx.createBufferSource();
+                    launchNoise.buffer = launchNoiseBuf;
+                    const launchBP = ctx.createBiquadFilter();
+                    launchBP.type = 'bandpass';
+                    launchBP.Q.value = 15; // 高Q值 → 窄带，像哨子
+                    launchBP.frequency.setValueAtTime(p.launchPitch, now);
+                    launchBP.frequency.exponentialRampToValueAtTime(p.launchEndPitch, now + p.launchDur);
+                    const launchGain = ctx.createGain();
+                    launchGain.gain.setValueAtTime(0.001, now);
+                    launchGain.gain.linearRampToValueAtTime(vol * 0.2, now + p.launchDur * 0.3);
+                    launchGain.gain.setValueAtTime(vol * 0.25, now + p.launchDur * 0.85);
+                    launchGain.gain.exponentialRampToValueAtTime(0.001, now + p.launchDur);
+                    launchNoise.connect(launchBP).connect(launchGain);
+                    launchGain.connect(masterGain);
+                    launchGain.connect(reverb);
+                    launchNoise.start(now);
+                    launchNoise.stop(now + p.launchDur + 0.1);
+                    nodes.push(launchNoise);
+
+                    // === 爆裂冲击：低频正弦 + 超快衰减 ===
+                    const boomTime = now + p.launchDur * 0.92;
+                    const boom = ctx.createOscillator();
+                    const boomGain = ctx.createGain();
+                    boom.type = 'sine';
+                    boom.frequency.setValueAtTime(p.boomFreq * 3, boomTime);
+                    boom.frequency.exponentialRampToValueAtTime(p.boomFreq, boomTime + 0.08);
+                    applyEnvelope(boomGain, ctx, boomTime, 0.003, 0.01, 0.15, 0.001, 0.4, vol * 0.9);
+                    boom.connect(boomGain).connect(masterGain);
+                    boom.start(boomTime);
+                    boom.stop(boomTime + 0.6);
+                    nodes.push(boom);
+
+                    // === 冲击瞬态：高频噪声burst ===
+                    const crackBuf = createNoiseBuffer(ctx, 0.08, 'white');
+                    const crackSrc = ctx.createBufferSource();
+                    crackSrc.buffer = crackBuf;
+                    const crackHP = ctx.createBiquadFilter();
+                    crackHP.type = 'highpass';
+                    crackHP.frequency.value = p.boomSharpness;
+                    const crackGain = ctx.createGain();
+                    crackGain.gain.setValueAtTime(vol * 0.7, boomTime);
+                    crackGain.gain.exponentialRampToValueAtTime(0.001, boomTime + 0.06);
+                    crackSrc.connect(crackHP).connect(crackGain).connect(masterGain);
+                    crackSrc.start(boomTime);
+                    crackSrc.stop(boomTime + 0.08);
+                    nodes.push(crackSrc);
+
+                    // === 多层碎片散射：不同频率的噪声层，各自独立衰减 ===
+                    for (let i = 0; i < p.shrapnelCount; i++) {
+                        const layerDur = 0.4 + Math.random() * 1.2;
+                        const layerBuf = createNoiseBuffer(ctx, layerDur + 0.2, Math.random() > 0.5 ? 'white' : 'pink');
+                        const layerSrc = ctx.createBufferSource();
+                        layerSrc.buffer = layerBuf;
+
+                        const layerFilter = ctx.createBiquadFilter();
+                        layerFilter.type = 'bandpass';
+                        const centerFreq = 800 + Math.random() * 5000;
+                        layerFilter.frequency.value = centerFreq;
+                        layerFilter.Q.value = 0.5 + Math.random() * 2;
+
+                        const layerGain = ctx.createGain();
+                        const layerStart = boomTime + Math.random() * 0.05;
+                        const layerPeak = vol * (0.08 + Math.random() * 0.12);
+                        applyEnvelope(layerGain, ctx, layerStart, 0.005, 0, 0.1 + Math.random() * 0.3, 0.001, layerDur, layerPeak);
+
+                        layerSrc.connect(layerFilter).connect(layerGain);
+                        layerGain.connect(masterGain);
+                        layerGain.connect(reverb);
+                        layerSrc.start(layerStart);
+                        layerSrc.stop(layerStart + layerDur + 0.1);
+                        nodes.push(layerSrc);
+                    }
+
+                    // === 空间余韵：低频嗡鸣缓慢衰减 ===
+                    const tailOsc = ctx.createOscillator();
+                    const tailGain = ctx.createGain();
+                    tailOsc.type = 'sine';
+                    tailOsc.frequency.value = p.boomFreq * 0.7;
+                    const tailStart = boomTime + 0.1;
+                    tailGain.gain.setValueAtTime(vol * 0.08, tailStart);
+                    tailGain.gain.exponentialRampToValueAtTime(0.001, tailStart + p.reverbSize);
+                    tailOsc.connect(tailGain).connect(masterGain);
+                    tailOsc.start(tailStart);
+                    tailOsc.stop(tailStart + p.reverbSize + 0.1);
+                    nodes.push(tailOsc);
+
+                    return nodes;
+                }
+            },
+
+            // ========== 2. 流星划过声 ==========
+            {
+                id: 'meteor',
+                icon: '☄️',
+                title: '流星划过声',
+                scene: '镜头5/6：流星出现与坠落',
+                desc: '大气摩擦嘶嘶声 + 多普勒频移 + 尾迹湍流 + 远处余韵',
+                improve: '多普勒频率曲线 + 湍流噪声层 + 大气滤波',
+                btnClass: 'btn-meteor',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 55, unit: '%' },
+                    { key: 'startFreq', label: '起始音高(远处)', min: 2000, max: 10000, val: 5500, unit: 'Hz' },
+                    { key: 'endFreq', label: '终止音高(近处)', min: 200, max: 2000, val: 600, unit: 'Hz' },
+                    { key: 'duration', label: '划过时长', min: 0.8, max: 5, val: 2.2, step: 0.1, unit: 's' },
+                    { key: 'frictionLevel', label: '大气摩擦强度', min: 0, max: 100, val: 55, unit: '%' },
+                    { key: 'frictionFilter', label: '摩擦滤波频率', min: 1000, max: 10000, val: 4500, unit: 'Hz' },
+                    { key: 'turbulenceLevel', label: '尾迹湍流强度', min: 0, max: 100, val: 35, unit: '%' },
+                    { key: 'dopplerDepth', label: '多普勒深度', min: 0.2, max: 1, val: 0.6, step: 0.05, unit: '' },
+                    { key: 'tailHum', label: '余韵嗡鸣频率', min: 60, max: 300, val: 120, unit: 'Hz' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const dur = p.duration;
+
+                    // === 大气摩擦嘶嘶声：宽带噪声，频率从高滑到低（多普勒） ===
+                    const frictionBuf = createNoiseBuffer(ctx, dur + 1.5, 'white');
+                    const frictionSrc = ctx.createBufferSource();
+                    frictionSrc.buffer = frictionBuf;
+                    const frictionBP = ctx.createBiquadFilter();
+                    frictionBP.type = 'bandpass';
+                    frictionBP.Q.value = 3;
+                    // 多普勒效应：频率从高音急速下降到中音，模拟物体飞近又飞远
+                    frictionBP.frequency.setValueAtTime(p.startFreq, now);
+                    frictionBP.frequency.setTargetAtTime(
+                        p.startFreq + (p.endFreq - p.startFreq) * p.dopplerDepth,
+                        now + dur * 0.3, 0.08
+                    );
+                    frictionBP.frequency.setTargetAtTime(p.endFreq, now + dur * 0.7, 0.15);
+                    const frictionGain = ctx.createGain();
+                    const fl = p.frictionLevel / 100;
+                    // 音量曲线：远处弱→近处强→远去弱
+                    frictionGain.gain.setValueAtTime(0.001, now);
+                    frictionGain.gain.linearRampToValueAtTime(vol * fl * 0.4, now + dur * 0.15);
+                    frictionGain.gain.setValueAtTime(vol * fl * 0.5, now + dur * 0.4);
+                    frictionGain.gain.linearRampToValueAtTime(vol * fl * 0.35, now + dur * 0.7);
+                    frictionGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 1.0);
+                    frictionSrc.connect(frictionBP).connect(frictionGain).connect(ctx.destination);
+                    frictionSrc.start(now);
+                    frictionSrc.stop(now + dur + 1.2);
+                    nodes.push(frictionSrc);
+
+                    // === 尾迹湍流：粉噪声 + 低通，模拟空气扰动 ===
+                    const turbBuf = createNoiseBuffer(ctx, dur + 2, 'pink');
+                    const turbSrc = ctx.createBufferSource();
+                    turbSrc.buffer = turbBuf;
+                    const turbLP = ctx.createBiquadFilter();
+                    turbLP.type = 'lowpass';
+                    turbLP.frequency.setValueAtTime(p.frictionFilter * 0.5, now);
+                    turbLP.frequency.linearRampToValueAtTime(p.frictionFilter, now + dur * 0.4);
+                    turbLP.frequency.exponentialRampToValueAtTime(300, now + dur + 1.5);
+                    const turbGain = ctx.createGain();
+                    const tl = p.turbulenceLevel / 100;
+                    turbGain.gain.setValueAtTime(0.001, now);
+                    turbGain.gain.linearRampToValueAtTime(vol * tl * 0.3, now + dur * 0.2);
+                    turbGain.gain.setValueAtTime(vol * tl * 0.35, now + dur * 0.6);
+                    turbGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 1.5);
+                    turbSrc.connect(turbLP).connect(turbGain).connect(ctx.destination);
+                    turbSrc.start(now);
+                    turbSrc.stop(now + dur + 1.8);
+                    nodes.push(turbSrc);
+
+                    // === 余韵嗡鸣：流星消失后的低频共振 ===
+                    const humStart = now + dur * 0.6;
+                    const hum = ctx.createOscillator();
+                    const humGain = ctx.createGain();
+                    hum.type = 'sine';
+                    hum.frequency.value = p.tailHum;
+                    humGain.gain.setValueAtTime(0.001, humStart);
+                    humGain.gain.linearRampToValueAtTime(vol * 0.06, humStart + 0.3);
+                    humGain.gain.exponentialRampToValueAtTime(0.001, humStart + 2.0);
+                    hum.connect(humGain).connect(ctx.destination);
+                    hum.start(humStart);
+                    hum.stop(humStart + 2.2);
+                    nodes.push(hum);
+
+                    return nodes;
+                }
+            },
+
+            // ========== 3. 城市环境音 ==========
+            {
+                id: 'city',
+                icon: '🏙️',
+                title: '城市环境音',
+                scene: '镜头2：万家灯火俯瞰',
+                desc: '多层交通嗡鸣 + 远处人群底噪 + 随机喇叭/引擎 + 空气感',
+                improve: '5层独立噪声叠加 + LFO呼吸感 + 随机事件',
+                btnClass: 'btn-city',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 50, unit: '%' },
+                    { key: 'trafficLow', label: '低频交通层', min: 0, max: 100, val: 60, unit: '%' },
+                    { key: 'trafficMid', label: '中频车流层', min: 0, max: 100, val: 35, unit: '%' },
+                    { key: 'crowdLevel', label: '人群底噪', min: 0, max: 100, val: 25, unit: '%' },
+                    { key: 'airLevel', label: '高空风声', min: 0, max: 100, val: 20, unit: '%' },
+                    { key: 'hornProb', label: '喇叭概率', min: 0, max: 100, val: 50, unit: '%' },
+                    { key: 'lfoRate', label: '呼吸LFO速率', min: 0.03, max: 0.5, val: 0.12, step: 0.01, unit: 'Hz' },
+                    { key: 'lfoDepth', label: '呼吸深度', min: 1, max: 30, val: 10, unit: 'dB' },
+                    { key: 'duration', label: '播放时长', min: 3, max: 12, val: 5, step: 0.5, unit: 's' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const dur = p.duration;
+
+                    // 全局LFO呼吸
+                    const lfo = ctx.createOscillator();
+                    const lfoGain = ctx.createGain();
+                    lfo.type = 'sine';
+                    lfo.frequency.value = p.lfoRate;
+                    lfoGain.gain.value = p.lfoDepth;
+                    lfo.start(now);
+                    lfo.stop(now + dur + 0.1);
+                    nodes.push(lfo);
+
+                    // === 层1：低频交通嗡鸣（棕噪声 + 极低通） ===
+                    const t1Buf = createNoiseBuffer(ctx, dur + 1, 'brown');
+                    const t1Src = ctx.createBufferSource();
+                    t1Src.buffer = t1Buf;
+                    const t1LP = ctx.createBiquadFilter();
+                    t1LP.type = 'lowpass';
+                    t1LP.frequency.value = 120;
+                    t1LP.Q.value = 1;
+                    const t1Gain = ctx.createGain();
+                    const t1l = p.trafficLow / 100;
+                    t1Gain.gain.setValueAtTime(0.001, now);
+                    t1Gain.gain.linearRampToValueAtTime(vol * t1l * 0.4, now + 1);
+                    t1Gain.gain.setValueAtTime(vol * t1l * 0.4, now + dur - 1.5);
+                    t1Gain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    lfoGain.connect(t1Gain.gain);
+                    t1Src.connect(t1LP).connect(t1Gain).connect(ctx.destination);
+                    t1Src.start(now); t1Src.stop(now + dur + 0.1);
+                    nodes.push(t1Src);
+
+                    // === 层2：中频车流（粉噪声 + 带通） ===
+                    const t2Buf = createNoiseBuffer(ctx, dur + 1, 'pink');
+                    const t2Src = ctx.createBufferSource();
+                    t2Src.buffer = t2Buf;
+                    const t2BP = ctx.createBiquadFilter();
+                    t2BP.type = 'bandpass';
+                    t2BP.frequency.value = 400;
+                    t2BP.Q.value = 0.8;
+                    const t2Gain = ctx.createGain();
+                    const t2l = p.trafficMid / 100;
+                    t2Gain.gain.setValueAtTime(0.001, now);
+                    t2Gain.gain.linearRampToValueAtTime(vol * t2l * 0.2, now + 1.2);
+                    t2Gain.gain.setValueAtTime(vol * t2l * 0.2, now + dur - 1.5);
+                    t2Gain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    t2Src.connect(t2BP).connect(t2Gain).connect(ctx.destination);
+                    t2Src.start(now); t2Src.stop(now + dur + 0.1);
+                    nodes.push(t2Src);
+
+                    // === 层3：人群底噪（粉噪声 + 中频带通） ===
+                    const crBuf = createNoiseBuffer(ctx, dur + 1, 'pink');
+                    const crSrc = ctx.createBufferSource();
+                    crSrc.buffer = crBuf;
+                    const crBP = ctx.createBiquadFilter();
+                    crBP.type = 'bandpass';
+                    crBP.frequency.value = 900;
+                    crBP.Q.value = 0.6;
+                    const crGain = ctx.createGain();
+                    const crl = p.crowdLevel / 100;
+                    crGain.gain.setValueAtTime(0.001, now);
+                    crGain.gain.linearRampToValueAtTime(vol * crl * 0.15, now + 1.5);
+                    crGain.gain.setValueAtTime(vol * crl * 0.15, now + dur - 1.5);
+                    crGain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    crSrc.connect(crBP).connect(crGain).connect(ctx.destination);
+                    crSrc.start(now); crSrc.stop(now + dur + 0.1);
+                    nodes.push(crSrc);
+
+                    // === 层4：高空风声（白噪声 + 低通，模拟高空视角的风） ===
+                    const airBuf = createNoiseBuffer(ctx, dur + 1, 'white');
+                    const airSrc = ctx.createBufferSource();
+                    airSrc.buffer = airBuf;
+                    const airLP = ctx.createBiquadFilter();
+                    airLP.type = 'lowpass';
+                    airLP.frequency.value = 600;
+                    const airGain = ctx.createGain();
+                    const al = p.airLevel / 100;
+                    airGain.gain.setValueAtTime(0.001, now);
+                    airGain.gain.linearRampToValueAtTime(vol * al * 0.12, now + 0.8);
+                    airGain.gain.setValueAtTime(vol * al * 0.12, now + dur - 1.5);
+                    airGain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    airSrc.connect(airLP).connect(airGain).connect(ctx.destination);
+                    airSrc.start(now); airSrc.stop(now + dur + 0.1);
+                    nodes.push(airSrc);
+
+                    // === 随机事件：喇叭声 ===
+                    const hornCount = Math.floor(p.hornProb / 100 * dur / 1.5);
+                    for (let i = 0; i < hornCount; i++) {
+                        const ht = now + 0.8 + Math.random() * (dur - 2);
+                        // 喇叭 = 方波 + 带通
+                        const hOsc = ctx.createOscillator();
+                        const hGain = ctx.createGain();
+                        hOsc.type = 'square';
+                        const hFreq = 280 + Math.random() * 200;
+                        hOsc.frequency.setValueAtTime(hFreq, ht);
+                        hOsc.frequency.setValueAtTime(hFreq * 0.95, ht + 0.12);
+                        const hFilter = ctx.createBiquadFilter();
+                        hFilter.type = 'bandpass';
+                        hFilter.frequency.value = hFreq;
+                        hFilter.Q.value = 5;
+                        hGain.gain.setValueAtTime(0.001, ht);
+                        hGain.gain.linearRampToValueAtTime(vol * 0.06, ht + 0.02);
+                        hGain.gain.setValueAtTime(vol * 0.06, ht + 0.1 + Math.random() * 0.1);
+                        hGain.gain.exponentialRampToValueAtTime(0.001, ht + 0.35);
+                        hOsc.connect(hFilter).connect(hGain).connect(ctx.destination);
+                        hOsc.start(ht); hOsc.stop(ht + 0.4);
+                        nodes.push(hOsc);
+                    }
+
+                    return nodes;
+                }
+            },
+
+            // ========== 4. 星空嗡鸣 ==========
+            {
+                id: 'stars',
+                icon: '✨',
+                title: '星空嗡鸣',
+                scene: '镜头3/4：抬头看星空',
+                desc: '多层失谐Pad + 高频星尘闪烁 + 极低频空间感',
+                improve: '6层振荡器叠加 + 微失谐产生宽度 + 独立星尘粒子',
+                btnClass: 'btn-stars',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 45, unit: '%' },
+                    { key: 'baseFreq', label: 'Pad基础频率', min: 80, max: 400, val: 174, unit: 'Hz' },
+                    { key: 'detune', label: '失谐宽度', min: 2, max: 25, val: 10, unit: 'cent' },
+                    { key: 'padBrightness', label: 'Pad亮度', min: 300, max: 4000, val: 1000, unit: 'Hz' },
+                    { key: 'sparkleFreq', label: '星尘频率', min: 3000, max: 14000, val: 7000, unit: 'Hz' },
+                    { key: 'sparkleLevel', label: '星尘强度', min: 0, max: 100, val: 20, unit: '%' },
+                    { key: 'sparkleRate', label: '星尘闪烁速率', min: 0.3, max: 6, val: 2.5, step: 0.1, unit: 'Hz' },
+                    { key: 'subBass', label: '极低频空间感', min: 20, max: 80, val: 40, unit: 'Hz' },
+                    { key: 'duration', label: '播放时长', min: 3, max: 12, val: 5, step: 0.5, unit: 's' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const dur = p.duration;
+
+                    // === Pad层：6个振荡器，三组音高各两个（±失谐） ===
+                    const intervals = [1, 1.498, 1.888, 2, 3, 4]; // 基, 五度, 小七, 八度, 十二度, 十五度
+                    intervals.forEach((ratio, idx) => {
+                        for (let d = -1; d <= 1; d += 2) {
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.type = idx < 3 ? 'sine' : 'triangle';
+                            osc.frequency.value = p.baseFreq * ratio;
+                            osc.detune.value = d * p.detune + (Math.random() - 0.5) * 3;
+                            const layerVol = vol * 0.06 / intervals.length;
+                            gain.gain.setValueAtTime(0.001, now);
+                            gain.gain.linearRampToValueAtTime(layerVol, now + 1.5 + idx * 0.2);
+                            gain.gain.setValueAtTime(layerVol, now + dur - 2);
+                            gain.gain.linearRampToValueAtTime(0.001, now + dur);
+                            const filter = ctx.createBiquadFilter();
+                            filter.type = 'lowpass';
+                            filter.frequency.value = p.padBrightness + idx * 200;
+                            filter.Q.value = 0.3;
+                            osc.connect(filter).connect(gain).connect(ctx.destination);
+                            osc.start(now);
+                            osc.stop(now + dur + 0.1);
+                            nodes.push(osc);
+                        }
+                    });
+
+                    // === 星尘闪烁：多个高频正弦波，各自独立LFO调制 ===
+                    const sparkleCount = 4;
+                    for (let i = 0; i < sparkleCount; i++) {
+                        const sp = ctx.createOscillator();
+                        const spGain = ctx.createGain();
+                        const spLFO = ctx.createOscillator();
+                        const spLFOGain = ctx.createGain();
+                        sp.type = 'sine';
+                        sp.frequency.value = p.sparkleFreq + i * 800 + Math.random() * 500;
+                        spLFO.type = 'sine';
+                        spLFO.frequency.value = p.sparkleRate + Math.random() * 1.5;
+                        const sl = p.sparkleLevel / 100;
+                        spLFOGain.gain.value = vol * sl * 0.04;
+                        spLFO.connect(spLFOGain).connect(spGain.gain);
+                        spGain.gain.setValueAtTime(0.001, now);
+                        spGain.gain.linearRampToValueAtTime(vol * sl * 0.04, now + 2);
+                        spGain.gain.setValueAtTime(vol * sl * 0.04, now + dur - 2);
+                        spGain.gain.linearRampToValueAtTime(0.001, now + dur);
+                        sp.connect(spGain).connect(ctx.destination);
+                        sp.start(now + i * 0.5);
+                        sp.stop(now + dur + 0.1);
+                        spLFO.start(now + i * 0.5);
+                        spLFO.stop(now + dur + 0.1);
+                        nodes.push(sp, spLFO);
+                    }
+
+                    // === 极低频空间感 ===
+                    const sub = ctx.createOscillator();
+                    const subGain = ctx.createGain();
+                    sub.type = 'sine';
+                    sub.frequency.value = p.subBass;
+                    subGain.gain.setValueAtTime(0.001, now);
+                    subGain.gain.linearRampToValueAtTime(vol * 0.04, now + 2);
+                    subGain.gain.setValueAtTime(vol * 0.04, now + dur - 2);
+                    subGain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    sub.connect(subGain).connect(ctx.destination);
+                    sub.start(now);
+                    sub.stop(now + dur + 0.1);
+                    nodes.push(sub);
+
+                    return nodes;
+                }
+            },
+
+            // ========== 5. 蜡烛火焰声 ==========
+            {
+                id: 'candle',
+                icon: '🕯️',
+                title: '蜡烛火焰声',
+                scene: '镜头9：蛋糕蜡烛',
+                desc: '多层火焰呼吸噪声 + 随机噼啪 + 温暖低频 + 空气流动',
+                improve: '双层噪声呼吸 + 非线性噼啪 + 温暖次低频',
+                btnClass: 'btn-candle',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 55, unit: '%' },
+                    { key: 'flameFilter', label: '火焰主滤波', min: 300, max: 2500, val: 900, unit: 'Hz' },
+                    { key: 'breathRate', label: '火焰呼吸速率', min: 0.5, max: 8, val: 2.5, step: 0.1, unit: 'Hz' },
+                    { key: 'breathDepth', label: '呼吸深度', min: 0.02, max: 0.4, val: 0.15, step: 0.01, unit: '' },
+                    { key: 'crackleLevel', label: '噼啪强度', min: 0, max: 100, val: 40, unit: '%' },
+                    { key: 'crackleRate', label: '噼啪密度', min: 1, max: 20, val: 8, step: 1, unit: '次/s' },
+                    { key: 'warmth', label: '温暖低频', min: 30, max: 200, val: 80, unit: 'Hz' },
+                    { key: 'warmthLevel', label: '温暖强度', min: 0, max: 100, val: 30, unit: '%' },
+                    { key: 'duration', label: '播放时长', min: 2, max: 10, val: 4, step: 0.5, unit: 's' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const dur = p.duration;
+
+                    // === 主火焰噪声层1：棕噪声 + 低通（火焰主体） ===
+                    const f1Buf = createNoiseBuffer(ctx, dur + 0.5, 'brown');
+                    const f1Src = ctx.createBufferSource();
+                    f1Src.buffer = f1Buf;
+                    const f1LP = ctx.createBiquadFilter();
+                    f1LP.type = 'lowpass';
+                    f1LP.frequency.value = p.flameFilter;
+                    f1LP.Q.value = 0.5;
+                    const f1Gain = ctx.createGain();
+                    f1Gain.gain.setValueAtTime(0.001, now);
+                    f1Gain.gain.linearRampToValueAtTime(vol * 0.25, now + 0.4);
+                    f1Gain.gain.setValueAtTime(vol * 0.25, now + dur - 0.6);
+                    f1Gain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    // LFO呼吸
+                    const breath1 = ctx.createOscillator();
+                    const breath1Gain = ctx.createGain();
+                    breath1.type = 'sine';
+                    breath1.frequency.value = p.breathRate;
+                    breath1Gain.gain.value = p.breathDepth;
+                    breath1.connect(breath1Gain).connect(f1Gain.gain);
+                    f1Src.connect(f1LP).connect(f1Gain).connect(ctx.destination);
+                    f1Src.start(now); f1Src.stop(now + dur + 0.1);
+                    breath1.start(now); breath1.stop(now + dur + 0.1);
+                    nodes.push(f1Src, breath1);
+
+                    // === 主火焰噪声层2：粉噪声 + 带通（火焰嘶嘶高频层） ===
+                    const f2Buf = createNoiseBuffer(ctx, dur + 0.5, 'pink');
+                    const f2Src = ctx.createBufferSource();
+                    f2Src.buffer = f2Buf;
+                    const f2BP = ctx.createBiquadFilter();
+                    f2BP.type = 'bandpass';
+                    f2BP.frequency.value = p.flameFilter * 2.5;
+                    f2BP.Q.value = 1.5;
+                    const f2Gain = ctx.createGain();
+                    f2Gain.gain.setValueAtTime(0.001, now);
+                    f2Gain.gain.linearRampToValueAtTime(vol * 0.06, now + 0.5);
+                    f2Gain.gain.setValueAtTime(vol * 0.06, now + dur - 0.6);
+                    f2Gain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    const breath2 = ctx.createOscillator();
+                    const breath2Gain = ctx.createGain();
+                    breath2.type = 'sine';
+                    breath2.frequency.value = p.breathRate * 1.7; // 不同速率，产生不规则感
+                    breath2Gain.gain.value = p.breathDepth * 0.6;
+                    breath2.connect(breath2Gain).connect(f2Gain.gain);
+                    f2Src.connect(f2BP).connect(f2Gain).connect(ctx.destination);
+                    f2Src.start(now); f2Src.stop(now + dur + 0.1);
+                    breath2.start(now); breath2.stop(now + dur + 0.1);
+                    nodes.push(f2Src, breath2);
+
+                    // === 温暖低频 ===
+                    const warm = ctx.createOscillator();
+                    const warmGain = ctx.createGain();
+                    warm.type = 'sine';
+                    warm.frequency.value = p.warmth;
+                    const wl = p.warmthLevel / 100;
+                    warmGain.gain.setValueAtTime(0.001, now);
+                    warmGain.gain.linearRampToValueAtTime(vol * wl * 0.08, now + 0.6);
+                    warmGain.gain.setValueAtTime(vol * wl * 0.08, now + dur - 0.6);
+                    warmGain.gain.linearRampToValueAtTime(0.001, now + dur);
+                    warm.connect(warmGain).connect(ctx.destination);
+                    warm.start(now); warm.stop(now + dur + 0.1);
+                    nodes.push(warm);
+
+                    // === 随机噼啪声（非均匀间隔，模拟真实火焰） ===
+                    const crackleCount = Math.floor(p.crackleRate * dur);
+                    const cl = p.crackleLevel / 100;
+                    let crackleTime = now + 0.3;
+                    for (let i = 0; i < crackleCount; i++) {
+                        // 非均匀间隔：大部分间隔短，偶尔长间隔
+                        crackleTime += 0.05 + Math.random() * (dur / crackleCount) * 1.5;
+                        if (crackleTime > now + dur - 0.3) break;
+
+                        const cBuf = createNoiseBuffer(ctx, 0.04, 'white');
+                        const cSrc = ctx.createBufferSource();
+                        cSrc.buffer = cBuf;
+                        const cHP = ctx.createBiquadFilter();
+                        cHP.type = 'highpass';
+                        cHP.frequency.value = 2500 + Math.random() * 4000;
+                        const cBP = ctx.createBiquadFilter();
+                        cBP.type = 'peaking';
+                        cBP.frequency.value = 4000 + Math.random() * 3000;
+                        cBP.gain.value = 8;
+                        const cGain = ctx.createGain();
+                        const cPeak = vol * cl * (0.08 + Math.random() * 0.15);
+                        cGain.gain.setValueAtTime(cPeak, crackleTime);
+                        cGain.gain.exponentialRampToValueAtTime(0.001, crackleTime + 0.015 + Math.random() * 0.025);
+                        cSrc.connect(cHP).connect(cBP).connect(cGain).connect(ctx.destination);
+                        cSrc.start(crackleTime);
+                        cSrc.stop(crackleTime + 0.06);
+                        nodes.push(cSrc);
+                    }
+
+                    return nodes;
+                }
+            },
+
+            // ========== 6. 祝福汇聚声 ==========
+            {
+                id: 'bless',
+                icon: '💫',
+                title: '祝福汇聚声',
+                scene: '镜头11：祝福语飞入汇聚',
+                desc: '琶音滑入 + 粒子汇聚叮当 + 和弦闪光收尾',
+                improve: '五声音阶琶音 + 多层粒子音高随机 + 大三和弦收尾',
+                btnClass: 'btn-bless',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 50, unit: '%' },
+                    { key: 'arpBaseFreq', label: '琶音基频', min: 300, max: 1200, val: 523, unit: 'Hz' },
+                    { key: 'arpOctaves', label: '琶音八度数', min: 1, max: 4, val: 2, step: 1, unit: '八度' },
+                    { key: 'slideDur', label: '单次滑入时长', min: 0.2, max: 1.2, val: 0.5, step: 0.05, unit: 's' },
+                    { key: 'slideCount', label: '滑入次数', min: 4, max: 14, val: 10, step: 1, unit: '次' },
+                    { key: 'particleFreq', label: '粒子叮当频率', min: 2000, max: 10000, val: 5500, unit: 'Hz' },
+                    { key: 'particleCount', label: '粒子数量', min: 4, max: 16, val: 10, step: 1, unit: '个' },
+                    { key: 'chordBase', label: '和弦基频', min: 130, max: 520, val: 262, unit: 'Hz' },
+                    { key: 'chordDecay', label: '和弦衰减', min: 0.5, max: 5, val: 2.5, step: 0.1, unit: 's' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+
+                    // 五声音阶比率（C大调五声）
+                    const pentatonic = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3];
+
+                    // === 琶音滑入 ===
+                    const gap = p.slideDur * 0.55;
+                    for (let i = 0; i < p.slideCount; i++) {
+                        const t = now + i * gap;
+                        const noteIdx = i % pentatonic.length;
+                        const octaveShift = Math.floor(i / pentatonic.length) % p.arpOctaves;
+                        const freq = p.arpBaseFreq * pentatonic[noteIdx] * Math.pow(2, octaveShift);
+
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        // 从高音滑到目标音
+                        osc.frequency.setValueAtTime(freq * 2.5, t);
+                        osc.frequency.exponentialRampToValueAtTime(freq, t + p.slideDur * 0.7);
+                        applyEnvelope(gain, ctx, t, 0.02, 0.05, p.slideDur * 0.4, 0.3, p.slideDur * 0.4, vol * 0.12);
+                        osc.connect(gain).connect(ctx.destination);
+                        osc.start(t);
+                        osc.stop(t + p.slideDur + 0.1);
+                        nodes.push(osc);
+
+                        // 每个音符叠加一个泛音
+                        const osc2 = ctx.createOscillator();
+                        const gain2 = ctx.createGain();
+                        osc2.type = 'triangle';
+                        osc2.frequency.setValueAtTime(freq * 3, t);
+                        osc2.frequency.exponentialRampToValueAtTime(freq * 2, t + p.slideDur * 0.6);
+                        gain2.gain.setValueAtTime(0.001, t);
+                        gain2.gain.linearRampToValueAtTime(vol * 0.03, t + 0.03);
+                        gain2.gain.exponentialRampToValueAtTime(0.001, t + p.slideDur * 0.8);
+                        osc2.connect(gain2).connect(ctx.destination);
+                        osc2.start(t);
+                        osc2.stop(t + p.slideDur + 0.1);
+                        nodes.push(osc2);
+                    }
+
+                    // === 粒子叮当（汇聚完成后） ===
+                    const particleStart = now + p.slideCount * gap + 0.1;
+                    for (let i = 0; i < p.particleCount; i++) {
+                        const t = particleStart + i * 0.06 + Math.random() * 0.04;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = p.particleFreq + Math.random() * 3000;
+                        gain.gain.setValueAtTime(vol * 0.08, t);
+                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12 + Math.random() * 0.08);
+                        osc.connect(gain).connect(ctx.destination);
+                        osc.start(t);
+                        osc.stop(t + 0.25);
+                        nodes.push(osc);
+                    }
+
+                    // === 大三和弦收尾 ===
+                    const chordStart = particleStart + p.particleCount * 0.06 + 0.2;
+                    const chordRatios = [1, 5 / 4, 3 / 2, 2, 5 / 2, 3]; // 大三和弦 + 泛音
+                    chordRatios.forEach((r, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = idx < 3 ? 'sine' : 'triangle';
+                        osc.frequency.value = p.chordBase * r;
+                        osc.detune.value = (Math.random() - 0.5) * 6;
+                        const chordVol = vol * (idx < 3 ? 0.08 : 0.03);
+                        gain.gain.setValueAtTime(0.001, chordStart);
+                        gain.gain.linearRampToValueAtTime(chordVol, chordStart + 0.15);
+                        gain.gain.setValueAtTime(chordVol, chordStart + 0.3);
+                        gain.gain.exponentialRampToValueAtTime(0.001, chordStart + p.chordDecay);
+                        osc.connect(gain).connect(ctx.destination);
+                        osc.start(chordStart);
+                        osc.stop(chordStart + p.chordDecay + 0.1);
+                        nodes.push(osc);
+                    });
+
+                    return nodes;
+                }
+            },
+
+            // ========== 7. 睁眼/闭眼转场 ==========
+            {
+                id: 'transition',
+                icon: '🌀',
+                title: '睁眼/闭眼转场',
+                scene: '镜头0/1/6/7/8/9：所有转场',
+                desc: '闭眼(频率塌陷+噪声消失) / 睁眼(频率升起+噪声涌入) + 呼吸质感',
+                improve: '双向对称设计 + 噪声质感层 + 呼吸感LFO',
+                btnClass: 'btn-transition',
+                params: [
+                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 45, unit: '%' },
+                    { key: 'closeHighFreq', label: '闭眼起始高频', min: 1000, max: 6000, val: 3500, unit: 'Hz' },
+                    { key: 'closeLowFreq', label: '闭眼终止低频', min: 40, max: 300, val: 100, unit: 'Hz' },
+                    { key: 'openLowFreq', label: '睁眼起始低频', min: 40, max: 300, val: 80, unit: 'Hz' },
+                    { key: 'openHighFreq', label: '睁眼终止高频', min: 1000, max: 8000, val: 4000, unit: 'Hz' },
+                    { key: 'transitionDur', label: '单次转场时长', min: 0.3, max: 2, val: 0.8, step: 0.1, unit: 's' },
+                    { key: 'noiseTexture', label: '噪声质感', min: 0, max: 100, val: 35, unit: '%' },
+                    { key: 'pauseBetween', label: '闭眼-睁眼间隔', min: 0.1, max: 1.5, val: 0.4, step: 0.1, unit: 's' },
+                ],
+                play(p) {
+                    const ctx = getCtx();
+                    const now = ctx.currentTime;
+                    const vol = (p.volume / 100) * masterVolume;
+                    const nodes = [];
+                    const dur = p.transitionDur;
+                    const nl = p.noiseTexture / 100;
+
+                    // ========== 闭眼 ==========
+                    // 频率塌陷：正弦波从高频滑到低频
+                    const closeOsc = ctx.createOscillator();
+                    const closeGain = ctx.createGain();
+                    closeOsc.type = 'sine';
+                    closeOsc.frequency.setValueAtTime(p.closeHighFreq, now);
+                    closeOsc.frequency.exponentialRampToValueAtTime(p.closeLowFreq, now + dur);
+                    closeGain.gain.setValueAtTime(vol * 0.2, now);
+                    closeGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    closeOsc.connect(closeGain).connect(ctx.destination);
+                    closeOsc.start(now); closeOsc.stop(now + dur + 0.1);
+                    nodes.push(closeOsc);
+
+                    // 闭眼噪声（从亮到暗）
+                    const cnBuf = createNoiseBuffer(ctx, dur + 0.2, 'pink');
+                    const cnSrc = ctx.createBufferSource();
+                    cnSrc.buffer = cnBuf;
+                    const cnLP = ctx.createBiquadFilter();
+                    cnLP.type = 'lowpass';
+                    cnLP.frequency.setValueAtTime(5000, now);
+                    cnLP.frequency.exponentialRampToValueAtTime(100, now + dur);
+                    const cnGain = ctx.createGain();
+                    cnGain.gain.setValueAtTime(vol * nl * 0.18, now);
+                    cnGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    cnSrc.connect(cnLP).connect(cnGain).connect(ctx.destination);
+                    cnSrc.start(now); cnSrc.stop(now + dur + 0.1);
+                    nodes.push(cnSrc);
+
+                    // ========== 短暂静默（许愿/黑暗） ==========
+                    const openStart = now + dur + p.pauseBetween;
+
+                    // ========== 睁眼 ==========
+                    // 频率升起
+                    const openOsc = ctx.createOscillator();
+                    const openGain = ctx.createGain();
+                    openOsc.type = 'sine';
+                    openOsc.frequency.setValueAtTime(p.openLowFreq, openStart);
+                    openOsc.frequency.exponentialRampToValueAtTime(p.openHighFreq, openStart + dur);
+                    openGain.gain.setValueAtTime(0.001, openStart);
+                    openGain.gain.linearRampToValueAtTime(vol * 0.25, openStart + dur * 0.75);
+                    openGain.gain.exponentialRampToValueAtTime(0.001, openStart + dur + 0.3);
+                    openOsc.connect(openGain).connect(ctx.destination);
+                    openOsc.start(openStart); openOsc.stop(openStart + dur + 0.4);
+                    nodes.push(openOsc);
+
+                    // 睁眼噪声（从暗到亮）
+                    const onBuf = createNoiseBuffer(ctx, dur + 0.5, 'white');
+                    const onSrc = ctx.createBufferSource();
+                    onSrc.buffer = onBuf;
+                    const onHP = ctx.createBiquadFilter();
+                    onHP.type = 'bandpass';
+                    onHP.frequency.setValueAtTime(100, openStart);
+                    onHP.frequency.exponentialRampToValueAtTime(3000, openStart + dur);
+                    onHP.Q.value = 0.5;
+                    const onGain = ctx.createGain();
+                    onGain.gain.setValueAtTime(0.001, openStart);
+                    onGain.gain.linearRampToValueAtTime(vol * nl * 0.15, openStart + dur * 0.8);
+                    onGain.gain.exponentialRampToValueAtTime(0.001, openStart + dur + 0.3);
+                    onSrc.connect(onHP).connect(onGain).connect(ctx.destination);
+                    onSrc.start(openStart); onSrc.stop(openStart + dur + 0.4);
+                    nodes.push(onSrc);
+
+                    // 睁眼"光感"：高频正弦波闪现
+                    const lightOsc = ctx.createOscillator();
+                    const lightGain = ctx.createGain();
+                    lightOsc.type = 'sine';
+                    lightOsc.frequency.value = p.openHighFreq * 1.5;
+                    const lightStart = openStart + dur * 0.5;
+                    lightGain.gain.setValueAtTime(0.001, lightStart);
+                    lightGain.gain.linearRampToValueAtTime(vol * 0.06, lightStart + 0.1);
+                    lightGain.gain.exponentialRampToValueAtTime(0.001, lightStart + 0.5);
+                    lightOsc.connect(lightGain).connect(ctx.destination);
+                    lightOsc.start(lightStart); lightOsc.stop(lightStart + 0.6);
+                    nodes.push(lightOsc);
+
+                    return nodes;
+                }
+            },
+
+        ];
+
+        // ==================== 渲染卡片 ====================
+        const grid = document.getElementById('cardGrid');
+
+        sounds.forEach(sound => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = 'card-' + sound.id;
+            const paramValues = {};
+            sound.params.forEach(p => { paramValues[p.key] = p.val; });
+
+            let paramsHTML = sound.params.map(p => {
+                const step = p.step || (p.max - p.min > 100 ? 1 : 0.1);
+                return `
+      <div class="param-row">
+        <span class="param-label">${p.label}</span>
+        <input type="range" class="param-slider"
+          data-sound="${sound.id}" data-key="${p.key}"
+          min="${p.min}" max="${p.max}" step="${step}" value="${p.val}">
+        <span class="param-value" id="val-${sound.id}-${p.key}">${p.val}${p.unit}</span>
+      </div>
+    `;
+            }).join('');
+
+            card.innerHTML = `
+    <div class="card-header">
+      <div class="card-title"><span class="icon">${sound.icon}</span>${sound.title}</div>
+      <span class="card-scene">${sound.scene}</span>
+    </div>
+    <div class="card-desc">${sound.desc}</div>
+    <div class="improve-tag">✦ ${sound.improve}</div>
+    ${paramsHTML}
+    <button class="play-btn ${sound.btnClass}" id="btn-${sound.id}"
+      onclick="playSound('${sound.id}')">
+      ▶ 播放 ${sound.title}
+    </button>
+  `;
+            grid.appendChild(card);
+
+            card.querySelectorAll('.param-slider').forEach(slider => {
+                slider.addEventListener('input', e => {
+                    const key = e.target.dataset.key;
+                    const sid = e.target.dataset.sound;
+                    const val = parseFloat(e.target.value);
+                    paramValues[key] = val;
+                    const pDef = sound.params.find(pp => pp.key === key);
+                    document.getElementById(`val-${sid}-${key}`).textContent = val + (pDef ? pDef.unit : '');
+                });
+            });
+
+            card._paramValues = paramValues;
+        });
+
+        function playSound(id) {
+            const sound = sounds.find(s => s.id === id);
+            if (!sound) return;
+            const card = document.getElementById('card-' + id);
+            const btn = document.getElementById('btn-' + id);
+            stopAll();
+            const params = { ...card._paramValues };
+            btn.classList.add('playing');
+            btn.textContent = '⏵ 播放中...';
+            const nodes = sound.play(params);
+            activeNodes = nodes;
+
+            let maxDur = 3000;
+            sound.params.forEach(p => {
+                if (['duration', 'boomDuration', 'tailDecay', 'chordDecay', 'reverbSize', 'transitionDur', 'pauseBetween'].includes(p.key)) {
+                    maxDur = Math.max(maxDur, (params[p.key] || 0) * 1000 + 800);
+                }
+            });
+            if (id === 'bless') maxDur = (params.slideCount * params.slideDur * 0.55 + 3) * 1000;
+            if (id === 'transition') maxDur = (params.transitionDur * 2 + params.pauseBetween + 1) * 1000;
+
+            const tid = setTimeout(() => {
+                btn.classList.remove('playing');
+                btn.textContent = '▶ 播放 ' + sound.title;
+            }, Math.min(maxDur, 12000));
+            activeTimeouts.push(tid);
+        }
+    </script>
+</body>
+
+</html>
