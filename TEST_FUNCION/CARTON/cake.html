@@ -2,945 +2,957 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🎆 真实·性能优化烟花</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日蛋糕 🎂</title>
     <style>
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
-            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0a0808;
             overflow: hidden;
-            height: 100vh;
-            width: 100vw;
+            font-family: 'Arial', sans-serif;
         }
 
         canvas {
+            border-radius: 16px;
+            box-shadow: 0 0 80px rgba(255, 150, 50, 0.12), 0 0 200px rgba(255, 100, 30, 0.06);
+            max-width: 100vw;
+            max-height: 100vh;
             display: block;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            cursor: default;
+            background: #1a1410;
+            width: auto;
+            height: auto;
         }
 
         .info {
             position: fixed;
-            bottom: 28px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.15);
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 200, 150, 0.12);
             font-size: 13px;
             letter-spacing: 2px;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 20px;
-            border-radius: 40px;
             pointer-events: none;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        @media (max-width: 600px) {
-            .info {
-                font-size: 9px;
-                padding: 3px 12px;
-                bottom: 12px;
-            }
+            font-weight: 300;
+            text-shadow: 0 0 20px rgba(255, 150, 50, 0.05);
         }
     </style>
 </head>
 
 <body>
-
-    <canvas id="fireworksCanvas"></canvas>
-    <div class="info">✦ 真实火花 · 优化性能 ✦</div>
-
+    <canvas id="canvas"></canvas>
+    <div class="info">✨ 许个愿吧 ✨</div>
     <script>
         // ============================================================
-        //  1. 画布 & 尺寸
+        //  配置
         // ============================================================
-        const canvas = document.getElementById('fireworksCanvas');
+        const W = 800;
+        const H = 600;
+        const canvas = document.getElementById('canvas');
+        canvas.width = W;
+        canvas.height = H;
         const ctx = canvas.getContext('2d');
-        let W, H;
 
-        function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-        }
-        resize();
-        window.addEventListener('resize', resize);
+        const DESK_Y = H * 0.78; // 468
+        const DESK_H = H - DESK_Y;
 
-        // ============================================================
-        //  2. 工具函数 (更自然的色彩)
-        // ============================================================
-        const rand = (a, b) => Math.random() * (b - a) + a;
-        const randInt = (a, b) => Math.floor(rand(a, b + 1));
-        const lerp = (a, b, t) => a + (b - a) * t;
-        const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+        const CAKE_CX = W / 2;
+        const LAYER_H = 50;
+        const LAYERS = [
+            { w: 180, color: '#5c3a1a' },
+            { w: 140, color: '#e8a0a0' },
+            { w: 100, color: '#f5ede3' },
+        ];
 
-        function hsl(h, s, l, a = 1) {
-            return `hsla(${h % 360}, ${s}%, ${l}%, ${a})`;
-        }
-
-        // 真实烟花颜色：饱和度适中，亮度变化自然
-        function randomColor() {
-            return { h: rand(0, 360), s: rand(70, 95), l: rand(50, 80) };
-        }
-
-        function colorVariant(c, dh = 25, ds = 15, dl = 20) {
-            return {
-                h: (c.h + rand(-dh, dh) + 360) % 360,
-                s: clamp(c.s + rand(-ds, ds), 50, 100),
-                l: clamp(c.l + rand(-dl, dl), 30, 85)
-            };
-        }
-
-        function colorLerp(c1, c2, t) {
-            return {
-                h: (c1.h + (c2.h - c1.h) * t + 360) % 360,
-                s: lerp(c1.s, c2.s, t),
-                l: lerp(c1.l, c2.l, t)
-            };
-        }
+        const CANDLE_COLORS = ['#ff4444', '#ffdd44', '#4488ff', '#44dd44', '#ff66aa'];
+        const CANDLE_W = 8;
+        const CANDLE_H = 25;
+        const CANDLE_COUNT = 5;
+        const FLAME_W = 10;
+        const FLAME_H = 14;
 
         // ============================================================
-        //  3. 粒子类 (更真实，更轻量)
+        //  工具函数
         // ============================================================
-        class Particle {
-            constructor(x, y, vx, vy, opts = {}) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.z = opts.z !== undefined ? opts.z : rand(-0.8, 0.8);
+        function lerp(a, b, t) { return a + (b - a) * t; }
 
-                this.startColor = opts.startColor || randomColor();
-                this.endColor = opts.endColor || colorVariant(this.startColor, 30, 15, 25);
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-                // 尺寸更真实：火花大小随生命衰减
-                this.size = opts.size || rand(1.5, 4.5);
-                this.baseSize = this.size;
+        function roundRect(ctx, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
 
-                this.life = opts.life || randInt(50, 110);
-                this.maxLife = this.life;
-                this.age = 0;
+        function getCakeLayerY(index) {
+            return DESK_Y - (index + 1) * LAYER_H;
+        }
 
-                // 物理：重力稍强，拖曳适中
-                this.gravity = opts.gravity || rand(0.03, 0.10);
-                this.drag = opts.drag || rand(0.970, 0.995);
-                this.turbulence = opts.turbulence || rand(0.01, 0.035);
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
 
-                // 拖尾：缩短以提升性能
-                this.trail = [];
-                this.maxTrail = opts.maxTrail !== undefined ? opts.maxTrail : randInt(4, 10);
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(c => clamp(Math.round(c), 0, 255).toString(16).padStart(2, '0')).join('');
+        }
 
-                // 闪烁取消，保持稳定亮度，更真实
-                this.dead = false;
-                this.isSpark = opts.isSpark || false;
-                this.isGold = opts.isGold || false;
-            }
+        function lightenColor(hex, amount) {
+            const { r, g, b } = hexToRgb(hex);
+            return rgbToHex(
+                Math.min(255, r + amount),
+                Math.min(255, g + amount),
+                Math.min(255, b + amount)
+            );
+        }
 
-            update() {
-                this.age++;
-                this.vx *= this.drag;
-                this.vy *= this.drag;
-                this.vy += this.gravity;
-
-                // 极微弱扰动
-                this.vx += (Math.random() - 0.5) * this.turbulence;
-                this.vy += (Math.random() - 0.5) * this.turbulence * 0.5;
-
-                this.x += this.vx;
-                this.y += this.vy;
-
-                this.trail.push({ x: this.x, y: this.y });
-                if (this.trail.length > this.maxTrail) {
-                    this.trail.shift();
-                }
-
-                const progress = this.age / this.maxLife;
-                this.size = this.baseSize * (1 - progress * 0.65);
-
-                if (this.age >= this.maxLife || this.size < 0.2 || this.y > H + 50) {
-                    this.dead = true;
-                }
-            }
-
-            getColor() {
-                const t = this.age / this.maxLife;
-                if (this.isGold) {
-                    const g1 = { h: 42, s: 85, l: 70 };
-                    const g2 = { h: 28, s: 70, l: 50 };
-                    return colorLerp(g1, g2, t);
-                }
-                return colorLerp(this.startColor, this.endColor, t);
-            }
-
-            getAlpha() {
-                // 亮度衰减：先慢后快，更真实
-                const t = this.age / this.maxLife;
-                const base = 1 - t * t; // 二次衰减
-                return clamp(base, 0, 1);
-            }
-
-            getDepthScale() {
-                return 1 + this.z * 0.3;
-            }
-
-            draw(ctx) {
-                const alpha = this.getAlpha();
-                if (alpha < 0.02) return;
-
-                const depthScale = this.getDepthScale();
-                const size = Math.max(0.3, this.size * depthScale);
-                const color = this.getColor();
-
-                // ---- 拖尾（简化，减少绘制开销） ----
-                if (this.trail.length > 2) {
-                    const trailLen = this.trail.length;
-                    for (let i = 1; i < trailLen; i += 2) { // 跳点绘制，优化性能
-                        const t = i / trailLen;
-                        const trailAlpha = alpha * t * 0.4;
-                        const trailSize = size * (0.2 + 0.8 * t) * 0.6;
-                        const tc = colorLerp(this.startColor, this.endColor, t * 0.7);
-                        ctx.beginPath();
-                        ctx.arc(this.trail[i].x, this.trail[i].y, trailSize, 0, Math.PI * 2);
-                        ctx.fillStyle = hsl(tc.h, tc.s, tc.l, trailAlpha * 0.5);
-                        ctx.fill();
-                    }
-                }
-
-                // ---- 主粒子（柔和光晕，减少过亮荧光感） ----
-                const glowSize = size * (2.0 + this.z * 0.3);
-                const grad = ctx.createRadialGradient(
-                    this.x, this.y, size * 0.1,
-                    this.x, this.y, glowSize
-                );
-
-                const brightL = Math.min(90, color.l + 12);
-                grad.addColorStop(0, hsl(color.h, color.s, brightL, alpha * 0.9));
-                grad.addColorStop(0.3, hsl(color.h, color.s, color.l, alpha * 0.7));
-                grad.addColorStop(0.8, hsl(color.h, color.s * 0.8, color.l * 0.8, alpha * 0.2));
-                grad.addColorStop(1, hsl(color.h, color.s * 0.6, color.l * 0.5, 0));
-
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                // ---- 核心点（小而亮） ----
-                if (size > 0.6 && alpha > 0.3) {
-                    const coreSize = size * 0.2;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, coreSize, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,255,240,${alpha * 0.4})`;
-                    ctx.fill();
-                }
-                ctx.shadowBlur = 0;
-            }
-
-            isDead() {
-                return this.dead;
-            }
+        function darkenColor(hex, amount) {
+            const { r, g, b } = hexToRgb(hex);
+            return rgbToHex(
+                Math.max(0, r - amount),
+                Math.max(0, g - amount),
+                Math.max(0, b - amount)
+            );
         }
 
         // ============================================================
-        //  4. 烟花爆炸工厂 (真实化 + 性能优化)
+        //  绘制函数（背景、桌面、蛋糕、蜡烛、火焰）
         // ============================================================
-        const FireworkTypes = {
-            SPHERE: 'sphere',
-            WILLOW: 'willow',
-            RING: 'ring',
-            CHRYSANTHEMUM: 'chrysanthemum',
-            DOUBLE: 'double',
-            PEONY: 'peony',
-            DAHLIA: 'dahlia',
-            COMET: 'comet'
-        };
-
-        function createExplosion(x, y, type, mainColor) {
-            const particles = [];
-            const c = mainColor || randomColor();
-
-            // 适度降低粒子总数，提升性能
-            const count = randInt(180, 320);
-            const speedBase = rand(5.5, 12.0);
-            const sizeBase = rand(1.8, 4.8);
-            const lifeBase = randInt(55, 120);
-
-            let params = { count, speedBase, sizeBase, lifeBase };
-
-            switch (type) {
-                case FireworkTypes.SPHERE:
-                    createSphere(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.WILLOW:
-                    createWillow(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.RING:
-                    createRing(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.CHRYSANTHEMUM:
-                    createChrysanthemum(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.DOUBLE:
-                    createDouble(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.PEONY:
-                    createPeony(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.DAHLIA:
-                    createDahlia(x, y, c, params, particles);
-                    break;
-                case FireworkTypes.COMET:
-                    createComet(x, y, c, params, particles);
-                    break;
-                default:
-                    createSphere(x, y, c, params, particles);
-            }
-
-            // 金色/白色点缀（减少数量，提升真实感）
-            const goldCount = randInt(15, 40);
-            for (let i = 0; i < goldCount; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = rand(1.5, 6.0);
-                const p = new Particle(x, y,
-                    Math.cos(angle) * speed + rand(-0.5, 0.5),
-                    Math.sin(angle) * speed * 0.6 - 0.3, {
-                    startColor: { h: rand(35, 50), s: 85, l: 75 },
-                    endColor: { h: rand(20, 40), s: 65, l: 50 },
-                    size: rand(0.6, 2.2),
-                    life: randInt(25, 60),
-                    gravity: rand(0.02, 0.06),
-                    drag: rand(0.97, 0.99),
-                    z: rand(-0.5, 0.5),
-                    maxTrail: randInt(3, 7),
-                    turbulence: 0.015,
-                    isGold: true
-                }
-                );
-                particles.push(p);
-            }
-
-            // 白色星点（减少数量）
-            const sparkCount = randInt(12, 35);
-            for (let i = 0; i < sparkCount; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = rand(1.0, 5.0);
-                const p = new Particle(x, y,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed * 0.5 - 0.2, {
-                    startColor: { h: 0, s: 0, l: 96 },
-                    endColor: { h: 30, s: 15, l: 65 },
-                    size: rand(0.4, 1.8),
-                    life: randInt(20, 50),
-                    gravity: rand(0.02, 0.06),
-                    drag: rand(0.97, 0.99),
-                    z: rand(-0.4, 0.4),
-                    maxTrail: randInt(2, 5),
-                    turbulence: 0.01,
-                    isSpark: true
-                }
-                );
-                particles.push(p);
-            }
-
-            return particles;
-        }
-
-        // ---- 各形态实现（参数调整，更真实） ----
-
-        function createSphere(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            for (let i = 0; i < count; i++) {
-                const theta = rand(0, Math.PI * 2);
-                const phi = rand(0, Math.PI);
-                const speed = speedBase * (0.5 + 0.5 * Math.pow(rand(0, 1), 0.6));
-                const vx = Math.sin(phi) * Math.cos(theta) * speed;
-                const vy = Math.sin(phi) * Math.sin(theta) * speed * 0.8 - 0.2;
-                const color = colorVariant(c, 25, 15, 20);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 30, 18, 25),
-                    size: sizeBase * rand(0.5, 1.2),
-                    life: lifeBase * rand(0.7, 1.3),
-                    gravity: rand(0.03, 0.09),
-                    drag: rand(0.970, 0.995),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(4, 10),
-                    turbulence: rand(0.01, 0.035)
-                }));
-            }
-        }
-
-        function createWillow(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            for (let i = 0; i < count; i++) {
-                const angle = rand(-Math.PI * 0.85, Math.PI * 0.85);
-                const speed = speedBase * rand(0.3, 0.8);
-                const vx = Math.sin(angle) * speed * rand(0.5, 1.2);
-                const vy = -Math.cos(angle) * speed * 0.35 + rand(0.3, 1.8);
-                const color = colorVariant(c, 20, 15, 18);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant({ h: c.h + 20, s: c.s * 0.7, l: c.l * 0.5 }, 30, 20, 20),
-                    size: sizeBase * rand(0.4, 1.0),
-                    life: lifeBase * rand(0.9, 1.5),
-                    gravity: rand(0.05, 0.13),
-                    drag: rand(0.955, 0.990),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(6, 14),
-                    turbulence: rand(0.005, 0.025)
-                }));
-            }
-        }
-
-        function createRing(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            const ringCount = Math.floor(count * 0.7);
-            for (let i = 0; i < ringCount; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = speedBase * rand(0.6, 1.1);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.7;
-                const color = colorVariant(c, 25, 15, 20);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 30, 18, 25),
-                    size: sizeBase * rand(0.5, 1.1),
-                    life: lifeBase * rand(0.7, 1.2),
-                    gravity: rand(0.02, 0.07),
-                    drag: rand(0.975, 0.995),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(4, 10),
-                    turbulence: rand(0.01, 0.03)
-                }));
-            }
-            // 环内填充
-            for (let i = 0; i < count * 0.25; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = speedBase * rand(0.1, 0.5);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.4 - 0.3;
-                const color = colorVariant(c, 25, 15, 18);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 30, 18, 22),
-                    size: sizeBase * rand(0.3, 0.7),
-                    life: lifeBase * rand(0.5, 0.8),
-                    gravity: rand(0.03, 0.08),
-                    drag: rand(0.970, 0.990),
-                    z: rand(-0.5, 0.5),
-                    maxTrail: randInt(3, 6),
-                    turbulence: rand(0.01, 0.03)
-                }));
-            }
-        }
-
-        function createChrysanthemum(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            const rays = randInt(24, 45);
-            const perRay = Math.floor(count / rays);
-            for (let r = 0; r < rays; r++) {
-                const angle = (r / rays) * Math.PI * 2 + rand(-0.04, 0.04);
-                for (let j = 0; j < perRay; j++) {
-                    const t = j / perRay;
-                    const speed = speedBase * (0.5 + 0.5 * t * t);
-                    const vx = Math.cos(angle) * speed * rand(0.8, 1.2);
-                    const vy = Math.sin(angle) * speed * 0.8 + rand(-0.3, 0.3);
-                    const color = colorVariant(c, 20 + t * 20, 15, 15 + t * 15);
-                    list.push(new Particle(x, y, vx, vy, {
-                        startColor: color,
-                        endColor: colorVariant({ h: c.h + 35, s: c.s * 0.6, l: c.l * 0.5 }, 35, 20, 25),
-                        size: sizeBase * (0.4 + 0.6 * (1 - t * 0.5)) * rand(0.6, 1.2),
-                        life: lifeBase * (0.7 + 0.3 * (1 - t)) * rand(0.8, 1.2),
-                        gravity: rand(0.02, 0.08),
-                        drag: rand(0.965, 0.995),
-                        z: rand(-0.8, 0.8),
-                        maxTrail: randInt(4, 12 + Math.floor(t * 5)),
-                        turbulence: rand(0.01, 0.035)
-                    }));
-                }
-            }
-            // 末端小爆裂
-            for (let i = 0; i < randInt(25, 55); i++) {
-                const angle = rand(0, Math.PI * 2);
-                const dist = rand(18, 45);
-                const sx = x + Math.cos(angle) * dist;
-                const sy = y + Math.sin(angle) * dist * 0.7 - 5;
-                const speed = rand(1.5, 4.5);
-                const vx = Math.cos(angle + rand(-0.3, 0.3)) * speed;
-                const vy = Math.sin(angle + rand(-0.3, 0.3)) * speed * 0.6 + rand(0.2, 0.8);
-                const color = colorVariant(c, 30, 18, 22);
-                list.push(new Particle(sx, sy, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant({ h: c.h + 45, s: c.s * 0.5, l: c.l * 0.4 }, 35, 20, 25),
-                    size: rand(0.6, 2.5),
-                    life: randInt(25, 60),
-                    gravity: rand(0.04, 0.10),
-                    drag: rand(0.955, 0.990),
-                    z: rand(-0.6, 0.6),
-                    maxTrail: randInt(3, 7),
-                    turbulence: rand(0.01, 0.04)
-                }));
-            }
-        }
-
-        function createDouble(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            const firstCount = Math.floor(count * 0.35);
-            for (let i = 0; i < firstCount; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = speedBase * rand(0.3, 0.7);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.6 - 0.2;
-                const color = colorVariant(c, 20, 15, 18);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 30, 18, 22),
-                    size: sizeBase * rand(0.4, 0.8),
-                    life: lifeBase * rand(0.5, 0.8),
-                    gravity: rand(0.02, 0.06),
-                    drag: rand(0.975, 0.995),
-                    z: rand(-0.6, 0.6),
-                    maxTrail: randInt(3, 7),
-                    turbulence: rand(0.01, 0.03)
-                }));
-            }
-            const secondCount = count - firstCount;
-            for (let i = 0; i < secondCount; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = speedBase * rand(0.8, 1.3);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.7 - 0.3;
-                const color = colorVariant(c, 30, 18, 22);
-                const delayOffset = rand(6, 18);
-                const p2 = new Particle(
-                    x + vx * 0.12 + rand(-2, 2),
-                    y + vy * 0.12 + rand(-2, 2),
-                    vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 35, 20, 28),
-                    size: sizeBase * rand(0.6, 1.3),
-                    life: lifeBase * rand(0.9, 1.4),
-                    gravity: rand(0.02, 0.08),
-                    drag: rand(0.965, 0.995),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(5, 12),
-                    turbulence: rand(0.01, 0.035)
-                }
-                );
-                p2.age = -delayOffset;
-                list.push(p2);
-            }
-        }
-
-        function createPeony(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            for (let i = 0; i < count; i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = speedBase * (0.5 + 0.5 * Math.pow(rand(0, 1), 0.5));
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.7 - 0.2;
-                const color = colorVariant(c, 20, 15, 18);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 30, 18, 22),
-                    size: sizeBase * rand(0.5, 1.2),
-                    life: lifeBase * rand(0.8, 1.4),
-                    gravity: rand(0.02, 0.07),
-                    drag: rand(0.970, 0.995),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(4, 10),
-                    turbulence: rand(0.01, 0.035)
-                }));
-            }
-            // 中心金色闪光（减少）
-            for (let i = 0; i < randInt(15, 35); i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = rand(0.5, 3.0);
-                const p = new Particle(x, y,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed * 0.4 - 0.2, {
-                    startColor: { h: rand(38, 52), s: 90, l: 80 },
-                    endColor: { h: rand(25, 42), s: 75, l: 55 },
-                    size: rand(0.5, 2.0),
-                    life: randInt(20, 50),
-                    gravity: rand(0.01, 0.04),
-                    drag: rand(0.98, 0.995),
-                    z: rand(-0.3, 0.3),
-                    maxTrail: randInt(2, 5),
-                    isGold: true
-                }
-                );
-                list.push(p);
-            }
-        }
-
-        function createDahlia(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            const layers = randInt(3, 5);
-            const perLayer = Math.floor(count / layers);
-            for (let layer = 0; layer < layers; layer++) {
-                const layerScale = 0.4 + (layer / layers) * 0.8;
-                const layerSpeed = speedBase * layerScale;
-                const layerSize = sizeBase * (0.6 + (layer / layers) * 0.7);
-                const angleOffset = (layer / layers) * Math.PI * 0.5;
-                for (let i = 0; i < perLayer; i++) {
-                    const angle = (i / perLayer) * Math.PI * 2 + angleOffset + rand(-0.06, 0.06);
-                    const speed = layerSpeed * rand(0.7, 1.3);
-                    const vx = Math.cos(angle) * speed;
-                    const vy = Math.sin(angle) * speed * 0.7;
-                    const color = colorVariant(c, 15 + layer * 10, 12, 12 + layer * 10);
-                    list.push(new Particle(x, y, vx, vy, {
-                        startColor: color,
-                        endColor: colorVariant(color, 30, 18, 22),
-                        size: layerSize * rand(0.5, 1.1),
-                        life: lifeBase * rand(0.7, 1.3),
-                        gravity: rand(0.02, 0.07),
-                        drag: rand(0.970, 0.995),
-                        z: rand(-0.8, 0.8),
-                        maxTrail: randInt(4, 10),
-                        turbulence: rand(0.01, 0.03)
-                    }));
-                }
-            }
-        }
-
-        function createComet(x, y, c, p, list) {
-            const { count, speedBase, sizeBase, lifeBase } = p;
-            const direction = rand(0, Math.PI * 2);
-            for (let i = 0; i < count; i++) {
-                const angle = direction + rand(-0.3, 0.3);
-                const speed = speedBase * rand(0.3, 0.9);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.8 - 0.3;
-                const color = colorVariant(c, 25, 15, 20);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 35, 20, 25),
-                    size: sizeBase * rand(0.4, 1.0),
-                    life: lifeBase * rand(0.8, 1.5),
-                    gravity: rand(0.02, 0.08),
-                    drag: rand(0.955, 0.990),
-                    z: rand(-0.8, 0.8),
-                    maxTrail: randInt(8, 18),
-                    turbulence: rand(0.005, 0.025)
-                }));
-            }
-            // 头部爆裂
-            for (let i = 0; i < randInt(30, 60); i++) {
-                const angle = rand(0, Math.PI * 2);
-                const speed = rand(1.5, 4.5);
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed * 0.6 - 0.2;
-                const color = colorVariant(c, 30, 18, 22);
-                list.push(new Particle(x, y, vx, vy, {
-                    startColor: color,
-                    endColor: colorVariant(color, 35, 22, 28),
-                    size: rand(0.8, 3.0),
-                    life: randInt(30, 65),
-                    gravity: rand(0.02, 0.06),
-                    drag: rand(0.97, 0.995),
-                    z: rand(-0.6, 0.6),
-                    maxTrail: randInt(3, 8),
-                    turbulence: rand(0.01, 0.035)
-                }));
-            }
-        }
-
-        // ============================================================
-        //  5. 火箭类 (性能优化)
-        // ============================================================
-        class Rocket {
-            constructor(startX, targetY, type) {
-                this.x = startX || rand(W * 0.04, W * 0.96);
-                this.y = H * 0.94 + rand(0, 30);
-                this.targetY = targetY || rand(H * 0.02, H * 0.42);
-                this.type = type || Object.values(FireworkTypes)[randInt(0, 7)];
-
-                this.speed = rand(6.5, 12.0);
-                this.angle = -Math.PI / 2 + rand(-0.03, 0.03);
-                this.alive = true;
-                this.exploded = false;
-                this.color = randomColor();
-
-                this.trail = [];
-                this.maxTrail = 18; // 缩短
-                this.flameParticles = [];
-                this.wobble = rand(0.002, 0.008);
-                this.wobblePhase = rand(0, Math.PI * 2);
-            }
-
-            update() {
-                if (this.exploded) return;
-
-                this.trail.push({ x: this.x, y: this.y });
-                if (this.trail.length > this.maxTrail) {
-                    this.trail.shift();
-                }
-
-                const progress = 1 - (this.y - this.targetY) / (H * 0.94 - this.targetY);
-                const speedFactor = 1 - progress * 0.35;
-                const currentSpeed = this.speed * speedFactor;
-
-                this.wobblePhase += this.wobble;
-                const wobbleOffset = Math.sin(this.wobblePhase) * 0.3;
-
-                this.x += Math.sin(this.angle + wobbleOffset * 0.05) * currentSpeed * 0.2;
-                this.y -= currentSpeed;
-                this.angle += rand(-0.003, 0.003);
-
-                // 尾焰（减少粒子）
-                if (this.y < H * 0.85 && Math.random() < 0.4) {
-                    const size = rand(0.8, 3.5);
-                    const vx = rand(-0.8, 0.8);
-                    const vy = rand(0.3, 2.2);
-                    const life = randInt(8, 18);
-                    const h = rand(25, 50);
-                    const l = rand(55, 85);
-                    const fp = new Particle(
-                        this.x + rand(-4, 4),
-                        this.y + 3,
-                        vx, vy, {
-                        startColor: { h, s: 95, l },
-                        endColor: { h: h + 25, s: 75, l: l * 0.3 },
-                        size,
-                        life,
-                        gravity: 0.015,
-                        drag: 0.94,
-                        z: rand(-0.3, 0.3),
-                        maxTrail: 2,
-                        turbulence: 0.02
-                    }
-                    );
-                    this.flameParticles.push(fp);
-                }
-
-                for (let i = this.flameParticles.length - 1; i >= 0; i--) {
-                    this.flameParticles[i].update();
-                    if (this.flameParticles[i].isDead()) {
-                        this.flameParticles.splice(i, 1);
-                    }
-                }
-
-                if (this.y <= this.targetY) {
-                    this.explode();
-                }
-                if (this.y < -50) {
-                    this.alive = false;
-                }
-            }
-
-            explode() {
-                if (this.exploded) return;
-                this.exploded = true;
-                this.alive = false;
-
-                const newParticles = createExplosion(
-                    this.x, this.y,
-                    this.type,
-                    this.color
-                );
-                particles.push(...newParticles);
-
-                // 闪光（缩小半径）
-                flashEffect = {
-                    x: this.x,
-                    y: this.y,
-                    radius: 0,
-                    maxRadius: rand(40, 90),
-                    life: 14,
-                    maxLife: 14,
-                    active: true
-                };
-
-                // 余烬（减少）
-                for (let i = 0; i < randInt(8, 20); i++) {
-                    const angle = rand(0, Math.PI * 2);
-                    const speed = rand(0.2, 1.8);
-                    const p = new Particle(
-                        this.x + rand(-10, 10),
-                        this.y + rand(-10, 10),
-                        Math.cos(angle) * speed,
-                        Math.sin(angle) * speed * 0.4 + rand(0.2, 0.8), {
-                        startColor: { h: rand(25, 45), s: 60, l: 60 },
-                        endColor: { h: rand(10, 30), s: 35, l: 25 },
-                        size: rand(0.4, 1.8),
-                        life: randInt(35, 80),
-                        gravity: rand(0.01, 0.03),
-                        drag: rand(0.98, 0.995),
-                        z: rand(-0.4, 0.4),
-                        maxTrail: randInt(3, 8),
-                        turbulence: 0.005
-                    }
-                    );
-                    particles.push(p);
-                }
-            }
-
-            draw(ctx) {
-                for (const fp of this.flameParticles) {
-                    fp.draw(ctx);
-                }
-
-                if (this.trail.length > 2) {
-                    for (let i = 1; i < this.trail.length; i += 2) {
-                        const t = i / this.trail.length;
-                        const alpha = t * 0.2;
-                        const size = (1 - t) * 2.5 + 0.2;
-                        const h = rand(30, 50);
-                        ctx.beginPath();
-                        ctx.arc(this.trail[i].x, this.trail[i].y, size, 0, Math.PI * 2);
-                        ctx.fillStyle = `hsla(${h}, 80%, 55%, ${alpha * 0.3})`;
-                        ctx.fill();
-                    }
-                }
-
-                if (!this.exploded && this.y > 0) {
-                    const grad = ctx.createRadialGradient(
-                        this.x, this.y - 4, 1,
-                        this.x, this.y - 4, 10
-                    );
-                    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
-                    grad.addColorStop(0.2, 'rgba(255,225,170,0.8)');
-                    grad.addColorStop(0.6, 'rgba(255,190,90,0.3)');
-                    grad.addColorStop(1, 'rgba(255,150,50,0)');
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y - 4, 10, 0, Math.PI * 2);
-                    ctx.fillStyle = grad;
-                    ctx.fill();
-
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = 'rgba(255,200,100,0.2)';
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y - 5, 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
-            }
-        }
-
-        // ============================================================
-        //  6. 全局状态
-        // ============================================================
-        let particles = [];
-        let rockets = [];
-        let flashEffect = null;
-        let lastLaunchTime = 0;
-        let launchInterval = 800;
-        let animFrame = null;
-
-        // ============================================================
-        //  7. 发射逻辑
-        // ============================================================
-        function launchFirework(x, targetY, type) {
-            const startX = x || rand(W * 0.04, W * 0.96);
-            const target = targetY || rand(H * 0.02, H * 0.42);
-            const t = type || Object.values(FireworkTypes)[randInt(0, 7)];
-            const rocket = new Rocket(startX, target, t);
-            rockets.push(rocket);
-        }
-
-        function autoLaunch(time) {
-            if (time - lastLaunchTime > launchInterval + rand(-350, 450)) {
-                const count = Math.random() < 0.2 ? randInt(2, 3) : 1;
-                for (let i = 0; i < count; i++) {
-                    const x = rand(W * 0.04, W * 0.96);
-                    const y = rand(H * 0.02, H * 0.42);
-                    const type = Object.values(FireworkTypes)[randInt(0, 7)];
-                    setTimeout(() => launchFirework(x, y, type), i * rand(80, 200));
-                }
-                lastLaunchTime = time;
-                launchInterval = rand(600, 2200);
-            }
-        }
-
-        // ============================================================
-        //  8. 主循环
-        // ============================================================
-        function drawScene(time) {
-            ctx.fillStyle = '#000000';
+        function drawBackground() {
+            const grad = ctx.createRadialGradient(CAKE_CX, DESK_Y - 60, 30, CAKE_CX, DESK_Y - 60, 450);
+            grad.addColorStop(0, '#2a1e18');
+            grad.addColorStop(0.4, '#1e1612');
+            grad.addColorStop(0.8, '#14100d');
+            grad.addColorStop(1, '#0a0808');
+            ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
 
-            for (let i = rockets.length - 1; i >= 0; i--) {
-                const r = rockets[i];
-                r.update();
-                r.draw(ctx);
-                if (!r.alive || r.exploded) {
-                    rockets.splice(i, 1);
-                }
-            }
+            const grad2 = ctx.createRadialGradient(CAKE_CX, 0, 20, CAKE_CX, 0, 350);
+            grad2.addColorStop(0, 'rgba(255, 180, 100, 0.04)');
+            grad2.addColorStop(1, 'rgba(255, 180, 100, 0)');
+            ctx.fillStyle = grad2;
+            ctx.fillRect(0, 0, W, H);
 
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw(ctx);
-                if (p.isDead()) {
-                    particles.splice(i, 1);
-                }
-            }
+            const envGlow = ctx.createRadialGradient(CAKE_CX, DESK_Y - 40, 20, CAKE_CX, DESK_Y - 40, 400);
+            envGlow.addColorStop(0, 'rgba(255, 180, 100, 0.08)');
+            envGlow.addColorStop(0.5, 'rgba(255, 140, 70, 0.04)');
+            envGlow.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            ctx.fillStyle = envGlow;
+            ctx.fillRect(0, 0, W, H);
+        }
 
-            if (flashEffect && flashEffect.active) {
-                const progress = 1 - flashEffect.life / flashEffect.maxLife;
-                const radius = flashEffect.maxRadius * (1 - Math.pow(1 - progress, 0.4));
-                const alpha = (1 - progress) * 0.7;
-                const grad = ctx.createRadialGradient(
-                    flashEffect.x, flashEffect.y, 0,
-                    flashEffect.x, flashEffect.y, radius
-                );
-                grad.addColorStop(0, `rgba(255,255,255,${alpha * 0.9})`);
-                grad.addColorStop(0.2, `rgba(255,240,210,${alpha * 0.5})`);
-                grad.addColorStop(0.6, `rgba(255,220,180,${alpha * 0.15})`);
-                grad.addColorStop(1, `rgba(255,200,160,0)`);
+        function drawDesk() {
+            ctx.save();
+
+            const shadowGrad = ctx.createLinearGradient(0, DESK_Y, 0, H);
+            shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            shadowGrad.addColorStop(0.15, 'rgba(0,0,0,0.3)');
+            shadowGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = shadowGrad;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+
+            const deskGrad = ctx.createLinearGradient(0, DESK_Y, 0, H);
+            deskGrad.addColorStop(0, 'rgba(70, 40, 25, 0.85)');
+            deskGrad.addColorStop(0.5, 'rgba(55, 32, 18, 0.90)');
+            deskGrad.addColorStop(1, 'rgba(40, 22, 12, 0.95)');
+            ctx.fillStyle = deskGrad;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+
+            ctx.strokeStyle = 'rgba(90, 55, 35, 0.25)';
+            ctx.lineWidth = 0.5;
+            for (let y = DESK_Y + 4; y < H; y += 6) {
+                const offset = Math.sin(y * 0.03) * 3 + Math.sin(y * 0.07 + 1) * 2;
                 ctx.beginPath();
-                ctx.arc(flashEffect.x, flashEffect.y, radius, 0, Math.PI * 2);
+                ctx.moveTo(0, y);
+                for (let x = 0; x < W; x += 2) {
+                    const wave = Math.sin(x * 0.02 + y * 0.01) * 1.5 + Math.sin(x * 0.05 + y * 0.02) * 0.8;
+                    ctx.lineTo(x, y + wave + offset * 0.3);
+                }
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(120, 80, 50, 0.12)';
+            ctx.lineWidth = 0.3;
+            for (let y = DESK_Y + 2; y < H; y += 9) {
+                const offset = Math.sin(y * 0.04 + 2) * 4;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x < W; x += 3) {
+                    const wave = Math.sin(x * 0.015 + y * 0.008) * 2 + Math.sin(x * 0.04 + y * 0.015 + 1) * 1;
+                    ctx.lineTo(x, y + wave + offset * 0.2);
+                }
+                ctx.stroke();
+            }
+
+            const highlight = ctx.createLinearGradient(0, DESK_Y, 0, DESK_Y + 20);
+            highlight.addColorStop(0, 'rgba(180, 130, 90, 0.10)');
+            highlight.addColorStop(1, 'rgba(180, 130, 90, 0)');
+            ctx.fillStyle = highlight;
+            ctx.fillRect(0, DESK_Y, W, 20);
+
+            ctx.restore();
+        }
+
+        function drawCandleGlow(time) {
+            ctx.save();
+
+            const glow1 = ctx.createRadialGradient(CAKE_CX, DESK_Y - 50, 20, CAKE_CX, DESK_Y - 50, 350);
+            glow1.addColorStop(0, `rgba(255, 200, 120, ${0.06 + 0.02 * Math.sin(time * 0.5 + 1)})`);
+            glow1.addColorStop(0.3, `rgba(255, 170, 90, ${0.04 + 0.015 * Math.sin(time * 0.4 + 2)})`);
+            glow1.addColorStop(0.7, `rgba(255, 140, 70, ${0.02 + 0.01 * Math.sin(time * 0.3 + 3)})`);
+            glow1.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            ctx.fillStyle = glow1;
+            ctx.fillRect(0, 0, W, H);
+
+            const candlePositions = getCandlePositions();
+            for (let i = 0; i < candlePositions.length; i++) {
+                const cx = candlePositions[i];
+                const cy = DESK_Y - LAYER_H * 3 - CANDLE_H + 2;
+                const pulse = 0.85 + 0.15 * Math.sin(time * 1.2 + i * 1.8);
+                const radius = 60 * pulse;
+                const glow = ctx.createRadialGradient(cx, cy, 5, cx, cy, radius);
+                const alpha = 0.12 + 0.06 * Math.sin(time * 0.7 + i * 1.2);
+                glow.addColorStop(0, `rgba(255, 210, 140, ${alpha})`);
+                glow.addColorStop(0.4, `rgba(255, 180, 100, ${alpha * 0.5})`);
+                glow.addColorStop(1, 'rgba(255, 150, 80, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+            }
+
+            const deskGlow = ctx.createRadialGradient(CAKE_CX, DESK_Y + 20, 30, CAKE_CX, DESK_Y + 20, 240);
+            deskGlow.addColorStop(0, `rgba(255, 190, 110, ${0.04 + 0.02 * Math.sin(time * 0.6 + 0.5)})`);
+            deskGlow.addColorStop(0.5, `rgba(255, 160, 80, ${0.02 + 0.01 * Math.sin(time * 0.5 + 1.5)})`);
+            deskGlow.addColorStop(1, 'rgba(255, 130, 60, 0)');
+            ctx.fillStyle = deskGlow;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+
+            ctx.restore();
+        }
+
+        // ---- 蛋糕 ----
+        function drawCake() {
+            ctx.save();
+
+            for (let i = 1; i < LAYERS.length; i++) {
+                const layer = LAYERS[i];
+                const w = layer.w;
+                const x = CAKE_CX - w / 2;
+                const y = getCakeLayerY(i);
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetY = 4;
+                ctx.fillStyle = 'rgba(0,0,0,0)';
+                ctx.fillRect(x + 4, y + 2, w - 8, 6);
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+            }
+
+            for (let i = 0; i < LAYERS.length; i++) {
+                const layer = LAYERS[i];
+                const w = layer.w;
+                const x = CAKE_CX - w / 2;
+                const y = getCakeLayerY(i);
+                const h = LAYER_H;
+
+                ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetX = 3;
+                ctx.shadowOffsetY = 5;
+
+                const grad = ctx.createLinearGradient(x, y, x + w, y);
+                grad.addColorStop(0, darkenColor(layer.color, 30));
+                grad.addColorStop(0.2, lightenColor(layer.color, 10));
+                grad.addColorStop(0.5, layer.color);
+                grad.addColorStop(0.8, darkenColor(layer.color, 15));
+                grad.addColorStop(1, darkenColor(layer.color, 40));
+                ctx.fillStyle = grad;
+                roundRect(ctx, x, y, w, h, 5);
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                const hlGrad = ctx.createLinearGradient(x, y + 3, x + w, y + 8);
+                hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
+                hlGrad.addColorStop(0.25, `rgba(255,255,255,${i === 2 ? 0.4 : 0.2})`);
+                hlGrad.addColorStop(0.75, `rgba(255,255,255,${i === 2 ? 0.3 : 0.12})`);
+                hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = hlGrad;
+                ctx.fillRect(x + 8, y + 3, w - 16, 6);
+
+                const sideGrad = ctx.createLinearGradient(x + w - 10, y, x + w, y + h);
+                sideGrad.addColorStop(0, 'rgba(0,0,0,0.05)');
+                sideGrad.addColorStop(0.5, 'rgba(0,0,0,0.2)');
+                sideGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
+                ctx.fillStyle = sideGrad;
+                ctx.fillRect(x + w - 10, y, 10, h);
+
+                const leftGrad = ctx.createLinearGradient(x, y, x + 5, y + h);
+                leftGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
+                leftGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+                leftGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = leftGrad;
+                ctx.fillRect(x, y, 5, h);
+
+                drawCreamPiping(i);
+            }
+
+            ctx.restore();
+        }
+
+        // ---- 奶油裱花 ----
+        function drawCreamPiping(layerIndex) {
+            const layer = LAYERS[layerIndex];
+            const w = layer.w;
+            const x = CAKE_CX - w / 2;
+            const y = getCakeLayerY(layerIndex);
+
+            let mainColor, dotColor;
+            if (layerIndex === 0) {
+                mainColor = 'rgba(255, 180, 170, 0.9)';
+                dotColor = 'rgba(255, 210, 200, 0.7)';
+            } else if (layerIndex === 1) {
+                mainColor = 'rgba(255, 220, 160, 0.9)';
+                dotColor = 'rgba(255, 235, 190, 0.7)';
+            } else {
+                mainColor = 'rgba(190, 220, 255, 0.9)';
+                dotColor = 'rgba(210, 235, 255, 0.7)';
+            }
+
+            const radius = layerIndex === 0 ? 11 : (layerIndex === 1 ? 9 : 8);
+            const spacing = layerIndex === 0 ? 22 : (layerIndex === 1 ? 20 : 18);
+            const topY = y + 3;
+
+            ctx.save();
+
+            const startX = x + radius + 5;
+            const endX = x + w - radius - 5;
+
+            for (let px = startX; px < endX; px += spacing) {
+                const offset = Math.sin(px * 0.5 + layerIndex * 2) * 1.5;
+                const cx = px + offset;
+                const cy = topY;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, Math.PI, 0, false);
+                ctx.strokeStyle = mainColor;
+                ctx.lineWidth = 3.5;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                ctx.fillStyle = dotColor;
+                ctx.beginPath();
+                ctx.arc(cx - 2, cy - 2, radius * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (layerIndex === 2) {
+                for (let px = x + 18; px < x + w - 18; px += 24) {
+                    const cx = px + Math.sin(px * 0.5) * 3;
+                    const cy = topY + 8 + Math.sin(px * 0.4 + 1) * 5;
+                    ctx.fillStyle = 'rgba(255, 200, 180, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(cx - 2, cy - 2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (layerIndex === 1) {
+                for (let px = x + 14; px < x + w - 14; px += 26) {
+                    const cx = px + Math.sin(px * 0.6 + 2) * 2;
+                    const cy = topY + 6 + Math.sin(px * 0.5 + 1.5) * 4;
+                    ctx.fillStyle = 'rgba(255, 230, 170, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                for (let px = x + 12; px < x + w - 12; px += 28) {
+                    const cx = px + Math.sin(px * 0.7 + 1) * 2;
+                    const cy = topY + 5 + Math.sin(px * 0.6 + 2) * 3;
+                    ctx.fillStyle = 'rgba(255, 200, 190, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.restore();
+        }
+
+        // ---- 蜡烛 ----
+        function getCandlePositions() {
+            const topW = LAYERS[2].w;
+            const startX = CAKE_CX - topW / 2 + 8;
+            const endX = CAKE_CX + topW / 2 - 8;
+            const positions = [];
+            for (let i = 0; i < CANDLE_COUNT; i++) {
+                const t = (i + 0.5) / CANDLE_COUNT;
+                positions.push(lerp(startX, endX, t));
+            }
+            return positions;
+        }
+
+        function drawCandles() {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+
+            ctx.save();
+
+            for (let i = 0; i < positions.length; i++) {
+                const cx = positions[i];
+                const cy = topY;
+                const color = CANDLE_COLORS[i % CANDLE_COLORS.length];
+
+                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                ctx.shadowBlur = 6;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 2;
+
+                const grad = ctx.createLinearGradient(cx - CANDLE_W / 2, cy, cx + CANDLE_W / 2, cy);
+                grad.addColorStop(0, darkenColor(color, 25));
+                grad.addColorStop(0.3, lightenColor(color, 20));
+                grad.addColorStop(0.7, color);
+                grad.addColorStop(1, darkenColor(color, 15));
+
+                ctx.fillStyle = grad;
+                roundRect(ctx, cx - CANDLE_W / 2, cy - CANDLE_H, CANDLE_W, CANDLE_H, 1.5);
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                const hlGrad = ctx.createLinearGradient(cx - CANDLE_W / 2, cy - CANDLE_H, cx - CANDLE_W / 2 + 2.5, cy);
+                hlGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
+                hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+                hlGrad.addColorStop(1, 'rgba(255,255,255,0.05)');
+                ctx.fillStyle = hlGrad;
+                ctx.fillRect(cx - CANDLE_W / 2 + 0.5, cy - CANDLE_H + 1, 2, CANDLE_H - 2);
+
+                ctx.fillStyle = 'rgba(255, 240, 220, 0.25)';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - CANDLE_H + 0.5, CANDLE_W / 2 - 0.5, 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(cx, cy - CANDLE_H + 1, 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ---- 火焰（微动） ----
+        function drawFlames(time) {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+
+            ctx.save();
+
+            for (let i = 0; i < positions.length; i++) {
+                const cx = positions[i];
+                const baseY = topY - CANDLE_H + 1;
+
+                const phase = i * 1.3 + 0.7;
+                const scaleX = 0.92 + 0.08 * Math.sin(time * 1.2 + phase);
+                const scaleY = 0.90 + 0.10 * Math.sin(time * 1.6 + phase * 0.7);
+                const offsetY = 1.2 * Math.sin(time * 2.0 + phase * 1.2);
+
+                const flameX = cx;
+                const flameY = baseY + offsetY - 2;
+
+                const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase));
+                const glow = ctx.createRadialGradient(flameX, flameY, 2, flameX, flameY, glowRadius);
+                glow.addColorStop(0, `rgba(255, 200, 100, ${0.12 + 0.05 * Math.sin(time * 0.7 + phase)})`);
+                glow.addColorStop(0.5, `rgba(255, 160, 70, ${0.05 + 0.03 * Math.sin(time * 0.5 + phase * 0.8)})`);
+                glow.addColorStop(1, 'rgba(255, 120, 50, 0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(flameX, flameY, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(flameX, flameY);
+                ctx.scale(scaleX, scaleY);
+
+                const grad = ctx.createRadialGradient(0, -3, 1, 0, 0, FLAME_H * 0.6);
+                grad.addColorStop(0, '#fffbe6');
+                grad.addColorStop(0.15, '#ffdd44');
+                grad.addColorStop(0.4, '#ffaa00');
+                grad.addColorStop(0.7, '#ff7700');
+                grad.addColorStop(1, '#ff4400');
+
+                ctx.beginPath();
+                const w = FLAME_W / 2;
+                const h = FLAME_H / 2;
+                ctx.moveTo(0, -h);
+                ctx.bezierCurveTo(w * 0.8, -h * 0.4, w, -h * 0.1, w, h * 0.2);
+                ctx.bezierCurveTo(w, h * 0.6, w * 0.6, h, 0, h * 0.85);
+                ctx.bezierCurveTo(-w * 0.6, h, -w, h * 0.6, -w, h * 0.2);
+                ctx.bezierCurveTo(-w, -h * 0.1, -w * 0.8, -h * 0.4, 0, -h);
+                ctx.closePath();
+
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                flashEffect.life--;
-                if (flashEffect.life <= 0) {
-                    flashEffect.active = false;
-                    flashEffect = null;
+                const coreGrad = ctx.createRadialGradient(0, -2, 0.5, 0, 0, FLAME_H * 0.25);
+                coreGrad.addColorStop(0, 'rgba(255, 255, 240, 0.9)');
+                coreGrad.addColorStop(0.3, 'rgba(255, 230, 150, 0.6)');
+                coreGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
+                ctx.fillStyle = coreGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, -2, FLAME_W * 0.25, FLAME_H * 0.25, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                const baseGlow = ctx.createRadialGradient(cx, baseY + 1, 1, cx, baseY + 1, 12);
+                baseGlow.addColorStop(0, `rgba(255, 200, 100, ${0.15 + 0.08 * Math.sin(time * 0.8 + phase)})`);
+                baseGlow.addColorStop(1, 'rgba(255, 150, 70, 0)');
+                ctx.fillStyle = baseGlow;
+                ctx.beginPath();
+                ctx.arc(cx, baseY + 1, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ============================================================
+        //  装饰：礼物堆（物理堆叠，无抖动）+ 动态气球 + 横幅
+        // ============================================================
+
+        // ---- 绘制单个礼物盒 ----
+        function drawGift(x, y, w, h, boxColor, ribbonColor, shadowOffset) {
+            shadowOffset = shadowOffset || 5;
+            if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) {
+                return;
+            }
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = shadowOffset;
+
+            const gradBox = ctx.createLinearGradient(x, y, x + w, y + h);
+            gradBox.addColorStop(0, lightenColor(boxColor, 25));
+            gradBox.addColorStop(0.5, boxColor);
+            gradBox.addColorStop(1, darkenColor(boxColor, 30));
+            ctx.fillStyle = gradBox;
+            roundRect(ctx, x, y, w, h, 4);
+            ctx.fill();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            // 丝带
+            ctx.fillStyle = ribbonColor;
+            ctx.fillRect(x + w / 2 - 3, y, 6, h);
+            ctx.fillRect(x, y + h / 2 - 3, w, 6);
+
+            // 蝴蝶结
+            ctx.beginPath();
+            ctx.arc(x + w / 2 - 7, y - 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w / 2 + 7, y - 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.fillRect(x + 6, y + 3, w - 12, 4);
+            ctx.restore();
+        }
+
+        // ---- 礼物堆：物理堆叠，无抖动，无缝无空隙，且尺寸更大 ----
+        const giftPyramidData = (() => {
+            // 从原来的5层增加到了6层，且单个体积更大，顶层高度远超蛋糕
+            const layerDefs = [
+                { layer: 5, yBase: -160, count: 1, xStart: 140, xEnd: 170, sizeMin: 30, sizeMax: 40 },
+                { layer: 4, yBase: -128, count: 2, xStart: 120, xEnd: 190, sizeMin: 34, sizeMax: 44 },
+                { layer: 3, yBase: -96, count: 3, xStart: 100, xEnd: 210, sizeMin: 38, sizeMax: 48 },
+                { layer: 2, yBase: -64, count: 4, xStart: 80, xEnd: 225, sizeMin: 42, sizeMax: 54 },
+                { layer: 1, yBase: -32, count: 5, xStart: 60, xEnd: 240, sizeMin: 46, sizeMax: 58 },
+                { layer: 0, yBase: 0, count: 6, xStart: 40, xEnd: 260, sizeMin: 50, sizeMax: 64 },
+            ];
+
+            const allGifts = [];
+            const colorPalette = [
+                ['#e74c3c', '#f1c40f'], ['#2980b9', '#ecf0f1'], ['#27ae60', '#f1c40f'],
+                ['#f39c12', '#e74c3c'], ['#8e44ad', '#f1c40f'], ['#1abc9c', '#e67e22'],
+                ['#e67e22', '#2c3e50'], ['#2c3e50', '#f1c40f'], ['#c0392b', '#ecf0f1'],
+                ['#16a085', '#f39c12'], ['#d35400', '#f1c40f'], ['#9b59b6', '#ecf0f1'],
+            ];
+
+            let idx = 0;
+            for (let ld of layerDefs) {
+                const { layer, yBase, count, xStart, xEnd, sizeMin, sizeMax } = ld;
+                const availableWidth = xEnd - xStart;
+
+                let rawWidths = [];
+                let totalRawWidth = 0;
+                for (let i = 0; i < count; i++) {
+                    let w = sizeMin + Math.random() * (sizeMax - sizeMin);
+                    rawWidths.push(w);
+                    totalRawWidth += w;
+                }
+
+                let scale = availableWidth / totalRawWidth;
+                let currentX = xStart;
+
+                for (let i = 0; i < count; i++) {
+                    const w = rawWidths[i] * scale;
+                    const h = w * (0.78 + Math.random() * 0.12);
+                    const x = currentX;
+                    const y = DESK_Y + yBase - h;
+
+                    const ci = idx % colorPalette.length;
+                    const [boxColor, ribbonColor] = colorPalette[ci];
+                    const darkAmt = (5 - layer) * 2;
+                    const finalColor = darkenColor(boxColor, darkAmt);
+                    const shadowOff = Math.max(3, 8 - layer);
+
+                    allGifts.push({
+                        x, y, w, h,
+                        color: finalColor, ribbon: ribbonColor,
+                        layer: layer, shadowOff: shadowOff
+                    });
+
+                    currentX += w;
+                    idx++;
                 }
             }
 
-            autoLaunch(time);
+            allGifts.sort((a, b) => b.layer - a.layer);
+            return allGifts;
+        })();
+
+        // ---- 绘制礼物堆 ----
+        function drawGiftPyramid() {
+            for (let g of giftPyramidData) {
+                drawGift(g.x, g.y, g.w, g.h, g.color, g.ribbon, g.shadowOff);
+            }
         }
 
-        function animate(timestamp) {
-            drawScene(timestamp);
-            animFrame = requestAnimationFrame(animate);
+        // ---- 气球（带基座） ----
+        const balloons = [];
+        const balloonColors = ['#ff6b81', '#ffd93d', '#6bcfff', '#a29bfe', '#ff9ff3', '#ff9f43', '#00d2d3', '#f368e0', '#ff6b81',
+            '#ffd93d'
+        ];
+        const numBalloons = 12;
+
+        for (let i = 0; i < numBalloons; i++) {
+            balloons.push({
+                x: 570 + Math.random() * 210,
+                y: 210 + Math.random() * 160,
+                color: balloonColors[i % balloonColors.length],
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.4 + Math.random() * 0.3,
+                swingSpeed: 0.015 + Math.random() * 0.015,
+                radius: 14 + Math.floor(Math.random() * 8)
+            });
+        }
+
+        function drawBalloons(time) {
+            for (let b of balloons) {
+                const baseX = b.x;
+                const baseY = DESK_Y - 2;
+
+                const grad = ctx.createRadialGradient(baseX, baseY, 1, baseX, baseY, 10);
+                grad.addColorStop(0, b.color);
+                grad.addColorStop(0.5, lightenColor(b.color, 50));
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(baseX, baseY, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = b.color;
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(baseX, baseY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(baseX - 1.5, baseY - 1.5, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            for (let b of balloons) {
+                const floatOffset = Math.sin(time * b.speed + b.phase) * 5;
+                const swingOffset = Math.sin(time * b.swingSpeed * 2 + b.phase) * 4;
+
+                const currentX = b.x + swingOffset;
+                const currentY = b.y + floatOffset;
+
+                const baseX = b.x;
+                const baseY = DESK_Y - 2;
+                ctx.beginPath();
+                ctx.moveTo(currentX, currentY + b.radius * 0.9);
+                ctx.lineTo(baseX, baseY);
+                ctx.strokeStyle = 'rgba(200,200,200,0.3)';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 3;
+
+                ctx.beginPath();
+                ctx.ellipse(currentX, currentY, b.radius, b.radius * 1.3, 0, 0, Math.PI * 2);
+                ctx.fillStyle = b.color;
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.ellipse(currentX - b.radius * 0.25, currentY - b.radius * 0.3, b.radius * 0.3, b.radius * 0.4, -0.2, 0,
+                    Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(currentX, currentY + b.radius * 0.9);
+                ctx.lineTo(currentX - 2, currentY + b.radius * 1.1);
+                ctx.lineTo(currentX + 2, currentY + b.radius * 1.1);
+                ctx.fillStyle = darkenColor(b.color, 30);
+                ctx.fill();
+            }
+        }
+
+        // ---- "生日快乐" 横幅（拉长拉高，受重力向下弯曲，内容丰富） ----
+        function drawBanner() {
+            // 拉长占满 canvas，拉高到顶部位置
+            const bannerW = W - 20; // 左右各留10像素
+            const bannerH = 55;
+            const bx = (W - bannerW) / 2;
+            const by = 80; // 提升到较高的位置
+            const curveDepth = 22; // 中间下垂的深度
+
+            ctx.save();
+
+            // 绘制布条主体 (中间受重力下弯)
+            const gradient = ctx.createLinearGradient(bx, 0, bx, by + bannerH + curveDepth);
+            gradient.addColorStop(0, '#e74c3c');
+            gradient.addColorStop(0.5, '#c0392b');
+            gradient.addColorStop(1, '#a93226');
+
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 4;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.quadraticCurveTo(CAKE_CX, by + curveDepth, bx + bannerW, by);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.quadraticCurveTo(CAKE_CX, by + bannerH + curveDepth * 2, bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+            // 绘制边缘金边
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.quadraticCurveTo(CAKE_CX, by + curveDepth, bx + bannerW, by);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.quadraticCurveTo(CAKE_CX, by + bannerH + curveDepth * 2, bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.stroke();
+
+            // 三角形旗帜（两端）
+            const triSize = 20;
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx - triSize, by + curveDepth / 2 + bannerH / 2);
+            ctx.lineTo(bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(bx + bannerW, by);
+            ctx.lineTo(bx + bannerW + triSize, by + curveDepth / 2 + bannerH / 2);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fill();
+
+            // 添加迷你图案：在两侧画一个小蛋糕和小礼物
+            // 小蛋糕（左侧）
+            const cakeX = CAKE_CX - 150;
+            const cakeY = by + bannerH / 2 + curveDepth * 0.8;
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(cakeX - 12, cakeY, 24, 14);
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(cakeX, cakeY, 12, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(cakeX, cakeY - 3, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 小礼物（右侧）
+            const giftX = CAKE_CX + 150;
+            const giftY = by + bannerH / 2 + curveDepth * 0.8;
+            ctx.fillStyle = '#e67e22';
+            ctx.fillRect(giftX - 10, giftY - 14, 20, 16);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(giftX - 10, giftY - 14, 20, 16);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(giftX - 4, giftY - 14, 8, 16);
+
+            // 绘制文字“生日快乐” (顺着下垂的弧度)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 40px "Arial", "Microsoft YaHei", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 2;
+
+            const text = '生日快乐';
+            const chars = text.split('');
+            const charWidth = 50;
+            const startX = CAKE_CX - (chars.length - 1) * charWidth / 2;
+
+            for (let i = 0; i < chars.length; i++) {
+                const x = startX + i * charWidth;
+                const normalizedX = (2 * (x - CAKE_CX)) / bannerW;
+                const droop = curveDepth * (1 - normalizedX * normalizedX);
+
+                const y = by + bannerH / 2 + droop;
+
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillText(chars[i], x, y + 1);
+                ctx.fillStyle = '#fff8e7';
+                ctx.fillText(chars[i], x, y);
+            }
+
+            // 绘制英文小字，顺着弯曲的弧度，且与主标题拉开距离
+            ctx.font = 'bold 14px "Arial", "Microsoft YaHei", sans-serif';
+            const enText = 'HAPPY BIRTHDAY';
+            ctx.fillStyle = '#f1c40f';
+            // 下移了12像素，留出更明显的间距
+            const enY = by + bannerH + curveDepth + 3;
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 2;
+            ctx.fillText(enText, CAKE_CX, enY);
+
+            // 点缀星星和彩点
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+            for (let i = 0; i < 10; i++) {
+                const angle = i / 10 * Math.PI * 2 + 0.3;
+                const dist = 130 + Math.sin(i * 1.3) * 15;
+                const sx = CAKE_CX + Math.cos(angle) * dist;
+                const sy = by + bannerH / 2 + Math.sin(angle) * dist * 0.35;
+                ctx.beginPath();
+                for (let j = 0; j < 5; j++) {
+                    const a = (j * 4 * Math.PI / 5) - Math.PI / 2;
+                    const px = sx + 4 * Math.cos(a);
+                    const py = sy + 4 * Math.sin(a);
+                    if (j === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+            // 加一些彩色的圆点点缀
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            for (let i = 0; i < 8; i++) {
+                const sx = bx + 40 + i * (bannerW / 8);
+                const normalizedX = (2 * (sx - CAKE_CX)) / bannerW;
+                const droop = curveDepth * (1 - normalizedX * normalizedX);
+                ctx.beginPath();
+                ctx.arc(sx, by + 12 + droop * 0.6, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
         }
 
         // ============================================================
-        //  9. 启动
+        //  主循环
         // ============================================================
-        const initTypes = Object.values(FireworkTypes);
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                const x = rand(W * 0.06, W * 0.94);
-                const y = rand(H * 0.02, H * 0.40);
-                const type = initTypes[i % initTypes.length];
-                launchFirework(x, y, type);
-            }, 150 + i * 280);
+        let startTime = performance.now();
+
+        function render() {
+            const now = performance.now();
+            const time = (now - startTime) / 1000;
+
+            ctx.clearRect(0, 0, W, H);
+
+            drawBackground();
+            drawDesk();
+            drawCandleGlow(time);
+            drawCake();
+
+            drawGiftPyramid();
+            drawBalloons(time);
+            drawBanner();
+
+            drawCandles();
+            drawFlames(time);
+
+            requestAnimationFrame(render);
         }
-        lastLaunchTime = performance.now() - 200;
 
-        animate(0);
+        render();
 
-        console.log('🎆 真实火花·性能优化版已启动！');
-        console.log('   ✦ 降低荧光感，更接近真实烟花');
-        console.log('   ✦ 粒子数量减少约40%，拖尾缩短');
-        console.log('   ✦ 光晕柔和，色彩更自然');
-        console.log('   ✦ 适合长时间观看，流畅度提升');
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = window.innerWidth - 40;
+            const containerHeight = window.innerHeight - 40;
+            const scale = Math.min(containerWidth / W, containerHeight / H, 1.2);
+            canvas.style.width = (W * scale) + 'px';
+            canvas.style.height = (H * scale) + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        console.log('🎂 礼物放大加层 + 无缝物理堆叠 + 重力下弯横幅 + 丰富图案 🎉');
     </script>
-
 </body>
 
 </html>
