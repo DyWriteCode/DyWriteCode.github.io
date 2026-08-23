@@ -175,7 +175,6 @@
       </div>
     </Teleport>
   </div>
-  <BirthdayExplosion v-if="showBirthday" @finished="onBirthdayFinished" />
 </template>
 
 <script>
@@ -183,7 +182,6 @@ import letter from './letter/cover.vue'
 import vlog from './vlog/cover.vue'
 import voice from './voice/index.vue'
 import VoiceRecorderButton from './voice/VoiceRecorderButton.vue'
-import BirthdayExplosion from './BirthdayExplosion.vue'
 import MessageDetail from './MessageDetail.vue'
 import './css/main.scss'
 import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis'
@@ -205,7 +203,6 @@ export default {
     voice,
     VoiceRecorderButton,
     MessageDetail,
-    BirthdayExplosion
   },
   props: {
     title: String,
@@ -287,8 +284,6 @@ export default {
       isTouchMoved: false,
       isUserAtBottom: true,        // 用户是否在底部
       scrollThreshold: 20,          // 判定底部的阈值（像素）
-      showBirthday: false,
-      birthdayResolve: null,
     }
   },
   watch: {

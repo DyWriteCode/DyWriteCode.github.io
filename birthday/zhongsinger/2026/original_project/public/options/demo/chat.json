@@ -1,15 +1,6 @@
 [
     {
         "msgs": [
-            "<birthday/>"
-        ],
-        "msgInputSpeed": 80,
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
             "本条消息用户输入包括[1]才能进入下一步，多次将强行跳过"
         ],
         "msgInputSpeed": 8,
