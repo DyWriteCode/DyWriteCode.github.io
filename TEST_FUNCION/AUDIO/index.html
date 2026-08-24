@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🎵 声音配置测试面板</title>
+    <title>🎵 声音配置测试面板 - 预加载</title>
     <style>
         /* ----- 全局重置 & 字体 ----- */
         * {
@@ -11,6 +12,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             background: #0b0e17;
             color: #d0d9f0;
@@ -36,6 +38,7 @@
             align-items: center;
             gap: 12px;
         }
+
         h1 small {
             font-size: 14px;
             font-weight: 300;
@@ -46,9 +49,34 @@
         .sub {
             color: #6a7490;
             font-size: 14px;
-            margin-bottom: 28px;
+            margin-bottom: 10px;
             border-left: 3px solid #2a3a5a;
             padding-left: 16px;
+        }
+
+        /* 预加载状态条 */
+        #preloadStatus {
+            background: #0e121e;
+            border: 1px solid #1a263a;
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 13px;
+            color: #8a9ab8;
+            display: inline-block;
+            margin-bottom: 22px;
+            transition: all 0.3s;
+        }
+
+        #preloadStatus.loading {
+            color: #f0c060;
+            border-color: #5a4a2a;
+            background: #1a160e;
+        }
+
+        #preloadStatus.ready {
+            color: #6ae0b0;
+            border-color: #2a6a4a;
+            background: #0a1a12;
         }
 
         /* ----- 卡片网格 ----- */
@@ -67,6 +95,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
             transition: border-color 0.2s;
         }
+
         .card:hover {
             border-color: #3a4a6a;
         }
@@ -77,6 +106,7 @@
             align-items: center;
             margin-bottom: 12px;
         }
+
         .card-header h2 {
             font-weight: 500;
             font-size: 18px;
@@ -84,6 +114,7 @@
             align-items: center;
             gap: 10px;
         }
+
         .card-header .badge {
             background: #1f2a3e;
             color: #8a9ab8;
@@ -93,7 +124,6 @@
             border: 1px solid #2e3d5a;
         }
 
-        /* ----- 控制行 ----- */
         .control-row {
             display: flex;
             flex-wrap: wrap;
@@ -101,6 +131,7 @@
             gap: 8px 12px;
             margin-top: 6px;
         }
+
         .control-row .label {
             font-size: 13px;
             color: #8a9ab8;
@@ -122,45 +153,55 @@
             align-items: center;
             gap: 6px;
         }
-        .btn:hover {
+
+        .btn:hover:not(:disabled) {
             background: #2a3a5a;
             border-color: #4a6a8a;
         }
-        .btn:active {
+
+        .btn:active:not(:disabled) {
             transform: scale(0.96);
         }
+
         .btn-primary {
             background: #2a4a7a;
             border-color: #4a7aaa;
         }
-        .btn-primary:hover {
+
+        .btn-primary:hover:not(:disabled) {
             background: #3a5a8a;
         }
+
         .btn-danger {
             background: #5a2a3a;
             border-color: #8a3a4a;
         }
-        .btn-danger:hover {
+
+        .btn-danger:hover:not(:disabled) {
             background: #7a3a4a;
         }
+
         .btn-success {
             background: #1a5a3a;
             border-color: #2a8a5a;
         }
-        .btn-success:hover {
+
+        .btn-success:hover:not(:disabled) {
             background: #2a7a4a;
         }
+
         .btn-sm {
             padding: 3px 12px;
             font-size: 12px;
         }
+
         .btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+            filter: grayscale(0.5);
         }
 
-        /* ----- 状态指示 ----- */
         .status {
             font-size: 12px;
             color: #6a7a9a;
@@ -169,13 +210,13 @@
             background: #0e121e;
             border: 1px solid #1a263a;
         }
+
         .status.playing {
             color: #6ae0b0;
             border-color: #3a8a6a;
             background: #0a1a1a;
         }
 
-        /* ----- 音量 / 平衡滑块 ----- */
         .slider-group {
             display: flex;
             align-items: center;
@@ -183,6 +224,7 @@
             font-size: 12px;
             color: #6a7a9a;
         }
+
         .slider-group input[type="range"] {
             width: 80px;
             height: 3px;
@@ -192,6 +234,7 @@
             -webkit-appearance: none;
             appearance: none;
         }
+
         .slider-group input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -203,7 +246,6 @@
             border: 1px solid #6a9aca;
         }
 
-        /* ----- 流星 / 烟花 列表 ----- */
         .instance-list {
             margin-top: 14px;
             display: flex;
@@ -213,13 +255,16 @@
             overflow-y: auto;
             padding-right: 4px;
         }
+
         .instance-list::-webkit-scrollbar {
             width: 4px;
         }
+
         .instance-list::-webkit-scrollbar-track {
             background: #0e121e;
             border-radius: 10px;
         }
+
         .instance-list::-webkit-scrollbar-thumb {
             background: #2a3a5a;
             border-radius: 10px;
@@ -236,79 +281,88 @@
             gap: 8px 14px;
             transition: border-color 0.2s;
         }
+
         .instance-item:hover {
             border-color: #2e3d5a;
         }
+
         .instance-item .name {
             font-size: 13px;
             font-weight: 500;
             color: #b0c0e0;
             min-width: 70px;
         }
+
         .instance-item .trail {
             font-size: 12px;
             color: #6a7a9a;
             font-family: monospace;
         }
+
         .instance-item .controls {
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
             align-items: center;
         }
+
         .instance-item .mini-status {
             font-size: 11px;
             color: #6a7a9a;
             padding: 0 6px;
         }
+
         .instance-item .mini-status.active {
             color: #6ae0b0;
         }
 
-        /* ----- 工具类 ----- */
         .mt-2 {
             margin-top: 10px;
         }
+
         .flex {
             display: flex;
             align-items: center;
             gap: 8px;
         }
+
         .flex-wrap {
             flex-wrap: wrap;
         }
+
         .gap-4 {
             gap: 4px;
         }
+
         .text-muted {
             color: #5a6a8a;
             font-size: 12px;
         }
+
         .w-full {
             width: 100%;
         }
 
-        /* ----- 响应式 ----- */
         @media (max-width: 640px) {
             .grid {
                 grid-template-columns: 1fr;
             }
+
             .instance-item {
                 flex-direction: column;
                 align-items: stretch;
             }
+
             .instance-item .controls {
                 justify-content: flex-start;
             }
         }
 
-        /* ----- 自定义滚动条 (火狐) ----- */
         .instance-list {
             scrollbar-width: thin;
             scrollbar-color: #2a3a5a #0e121e;
         }
 
-        /* 小提示 */
         .footnote {
             margin-top: 30px;
             font-size: 13px;
@@ -317,6 +371,7 @@
             border-top: 1px solid #1a2236;
             padding-top: 18px;
         }
+
         .footnote code {
             background: #0e121e;
             padding: 2px 10px;
@@ -326,17 +381,21 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="app">
         <h1>
             🎵 声音配置测试面板
-            <small>config 驱动 · 独立播放器</small>
+            <small>预加载 · config 驱动</small>
         </h1>
         <div class="sub">
-            ⚙️ 所有声音路径 &amp; 截断参数在 <code style="background:#0e121e;padding:2px 10px;border-radius:6px;color:#8a9ab8;">config</code> 中配置 ·
-            流星 &amp; 烟花自带轨迹管理器
+            ⚙️ 所有声音路径 &amp; 截断参数在 <code
+                style="background:#0e121e;padding:2px 10px;border-radius:6px;color:#8a9ab8;">config</code> 中配置
         </div>
+
+        <!-- 预加载状态 -->
+        <div id="preloadStatus" class="loading">⏳ 正在预加载音频文件...</div>
 
         <!-- ===== 网格 ===== -->
         <div class="grid" id="appGrid">
@@ -403,7 +462,6 @@
                     <span class="text-muted" style="font-size:12px;">每个流星独立轨迹</span>
                 </div>
                 <div class="instance-list" id="meteorList">
-                    <!-- 动态插入流星实例 -->
                     <div class="text-muted" style="padding:10px 0;text-align:center;font-size:13px;">
                         暂无流星，点击「添加流星」创建
                     </div>
@@ -430,8 +488,7 @@
         </div>
 
         <div class="footnote">
-            ⚡ 所有音频使用 Web Audio API 播放 · 截断参数在 <code>config.sounds</code> 中调整 ·
-            流星 / 烟花 实例独立控制，支持立体声轨迹模拟
+            ⚡ 所有音频使用 Web Audio API · 页面启动时自动预加载 <code>config</code> 中的所有音频 · 截断参数在 <code>config.sounds</code> 中调整
         </div>
     </div>
 
@@ -443,32 +500,32 @@
             // 每个声音的配置：url（路径），start（起始秒），end（结束秒）
             sounds: {
                 heartbeat: {
-                    url: "./heart.mp3", // ← 替换为你的音频文件路径
+                    url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
                     start: 0.0,
                     end: 2.0,
                 },
                 city: {
-                    url: './city.mp3',
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/city.mp3',
                     start: 0.0,
                     end: 6.0,
                 },
                 space: {
-                    url: './space.mp3',
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/space.mp3',
                     start: 0.0,
                     end: 4.0,
                 },
                 meteor: {
-                    url: './meteor.mp3',
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/meteor.mp3',
                     start: 0.0,
                     end: 3.5,
                 },
                 firework_launch: {
-                    url: './firework_go.mp3',
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_go.mp3',
                     start: 0.0,
                     end: 1.8,
                 },
                 firework_explode: {
-                    url: './firework_boom.mp3',
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_boom.mp3',
                     start: 0.0,
                     end: 2.5,
                 },
@@ -488,7 +545,6 @@
                 panSpread: 0.6, // 爆炸时立体声扩散度
             },
         };
-
         // ================================================================
         //  🎛️  音频引擎 (Web Audio API)
         // ================================================================
@@ -496,19 +552,37 @@
             constructor() {
                 this.ctx = null;
                 this.buffers = {};
-                this.activeSources = new Map(); // id -> { source, nodes, ... }
+                this.activeSources = new Map();
                 this.sourceIdCounter = 0;
+                this.isPreloading = false;
             }
 
-            // 懒加载 AudioContext
             getContext() {
                 if (!this.ctx) {
-                    this.ctx = new(window.AudioContext || window.webkitAudioContext)();
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
                 }
                 return this.ctx;
             }
 
-            // 加载音频文件
+            // 预加载所有配置的音频
+            async preloadAll(soundConfigs) {
+                this.isPreloading = true;
+                const entries = Object.entries(soundConfigs);
+                const loadPromises = entries.map(([key, cfg]) => {
+                    if (cfg.url) {
+                        // loadSound 内部会处理失败并回退到合成音
+                        return this.loadSound(key, cfg.url).catch(err => {
+                            console.warn(`预加载 ${key} 失败，使用合成后备音`, err);
+                            return null;
+                        });
+                    }
+                    return Promise.resolve();
+                });
+                await Promise.all(loadPromises);
+                this.isPreloading = false;
+                console.log('✅ 所有音频预加载完成');
+            }
+
             async loadSound(key, url) {
                 if (this.buffers[key]) return this.buffers[key];
                 try {
@@ -521,21 +595,17 @@
                     return audioBuffer;
                 } catch (err) {
                     console.warn(`⚠️ 加载音频 "${key}" 失败 (${url})，使用合成音代替`, err);
-                    // 合成音作为后备
                     const synth = this.synthesizeFallback(key);
                     this.buffers[key] = synth;
                     return synth;
                 }
             }
 
-            // 合成后备音
+            // ----- 合成后备音 (与之前一致) -----
             synthesizeFallback(key) {
                 const ctx = this.getContext();
                 const sampleRate = ctx.sampleRate;
                 let duration = 3.0;
-                let type = 'sine';
-                let freq = 440;
-
                 switch (key) {
                     case 'heartbeat':
                         duration = 2.0;
@@ -545,9 +615,7 @@
                         return this.synthCity(ctx, sampleRate);
                     case 'space':
                         duration = 4.0;
-                        freq = 80;
-                        type = 'sawtooth';
-                        break;
+                        return this.synthSpace(ctx, sampleRate);
                     case 'meteor':
                         duration = 3.5;
                         return this.synthMeteor(ctx, sampleRate);
@@ -559,22 +627,8 @@
                         return this.synthFireworkExplode(ctx, sampleRate);
                     default:
                         duration = 2.0;
-                        freq = 440;
-                        type = 'sine';
+                        return this.synthGeneric(ctx, sampleRate);
                 }
-
-                const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < data.length; i++) {
-                    const t = i / sampleRate;
-                    let v = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 1.2);
-                    if (type === 'sawtooth') {
-                        v = (t * freq % 1) * 2 - 1;
-                        v *= Math.exp(-t * 0.8);
-                    }
-                    data[i] = v * 0.3;
-                }
-                return buffer;
             }
 
             synthHeartbeat(ctx, sr) {
@@ -583,7 +637,6 @@
                 const d = buf.getChannelData(0);
                 for (let i = 0; i < d.length; i++) {
                     const t = i / sr;
-                    // 两个脉冲
                     let env = 0;
                     if (t < 0.15) env = Math.sin(t / 0.15 * Math.PI) * 0.8;
                     else if (t < 0.3) env = Math.sin((t - 0.15) / 0.15 * Math.PI) * 0.4;
@@ -602,14 +655,25 @@
                 for (let i = 0; i < d.length; i++) {
                     const t = i / sr;
                     let noise = (Math.random() * 2 - 1) * 0.3;
-                    // 低频嗡鸣
                     const hum = Math.sin(2 * Math.PI * 120 * t) * 0.1;
-                    // 高频叮当
                     const ring = Math.sin(2 * Math.PI * 800 * t) * Math.exp(-t * 0.5) * 0.05;
-                    // 随机尖峰
                     const spike = (Math.random() > 0.995) ? (Math.random() * 2 - 1) * 0.2 : 0;
                     const env = Math.exp(-t * 0.08) * 0.8 + 0.2;
                     d[i] = (noise + hum + ring + spike) * env * 0.6;
+                }
+                return buf;
+            }
+
+            synthSpace(ctx, sr) {
+                const dur = 4.0;
+                const buf = ctx.createBuffer(1, sr * dur, sr);
+                const d = buf.getChannelData(0);
+                for (let i = 0; i < d.length; i++) {
+                    const t = i / sr;
+                    const freq = 80 + 40 * Math.sin(t * 0.5);
+                    const v = Math.sin(2 * Math.PI * freq * t) * 0.3 +
+                        Math.sin(2 * Math.PI * (freq * 1.5) * t) * 0.1;
+                    d[i] = v * Math.exp(-t * 0.05) * 0.6;
                 }
                 return buf;
             }
@@ -659,7 +723,18 @@
                 return buf;
             }
 
-            // ----- 播放单个声音（简单截断） -----
+            synthGeneric(ctx, sr) {
+                const dur = 2.0;
+                const buf = ctx.createBuffer(1, sr * dur, sr);
+                const d = buf.getChannelData(0);
+                for (let i = 0; i < d.length; i++) {
+                    const t = i / sr;
+                    d[i] = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t * 0.5) * 0.3;
+                }
+                return buf;
+            }
+
+            // ----- 播放逻辑 (与之前一致) -----
             async playSound(key, startTime, endTime, volume = 0.8, pan = 0) {
                 const buffer = await this.loadSound(key, config.sounds[key]?.url || '');
                 if (!buffer) return null;
@@ -678,7 +753,6 @@
                 gainNode.connect(panner);
                 panner.connect(ctx.destination);
 
-                // 截断处理
                 const actualStart = Math.min(Math.max(0, startTime || 0), buffer.duration - 0.05);
                 const actualEnd = Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
                 const duration = actualEnd - actualStart;
@@ -696,16 +770,13 @@
                     endTime: actualEnd,
                     isPlaying: true,
                     stop: () => {
-                        try {
-                            source.stop();
-                        } catch (_) { /* ignore */ }
+                        try { source.stop(); } catch (_) { }
                         entry.isPlaying = false;
                         this.activeSources.delete(id);
                     },
                 };
                 this.activeSources.set(id, entry);
 
-                // 自动清理
                 source.onended = () => {
                     entry.isPlaying = false;
                     this.activeSources.delete(id);
@@ -714,7 +785,6 @@
                 return entry;
             }
 
-            // 停止指定声音
             stopSound(id) {
                 const entry = this.activeSources.get(id);
                 if (entry) {
@@ -725,7 +795,6 @@
                 return false;
             }
 
-            // 停止所有声音
             stopAll() {
                 for (const [id, entry] of this.activeSources) {
                     entry.stop();
@@ -733,7 +802,6 @@
                 this.activeSources.clear();
             }
 
-            // 更新音量
             setVolume(id, vol) {
                 const entry = this.activeSources.get(id);
                 if (entry) {
@@ -741,7 +809,6 @@
                 }
             }
 
-            // 更新声像
             setPan(id, pan) {
                 const entry = this.activeSources.get(id);
                 if (entry) {
@@ -749,7 +816,6 @@
                 }
             }
 
-            // 获取播放状态
             isPlaying(id) {
                 const entry = this.activeSources.get(id);
                 return entry ? entry.isPlaying : false;
@@ -757,7 +823,7 @@
         }
 
         // ================================================================
-        //  🧩  流星管理器
+        //  🧩  流星管理器 (与之前一致)
         // ================================================================
         class MeteorManager {
             constructor(engine) {
@@ -769,7 +835,6 @@
                 this.isRunning = false;
             }
 
-            // 添加一颗流星
             async addMeteor(panStart, panEnd, volStart, volEnd, duration) {
                 const cfg = config.meteor;
                 const startPan = panStart ?? cfg.panStart;
@@ -799,7 +864,6 @@
                 return meteor;
             }
 
-            // 播放流星声音
             async playMeteor(meteor) {
                 if (meteor.isPlaying) return;
                 const key = 'meteor';
@@ -820,7 +884,6 @@
                 }
             }
 
-            // 停止流星
             stopMeteor(meteor) {
                 if (meteor.sourceId) {
                     this.engine.stopSound(meteor.sourceId);
@@ -830,28 +893,21 @@
                 this._updateUI();
             }
 
-            // 移除流星
             removeMeteor(meteor) {
                 this.stopMeteor(meteor);
                 meteor.active = false;
                 this.meteors = this.meteors.filter(m => m !== meteor);
-                if (this.meteors.length === 0) {
-                    this._stopAnimation();
-                }
+                if (this.meteors.length === 0) this._stopAnimation();
                 this._updateUI();
             }
 
-            // 清除所有
             clearAll() {
-                for (const m of this.meteors) {
-                    this.stopMeteor(m);
-                }
+                for (const m of this.meteors) this.stopMeteor(m);
                 this.meteors = [];
                 this._stopAnimation();
                 this._updateUI();
             }
 
-            // 动画循环：更新轨迹
             _startAnimation() {
                 if (this.isRunning) return;
                 this.isRunning = true;
@@ -867,10 +923,7 @@
                         const vol = m.volStart + (m.volEnd - m.volStart) * m.progress;
                         this.engine.setPan(m.sourceId, pan);
                         this.engine.setVolume(m.sourceId, vol);
-                        // 到达终点自动停止
-                        if (m.progress >= 1) {
-                            this.stopMeteor(m);
-                        }
+                        if (m.progress >= 1) this.stopMeteor(m);
                     }
                     this._updateUI();
                     if (hasActive || this.meteors.some(m => m.isPlaying)) {
@@ -891,16 +944,12 @@
                 }
             }
 
-            _updateUI() {
-                if (this.onUpdate) this.onUpdate(this.meteors);
-            }
-
-            // 获取活跃流星数量
+            _updateUI() { if (this.onUpdate) this.onUpdate(this.meteors); }
             get count() { return this.meteors.length; }
         }
 
         // ================================================================
-        //  🎆  烟花管理器
+        //  🎆  烟花管理器 (与之前一致)
         // ================================================================
         class FireworkManager {
             constructor(engine) {
@@ -911,21 +960,11 @@
                 this.timeouts = [];
             }
 
-            // 添加烟花
             async addFirework() {
                 const id = ++this.idCounter;
-                const fw = {
-                    id,
-                    isPlaying: false,
-                    launchId: null,
-                    explodeId: null,
-                    active: true,
-                    phase: 'idle', // idle | launching | exploding | done
-                };
+                const fw = { id, isPlaying: false, launchId: null, explodeId: null, active: true, phase: 'idle' };
                 this.fireworks.push(fw);
                 this._updateUI();
-
-                // 自动播放
                 await this._playFirework(fw);
                 return fw;
             }
@@ -936,7 +975,6 @@
                 fw.phase = 'launching';
                 this._updateUI();
 
-                // 发射声
                 const launchCfg = config.sounds.firework_launch;
                 const launchEntry = await this.engine.playSound(
                     'firework_launch',
@@ -947,13 +985,9 @@
                 );
                 fw.launchId = launchEntry?.id || null;
 
-                // 发射过程中，音量逐渐增大，声像略微晃动
                 let launchProgress = 0;
                 const launchInterval = setInterval(() => {
-                    if (!fw.active || !fw.isPlaying) {
-                        clearInterval(launchInterval);
-                        return;
-                    }
+                    if (!fw.active || !fw.isPlaying) { clearInterval(launchInterval); return; }
                     launchProgress += 0.05;
                     const vol = 0.4 + launchProgress * 0.5;
                     const pan = Math.sin(launchProgress * 3) * 0.2;
@@ -961,21 +995,16 @@
                         this.engine.setVolume(fw.launchId, Math.min(1, vol));
                         this.engine.setPan(fw.launchId, pan);
                     }
-                    if (launchProgress >= 1) {
-                        clearInterval(launchInterval);
-                    }
+                    if (launchProgress >= 1) clearInterval(launchInterval);
                 }, 50);
 
-                // 延迟后爆炸
                 const delay = config.firework.explodeDelay || 0.6;
                 const timeoutId = setTimeout(async () => {
                     if (!fw.active || !fw.isPlaying) return;
-                    // 停止发射声
                     if (fw.launchId) {
                         this.engine.stopSound(fw.launchId);
                         fw.launchId = null;
                     }
-                    // 播放爆炸声
                     fw.phase = 'exploding';
                     this._updateUI();
                     const explodeCfg = config.sounds.firework_explode;
@@ -989,8 +1018,6 @@
                         pan
                     );
                     fw.explodeId = explodeEntry?.id || null;
-
-                    // 爆炸声播放完毕后结束
                     if (explodeEntry) {
                         const checkDone = () => {
                             if (!fw.active) return;
@@ -998,9 +1025,7 @@
                                 fw.isPlaying = false;
                                 fw.phase = 'done';
                                 this._updateUI();
-                            } else {
-                                setTimeout(checkDone, 200);
-                            }
+                            } else { setTimeout(checkDone, 200); }
                         };
                         setTimeout(checkDone, 100);
                     } else {
@@ -1011,7 +1036,6 @@
                 }, delay * 1000);
 
                 this.timeouts.push(timeoutId);
-                // 存储清理引用
                 fw._cleanup = () => {
                     clearInterval(launchInterval);
                     clearTimeout(timeoutId);
@@ -1023,49 +1047,74 @@
                 };
             }
 
-            // 停止烟花
             stopFirework(fw) {
                 if (fw._cleanup) fw._cleanup();
                 fw.isPlaying = false;
                 fw.phase = 'idle';
                 this._updateUI();
             }
-
-            // 移除烟花
             removeFirework(fw) {
                 this.stopFirework(fw);
                 fw.active = false;
                 this.fireworks = this.fireworks.filter(f => f !== fw);
                 this._updateUI();
             }
-
-            // 清除所有
             clearAll() {
-                for (const fw of this.fireworks) {
-                    this.stopFirework(fw);
-                }
+                for (const fw of this.fireworks) this.stopFirework(fw);
                 this.fireworks = [];
                 this.timeouts.forEach(t => clearTimeout(t));
                 this.timeouts = [];
                 this._updateUI();
             }
-
             get count() { return this.fireworks.length; }
-
-            _updateUI() {
-                if (this.onUpdate) this.onUpdate(this.fireworks);
-            }
+            _updateUI() { if (this.onUpdate) this.onUpdate(this.fireworks); }
         }
 
         // ================================================================
-        //  🖥️  UI 控制器
+        //  🖥️  UI 控制器 (包含预加载逻辑)
         // ================================================================
         document.addEventListener('DOMContentLoaded', () => {
             const engine = new AudioEngine();
+            const preloadStatus = document.getElementById('preloadStatus');
+
+            // ----- 预加载所有音频 -----
+            const allPlayBtns = document.querySelectorAll('.play-btn');
+            const addMeteorBtn = document.getElementById('addMeteorBtn');
+            const addFireworkBtn = document.getElementById('addFireworkBtn');
+
+            // 初始禁用所有操作按钮
+            const disableAllControls = (disabled = true) => {
+                allPlayBtns.forEach(btn => btn.disabled = disabled);
+                addMeteorBtn.disabled = disabled;
+                addFireworkBtn.disabled = disabled;
+                // 停止按钮不受影响，但保持逻辑
+            };
+            disableAllControls(true);
+
+            preloadStatus.textContent = '⏳ 正在预加载音频文件...';
+            preloadStatus.className = 'loading';
+
+            // 开始预加载
+            engine.preloadAll(config.sounds).then(() => {
+                preloadStatus.textContent = '✅ 所有音频预加载完成，可以播放';
+                preloadStatus.className = 'ready';
+                disableAllControls(false);
+                // 更新简单播放器的按钮状态（因为之前可能被手动禁用）
+                for (const key of ['heartbeat', 'city', 'space']) {
+                    const status = simpleStatusMap[key];
+                    if (status) status.updateButtons();
+                }
+            }).catch(err => {
+                // 理论上不会触发，因为 loadSound 捕获了所有错误
+                preloadStatus.textContent = '⚠️ 预加载出现问题，但已使用合成音后备';
+                preloadStatus.className = 'ready';
+                disableAllControls(false);
+                console.warn('预加载异常', err);
+            });
 
             // ----- 简单声音播放器 (心跳 / 城市 / 太空) -----
             const simpleKeys = ['heartbeat', 'city', 'space'];
-            const simpleStatus = {};
+            const simpleStatusMap = {};
 
             for (const key of simpleKeys) {
                 const cfg = config.sounds[key];
@@ -1082,13 +1131,17 @@
 
                 const updateButtons = () => {
                     const playing = currentId !== null && engine.isPlaying(currentId);
-                    playBtn.disabled = playing;
-                    stopBtn.disabled = !playing;
+                    // 只有不在预加载状态时才启用（预加载完成后由 disableAllControls 控制）
+                    const preloading = engine.isPreloading;
+                    playBtn.disabled = playing || preloading;
+                    stopBtn.disabled = !playing || preloading;
                     if (statusEl) {
                         statusEl.textContent = playing ? '▶ 播放中' : '● 就绪';
                         statusEl.className = 'status' + (playing ? ' playing' : '');
                     }
                 };
+
+                simpleStatusMap[key] = { updateButtons };
 
                 playBtn.addEventListener('click', async () => {
                     try {
@@ -1102,7 +1155,6 @@
                         if (entry) {
                             currentId = entry.id;
                             updateButtons();
-                            // 播放结束后重置
                             const checkDone = () => {
                                 if (!engine.isPlaying(entry.id)) {
                                     currentId = null;
@@ -1126,14 +1178,14 @@
                     }
                 });
 
-                simpleStatus[key] = { currentId, updateButtons };
+                // 初始更新
+                updateButtons();
             }
 
             // ----- 流星管理器 -----
             const meteorManager = new MeteorManager(engine);
             const meteorList = document.getElementById('meteorList');
             const meteorCount = document.getElementById('meteorCount');
-            const addMeteorBtn = document.getElementById('addMeteorBtn');
             const clearMeteorsBtn = document.getElementById('clearMeteorsBtn');
 
             const renderMeteors = (meteors) => {
@@ -1171,7 +1223,6 @@
                 }
                 meteorList.innerHTML = html;
 
-                // 绑定事件
                 meteorList.querySelectorAll('.meteor-play').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = parseInt(btn.dataset.id);
@@ -1198,7 +1249,6 @@
             meteorManager.onUpdate = renderMeteors;
 
             addMeteorBtn.addEventListener('click', async () => {
-                // 随机轨迹参数
                 const panStart = (Math.random() * 2 - 1) * 0.9;
                 const panEnd = (Math.random() * 2 - 1) * 0.9;
                 const volStart = 0.4 + Math.random() * 0.4;
@@ -1207,7 +1257,6 @@
                 const meteor = await meteorManager.addMeteor(
                     panStart, panEnd, volStart, volEnd, duration
                 );
-                // 自动播放
                 await meteorManager.playMeteor(meteor);
             });
 
@@ -1219,7 +1268,6 @@
             const fireworkManager = new FireworkManager(engine);
             const fireworkList = document.getElementById('fireworkList');
             const fireworkCount = document.getElementById('fireworkCount');
-            const addFireworkBtn = document.getElementById('addFireworkBtn');
             const clearFireworksBtn = document.getElementById('clearFireworksBtn');
 
             const renderFireworks = (fireworks) => {
@@ -1236,12 +1284,7 @@
                 clearFireworksBtn.disabled = false;
                 fireworkCount.textContent = `${fireworks.length} 个`;
 
-                const phaseMap = {
-                    'idle': '⏸ 待机',
-                    'launching': '🚀 发射中',
-                    'exploding': '💥 爆炸',
-                    'done': '✅ 完成',
-                };
+                const phaseMap = { 'idle': '⏸ 待机', 'launching': '🚀 发射中', 'exploding': '💥 爆炸', 'done': '✅ 完成' };
 
                 let html = '';
                 for (const fw of fireworks) {
@@ -1279,26 +1322,18 @@
                 fireworkManager.clearAll();
             });
 
-            // ================================================================
-            //  📋  打印 config 到控制台，方便调试
-            // ================================================================
+            // ----- 初始渲染 -----
+            renderMeteors([]);
+            renderFireworks([]);
+
+            // 暴露调试
+            window.__audioDebug = { engine, config, meteorManager, fireworkManager };
             console.log('🔊 当前声音配置:');
             console.log(JSON.stringify(config, null, 2));
             console.log('💡 提示: 修改 config 对象即可调整音频路径和截断参数');
-
-            // 暴露到全局方便调试
-            window.__audioDebug = {
-                engine,
-                config,
-                meteorManager,
-                fireworkManager,
-            };
-
-            // 初始状态更新
-            renderMeteors([]);
-            renderFireworks([]);
         });
     </script>
 
 </body>
+
 </html>

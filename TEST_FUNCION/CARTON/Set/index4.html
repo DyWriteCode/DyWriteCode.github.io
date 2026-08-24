@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎂 许个愿吧 · 睁眼蛋糕</title>
+    <title>🎂 许个愿吧 · 睁眼蛋糕 · 祝福化光</title>
     <style>
         * {
             margin: 0;
@@ -54,10 +54,36 @@
             opacity: 1;
         }
 
+        .status-tip {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 215, 140, 0.85);
+            font-size: 16px;
+            letter-spacing: 4px;
+            pointer-events: none;
+            z-index: 30;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            font-weight: 300;
+            text-shadow: 0 0 40px rgba(255, 200, 100, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-tip.show {
+            opacity: 1;
+        }
+
         @media (max-width: 600px) {
             #info {
                 font-size: 10px;
                 bottom: 16px;
+            }
+
+            .status-tip {
+                font-size: 13px;
+                top: 20px;
             }
         }
     </style>
@@ -66,9 +92,11 @@
 <body>
     <canvas id="mainCanvas"></canvas>
     <div id="info">✨ 许个愿吧 · 生日快乐 ✨</div>
+    <div class="status-tip" id="statusTip"></div>
+
     <script>
         // ================================================================
-        //  1. Canvas 初始化（主画布 = 窗口尺寸）
+        //  1. Canvas 初始化
         // ================================================================
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d', { alpha: true });
@@ -82,7 +110,7 @@
         resize();
 
         // ================================================================
-        //  2. 离屏 Canvas（固定 800x600 绘制蛋糕场景）
+        //  2. 离屏 Canvas（800x600 蛋糕场景）
         // ================================================================
         const OFF_W = 800;
         const OFF_H = 600;
@@ -92,7 +120,7 @@
         const offCtx = offCanvas.getContext('2d');
 
         // ================================================================
-        //  3. 工具函数（来自 cake.html）
+        //  3. 工具函数
         // ================================================================
         function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -140,10 +168,21 @@
 
         function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
 
+        function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+        function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
+
+        function easeInCubic(t) { return t * t * t; }
+
+        // ★ test.html 缓动
+        function easeInOutSine(t) {
+            return -(Math.cos(Math.PI * t) - 1) / 2;
+        }
+
         // ================================================================
-        //  4. 蛋糕场景常量（来自 cake.html）
+        //  4. 蛋糕场景（基于 cake.html）
         // ================================================================
-        const DESK_Y = OFF_H * 0.78; // 468
+        const DESK_Y = OFF_H * 0.78;
         const DESK_H = OFF_H - DESK_Y;
         const CAKE_CX = OFF_W / 2;
         const LAYER_H = 50;
@@ -163,11 +202,19 @@
             return DESK_Y - (index + 1) * LAYER_H;
         }
 
-        // ================================================================
-        //  5. 蛋糕绘制函数（全部绘制到 offCtx，坐标基于 800x600）
-        // ================================================================
+        function getCandlePositions() {
+            const topW = LAYERS[2].w;
+            const startX = CAKE_CX - topW / 2 + 8;
+            const endX = CAKE_CX + topW / 2 - 8;
+            const positions = [];
+            for (let i = 0; i < CANDLE_COUNT; i++) {
+                const t = (i + 0.5) / CANDLE_COUNT;
+                positions.push(lerp(startX, endX, t));
+            }
+            return positions;
+        }
 
-        // ---- 5a. 背景 ----
+        // ---- 绘制背景 ----
         function drawBackground() {
             const grad = offCtx.createRadialGradient(CAKE_CX, DESK_Y - 60, 30, CAKE_CX, DESK_Y - 60, 450);
             grad.addColorStop(0, '#2a1e18');
@@ -176,13 +223,11 @@
             grad.addColorStop(1, '#0a0808');
             offCtx.fillStyle = grad;
             offCtx.fillRect(0, 0, OFF_W, OFF_H);
-
             const grad2 = offCtx.createRadialGradient(CAKE_CX, 0, 20, CAKE_CX, 0, 350);
             grad2.addColorStop(0, 'rgba(255, 180, 100, 0.04)');
             grad2.addColorStop(1, 'rgba(255, 180, 100, 0)');
             offCtx.fillStyle = grad2;
             offCtx.fillRect(0, 0, OFF_W, OFF_H);
-
             const envGlow = offCtx.createRadialGradient(CAKE_CX, DESK_Y - 40, 20, CAKE_CX, DESK_Y - 40, 400);
             envGlow.addColorStop(0, 'rgba(255, 180, 100, 0.08)');
             envGlow.addColorStop(0.5, 'rgba(255, 140, 70, 0.04)');
@@ -191,24 +236,21 @@
             offCtx.fillRect(0, 0, OFF_W, OFF_H);
         }
 
-        // ---- 5b. 桌面 ----
+        // ---- 桌面 ----
         function drawDesk() {
             offCtx.save();
-
             const shadowGrad = offCtx.createLinearGradient(0, DESK_Y, 0, OFF_H);
             shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
             shadowGrad.addColorStop(0.15, 'rgba(0,0,0,0.3)');
             shadowGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
             offCtx.fillStyle = shadowGrad;
             offCtx.fillRect(0, DESK_Y, OFF_W, DESK_H);
-
             const deskGrad = offCtx.createLinearGradient(0, DESK_Y, 0, OFF_H);
             deskGrad.addColorStop(0, 'rgba(70, 40, 25, 0.85)');
             deskGrad.addColorStop(0.5, 'rgba(55, 32, 18, 0.90)');
             deskGrad.addColorStop(1, 'rgba(40, 22, 12, 0.95)');
             offCtx.fillStyle = deskGrad;
             offCtx.fillRect(0, DESK_Y, OFF_W, DESK_H);
-
             offCtx.strokeStyle = 'rgba(90, 55, 35, 0.25)';
             offCtx.lineWidth = 0.5;
             for (let y = DESK_Y + 4; y < OFF_H; y += 6) {
@@ -233,18 +275,17 @@
                 }
                 offCtx.stroke();
             }
-
             const highlight = offCtx.createLinearGradient(0, DESK_Y, 0, DESK_Y + 20);
             highlight.addColorStop(0, 'rgba(180, 130, 90, 0.10)');
             highlight.addColorStop(1, 'rgba(180, 130, 90, 0)');
             offCtx.fillStyle = highlight;
             offCtx.fillRect(0, DESK_Y, OFF_W, 20);
-
             offCtx.restore();
         }
 
-        // ---- 5c. 蜡烛光晕 ----
-        function drawCandleGlow(time) {
+        // ---- 蜡烛光晕 ----
+        function drawCandleGlow(time, flamesVisible) {
+            if (!flamesVisible) return;
             offCtx.save();
             const glow1 = offCtx.createRadialGradient(CAKE_CX, DESK_Y - 50, 20, CAKE_CX, DESK_Y - 50, 350);
             glow1.addColorStop(0, `rgba(255, 200, 120, ${0.06 + 0.02 * Math.sin(time * 0.5 + 1)})`);
@@ -278,13 +319,12 @@
             offCtx.restore();
         }
 
-        // ---- 5d. 蛋糕主体 ----
+        // ---- 蛋糕主体 ----
         function drawCreamPiping(layerIndex) {
             const layer = LAYERS[layerIndex];
             const w = layer.w;
             const x = CAKE_CX - w / 2;
             const y = getCakeLayerY(layerIndex);
-
             let mainColor, dotColor;
             if (layerIndex === 0) {
                 mainColor = 'rgba(255, 180, 170, 0.9)';
@@ -296,15 +336,12 @@
                 mainColor = 'rgba(190, 220, 255, 0.9)';
                 dotColor = 'rgba(210, 235, 255, 0.7)';
             }
-
             const radius = layerIndex === 0 ? 11 : (layerIndex === 1 ? 9 : 8);
             const spacing = layerIndex === 0 ? 22 : (layerIndex === 1 ? 20 : 18);
             const topY = y + 3;
-
             offCtx.save();
             const startX = x + radius + 5;
             const endX = x + w - radius - 5;
-
             for (let px = startX; px < endX; px += spacing) {
                 const offset = Math.sin(px * 0.5 + layerIndex * 2) * 1.5;
                 const cx = px + offset;
@@ -320,7 +357,6 @@
                 offCtx.arc(cx - 2, cy - 2, radius * 0.3, 0, Math.PI * 2);
                 offCtx.fill();
             }
-
             if (layerIndex === 2) {
                 for (let px = x + 18; px < x + w - 18; px += 24) {
                     const cx = px + Math.sin(px * 0.5) * 3;
@@ -356,7 +392,7 @@
             offCtx.restore();
         }
 
-        function drawCake() {
+        function drawCakeBody() {
             offCtx.save();
             for (let i = 1; i < LAYERS.length; i++) {
                 const layer = LAYERS[i];
@@ -372,19 +408,16 @@
                 offCtx.shadowBlur = 0;
                 offCtx.shadowOffsetY = 0;
             }
-
             for (let i = 0; i < LAYERS.length; i++) {
                 const layer = LAYERS[i];
                 const w = layer.w;
                 const x = CAKE_CX - w / 2;
                 const y = getCakeLayerY(i);
                 const h = LAYER_H;
-
                 offCtx.shadowColor = 'rgba(0,0,0,0.35)';
                 offCtx.shadowBlur = 15;
                 offCtx.shadowOffsetX = 3;
                 offCtx.shadowOffsetY = 5;
-
                 const grad = offCtx.createLinearGradient(x, y, x + w, y);
                 grad.addColorStop(0, darkenColor(layer.color, 30));
                 grad.addColorStop(0.2, lightenColor(layer.color, 10));
@@ -394,12 +427,10 @@
                 offCtx.fillStyle = grad;
                 roundRect(offCtx, x, y, w, h, 5);
                 offCtx.fill();
-
                 offCtx.shadowColor = 'transparent';
                 offCtx.shadowBlur = 0;
                 offCtx.shadowOffsetX = 0;
                 offCtx.shadowOffsetY = 0;
-
                 const hlGrad = offCtx.createLinearGradient(x, y + 3, x + w, y + 8);
                 hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
                 hlGrad.addColorStop(0.25, `rgba(255,255,255,${i === 2 ? 0.4 : 0.2})`);
@@ -407,39 +438,24 @@
                 hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
                 offCtx.fillStyle = hlGrad;
                 offCtx.fillRect(x + 8, y + 3, w - 16, 6);
-
                 const sideGrad = offCtx.createLinearGradient(x + w - 10, y, x + w, y + h);
                 sideGrad.addColorStop(0, 'rgba(0,0,0,0.05)');
                 sideGrad.addColorStop(0.5, 'rgba(0,0,0,0.2)');
                 sideGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
                 offCtx.fillStyle = sideGrad;
                 offCtx.fillRect(x + w - 10, y, 10, h);
-
                 const leftGrad = offCtx.createLinearGradient(x, y, x + 5, y + h);
                 leftGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
                 leftGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
                 leftGrad.addColorStop(1, 'rgba(255,255,255,0)');
                 offCtx.fillStyle = leftGrad;
                 offCtx.fillRect(x, y, 5, h);
-
                 drawCreamPiping(i);
             }
             offCtx.restore();
         }
 
-        // ---- 5e. 蜡烛 ----
-        function getCandlePositions() {
-            const topW = LAYERS[2].w;
-            const startX = CAKE_CX - topW / 2 + 8;
-            const endX = CAKE_CX + topW / 2 - 8;
-            const positions = [];
-            for (let i = 0; i < CANDLE_COUNT; i++) {
-                const t = (i + 0.5) / CANDLE_COUNT;
-                positions.push(lerp(startX, endX, t));
-            }
-            return positions;
-        }
-
+        // ---- 蜡烛 ----
         function drawCandles() {
             const positions = getCandlePositions();
             const topY = getCakeLayerY(2);
@@ -448,39 +464,32 @@
                 const cx = positions[i];
                 const cy = topY;
                 const color = CANDLE_COLORS[i % CANDLE_COLORS.length];
-
                 offCtx.shadowColor = 'rgba(0,0,0,0.25)';
                 offCtx.shadowBlur = 6;
                 offCtx.shadowOffsetX = 1;
                 offCtx.shadowOffsetY = 2;
-
                 const grad = offCtx.createLinearGradient(cx - CANDLE_W / 2, cy, cx + CANDLE_W / 2, cy);
                 grad.addColorStop(0, darkenColor(color, 25));
                 grad.addColorStop(0.3, lightenColor(color, 20));
                 grad.addColorStop(0.7, color);
                 grad.addColorStop(1, darkenColor(color, 15));
-
                 offCtx.fillStyle = grad;
                 roundRect(offCtx, cx - CANDLE_W / 2, cy - CANDLE_H, CANDLE_W, CANDLE_H, 1.5);
                 offCtx.fill();
-
                 offCtx.shadowColor = 'transparent';
                 offCtx.shadowBlur = 0;
                 offCtx.shadowOffsetX = 0;
                 offCtx.shadowOffsetY = 0;
-
                 const hlGrad = offCtx.createLinearGradient(cx - CANDLE_W / 2, cy - CANDLE_H, cx - CANDLE_W / 2 + 2.5, cy);
                 hlGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
                 hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.35)');
                 hlGrad.addColorStop(1, 'rgba(255,255,255,0.05)');
                 offCtx.fillStyle = hlGrad;
                 offCtx.fillRect(cx - CANDLE_W / 2 + 0.5, cy - CANDLE_H + 1, 2, CANDLE_H - 2);
-
                 offCtx.fillStyle = 'rgba(255, 240, 220, 0.25)';
                 offCtx.beginPath();
                 offCtx.ellipse(cx, cy - CANDLE_H + 0.5, CANDLE_W / 2 - 0.5, 2, 0, 0, Math.PI * 2);
                 offCtx.fill();
-
                 offCtx.fillStyle = '#333';
                 offCtx.beginPath();
                 offCtx.arc(cx, cy - CANDLE_H + 1, 0.8, 0, Math.PI * 2);
@@ -489,8 +498,12 @@
             offCtx.restore();
         }
 
-        // ---- 5f. 火焰 ----
-        function drawFlames(time) {
+        // ---- ★ 火焰（支持闭眼熄灭） ----
+        function drawFlames(time, closeProgress) {
+            // closeProgress: 0=全亮, 1=全灭
+            const flameAlpha = clamp(1 - closeProgress * 1.2, 0, 1);
+            if (flameAlpha < 0.01) return;
+
             const positions = getCandlePositions();
             const topY = getCakeLayerY(2);
             offCtx.save();
@@ -498,62 +511,63 @@
             for (let i = 0; i < positions.length; i++) {
                 const cx = positions[i];
                 const baseY = topY - CANDLE_H + 1;
-
                 const phase = i * 1.3 + 0.7;
                 const scaleX = 0.92 + 0.08 * Math.sin(time * 1.2 + phase);
                 const scaleY = 0.90 + 0.10 * Math.sin(time * 1.6 + phase * 0.7);
                 const offsetY = 1.2 * Math.sin(time * 2.0 + phase * 1.2);
-
                 const flameX = cx;
                 const flameY = baseY + offsetY - 2;
 
-                const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase));
+                // 光晕
+                const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase)) * (0.3 + 0.7 * flameAlpha);
                 const glow = offCtx.createRadialGradient(flameX, flameY, 2, flameX, flameY, glowRadius);
-                glow.addColorStop(0, `rgba(255, 200, 100, ${0.12 + 0.05 * Math.sin(time * 0.7 + phase)})`);
-                glow.addColorStop(0.5, `rgba(255, 160, 70, ${0.05 + 0.03 * Math.sin(time * 0.5 + phase * 0.8)})`);
+                const glowA = (0.12 + 0.05 * Math.sin(time * 0.7 + phase)) * flameAlpha;
+                glow.addColorStop(0, `rgba(255, 200, 100, ${glowA})`);
+                glow.addColorStop(0.5, `rgba(255, 160, 70, ${glowA * 0.5})`);
                 glow.addColorStop(1, 'rgba(255, 120, 50, 0)');
                 offCtx.fillStyle = glow;
                 offCtx.beginPath();
                 offCtx.arc(flameX, flameY, glowRadius, 0, Math.PI * 2);
                 offCtx.fill();
 
+                // 火焰主体
                 offCtx.save();
                 offCtx.translate(flameX, flameY);
                 offCtx.scale(scaleX, scaleY);
 
                 const grad = offCtx.createRadialGradient(0, -3, 1, 0, 0, FLAME_H * 0.6);
-                grad.addColorStop(0, '#fffbe6');
-                grad.addColorStop(0.15, '#ffdd44');
-                grad.addColorStop(0.4, '#ffaa00');
-                grad.addColorStop(0.7, '#ff7700');
-                grad.addColorStop(1, '#ff4400');
+                const a = flameAlpha;
+                grad.addColorStop(0, `rgba(255, 251, 230, ${a})`);
+                grad.addColorStop(0.15, `rgba(255, ${Math.round(221 * a)}, ${Math.round(68 * a)}, ${a})`);
+                grad.addColorStop(0.4, `rgba(255, ${Math.round(170 * a)}, 0, ${a})`);
+                grad.addColorStop(0.7, `rgba(255, ${Math.round(119 * a)}, 0, ${a})`);
+                grad.addColorStop(1, `rgba(255, ${Math.round(68 * a)}, 0, ${a * 0.5})`);
 
                 offCtx.beginPath();
-                const w = FLAME_W / 2;
-                const h = FLAME_H / 2;
+                const w = FLAME_W / 2,
+                    h = FLAME_H / 2;
                 offCtx.moveTo(0, -h);
                 offCtx.bezierCurveTo(w * 0.8, -h * 0.4, w, -h * 0.1, w, h * 0.2);
                 offCtx.bezierCurveTo(w, h * 0.6, w * 0.6, h, 0, h * 0.85);
                 offCtx.bezierCurveTo(-w * 0.6, h, -w, h * 0.6, -w, h * 0.2);
                 offCtx.bezierCurveTo(-w, -h * 0.1, -w * 0.8, -h * 0.4, 0, -h);
                 offCtx.closePath();
-
                 offCtx.fillStyle = grad;
                 offCtx.fill();
 
                 const coreGrad = offCtx.createRadialGradient(0, -2, 0.5, 0, 0, FLAME_H * 0.25);
-                coreGrad.addColorStop(0, 'rgba(255, 255, 240, 0.9)');
-                coreGrad.addColorStop(0.3, 'rgba(255, 230, 150, 0.6)');
-                coreGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
+                coreGrad.addColorStop(0, `rgba(255, 255, 240, ${0.9 * a})`);
+                coreGrad.addColorStop(0.3, `rgba(255, 230, 150, ${0.6 * a})`);
+                coreGrad.addColorStop(1, `rgba(255, 200, 80, 0)`);
                 offCtx.fillStyle = coreGrad;
                 offCtx.beginPath();
                 offCtx.ellipse(0, -2, FLAME_W * 0.25, FLAME_H * 0.25, 0, 0, Math.PI * 2);
                 offCtx.fill();
-
                 offCtx.restore();
 
                 const baseGlow = offCtx.createRadialGradient(cx, baseY + 1, 1, cx, baseY + 1, 12);
-                baseGlow.addColorStop(0, `rgba(255, 200, 100, ${0.15 + 0.08 * Math.sin(time * 0.8 + phase)})`);
+                const bA = (0.15 + 0.08 * Math.sin(time * 0.8 + phase)) * a;
+                baseGlow.addColorStop(0, `rgba(255, 200, 100, ${bA})`);
                 baseGlow.addColorStop(1, 'rgba(255, 150, 70, 0)');
                 offCtx.fillStyle = baseGlow;
                 offCtx.beginPath();
@@ -563,7 +577,7 @@
             offCtx.restore();
         }
 
-        // ---- 5g. 礼物堆（物理堆叠，来自 cake.html） ----
+        // ---- 礼物 ----
         function drawGift(x, y, w, h, boxColor, ribbonColor, shadowOffset) {
             shadowOffset = shadowOffset || 5;
             if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) return;
@@ -572,7 +586,6 @@
             offCtx.shadowBlur = 10;
             offCtx.shadowOffsetX = 3;
             offCtx.shadowOffsetY = shadowOffset;
-
             const gradBox = offCtx.createLinearGradient(x, y, x + w, y + h);
             gradBox.addColorStop(0, lightenColor(boxColor, 25));
             gradBox.addColorStop(0.5, boxColor);
@@ -580,23 +593,19 @@
             offCtx.fillStyle = gradBox;
             roundRect(offCtx, x, y, w, h, 4);
             offCtx.fill();
-
             offCtx.shadowColor = 'transparent';
             offCtx.shadowBlur = 0;
             offCtx.shadowOffsetX = 0;
             offCtx.shadowOffsetY = 0;
-
             offCtx.fillStyle = ribbonColor;
             offCtx.fillRect(x + w / 2 - 3, y, 6, h);
             offCtx.fillRect(x, y + h / 2 - 3, w, 6);
-
             offCtx.beginPath();
             offCtx.arc(x + w / 2 - 7, y - 3, 7, 0, Math.PI * 2);
             offCtx.fill();
             offCtx.beginPath();
             offCtx.arc(x + w / 2 + 7, y - 3, 7, 0, Math.PI * 2);
             offCtx.fill();
-
             offCtx.fillStyle = 'rgba(255,255,255,0.15)';
             offCtx.fillRect(x + 6, y + 3, w - 12, 4);
             offCtx.restore();
@@ -664,7 +673,7 @@
             }
         }
 
-        // ---- 5h. 气球 ----
+        // ---- 气球 ----
         const balloons = [];
         const balloonColors = ['#ff6b81', '#ffd93d', '#6bcfff', '#a29bfe', '#ff9ff3', '#ff9f43', '#00d2d3', '#f368e0',
             '#ff6b81', '#ffd93d'
@@ -707,7 +716,6 @@
                 offCtx.arc(baseX - 1.5, baseY - 1.5, 1.5, 0, Math.PI * 2);
                 offCtx.fill();
             }
-
             for (let b of balloons) {
                 const floatOffset = Math.sin(time * b.speed + b.phase) * 5;
                 const swingOffset = Math.sin(time * b.swingSpeed * 2 + b.phase) * 4;
@@ -721,7 +729,6 @@
                 offCtx.strokeStyle = 'rgba(200,200,200,0.3)';
                 offCtx.lineWidth = 1.2;
                 offCtx.stroke();
-
                 offCtx.shadowColor = 'rgba(0,0,0,0.2)';
                 offCtx.shadowBlur = 8;
                 offCtx.shadowOffsetX = 2;
@@ -730,7 +737,6 @@
                 offCtx.ellipse(currentX, currentY, b.radius, b.radius * 1.3, 0, 0, Math.PI * 2);
                 offCtx.fillStyle = b.color;
                 offCtx.fill();
-
                 offCtx.shadowColor = 'transparent';
                 offCtx.shadowBlur = 0;
                 offCtx.beginPath();
@@ -738,7 +744,6 @@
                     Math.PI * 2);
                 offCtx.fillStyle = 'rgba(255,255,255,0.3)';
                 offCtx.fill();
-
                 offCtx.beginPath();
                 offCtx.moveTo(currentX, currentY + b.radius * 0.9);
                 offCtx.lineTo(currentX - 2, currentY + b.radius * 1.1);
@@ -748,21 +753,18 @@
             }
         }
 
-        // ---- 5i. 横幅 ----
+        // ---- 横幅 ----
         function drawBanner() {
             const bannerW = OFF_W - 20;
             const bannerH = 55;
             const bx = (OFF_W - bannerW) / 2;
             const by = 80;
             const curveDepth = 22;
-
             offCtx.save();
-
             const gradient = offCtx.createLinearGradient(bx, 0, bx, by + bannerH + curveDepth);
             gradient.addColorStop(0, '#e74c3c');
             gradient.addColorStop(0.5, '#c0392b');
             gradient.addColorStop(1, '#a93226');
-
             offCtx.shadowColor = 'rgba(0,0,0,0.3)';
             offCtx.shadowBlur = 14;
             offCtx.shadowOffsetX = 2;
@@ -777,7 +779,6 @@
             offCtx.fill();
             offCtx.shadowColor = 'transparent';
             offCtx.shadowBlur = 0;
-
             offCtx.strokeStyle = '#f1c40f';
             offCtx.lineWidth = 3;
             offCtx.beginPath();
@@ -787,7 +788,6 @@
             offCtx.quadraticCurveTo(CAKE_CX, by + bannerH + curveDepth * 2, bx, by + bannerH + curveDepth);
             offCtx.closePath();
             offCtx.stroke();
-
             const triSize = 20;
             offCtx.fillStyle = '#f1c40f';
             offCtx.beginPath();
@@ -802,8 +802,6 @@
             offCtx.lineTo(bx + bannerW, by + bannerH + curveDepth);
             offCtx.closePath();
             offCtx.fill();
-
-            // 小蛋糕（左侧）
             const cakeX = CAKE_CX - 150;
             const cakeY = by + bannerH / 2 + curveDepth * 0.8;
             offCtx.fillStyle = '#f1c40f';
@@ -816,8 +814,6 @@
             offCtx.beginPath();
             offCtx.arc(cakeX, cakeY - 3, 4, 0, Math.PI * 2);
             offCtx.fill();
-
-            // 小礼物（右侧）
             const giftX = CAKE_CX + 150;
             const giftY = by + bannerH / 2 + curveDepth * 0.8;
             offCtx.fillStyle = '#e67e22';
@@ -827,7 +823,6 @@
             offCtx.strokeRect(giftX - 10, giftY - 14, 20, 16);
             offCtx.fillStyle = '#e74c3c';
             offCtx.fillRect(giftX - 4, giftY - 14, 8, 16);
-
             offCtx.textAlign = 'center';
             offCtx.textBaseline = 'middle';
             offCtx.font = 'bold 40px "Arial", "Microsoft YaHei", sans-serif';
@@ -835,12 +830,10 @@
             offCtx.shadowBlur = 4;
             offCtx.shadowOffsetX = 1;
             offCtx.shadowOffsetY = 2;
-
             const text = '生日快乐';
             const chars = text.split('');
             const charWidth = 50;
             const startX = CAKE_CX - (chars.length - 1) * charWidth / 2;
-
             for (let i = 0; i < chars.length; i++) {
                 const x = startX + i * charWidth;
                 const normalizedX = (2 * (x - CAKE_CX)) / bannerW;
@@ -851,7 +844,6 @@
                 offCtx.fillStyle = '#fff8e7';
                 offCtx.fillText(chars[i], x, y);
             }
-
             offCtx.font = 'bold 14px "Arial", "Microsoft YaHei", sans-serif';
             const enText = 'HAPPY BIRTHDAY';
             offCtx.fillStyle = '#f1c40f';
@@ -859,7 +851,6 @@
             offCtx.shadowColor = 'rgba(0,0,0,0.3)';
             offCtx.shadowBlur = 2;
             offCtx.fillText(enText, CAKE_CX, enY);
-
             offCtx.shadowColor = 'transparent';
             offCtx.shadowBlur = 0;
             offCtx.fillStyle = 'rgba(255, 215, 0, 0.8)';
@@ -888,45 +879,38 @@
                 offCtx.arc(sx, by + 12 + droop * 0.6, 3, 0, Math.PI * 2);
                 offCtx.fill();
             }
-
             offCtx.restore();
         }
 
-        // ---- 5j. 完整蛋糕场景绘制 ----
-        function drawCakeScene(time) {
+        // ---- 完整蛋糕场景 ----
+        function drawCakeScene(time, closeProgress) {
             offCtx.clearRect(0, 0, OFF_W, OFF_H);
             drawBackground();
             drawDesk();
-            drawCandleGlow(time);
-            drawCake();
+            drawCandleGlow(time, true);
+            drawCakeBody();
             drawGiftPyramid();
             drawBalloons(time);
             drawBanner();
             drawCandles();
-            drawFlames(time);
+            drawFlames(time, closeProgress || 0);
         }
 
         // ================================================================
-        //  6. 眼睛睁开逻辑（来自 index1.html）
+        //  5. 初始睁眼逻辑（clip 方式）
         // ================================================================
         const CONFIG = {
             eyeDuration: 2000,
             liftDuration: 4000,
-            maxOffsetY: 0.0, // 不需要抬升，设为0
-            glowIntensity: 0.7,
-            starAppearStart: 0.85,
-            starAppearEnd: 1,
-            starFadeRange: 0.1,
-            starRandomOffset: 0.04,
         };
 
         let startTime = 0;
         let liftStartTime = null;
         let animId = null;
+        let flamesVisible = true;
 
-        // ---- 6a. 主场景绘制（将离屏canvas绘制到主canvas，并应用缩放） ----
-        function drawFullScene(offsetY, glowIntensity, liftProgress, time) {
-            // 计算缩放比例，使蛋糕场景居中显示
+        // 绘制蛋糕到主画布（无遮罩）
+        function drawCakeToMain() {
             const scaleX = W / OFF_W;
             const scaleY = H / OFF_H;
             const scale = Math.min(scaleX, scaleY);
@@ -934,26 +918,14 @@
             const drawH = OFF_H * scale;
             const offsetX = (W - drawW) / 2;
             const offsetYPos = (H - drawH) / 2;
-
-            // 在离屏canvas上绘制蛋糕场景
-            drawCakeScene(time);
-
-            // 将离屏canvas绘制到主canvas
             ctx.save();
             ctx.drawImage(offCanvas, offsetX, offsetYPos, drawW, drawH);
             ctx.restore();
         }
 
-        // ---- 6b. 眼睛睁开遮罩 ----
-        function drawEyeOpenMask(progress, offsetY, glowIntensity, liftProgress, time) {
+        // 使用 clip 在椭圆区域内绘制蛋糕（用于初始睁眼）
+        function drawCakeWithClip(progress) {
             const p = Math.min(Math.max(progress, 0), 1);
-            if (p >= 1) return;
-
-            ctx.save();
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, W, H);
-
             const cx = W / 2;
             const cy = H * 0.72;
             const maxR = Math.max(W, H) * 0.75;
@@ -961,19 +933,653 @@
             const rx = p * maxR;
             const ry = p * maxR * ratio;
 
+            ctx.save();
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
             ctx.beginPath();
             ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
             ctx.clip();
-
-            drawFullScene(offsetY, glowIntensity, liftProgress, time);
+            drawCakeToMain();
             ctx.restore();
         }
 
-        // ---- 6c. 渲染循环 ----
+        // ================================================================
+        //  ★★★ 闭眼遮罩（来自 test.html） ★★★
+        //  径向渐变：中心透明 -> 边缘黑色，柔和闭眼效果
+        //  使用 easeOutCubic 缓动，从边缘平滑向中心收缩
+        // ================================================================
+        function drawEyeCloseMask(progress) {
+            const p = clamp(progress, 0, 1);
+
+            const cx = W / 2;
+            const cy = H / 2;
+            const maxR = Math.max(W, H) * 0.9;
+
+            // 使用 easeOutCubic 让遮罩从边缘平滑收缩
+            const eased = easeOutCubic(p);
+            const currentR = maxR * (1 - eased);
+
+            ctx.save();
+
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+            const transparentR = Math.min(currentR * 1.25, maxR);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(Math.min(0.8, transparentR / maxR), 'rgba(0,0,0,0)');
+            grad.addColorStop(Math.min(0.95, (transparentR + 40) / maxR), 'rgba(0,0,0,1)');
+            grad.addColorStop(1, 'rgba(0,0,0,1)');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            if (p >= 1) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            ctx.restore();
+
+            // 星尘效果（半闭眼时闪烁）
+            if (p > 0.5 && p < 1) {
+                const alpha = (p - 0.5) / 0.5 * 0.12;
+                ctx.save();
+                for (let i = 0; i < 18; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 80 + Math.random() * 350;
+                    const sx = cx + Math.cos(angle) * dist;
+                    const sy = cy + Math.sin(angle) * dist * 0.6;
+                    const size = 0.5 + Math.random() * 1.5;
+                    ctx.globalAlpha = (0.3 + Math.random() * 0.7) * alpha;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // ================================================================
+        //  6. 自定义闭眼 + 睁眼 + 吹蜡烛 + 烟雾 + 粒子祝福
+        //  ★ 采用 test.html 的 closeState 状态管理 ★
+        //  ★ 已移除重开机制（按钮 + R键） ★
+        // ================================================================
+
+        // ---- 粒子祝福系统 ----
+        const PARTICLE_CFG = {
+            flyDuration: 2000,
+            fontSizeMin: 24,
+            fontSizeMax: 30,
+            textColor: '#f0f4f8',
+            targetFontSize: 110,
+            particleSizeMin: 2.8,
+            particleSizeMax: 5.2,
+            fadeStart: 0.30,
+            fadeEnd: 0.68,
+            particlesPerChar: 400,
+            charGap: 50,
+            jitterMax: 5000,
+            stableParticleAlpha: 0.7,
+        };
+
+        const BASE_BLESSINGS = [
+            '愿你眼中有星辰大海', '心中有繁花似锦', '前路漫漫亦灿灿', '做自己的光', '温柔且坚定',
+            '未来皆可期', '感谢青春有你', '去更远的地方', '永远年轻，永远热泪盈眶', '生日快乐',
+            '愿你所遇皆温柔', '岁月如歌', '前程似锦', '万事胜意', '未来可期', '平安喜乐',
+            '得偿所愿', '光芒万丈', '不负韶华', '以梦为马', '乘风破浪', '星河长明',
+            '万事顺遂', '人间值得', '山河无恙', '人间皆安'
+        ];
+
+        const TOTAL_PARTICLES = PARTICLE_CFG.particlesPerChar * 4;
+        let BLESSINGS = [];
+        while (BLESSINGS.length < TOTAL_PARTICLES) {
+            BASE_BLESSINGS.forEach(t => { if (BLESSINGS.length < TOTAL_PARTICLES) BLESSINGS.push(t); });
+        }
+        for (let i = BLESSINGS.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [BLESSINGS[i], BLESSINGS[j]] = [BLESSINGS[j], BLESSINGS[i]];
+        }
+
+        const particleTex = (() => {
+            const c = document.createElement('canvas');
+            const size = 28;
+            c.width = size;
+            c.height = size;
+            const cx = c.getContext('2d');
+            const grad = cx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.3, 'rgba(255,255,255,0.95)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            cx.fillStyle = grad;
+            cx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            cx.fill();
+            return c;
+        })();
+
+        const offscreen = document.createElement('canvas');
+        const offCtx2 = offscreen.getContext('2d');
+
+        function extractCharPixels(char, fontSize, targetCount) {
+            const pad = 16,
+                size = fontSize + pad * 2;
+            offscreen.width = size;
+            offscreen.height = size;
+            offCtx2.clearRect(0, 0, size, size);
+            offCtx2.textAlign = 'center';
+            offCtx2.textBaseline = 'middle';
+            offCtx2.font = `bold ${fontSize}px "PingFang SC","Microsoft YaHei",sans-serif`;
+            offCtx2.fillStyle = '#ffffff';
+            offCtx2.fillText(char, size / 2, size / 2);
+            const imgData = offCtx2.getImageData(0, 0, size, size);
+            const data = imgData.data;
+            const raw = [];
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const idx = (y * size + x) * 4;
+                    if (data[idx + 3] > 30) raw.push({
+                        x: x - pad,
+                        y: y - pad,
+                        r: data[idx],
+                        g: data[idx + 1],
+                        b: data[idx + 2]
+                    });
+                }
+            }
+            if (raw.length > 0) {
+                let minX = Infinity,
+                    maxX = -Infinity,
+                    minY = Infinity,
+                    maxY = -Infinity;
+                raw.forEach(p => {
+                    if (p.x < minX) minX = p.x;
+                    if (p.x > maxX) maxX = p.x;
+                    if (p.y < minY) minY = p.y;
+                    if (p.y > maxY) maxY = p.y;
+                });
+                const cx = (minX + maxX) / 2,
+                    cy = (minY + maxY) / 2;
+                raw.forEach(p => {
+                    p.x -= cx;
+                    p.y -= cy;
+                });
+            }
+            if (raw.length === 0) {
+                for (let i = 0; i < targetCount; i++) raw.push({
+                    x: rand(-fontSize / 2, fontSize / 2),
+                    y: rand(-fontSize / 2, fontSize / 2),
+                    r: 255,
+                    g: 215,
+                    b: 50
+                });
+            }
+            const result = [];
+            const shuffled = [...raw];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = randInt(0, i);
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            for (let i = 0; i < Math.min(targetCount, shuffled.length); i++) result.push(shuffled[i]);
+            while (result.length < targetCount) {
+                const p = raw[randInt(0, raw.length - 1)];
+                result.push({ x: p.x + rand(-3, 3), y: p.y + rand(-3, 3), r: p.r, g: p.g, b: p.b });
+            }
+            return result;
+        }
+
+        const rand = (a, b) => Math.random() * (b - a) + a;
+        const randInt = (a, b) => Math.floor(rand(a, b + 1));
+
+        function buildTargetPositions() {
+            const chars = ['生', '日', '快', '乐'];
+            const fs = PARTICLE_CFG.targetFontSize,
+                gap = PARTICLE_CFG.charGap;
+            const charWidth = fs * 0.62;
+            const totalW = chars.length * charWidth + (chars.length - 1) * gap;
+            const startX = (W - totalW) / 2;
+            const centerY = H * 0.30;
+            const allPos = [];
+            chars.forEach((ch, ci) => {
+                const px = extractCharPixels(ch, fs, PARTICLE_CFG.particlesPerChar);
+                const cx = startX + ci * (charWidth + gap) + charWidth / 2;
+                px.forEach(p => {
+                    allPos.push({
+                        x: cx + p.x,
+                        y: centerY + p.y,
+                        r: p.r || 255,
+                        g: p.g || 215,
+                        b: p.b || 50,
+                        group: ci
+                    });
+                });
+            });
+            for (let g = 0; g < 4; g++) {
+                const groupItems = allPos.filter(p => p.group === g);
+                for (let i = groupItems.length - 1; i > 0; i--) {
+                    const j = randInt(0, i);
+                    [groupItems[i], groupItems[j]] = [groupItems[j], groupItems[i]];
+                }
+            }
+            return allPos;
+        }
+
+        let blessings = [];
+        let allParticles = [];
+        let targetCharPositions = [];
+        let particleState = 'idle';
+        let flyStartTime = 0;
+
+        function initParticles() {
+            const targetPos = buildTargetPositions();
+            const count = Math.min(BLESSINGS.length, targetPos.length);
+            const groupBaseDelay = [0, 1500, 3000, 4500];
+            targetCharPositions = [];
+            const fs = PARTICLE_CFG.targetFontSize,
+                gap = PARTICLE_CFG.charGap;
+            const charWidth = fs * 0.62;
+            const totalW = 4 * charWidth + 3 * gap;
+            const startX = (W - totalW) / 2;
+            const centerY = H * 0.30;
+            ['生', '日', '快', '乐'].forEach((ch, i) => {
+                const cx = startX + i * (charWidth + gap) + charWidth / 2;
+                targetCharPositions.push({ char: ch, x: cx, y: centerY, fontSize: fs });
+            });
+            blessings = [];
+            const groupTotal = [0, 0, 0, 0];
+            const groupProgress = [0, 0, 0, 0];
+            targetPos.forEach(pos => { if (pos.group >= 0 && pos.group < 4) groupTotal[pos.group]++; });
+            for (let i = 0; i < count; i++) {
+                const pos = targetPos[i % targetPos.length];
+                const base = groupBaseDelay[pos.group] || 0;
+                const idxInGroup = groupProgress[pos.group]++;
+                const currentGroupTotal = groupTotal[pos.group];
+                const t = idxInGroup / currentGroupTotal;
+                const timeInGroup = t * PARTICLE_CFG.jitterMax;
+                const startDelay = base + Math.max(0, timeInGroup);
+                blessings.push(createBlessingItem(BLESSINGS[i], i, count, pos, startDelay));
+            }
+            allParticles = blessings.map(b => ({
+                x: 0,
+                y: 0,
+                targetX: b.targetX,
+                targetY: b.targetY,
+                size: b.particleSize,
+                r: b.color.r,
+                g: b.color.g,
+                b: b.color.b,
+                alpha: 0,
+                progress: 0,
+                startDelay: b.startDelay,
+                group: b.group,
+                activated: false,
+                done: false
+            }));
+            particleState = 'idle';
+            flyStartTime = 0;
+            blessings.forEach(b => {
+                b.progress = 0;
+                b.done = false;
+                b.activated = false;
+            });
+            allParticles.forEach(p => {
+                p.alpha = 0;
+                p.progress = 0;
+                p.activated = false;
+                p.done = false;
+            });
+        }
+
+        function createBlessingItem(text, index, total, targetPos, startDelay) {
+            const fs = rand(PARTICLE_CFG.fontSizeMin, PARTICLE_CFG.fontSizeMax);
+            const dirs = ['left', 'right', 'top', 'bottom'];
+            const dir = dirs[index % dirs.length];
+            const margin = 50;
+            let sx, sy;
+            switch (dir) {
+                case 'left':
+                    sx = -margin - fs * text.length * 0.35;
+                    sy = rand(H * 0.08, H * 0.92);
+                    break;
+                case 'right':
+                    sx = W + margin + fs * text.length * 0.35;
+                    sy = rand(H * 0.08, H * 0.92);
+                    break;
+                case 'top':
+                    sx = rand(W * 0.05, W * 0.95);
+                    sy = -margin - fs;
+                    break;
+                case 'bottom':
+                    sx = rand(W * 0.05, W * 0.95);
+                    sy = H + margin + fs;
+                    break;
+            }
+            return {
+                text,
+                fontSize: fs,
+                startX: sx,
+                startY: sy,
+                targetX: targetPos.x,
+                targetY: targetPos.y,
+                cpX: (sx + targetPos.x) / 2 + rand(-W * 0.15, W * 0.15),
+                cpY: (sy + targetPos.y) / 2 + rand(-H * 0.15, H * 0.15),
+                index,
+                progress: 0,
+                done: false,
+                particleSize: rand(PARTICLE_CFG.particleSizeMin, PARTICLE_CFG.particleSizeMax),
+                color: { r: 255, g: 240, b: 200 },
+                group: targetPos.group,
+                startDelay,
+                activated: false
+            };
+        }
+
+        function drawParticle(p) {
+            if (p.alpha < 0.01) return;
+            const size = p.size;
+            ctx.save();
+            ctx.globalAlpha = clamp(p.alpha * PARTICLE_CFG.stableParticleAlpha, 0, 1);
+            ctx.drawImage(particleTex, p.x - size / 2, p.y - size / 2, size, size);
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = `rgba(255,230,180,0.8)`;
+            ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
+            ctx.restore();
+        }
+
+        function drawGlowText(text, x, y, fs, alpha = 1, blur = 40, color = 'rgba(255,215,0,0.5)') {
+            if (alpha < 0.05 || fs < 3) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `bold ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = blur;
+            ctx.fillStyle = PARTICLE_CFG.textColor;
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        function drawStableGlow() {
+            const fs = PARTICLE_CFG.targetFontSize;
+            targetCharPositions.forEach(item => {
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `bold ${fs}px "PingFang SC","Microsoft YaHei",sans-serif`;
+                const grad = ctx.createLinearGradient(item.x - fs / 2, item.y, item.x + fs / 2, item.y);
+                grad.addColorStop(0, '#ffd700');
+                grad.addColorStop(0.5, '#ffb6c1');
+                grad.addColorStop(1, '#87ceeb');
+                ctx.shadowColor = 'rgba(255,200,100,0.7)';
+                ctx.shadowBlur = 50;
+                ctx.fillStyle = grad;
+                ctx.fillText(item.char, item.x, item.y);
+                ctx.restore();
+            });
+        }
+
+        function updateParticles(timestamp) {
+            if (particleState !== 'flying') return;
+            if (flyStartTime === 0) flyStartTime = timestamp;
+            const elapsed = timestamp - flyStartTime;
+            let allDone = true;
+            allParticles.forEach((p, idx) => {
+                const b = blessings[idx];
+                if (!p.activated && elapsed >= p.startDelay) {
+                    p.activated = true;
+                    b.activated = true;
+                }
+                if (!p.activated) { allDone = false; return; }
+                if (p.done) return;
+                const localElapsed = elapsed - p.startDelay;
+                const eased = easeInOutCubic(clamp(localElapsed / PARTICLE_CFG.flyDuration, 0, 1));
+                p.progress = eased;
+                b.progress = eased;
+                const t = eased,
+                    mt = 1 - t;
+                const cx = mt * mt * b.startX + 2 * mt * t * b.cpX + t * t * b.targetX;
+                const cy = mt * mt * b.startY + 2 * mt * t * b.cpY + t * t * b.targetY;
+                const fadeStart = PARTICLE_CFG.fadeStart,
+                    fadeEnd = PARTICLE_CFG.fadeEnd;
+                let textAlpha = 1,
+                    textScale = 1;
+                if (eased > fadeStart) {
+                    const fp = (eased - fadeStart) / (fadeEnd - fadeStart);
+                    textAlpha = 1 - easeOutQuad(clamp(fp, 0, 1));
+                    textScale = 1 - 0.5 * easeOutQuad(clamp(fp, 0, 1));
+                }
+                const currentFs = Math.max(b.fontSize * textScale, 0.05);
+                let particleAlpha = 0;
+                if (eased > fadeStart * 0.5) {
+                    particleAlpha = easeOutQuad(clamp((eased - fadeStart * 0.5) / (fadeEnd * 1.2 - fadeStart * 0.5),
+                        0, 1));
+                }
+                const mixPos = clamp((eased - fadeStart * 0.3) / (fadeEnd * 1.4 - fadeStart * 0.3), 0, 1);
+                const posEased = easeOutQuad(mixPos);
+                p.x = lerp(cx, b.targetX, posEased);
+                p.y = lerp(cy, b.targetY, posEased);
+                p.alpha = particleAlpha;
+                p.size = b.particleSize * (0.6 + 0.4 * particleAlpha);
+                if (textAlpha > 0.08 && currentFs > 3) {
+                    drawGlowText(b.text, cx, cy, currentFs, textAlpha * 0.85, 40, 'rgba(255,215,0,0.5)');
+                }
+                if (p.alpha > 0.01) drawParticle(p);
+                if (eased >= 1) {
+                    p.done = true;
+                    b.done = true;
+                    p.x = b.targetX;
+                    p.y = b.targetY;
+                    p.alpha = 1;
+                    p.size = b.particleSize;
+                } else {
+                    allDone = false;
+                }
+            });
+            if (allDone) {
+                allParticles.forEach((p, idx) => {
+                    p.x = blessings[idx].targetX;
+                    p.y = blessings[idx].targetY;
+                    p.alpha = 1;
+                    p.size = blessings[idx].particleSize;
+                });
+                particleState = 'stable';
+                document.getElementById('info').classList.add('show');
+                statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
+                statusTip.classList.add('show');
+                setTimeout(() => statusTip.classList.remove('show'), 4000);
+                // 延迟后重置状态，允许再次点击许愿
+                setTimeout(() => {
+                    // 重置 closeState 到 idle，允许再次触发
+                    closeState.phase = 'idle';
+                    closeState.progress = 0;
+                    statusTip.textContent = '✦ 点击屏幕许愿 ✦';
+                    statusTip.classList.add('show');
+                    setTimeout(() => statusTip.classList.remove('show'), 3000);
+                }, 3000);
+            }
+        }
+
+        function startParticles() {
+            if (particleState === 'idle' || particleState === 'stable') {
+                allParticles.forEach((p, idx) => {
+                    const b = blessings[idx];
+                    p.x = b.startX;
+                    p.y = b.startY;
+                    p.alpha = 0;
+                    p.progress = 0;
+                    p.activated = false;
+                    p.done = false;
+                    b.progress = 0;
+                    b.done = false;
+                    b.activated = false;
+                });
+                particleState = 'flying';
+                flyStartTime = 0;
+            }
+        }
+
+        // ---- 烟雾粒子系统 ----
+        let smokeParticles = [];
+        let smokeActive = false;
+
+        function createSmoke() {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+            smokeParticles = [];
+            for (let i = 0; i < positions.length; i++) {
+                const cx = positions[i];
+                const cy = topY - CANDLE_H + 2;
+                const count = 5 + Math.floor(Math.random() * 4);
+                for (let j = 0; j < count; j++) {
+                    smokeParticles.push({
+                        x: cx + rand(-8, 8),
+                        y: cy + rand(-5, 5),
+                        vx: rand(-0.4, 0.4),
+                        vy: rand(-0.8, -1.8),
+                        radius: rand(6, 16),
+                        alpha: rand(0.4, 0.8),
+                        life: 1.0,
+                        decay: 0.002 + rand(0.001, 0.004),
+                        grow: rand(0.02, 0.07),
+                    });
+                }
+            }
+            smokeActive = true;
+        }
+
+        function updateSmoke() {
+            if (!smokeActive) return;
+            let alive = false;
+            smokeParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy -= 0.008;
+                p.radius += p.grow;
+                p.alpha *= (1 - p.decay);
+                p.life -= p.decay;
+                if (p.alpha > 0.01) alive = true;
+            });
+            smokeParticles = smokeParticles.filter(p => p.alpha > 0.01);
+            if (smokeParticles.length === 0) smokeActive = false;
+        }
+
+        function drawSmoke() {
+            if (!smokeActive) return;
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            smokeParticles.forEach(p => {
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+                grad.addColorStop(0, `rgba(200, 200, 215, ${p.alpha * 0.35})`);
+                grad.addColorStop(0.4, `rgba(180, 180, 195, ${p.alpha * 0.2})`);
+                grad.addColorStop(1, `rgba(150, 150, 165, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // ---- ★ 采用 test.html 的 closeState 状态管理 ----
+        let closeState = {
+            progress: 0, // 0=全开, 1=全闭
+            phase: 'idle', // 'idle' | 'closing' | 'closed' | 'opening'
+            startTime: 0,
+            isClosed: false,
+            isOpening: false,
+        };
+
+        const CLOSE_DURATION = 4500;
+        const HOLD_DURATION = 2000;
+        const OPEN_DURATION = 1500;
+
+        let particlesReady = false;
+        let blowCandlesDone = false;
+        const statusTip = document.getElementById('statusTip');
+        const infoEl = document.getElementById('info');
+
+        // ---- ★ 触发闭眼（全面重置状态） ----
+        function startCloseEye() {
+            // 只有在 idle 状态才能触发新的闭眼流程
+            if (closeState.phase !== 'idle') return;
+
+            // ★ 全面重置所有相关状态，确保每次点击都从干净状态开始
+            closeState.phase = 'closing';
+            closeState.startTime = performance.now();
+            closeState.progress = 0;
+            closeState.isClosed = false;
+            closeState.isOpening = false;
+            blowCandlesDone = false;
+            smokeActive = false;
+            smokeParticles = [];
+            flamesVisible = true;
+            particleState = 'idle';
+
+            statusTip.textContent = '✦ 闭上眼睛许个愿 ✦';
+            statusTip.classList.add('show');
+            infoEl.classList.remove('show');
+
+            // 重新绘制蛋糕场景（火焰恢复）
+            drawCakeScene(performance.now() / 100, 0);
+        }
+
+        // ---- 更新闭眼状态 ----
+        function updateCloseState(timestamp) {
+            if (closeState.phase === 'idle') return;
+            const elapsed = timestamp - closeState.startTime;
+
+            if (closeState.phase === 'closing') {
+                const p = clamp(elapsed / CLOSE_DURATION, 0, 1);
+                closeState.progress = easeOutCubic(p);
+                if (p >= 1) {
+                    closeState.progress = 1;
+                    closeState.phase = 'closed';
+                    closeState.isClosed = true;
+                    closeState.startTime = timestamp;
+                    statusTip.textContent = '✦ 默念心愿 2s ✦';
+                }
+            } else if (closeState.phase === 'closed') {
+                if (elapsed >= HOLD_DURATION) {
+                    closeState.phase = 'opening';
+                    closeState.startTime = timestamp;
+                    statusTip.textContent = '✦ 睁开眼睛 ✦';
+                    closeState.progress = 1;
+                }
+            } else if (closeState.phase === 'opening') {
+                const p = clamp(elapsed / OPEN_DURATION, 0, 1);
+                closeState.progress = 1 - easeOutCubic(p);
+                if (p >= 1) {
+                    closeState.progress = 0;
+                    closeState.phase = 'idle';
+                    closeState.isClosed = false;
+                    closeState.isOpening = false;
+                    // 睁眼完成！吹灭蜡烛！
+                    if (!blowCandlesDone) {
+                        blowCandlesDone = true;
+                        flamesVisible = false;
+                        drawCakeScene(timestamp / 100, 1);
+                        createSmoke();
+                        statusTip.textContent = '✦ 蜡烛吹灭啦 ✦';
+                        if (!particlesReady) {
+                            initParticles();
+                            particlesReady = true;
+                        }
+                        startParticles();
+                        setTimeout(() => statusTip.classList.remove('show'), 2500);
+                        infoEl.classList.add('show');
+                    }
+                }
+            }
+            if (smokeActive) updateSmoke();
+        }
+
+        // ================================================================
+        //  7. 主渲染循环
+        // ================================================================
+
         function render(timestamp) {
             if (!startTime) startTime = timestamp;
             const elapsed = timestamp - startTime;
 
+            // 初始睁眼（使用 clip 方式）
             const eyeRaw = Math.min(elapsed / CONFIG.eyeDuration, 1);
             const eyeProgress = easeOutCubic(eyeRaw);
 
@@ -988,46 +1594,104 @@
                 liftProgress = easeInOutQuad(raw);
             }
 
-            const offsetY = liftProgress * CONFIG.maxOffsetY * H;
-            const glowIntensity = CONFIG.glowIntensity;
-            const time = timestamp / 100;
+            const initialDone = (eyeProgress >= 1 && liftProgress >= 1);
+
+            if (initialDone) {
+                if (closeState.phase === 'idle' && particleState !== 'stable' && particleState !== 'flying') {
+                    infoEl.classList.add('show');
+                    if (!particlesReady) {
+                        initParticles();
+                        particlesReady = true;
+                    }
+                    drawCakeScene(timestamp / 100, 0);
+                }
+                updateCloseState(timestamp);
+            }
 
             ctx.clearRect(0, 0, W, H);
 
-            if (eyeProgress < 1) {
-                drawEyeOpenMask(eyeProgress, offsetY, glowIntensity, liftProgress, time);
+            if (!initialDone) {
+                drawCakeWithClip(eyeProgress);
             } else {
-                drawFullScene(offsetY, glowIntensity, liftProgress, time);
-            }
+                // ★ 主场景：绘制蛋糕 + 闭眼遮罩 + 粒子 + 烟雾
+                drawCakeToMain();
 
-            if (eyeProgress >= 1 && liftProgress >= 1) {
-                document.getElementById('info').classList.add('show');
+                // ★ 闭眼遮罩：无论 progress 是否为0都调用，保证一致性
+                drawEyeCloseMask(closeState.progress);
+
+                if (smokeActive) drawSmoke();
+
+                if (particleState === 'flying') {
+                    updateParticles(timestamp);
+                } else if (particleState === 'stable') {
+                    drawStableGlow();
+                    allParticles.forEach(p => {
+                        if (p.alpha > 0.01) {
+                            const size = p.size * 0.9;
+                            ctx.save();
+                            ctx.globalAlpha = clamp(p.alpha * PARTICLE_CFG.stableParticleAlpha, 0, 1);
+                            ctx.drawImage(particleTex, p.x - size / 2, p.y - size / 2, size, size);
+                            ctx.globalCompositeOperation = 'lighter';
+                            ctx.fillStyle = `rgba(255,230,180,0.6)`;
+                            ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
+                            ctx.restore();
+                        }
+                    });
+                }
+
+                drawCakeScene(timestamp / 100, closeState.progress);
             }
 
             animId = requestAnimationFrame(render);
         }
 
         // ================================================================
-        //  7. 启动
+        //  8. 交互与启动
         // ================================================================
+
+        canvas.addEventListener('click', function (e) {
+            // 只有在 idle 状态且不是 stable（祝福展示中）才能触发
+            if (closeState.phase === 'idle' && particleState !== 'stable' && particleState !== 'flying') {
+                startCloseEye();
+            }
+        });
+
         function init() {
             resize();
+            closeState.progress = 0;
+            closeState.phase = 'idle';
+            closeState.startTime = 0;
+            drawCakeScene(0, 0);
+            flamesVisible = true;
             startTime = 0;
             liftStartTime = null;
+            particlesReady = false;
+            smokeActive = false;
+            smokeParticles = [];
+            blowCandlesDone = false;
+            infoEl.classList.remove('show');
+            statusTip.textContent = '';
+            statusTip.classList.remove('show');
+
             if (animId) cancelAnimationFrame(animId);
             animId = requestAnimationFrame(render);
+
             window.addEventListener('resize', () => {
                 resize();
+                drawCakeScene(performance.now() / 100, closeState.progress);
+                if (particlesReady) initParticles();
+                if (animId) cancelAnimationFrame(animId);
                 startTime = 0;
                 liftStartTime = null;
-                document.getElementById('info').classList.remove('show');
+                animId = requestAnimationFrame(render);
             });
         }
 
         if (document.readyState === 'complete') init();
         else window.addEventListener('load', init);
 
-        console.log('🎂 睁眼蛋糕 · 融合 index1.html 睁眼逻辑 + cake.html 场景');
+        console.log('🎂 修复完成：闭眼逻辑统一，已移除重开机制，每次点击效果一致 ✨');
+        console.log('🕯️ 点击画面许愿 → 闭眼 → 默念心愿 → 睁眼 → 吹灭蜡烛 → 祝福化光！');
     </script>
 </body>
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生日祝福动画 · 音效生成器 v2</title>
+    <title>生日蛋糕 🎂 闭眼许愿</title>
     <style>
         * {
             margin: 0;
@@ -13,1244 +13,1148 @@
         }
 
         body {
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: #0a0a1a;
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 28px;
-            margin: 20px 0 10px;
-            background: linear-gradient(135deg, #f8d06b, #f87171, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .version-badge {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .version-badge span {
-            background: linear-gradient(135deg, #34d399, #10b981);
-            color: #0a0a1a;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 24px;
-            backdrop-filter: blur(10px);
-            transition: border-color 0.3s;
-        }
-
-        .card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .card-header {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .card-title .icon {
-            margin-right: 8px;
-        }
-
-        .card-scene {
-            font-size: 12px;
-            color: #a78bfa;
-            background: rgba(167, 139, 250, 0.15);
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-
-        .card-desc {
-            font-size: 12px;
-            color: #777;
-            margin-bottom: 14px;
-            line-height: 1.5;
-        }
-
-        .improve-tag {
-            display: inline-block;
-            font-size: 10px;
-            color: #34d399;
-            background: rgba(52, 211, 153, 0.12);
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-        }
-
-        .param-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            gap: 8px;
-        }
-
-        .param-label {
-            font-size: 12px;
-            color: #bbb;
-            min-width: 110px;
-            flex-shrink: 0;
-        }
-
-        .param-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 4px;
-            border-radius: 2px;
-            background: rgba(255, 255, 255, 0.15);
-            outline: none;
-        }
-
-        .param-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #a78bfa;
-            cursor: pointer;
-            box-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
-        }
-
-        .param-value {
-            font-size: 11px;
-            color: #a78bfa;
-            min-width: 55px;
-            text-align: right;
-            font-family: monospace;
-        }
-
-        .play-btn {
-            width: 100%;
-            padding: 11px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .play-btn:active {
-            transform: scale(0.97);
-        }
-
-        .play-btn.playing {
-            animation: pulse 0.6s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulse {
-            from {
-                box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4);
-            }
-
-            to {
-                box-shadow: 0 0 20px 4px rgba(167, 139, 250, 0.2);
-            }
-        }
-
-        .btn-firework {
-            background: linear-gradient(135deg, #f87171, #fbbf24);
-            color: #1a1a2e;
-        }
-
-        .btn-meteor {
-            background: linear-gradient(135deg, #fb923c, #f97316);
-            color: #1a1a2e;
-        }
-
-        .btn-city {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            color: #fff;
-        }
-
-        .btn-stars {
-            background: linear-gradient(135deg, #818cf8, #6366f1);
-            color: #fff;
-        }
-
-        .btn-candle {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1a1a2e;
-        }
-
-        .btn-bless {
-            background: linear-gradient(135deg, #f472b6, #ec4899);
-            color: #fff;
-        }
-
-        .btn-transition {
-            background: linear-gradient(135deg, #34d399, #10b981);
-            color: #1a1a2e;
-        }
-
-        .global-controls {
-            max-width: 1400px;
-            margin: 0 auto 24px;
-            display: flex;
-            gap: 12px;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
+            min-height: 100vh;
+            background: #0a0808;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            position: relative;
         }
 
-        .global-btn {
-            padding: 8px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
+        canvas {
+            border-radius: 16px;
+            box-shadow: 0 0 80px rgba(255, 150, 50, 0.12), 0 0 200px rgba(255, 100, 30, 0.06);
+            max-width: 100vw;
+            max-height: 100vh;
+            display: block;
+            background: #1a1410;
+            width: auto;
+            height: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .info {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 200, 150, 0.15);
+            font-size: 15px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            font-weight: 300;
+            text-shadow: 0 0 30px rgba(255, 150, 50, 0.05);
+            z-index: 10;
+            transition: all 1.5s ease;
+        }
+
+        .info.active {
+            color: rgba(255, 220, 180, 0.6);
+            text-shadow: 0 0 40px rgba(255, 200, 100, 0.15);
+        }
+
+        .info.closed {
+            color: rgba(255, 200, 150, 0.5);
+            text-shadow: 0 0 60px rgba(255, 180, 100, 0.2);
+            letter-spacing: 4px;
+        }
+
+        #restart-btn {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 28px;
             background: rgba(255, 255, 255, 0.06);
-            color: #e0e0e0;
-            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .global-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        .master-vol {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #999;
+            border-radius: 30px;
             font-size: 13px;
+            letter-spacing: 2px;
+            transition: all 0.5s ease;
+            z-index: 20;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            font-weight: 300;
         }
 
-        .master-vol input {
-            width: 120px;
+        #restart-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 30px rgba(255, 200, 100, 0.05);
         }
 
-        @media (max-width: 500px) {
-            .grid {
-                grid-template-columns: 1fr;
+        #restart-btn.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 600px) {
+            .info {
+                font-size: 12px;
+                bottom: 20px;
+                letter-spacing: 2px;
             }
 
-            .param-label {
-                min-width: 80px;
+            #restart-btn {
+                padding: 8px 20px;
+                font-size: 11px;
+                bottom: 60px;
             }
         }
     </style>
 </head>
 
 <body>
-
-    <h1>🎂 生日祝福动画 · 音效生成器</h1>
-    <p class="subtitle">所有音效均由 Web Audio API 程序化合成，拖动滑块实时调参，点击按钮试听</p>
-    <div class="version-badge"><span>v2 · 多层叠加 + 空间混响 + 非线性包络</span></div>
-
-    <div class="global-controls">
-        <div class="master-vol">
-            <span>🔊 主音量</span>
-            <input type="range" class="param-slider" id="masterVol" min="0" max="100" value="70">
-            <span id="masterVolVal" class="param-value">70%</span>
-        </div>
-        <button class="global-btn" onclick="stopAll()">⏹ 停止全部</button>
-    </div>
-
-    <div class="grid" id="cardGrid"></div>
+    <canvas id="canvas"></canvas>
+    <div class="info" id="info">✨ 许个愿吧 ✨</div>
+    <button id="restart-btn">🕯️ 重新睁开</button>
 
     <script>
-        // ==================== 全局状态 ====================
-        let masterVolume = 0.7;
-        let activeNodes = [];
-        let activeTimeouts = [];
+        // ============================================================
+        //  配置
+        // ============================================================
+        const W = 800;
+        const H = 600;
+        const canvas = document.getElementById('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
 
-        document.getElementById('masterVol').addEventListener('input', e => {
-            masterVolume = e.target.value / 100;
-            document.getElementById('masterVolVal').textContent = e.target.value + '%';
-        });
-
-        function stopAll() {
-            activeNodes.forEach(n => {
-                try { n.stop && n.stop(); } catch (e) { }
-                try { n.disconnect && n.disconnect(); } catch (e) { }
-            });
-            activeNodes = [];
-            activeTimeouts.forEach(t => clearTimeout(t));
-            activeTimeouts = [];
-        }
-
-        function getCtx() {
-            if (!window._audioCtx) {
-                window._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (window._audioCtx.state === 'suspended') window._audioCtx.resume();
-            return window._audioCtx;
-        }
-
-        // ==================== 噪声生成工具 ====================
-        function createNoiseBuffer(ctx, duration, type) {
-            const len = Math.ceil(ctx.sampleRate * duration);
-            const buf = ctx.createBuffer(2, len, ctx.sampleRate); // 立体声
-            for (let ch = 0; ch < 2; ch++) {
-                const data = buf.getChannelData(ch);
-                if (type === 'white') {
-                    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-                } else if (type === 'pink') {
-                    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-                    for (let i = 0; i < len; i++) {
-                        const w = Math.random() * 2 - 1;
-                        b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
-                        b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
-                        b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
-                        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
-                        b6 = w * 0.115926;
-                    }
-                } else if (type === 'brown') {
-                    let last = 0;
-                    for (let i = 0; i < len; i++) {
-                        const w = Math.random() * 2 - 1;
-                        last = (last + 0.02 * w) / 1.02;
-                        data[i] = last * 3.5;
-                    }
-                } else if (type === 'velvet') {
-                    // 天鹅绒噪声：极低频棕噪声 + 微弱白噪声混合
-                    let last = 0;
-                    for (let i = 0; i < len; i++) {
-                        const w = Math.random() * 2 - 1;
-                        last = (last + 0.01 * w) / 1.01;
-                        data[i] = last * 4.0 + w * 0.02;
-                    }
-                }
-            }
-            return buf;
-        }
-
-        // 创建简易卷积混响（用指数衰减噪声模拟房间脉冲响应）
-        function createReverb(ctx, duration, decay) {
-            const len = Math.ceil(ctx.sampleRate * duration);
-            const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-            for (let ch = 0; ch < 2; ch++) {
-                const data = buf.getChannelData(ch);
-                for (let i = 0; i < len; i++) {
-                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
-                }
-            }
-            const convolver = ctx.createConvolver();
-            convolver.buffer = buf;
-            return convolver;
-        }
-
-        // 非线性包络：模拟真实物理衰减曲线
-        function applyEnvelope(gainNode, ctx, now, attack, hold, decay, sustain, release, peak) {
-            const g = gainNode.gain;
-            g.cancelScheduledValues(now);
-            g.setValueAtTime(0, now);
-            g.linearRampToValueAtTime(peak, now + attack);
-            if (hold > 0) g.setValueAtTime(peak, now + attack + hold);
-            g.exponentialRampToValueAtTime(Math.max(peak * sustain, 0.0001), now + attack + hold + decay);
-            g.setValueAtTime(Math.max(peak * sustain, 0.0001), now + attack + hold + decay);
-            g.exponentialRampToValueAtTime(0.0001, now + attack + hold + decay + release);
-        }
-
-        // ==================== 音效定义 ====================
-        const sounds = [
-
-            // ========== 1. 烟花爆炸声 ==========
-            {
-                id: 'firework',
-                icon: '🎆',
-                title: '烟花爆炸声',
-                scene: '镜头7：烟花盛大绽放',
-                desc: '升空哨声 → 爆裂冲击波 → 多层碎片散射 → 空间余韵',
-                improve: '多层碎片声 + 卷积混响模拟室外空间 + 非线性衰减',
-                btnClass: 'btn-firework',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 65, unit: '%' },
-                    { key: 'launchPitch', label: '升空起始音高', min: 300, max: 3000, val: 1200, unit: 'Hz' },
-                    { key: 'launchEndPitch', label: '升空终止音高', min: 2000, max: 12000, val: 6000, unit: 'Hz' },
-                    { key: 'launchDur', label: '升空时长', min: 0.3, max: 2.5, val: 1.0, step: 0.1, unit: 's' },
-                    { key: 'boomFreq', label: '冲击波频率', min: 30, max: 150, val: 60, unit: 'Hz' },
-                    { key: 'boomSharpness', label: '冲击锐度', min: 2000, max: 12000, val: 6000, unit: 'Hz' },
-                    { key: 'shrapnelCount', label: '碎片散射层数', min: 2, max: 10, val: 6, step: 1, unit: '层' },
-                    { key: 'reverbSize', label: '空间混响大小', min: 0.5, max: 4, val: 2.0, step: 0.1, unit: 's' },
-                    { key: 'reverbDecay', label: '混响衰减速度', min: 1, max: 5, val: 2.5, step: 0.1, unit: '' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const masterGain = ctx.createGain();
-                    masterGain.gain.value = 1;
-
-                    // 混响总线
-                    const reverb = createReverb(ctx, p.reverbSize, p.reverbDecay);
-                    const reverbGain = ctx.createGain();
-                    reverbGain.gain.value = 0.35;
-                    reverb.connect(reverbGain).connect(masterGain);
-                    masterGain.connect(ctx.destination);
-
-                    // === 升空哨声：窄带噪声 + 频率上扫 ===
-                    const launchNoiseBuf = createNoiseBuffer(ctx, p.launchDur + 0.3, 'pink');
-                    const launchNoise = ctx.createBufferSource();
-                    launchNoise.buffer = launchNoiseBuf;
-                    const launchBP = ctx.createBiquadFilter();
-                    launchBP.type = 'bandpass';
-                    launchBP.Q.value = 15; // 高Q值 → 窄带，像哨子
-                    launchBP.frequency.setValueAtTime(p.launchPitch, now);
-                    launchBP.frequency.exponentialRampToValueAtTime(p.launchEndPitch, now + p.launchDur);
-                    const launchGain = ctx.createGain();
-                    launchGain.gain.setValueAtTime(0.001, now);
-                    launchGain.gain.linearRampToValueAtTime(vol * 0.2, now + p.launchDur * 0.3);
-                    launchGain.gain.setValueAtTime(vol * 0.25, now + p.launchDur * 0.85);
-                    launchGain.gain.exponentialRampToValueAtTime(0.001, now + p.launchDur);
-                    launchNoise.connect(launchBP).connect(launchGain);
-                    launchGain.connect(masterGain);
-                    launchGain.connect(reverb);
-                    launchNoise.start(now);
-                    launchNoise.stop(now + p.launchDur + 0.1);
-                    nodes.push(launchNoise);
-
-                    // === 爆裂冲击：低频正弦 + 超快衰减 ===
-                    const boomTime = now + p.launchDur * 0.92;
-                    const boom = ctx.createOscillator();
-                    const boomGain = ctx.createGain();
-                    boom.type = 'sine';
-                    boom.frequency.setValueAtTime(p.boomFreq * 3, boomTime);
-                    boom.frequency.exponentialRampToValueAtTime(p.boomFreq, boomTime + 0.08);
-                    applyEnvelope(boomGain, ctx, boomTime, 0.003, 0.01, 0.15, 0.001, 0.4, vol * 0.9);
-                    boom.connect(boomGain).connect(masterGain);
-                    boom.start(boomTime);
-                    boom.stop(boomTime + 0.6);
-                    nodes.push(boom);
-
-                    // === 冲击瞬态：高频噪声burst ===
-                    const crackBuf = createNoiseBuffer(ctx, 0.08, 'white');
-                    const crackSrc = ctx.createBufferSource();
-                    crackSrc.buffer = crackBuf;
-                    const crackHP = ctx.createBiquadFilter();
-                    crackHP.type = 'highpass';
-                    crackHP.frequency.value = p.boomSharpness;
-                    const crackGain = ctx.createGain();
-                    crackGain.gain.setValueAtTime(vol * 0.7, boomTime);
-                    crackGain.gain.exponentialRampToValueAtTime(0.001, boomTime + 0.06);
-                    crackSrc.connect(crackHP).connect(crackGain).connect(masterGain);
-                    crackSrc.start(boomTime);
-                    crackSrc.stop(boomTime + 0.08);
-                    nodes.push(crackSrc);
-
-                    // === 多层碎片散射：不同频率的噪声层，各自独立衰减 ===
-                    for (let i = 0; i < p.shrapnelCount; i++) {
-                        const layerDur = 0.4 + Math.random() * 1.2;
-                        const layerBuf = createNoiseBuffer(ctx, layerDur + 0.2, Math.random() > 0.5 ? 'white' : 'pink');
-                        const layerSrc = ctx.createBufferSource();
-                        layerSrc.buffer = layerBuf;
-
-                        const layerFilter = ctx.createBiquadFilter();
-                        layerFilter.type = 'bandpass';
-                        const centerFreq = 800 + Math.random() * 5000;
-                        layerFilter.frequency.value = centerFreq;
-                        layerFilter.Q.value = 0.5 + Math.random() * 2;
-
-                        const layerGain = ctx.createGain();
-                        const layerStart = boomTime + Math.random() * 0.05;
-                        const layerPeak = vol * (0.08 + Math.random() * 0.12);
-                        applyEnvelope(layerGain, ctx, layerStart, 0.005, 0, 0.1 + Math.random() * 0.3, 0.001, layerDur, layerPeak);
-
-                        layerSrc.connect(layerFilter).connect(layerGain);
-                        layerGain.connect(masterGain);
-                        layerGain.connect(reverb);
-                        layerSrc.start(layerStart);
-                        layerSrc.stop(layerStart + layerDur + 0.1);
-                        nodes.push(layerSrc);
-                    }
-
-                    // === 空间余韵：低频嗡鸣缓慢衰减 ===
-                    const tailOsc = ctx.createOscillator();
-                    const tailGain = ctx.createGain();
-                    tailOsc.type = 'sine';
-                    tailOsc.frequency.value = p.boomFreq * 0.7;
-                    const tailStart = boomTime + 0.1;
-                    tailGain.gain.setValueAtTime(vol * 0.08, tailStart);
-                    tailGain.gain.exponentialRampToValueAtTime(0.001, tailStart + p.reverbSize);
-                    tailOsc.connect(tailGain).connect(masterGain);
-                    tailOsc.start(tailStart);
-                    tailOsc.stop(tailStart + p.reverbSize + 0.1);
-                    nodes.push(tailOsc);
-
-                    return nodes;
-                }
-            },
-
-            // ========== 2. 流星划过声 ==========
-            {
-                id: 'meteor',
-                icon: '☄️',
-                title: '流星划过声',
-                scene: '镜头5/6：流星出现与坠落',
-                desc: '大气摩擦嘶嘶声 + 多普勒频移 + 尾迹湍流 + 远处余韵',
-                improve: '多普勒频率曲线 + 湍流噪声层 + 大气滤波',
-                btnClass: 'btn-meteor',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 55, unit: '%' },
-                    { key: 'startFreq', label: '起始音高(远处)', min: 2000, max: 10000, val: 5500, unit: 'Hz' },
-                    { key: 'endFreq', label: '终止音高(近处)', min: 200, max: 2000, val: 600, unit: 'Hz' },
-                    { key: 'duration', label: '划过时长', min: 0.8, max: 5, val: 2.2, step: 0.1, unit: 's' },
-                    { key: 'frictionLevel', label: '大气摩擦强度', min: 0, max: 100, val: 55, unit: '%' },
-                    { key: 'frictionFilter', label: '摩擦滤波频率', min: 1000, max: 10000, val: 4500, unit: 'Hz' },
-                    { key: 'turbulenceLevel', label: '尾迹湍流强度', min: 0, max: 100, val: 35, unit: '%' },
-                    { key: 'dopplerDepth', label: '多普勒深度', min: 0.2, max: 1, val: 0.6, step: 0.05, unit: '' },
-                    { key: 'tailHum', label: '余韵嗡鸣频率', min: 60, max: 300, val: 120, unit: 'Hz' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const dur = p.duration;
-
-                    // === 大气摩擦嘶嘶声：宽带噪声，频率从高滑到低（多普勒） ===
-                    const frictionBuf = createNoiseBuffer(ctx, dur + 1.5, 'white');
-                    const frictionSrc = ctx.createBufferSource();
-                    frictionSrc.buffer = frictionBuf;
-                    const frictionBP = ctx.createBiquadFilter();
-                    frictionBP.type = 'bandpass';
-                    frictionBP.Q.value = 3;
-                    // 多普勒效应：频率从高音急速下降到中音，模拟物体飞近又飞远
-                    frictionBP.frequency.setValueAtTime(p.startFreq, now);
-                    frictionBP.frequency.setTargetAtTime(
-                        p.startFreq + (p.endFreq - p.startFreq) * p.dopplerDepth,
-                        now + dur * 0.3, 0.08
-                    );
-                    frictionBP.frequency.setTargetAtTime(p.endFreq, now + dur * 0.7, 0.15);
-                    const frictionGain = ctx.createGain();
-                    const fl = p.frictionLevel / 100;
-                    // 音量曲线：远处弱→近处强→远去弱
-                    frictionGain.gain.setValueAtTime(0.001, now);
-                    frictionGain.gain.linearRampToValueAtTime(vol * fl * 0.4, now + dur * 0.15);
-                    frictionGain.gain.setValueAtTime(vol * fl * 0.5, now + dur * 0.4);
-                    frictionGain.gain.linearRampToValueAtTime(vol * fl * 0.35, now + dur * 0.7);
-                    frictionGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 1.0);
-                    frictionSrc.connect(frictionBP).connect(frictionGain).connect(ctx.destination);
-                    frictionSrc.start(now);
-                    frictionSrc.stop(now + dur + 1.2);
-                    nodes.push(frictionSrc);
-
-                    // === 尾迹湍流：粉噪声 + 低通，模拟空气扰动 ===
-                    const turbBuf = createNoiseBuffer(ctx, dur + 2, 'pink');
-                    const turbSrc = ctx.createBufferSource();
-                    turbSrc.buffer = turbBuf;
-                    const turbLP = ctx.createBiquadFilter();
-                    turbLP.type = 'lowpass';
-                    turbLP.frequency.setValueAtTime(p.frictionFilter * 0.5, now);
-                    turbLP.frequency.linearRampToValueAtTime(p.frictionFilter, now + dur * 0.4);
-                    turbLP.frequency.exponentialRampToValueAtTime(300, now + dur + 1.5);
-                    const turbGain = ctx.createGain();
-                    const tl = p.turbulenceLevel / 100;
-                    turbGain.gain.setValueAtTime(0.001, now);
-                    turbGain.gain.linearRampToValueAtTime(vol * tl * 0.3, now + dur * 0.2);
-                    turbGain.gain.setValueAtTime(vol * tl * 0.35, now + dur * 0.6);
-                    turbGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 1.5);
-                    turbSrc.connect(turbLP).connect(turbGain).connect(ctx.destination);
-                    turbSrc.start(now);
-                    turbSrc.stop(now + dur + 1.8);
-                    nodes.push(turbSrc);
-
-                    // === 余韵嗡鸣：流星消失后的低频共振 ===
-                    const humStart = now + dur * 0.6;
-                    const hum = ctx.createOscillator();
-                    const humGain = ctx.createGain();
-                    hum.type = 'sine';
-                    hum.frequency.value = p.tailHum;
-                    humGain.gain.setValueAtTime(0.001, humStart);
-                    humGain.gain.linearRampToValueAtTime(vol * 0.06, humStart + 0.3);
-                    humGain.gain.exponentialRampToValueAtTime(0.001, humStart + 2.0);
-                    hum.connect(humGain).connect(ctx.destination);
-                    hum.start(humStart);
-                    hum.stop(humStart + 2.2);
-                    nodes.push(hum);
-
-                    return nodes;
-                }
-            },
-
-            // ========== 3. 城市环境音 ==========
-            {
-                id: 'city',
-                icon: '🏙️',
-                title: '城市环境音',
-                scene: '镜头2：万家灯火俯瞰',
-                desc: '多层交通嗡鸣 + 远处人群底噪 + 随机喇叭/引擎 + 空气感',
-                improve: '5层独立噪声叠加 + LFO呼吸感 + 随机事件',
-                btnClass: 'btn-city',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 50, unit: '%' },
-                    { key: 'trafficLow', label: '低频交通层', min: 0, max: 100, val: 60, unit: '%' },
-                    { key: 'trafficMid', label: '中频车流层', min: 0, max: 100, val: 35, unit: '%' },
-                    { key: 'crowdLevel', label: '人群底噪', min: 0, max: 100, val: 25, unit: '%' },
-                    { key: 'airLevel', label: '高空风声', min: 0, max: 100, val: 20, unit: '%' },
-                    { key: 'hornProb', label: '喇叭概率', min: 0, max: 100, val: 50, unit: '%' },
-                    { key: 'lfoRate', label: '呼吸LFO速率', min: 0.03, max: 0.5, val: 0.12, step: 0.01, unit: 'Hz' },
-                    { key: 'lfoDepth', label: '呼吸深度', min: 1, max: 30, val: 10, unit: 'dB' },
-                    { key: 'duration', label: '播放时长', min: 3, max: 12, val: 5, step: 0.5, unit: 's' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const dur = p.duration;
-
-                    // 全局LFO呼吸
-                    const lfo = ctx.createOscillator();
-                    const lfoGain = ctx.createGain();
-                    lfo.type = 'sine';
-                    lfo.frequency.value = p.lfoRate;
-                    lfoGain.gain.value = p.lfoDepth;
-                    lfo.start(now);
-                    lfo.stop(now + dur + 0.1);
-                    nodes.push(lfo);
-
-                    // === 层1：低频交通嗡鸣（棕噪声 + 极低通） ===
-                    const t1Buf = createNoiseBuffer(ctx, dur + 1, 'brown');
-                    const t1Src = ctx.createBufferSource();
-                    t1Src.buffer = t1Buf;
-                    const t1LP = ctx.createBiquadFilter();
-                    t1LP.type = 'lowpass';
-                    t1LP.frequency.value = 120;
-                    t1LP.Q.value = 1;
-                    const t1Gain = ctx.createGain();
-                    const t1l = p.trafficLow / 100;
-                    t1Gain.gain.setValueAtTime(0.001, now);
-                    t1Gain.gain.linearRampToValueAtTime(vol * t1l * 0.4, now + 1);
-                    t1Gain.gain.setValueAtTime(vol * t1l * 0.4, now + dur - 1.5);
-                    t1Gain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    lfoGain.connect(t1Gain.gain);
-                    t1Src.connect(t1LP).connect(t1Gain).connect(ctx.destination);
-                    t1Src.start(now); t1Src.stop(now + dur + 0.1);
-                    nodes.push(t1Src);
-
-                    // === 层2：中频车流（粉噪声 + 带通） ===
-                    const t2Buf = createNoiseBuffer(ctx, dur + 1, 'pink');
-                    const t2Src = ctx.createBufferSource();
-                    t2Src.buffer = t2Buf;
-                    const t2BP = ctx.createBiquadFilter();
-                    t2BP.type = 'bandpass';
-                    t2BP.frequency.value = 400;
-                    t2BP.Q.value = 0.8;
-                    const t2Gain = ctx.createGain();
-                    const t2l = p.trafficMid / 100;
-                    t2Gain.gain.setValueAtTime(0.001, now);
-                    t2Gain.gain.linearRampToValueAtTime(vol * t2l * 0.2, now + 1.2);
-                    t2Gain.gain.setValueAtTime(vol * t2l * 0.2, now + dur - 1.5);
-                    t2Gain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    t2Src.connect(t2BP).connect(t2Gain).connect(ctx.destination);
-                    t2Src.start(now); t2Src.stop(now + dur + 0.1);
-                    nodes.push(t2Src);
-
-                    // === 层3：人群底噪（粉噪声 + 中频带通） ===
-                    const crBuf = createNoiseBuffer(ctx, dur + 1, 'pink');
-                    const crSrc = ctx.createBufferSource();
-                    crSrc.buffer = crBuf;
-                    const crBP = ctx.createBiquadFilter();
-                    crBP.type = 'bandpass';
-                    crBP.frequency.value = 900;
-                    crBP.Q.value = 0.6;
-                    const crGain = ctx.createGain();
-                    const crl = p.crowdLevel / 100;
-                    crGain.gain.setValueAtTime(0.001, now);
-                    crGain.gain.linearRampToValueAtTime(vol * crl * 0.15, now + 1.5);
-                    crGain.gain.setValueAtTime(vol * crl * 0.15, now + dur - 1.5);
-                    crGain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    crSrc.connect(crBP).connect(crGain).connect(ctx.destination);
-                    crSrc.start(now); crSrc.stop(now + dur + 0.1);
-                    nodes.push(crSrc);
-
-                    // === 层4：高空风声（白噪声 + 低通，模拟高空视角的风） ===
-                    const airBuf = createNoiseBuffer(ctx, dur + 1, 'white');
-                    const airSrc = ctx.createBufferSource();
-                    airSrc.buffer = airBuf;
-                    const airLP = ctx.createBiquadFilter();
-                    airLP.type = 'lowpass';
-                    airLP.frequency.value = 600;
-                    const airGain = ctx.createGain();
-                    const al = p.airLevel / 100;
-                    airGain.gain.setValueAtTime(0.001, now);
-                    airGain.gain.linearRampToValueAtTime(vol * al * 0.12, now + 0.8);
-                    airGain.gain.setValueAtTime(vol * al * 0.12, now + dur - 1.5);
-                    airGain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    airSrc.connect(airLP).connect(airGain).connect(ctx.destination);
-                    airSrc.start(now); airSrc.stop(now + dur + 0.1);
-                    nodes.push(airSrc);
-
-                    // === 随机事件：喇叭声 ===
-                    const hornCount = Math.floor(p.hornProb / 100 * dur / 1.5);
-                    for (let i = 0; i < hornCount; i++) {
-                        const ht = now + 0.8 + Math.random() * (dur - 2);
-                        // 喇叭 = 方波 + 带通
-                        const hOsc = ctx.createOscillator();
-                        const hGain = ctx.createGain();
-                        hOsc.type = 'square';
-                        const hFreq = 280 + Math.random() * 200;
-                        hOsc.frequency.setValueAtTime(hFreq, ht);
-                        hOsc.frequency.setValueAtTime(hFreq * 0.95, ht + 0.12);
-                        const hFilter = ctx.createBiquadFilter();
-                        hFilter.type = 'bandpass';
-                        hFilter.frequency.value = hFreq;
-                        hFilter.Q.value = 5;
-                        hGain.gain.setValueAtTime(0.001, ht);
-                        hGain.gain.linearRampToValueAtTime(vol * 0.06, ht + 0.02);
-                        hGain.gain.setValueAtTime(vol * 0.06, ht + 0.1 + Math.random() * 0.1);
-                        hGain.gain.exponentialRampToValueAtTime(0.001, ht + 0.35);
-                        hOsc.connect(hFilter).connect(hGain).connect(ctx.destination);
-                        hOsc.start(ht); hOsc.stop(ht + 0.4);
-                        nodes.push(hOsc);
-                    }
-
-                    return nodes;
-                }
-            },
-
-            // ========== 4. 星空嗡鸣 ==========
-            {
-                id: 'stars',
-                icon: '✨',
-                title: '星空嗡鸣',
-                scene: '镜头3/4：抬头看星空',
-                desc: '多层失谐Pad + 高频星尘闪烁 + 极低频空间感',
-                improve: '6层振荡器叠加 + 微失谐产生宽度 + 独立星尘粒子',
-                btnClass: 'btn-stars',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 45, unit: '%' },
-                    { key: 'baseFreq', label: 'Pad基础频率', min: 80, max: 400, val: 174, unit: 'Hz' },
-                    { key: 'detune', label: '失谐宽度', min: 2, max: 25, val: 10, unit: 'cent' },
-                    { key: 'padBrightness', label: 'Pad亮度', min: 300, max: 4000, val: 1000, unit: 'Hz' },
-                    { key: 'sparkleFreq', label: '星尘频率', min: 3000, max: 14000, val: 7000, unit: 'Hz' },
-                    { key: 'sparkleLevel', label: '星尘强度', min: 0, max: 100, val: 20, unit: '%' },
-                    { key: 'sparkleRate', label: '星尘闪烁速率', min: 0.3, max: 6, val: 2.5, step: 0.1, unit: 'Hz' },
-                    { key: 'subBass', label: '极低频空间感', min: 20, max: 80, val: 40, unit: 'Hz' },
-                    { key: 'duration', label: '播放时长', min: 3, max: 12, val: 5, step: 0.5, unit: 's' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const dur = p.duration;
-
-                    // === Pad层：6个振荡器，三组音高各两个（±失谐） ===
-                    const intervals = [1, 1.498, 1.888, 2, 3, 4]; // 基, 五度, 小七, 八度, 十二度, 十五度
-                    intervals.forEach((ratio, idx) => {
-                        for (let d = -1; d <= 1; d += 2) {
-                            const osc = ctx.createOscillator();
-                            const gain = ctx.createGain();
-                            osc.type = idx < 3 ? 'sine' : 'triangle';
-                            osc.frequency.value = p.baseFreq * ratio;
-                            osc.detune.value = d * p.detune + (Math.random() - 0.5) * 3;
-                            const layerVol = vol * 0.06 / intervals.length;
-                            gain.gain.setValueAtTime(0.001, now);
-                            gain.gain.linearRampToValueAtTime(layerVol, now + 1.5 + idx * 0.2);
-                            gain.gain.setValueAtTime(layerVol, now + dur - 2);
-                            gain.gain.linearRampToValueAtTime(0.001, now + dur);
-                            const filter = ctx.createBiquadFilter();
-                            filter.type = 'lowpass';
-                            filter.frequency.value = p.padBrightness + idx * 200;
-                            filter.Q.value = 0.3;
-                            osc.connect(filter).connect(gain).connect(ctx.destination);
-                            osc.start(now);
-                            osc.stop(now + dur + 0.1);
-                            nodes.push(osc);
-                        }
-                    });
-
-                    // === 星尘闪烁：多个高频正弦波，各自独立LFO调制 ===
-                    const sparkleCount = 4;
-                    for (let i = 0; i < sparkleCount; i++) {
-                        const sp = ctx.createOscillator();
-                        const spGain = ctx.createGain();
-                        const spLFO = ctx.createOscillator();
-                        const spLFOGain = ctx.createGain();
-                        sp.type = 'sine';
-                        sp.frequency.value = p.sparkleFreq + i * 800 + Math.random() * 500;
-                        spLFO.type = 'sine';
-                        spLFO.frequency.value = p.sparkleRate + Math.random() * 1.5;
-                        const sl = p.sparkleLevel / 100;
-                        spLFOGain.gain.value = vol * sl * 0.04;
-                        spLFO.connect(spLFOGain).connect(spGain.gain);
-                        spGain.gain.setValueAtTime(0.001, now);
-                        spGain.gain.linearRampToValueAtTime(vol * sl * 0.04, now + 2);
-                        spGain.gain.setValueAtTime(vol * sl * 0.04, now + dur - 2);
-                        spGain.gain.linearRampToValueAtTime(0.001, now + dur);
-                        sp.connect(spGain).connect(ctx.destination);
-                        sp.start(now + i * 0.5);
-                        sp.stop(now + dur + 0.1);
-                        spLFO.start(now + i * 0.5);
-                        spLFO.stop(now + dur + 0.1);
-                        nodes.push(sp, spLFO);
-                    }
-
-                    // === 极低频空间感 ===
-                    const sub = ctx.createOscillator();
-                    const subGain = ctx.createGain();
-                    sub.type = 'sine';
-                    sub.frequency.value = p.subBass;
-                    subGain.gain.setValueAtTime(0.001, now);
-                    subGain.gain.linearRampToValueAtTime(vol * 0.04, now + 2);
-                    subGain.gain.setValueAtTime(vol * 0.04, now + dur - 2);
-                    subGain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    sub.connect(subGain).connect(ctx.destination);
-                    sub.start(now);
-                    sub.stop(now + dur + 0.1);
-                    nodes.push(sub);
-
-                    return nodes;
-                }
-            },
-
-            // ========== 5. 蜡烛火焰声 ==========
-            {
-                id: 'candle',
-                icon: '🕯️',
-                title: '蜡烛火焰声',
-                scene: '镜头9：蛋糕蜡烛',
-                desc: '多层火焰呼吸噪声 + 随机噼啪 + 温暖低频 + 空气流动',
-                improve: '双层噪声呼吸 + 非线性噼啪 + 温暖次低频',
-                btnClass: 'btn-candle',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 55, unit: '%' },
-                    { key: 'flameFilter', label: '火焰主滤波', min: 300, max: 2500, val: 900, unit: 'Hz' },
-                    { key: 'breathRate', label: '火焰呼吸速率', min: 0.5, max: 8, val: 2.5, step: 0.1, unit: 'Hz' },
-                    { key: 'breathDepth', label: '呼吸深度', min: 0.02, max: 0.4, val: 0.15, step: 0.01, unit: '' },
-                    { key: 'crackleLevel', label: '噼啪强度', min: 0, max: 100, val: 40, unit: '%' },
-                    { key: 'crackleRate', label: '噼啪密度', min: 1, max: 20, val: 8, step: 1, unit: '次/s' },
-                    { key: 'warmth', label: '温暖低频', min: 30, max: 200, val: 80, unit: 'Hz' },
-                    { key: 'warmthLevel', label: '温暖强度', min: 0, max: 100, val: 30, unit: '%' },
-                    { key: 'duration', label: '播放时长', min: 2, max: 10, val: 4, step: 0.5, unit: 's' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const dur = p.duration;
-
-                    // === 主火焰噪声层1：棕噪声 + 低通（火焰主体） ===
-                    const f1Buf = createNoiseBuffer(ctx, dur + 0.5, 'brown');
-                    const f1Src = ctx.createBufferSource();
-                    f1Src.buffer = f1Buf;
-                    const f1LP = ctx.createBiquadFilter();
-                    f1LP.type = 'lowpass';
-                    f1LP.frequency.value = p.flameFilter;
-                    f1LP.Q.value = 0.5;
-                    const f1Gain = ctx.createGain();
-                    f1Gain.gain.setValueAtTime(0.001, now);
-                    f1Gain.gain.linearRampToValueAtTime(vol * 0.25, now + 0.4);
-                    f1Gain.gain.setValueAtTime(vol * 0.25, now + dur - 0.6);
-                    f1Gain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    // LFO呼吸
-                    const breath1 = ctx.createOscillator();
-                    const breath1Gain = ctx.createGain();
-                    breath1.type = 'sine';
-                    breath1.frequency.value = p.breathRate;
-                    breath1Gain.gain.value = p.breathDepth;
-                    breath1.connect(breath1Gain).connect(f1Gain.gain);
-                    f1Src.connect(f1LP).connect(f1Gain).connect(ctx.destination);
-                    f1Src.start(now); f1Src.stop(now + dur + 0.1);
-                    breath1.start(now); breath1.stop(now + dur + 0.1);
-                    nodes.push(f1Src, breath1);
-
-                    // === 主火焰噪声层2：粉噪声 + 带通（火焰嘶嘶高频层） ===
-                    const f2Buf = createNoiseBuffer(ctx, dur + 0.5, 'pink');
-                    const f2Src = ctx.createBufferSource();
-                    f2Src.buffer = f2Buf;
-                    const f2BP = ctx.createBiquadFilter();
-                    f2BP.type = 'bandpass';
-                    f2BP.frequency.value = p.flameFilter * 2.5;
-                    f2BP.Q.value = 1.5;
-                    const f2Gain = ctx.createGain();
-                    f2Gain.gain.setValueAtTime(0.001, now);
-                    f2Gain.gain.linearRampToValueAtTime(vol * 0.06, now + 0.5);
-                    f2Gain.gain.setValueAtTime(vol * 0.06, now + dur - 0.6);
-                    f2Gain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    const breath2 = ctx.createOscillator();
-                    const breath2Gain = ctx.createGain();
-                    breath2.type = 'sine';
-                    breath2.frequency.value = p.breathRate * 1.7; // 不同速率，产生不规则感
-                    breath2Gain.gain.value = p.breathDepth * 0.6;
-                    breath2.connect(breath2Gain).connect(f2Gain.gain);
-                    f2Src.connect(f2BP).connect(f2Gain).connect(ctx.destination);
-                    f2Src.start(now); f2Src.stop(now + dur + 0.1);
-                    breath2.start(now); breath2.stop(now + dur + 0.1);
-                    nodes.push(f2Src, breath2);
-
-                    // === 温暖低频 ===
-                    const warm = ctx.createOscillator();
-                    const warmGain = ctx.createGain();
-                    warm.type = 'sine';
-                    warm.frequency.value = p.warmth;
-                    const wl = p.warmthLevel / 100;
-                    warmGain.gain.setValueAtTime(0.001, now);
-                    warmGain.gain.linearRampToValueAtTime(vol * wl * 0.08, now + 0.6);
-                    warmGain.gain.setValueAtTime(vol * wl * 0.08, now + dur - 0.6);
-                    warmGain.gain.linearRampToValueAtTime(0.001, now + dur);
-                    warm.connect(warmGain).connect(ctx.destination);
-                    warm.start(now); warm.stop(now + dur + 0.1);
-                    nodes.push(warm);
-
-                    // === 随机噼啪声（非均匀间隔，模拟真实火焰） ===
-                    const crackleCount = Math.floor(p.crackleRate * dur);
-                    const cl = p.crackleLevel / 100;
-                    let crackleTime = now + 0.3;
-                    for (let i = 0; i < crackleCount; i++) {
-                        // 非均匀间隔：大部分间隔短，偶尔长间隔
-                        crackleTime += 0.05 + Math.random() * (dur / crackleCount) * 1.5;
-                        if (crackleTime > now + dur - 0.3) break;
-
-                        const cBuf = createNoiseBuffer(ctx, 0.04, 'white');
-                        const cSrc = ctx.createBufferSource();
-                        cSrc.buffer = cBuf;
-                        const cHP = ctx.createBiquadFilter();
-                        cHP.type = 'highpass';
-                        cHP.frequency.value = 2500 + Math.random() * 4000;
-                        const cBP = ctx.createBiquadFilter();
-                        cBP.type = 'peaking';
-                        cBP.frequency.value = 4000 + Math.random() * 3000;
-                        cBP.gain.value = 8;
-                        const cGain = ctx.createGain();
-                        const cPeak = vol * cl * (0.08 + Math.random() * 0.15);
-                        cGain.gain.setValueAtTime(cPeak, crackleTime);
-                        cGain.gain.exponentialRampToValueAtTime(0.001, crackleTime + 0.015 + Math.random() * 0.025);
-                        cSrc.connect(cHP).connect(cBP).connect(cGain).connect(ctx.destination);
-                        cSrc.start(crackleTime);
-                        cSrc.stop(crackleTime + 0.06);
-                        nodes.push(cSrc);
-                    }
-
-                    return nodes;
-                }
-            },
-
-            // ========== 6. 祝福汇聚声 ==========
-            {
-                id: 'bless',
-                icon: '💫',
-                title: '祝福汇聚声',
-                scene: '镜头11：祝福语飞入汇聚',
-                desc: '琶音滑入 + 粒子汇聚叮当 + 和弦闪光收尾',
-                improve: '五声音阶琶音 + 多层粒子音高随机 + 大三和弦收尾',
-                btnClass: 'btn-bless',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 50, unit: '%' },
-                    { key: 'arpBaseFreq', label: '琶音基频', min: 300, max: 1200, val: 523, unit: 'Hz' },
-                    { key: 'arpOctaves', label: '琶音八度数', min: 1, max: 4, val: 2, step: 1, unit: '八度' },
-                    { key: 'slideDur', label: '单次滑入时长', min: 0.2, max: 1.2, val: 0.5, step: 0.05, unit: 's' },
-                    { key: 'slideCount', label: '滑入次数', min: 4, max: 14, val: 10, step: 1, unit: '次' },
-                    { key: 'particleFreq', label: '粒子叮当频率', min: 2000, max: 10000, val: 5500, unit: 'Hz' },
-                    { key: 'particleCount', label: '粒子数量', min: 4, max: 16, val: 10, step: 1, unit: '个' },
-                    { key: 'chordBase', label: '和弦基频', min: 130, max: 520, val: 262, unit: 'Hz' },
-                    { key: 'chordDecay', label: '和弦衰减', min: 0.5, max: 5, val: 2.5, step: 0.1, unit: 's' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-
-                    // 五声音阶比率（C大调五声）
-                    const pentatonic = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3];
-
-                    // === 琶音滑入 ===
-                    const gap = p.slideDur * 0.55;
-                    for (let i = 0; i < p.slideCount; i++) {
-                        const t = now + i * gap;
-                        const noteIdx = i % pentatonic.length;
-                        const octaveShift = Math.floor(i / pentatonic.length) % p.arpOctaves;
-                        const freq = p.arpBaseFreq * pentatonic[noteIdx] * Math.pow(2, octaveShift);
-
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        // 从高音滑到目标音
-                        osc.frequency.setValueAtTime(freq * 2.5, t);
-                        osc.frequency.exponentialRampToValueAtTime(freq, t + p.slideDur * 0.7);
-                        applyEnvelope(gain, ctx, t, 0.02, 0.05, p.slideDur * 0.4, 0.3, p.slideDur * 0.4, vol * 0.12);
-                        osc.connect(gain).connect(ctx.destination);
-                        osc.start(t);
-                        osc.stop(t + p.slideDur + 0.1);
-                        nodes.push(osc);
-
-                        // 每个音符叠加一个泛音
-                        const osc2 = ctx.createOscillator();
-                        const gain2 = ctx.createGain();
-                        osc2.type = 'triangle';
-                        osc2.frequency.setValueAtTime(freq * 3, t);
-                        osc2.frequency.exponentialRampToValueAtTime(freq * 2, t + p.slideDur * 0.6);
-                        gain2.gain.setValueAtTime(0.001, t);
-                        gain2.gain.linearRampToValueAtTime(vol * 0.03, t + 0.03);
-                        gain2.gain.exponentialRampToValueAtTime(0.001, t + p.slideDur * 0.8);
-                        osc2.connect(gain2).connect(ctx.destination);
-                        osc2.start(t);
-                        osc2.stop(t + p.slideDur + 0.1);
-                        nodes.push(osc2);
-                    }
-
-                    // === 粒子叮当（汇聚完成后） ===
-                    const particleStart = now + p.slideCount * gap + 0.1;
-                    for (let i = 0; i < p.particleCount; i++) {
-                        const t = particleStart + i * 0.06 + Math.random() * 0.04;
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.value = p.particleFreq + Math.random() * 3000;
-                        gain.gain.setValueAtTime(vol * 0.08, t);
-                        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12 + Math.random() * 0.08);
-                        osc.connect(gain).connect(ctx.destination);
-                        osc.start(t);
-                        osc.stop(t + 0.25);
-                        nodes.push(osc);
-                    }
-
-                    // === 大三和弦收尾 ===
-                    const chordStart = particleStart + p.particleCount * 0.06 + 0.2;
-                    const chordRatios = [1, 5 / 4, 3 / 2, 2, 5 / 2, 3]; // 大三和弦 + 泛音
-                    chordRatios.forEach((r, idx) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = idx < 3 ? 'sine' : 'triangle';
-                        osc.frequency.value = p.chordBase * r;
-                        osc.detune.value = (Math.random() - 0.5) * 6;
-                        const chordVol = vol * (idx < 3 ? 0.08 : 0.03);
-                        gain.gain.setValueAtTime(0.001, chordStart);
-                        gain.gain.linearRampToValueAtTime(chordVol, chordStart + 0.15);
-                        gain.gain.setValueAtTime(chordVol, chordStart + 0.3);
-                        gain.gain.exponentialRampToValueAtTime(0.001, chordStart + p.chordDecay);
-                        osc.connect(gain).connect(ctx.destination);
-                        osc.start(chordStart);
-                        osc.stop(chordStart + p.chordDecay + 0.1);
-                        nodes.push(osc);
-                    });
-
-                    return nodes;
-                }
-            },
-
-            // ========== 7. 睁眼/闭眼转场 ==========
-            {
-                id: 'transition',
-                icon: '🌀',
-                title: '睁眼/闭眼转场',
-                scene: '镜头0/1/6/7/8/9：所有转场',
-                desc: '闭眼(频率塌陷+噪声消失) / 睁眼(频率升起+噪声涌入) + 呼吸质感',
-                improve: '双向对称设计 + 噪声质感层 + 呼吸感LFO',
-                btnClass: 'btn-transition',
-                params: [
-                    { key: 'volume', label: '总音量', min: 0, max: 100, val: 45, unit: '%' },
-                    { key: 'closeHighFreq', label: '闭眼起始高频', min: 1000, max: 6000, val: 3500, unit: 'Hz' },
-                    { key: 'closeLowFreq', label: '闭眼终止低频', min: 40, max: 300, val: 100, unit: 'Hz' },
-                    { key: 'openLowFreq', label: '睁眼起始低频', min: 40, max: 300, val: 80, unit: 'Hz' },
-                    { key: 'openHighFreq', label: '睁眼终止高频', min: 1000, max: 8000, val: 4000, unit: 'Hz' },
-                    { key: 'transitionDur', label: '单次转场时长', min: 0.3, max: 2, val: 0.8, step: 0.1, unit: 's' },
-                    { key: 'noiseTexture', label: '噪声质感', min: 0, max: 100, val: 35, unit: '%' },
-                    { key: 'pauseBetween', label: '闭眼-睁眼间隔', min: 0.1, max: 1.5, val: 0.4, step: 0.1, unit: 's' },
-                ],
-                play(p) {
-                    const ctx = getCtx();
-                    const now = ctx.currentTime;
-                    const vol = (p.volume / 100) * masterVolume;
-                    const nodes = [];
-                    const dur = p.transitionDur;
-                    const nl = p.noiseTexture / 100;
-
-                    // ========== 闭眼 ==========
-                    // 频率塌陷：正弦波从高频滑到低频
-                    const closeOsc = ctx.createOscillator();
-                    const closeGain = ctx.createGain();
-                    closeOsc.type = 'sine';
-                    closeOsc.frequency.setValueAtTime(p.closeHighFreq, now);
-                    closeOsc.frequency.exponentialRampToValueAtTime(p.closeLowFreq, now + dur);
-                    closeGain.gain.setValueAtTime(vol * 0.2, now);
-                    closeGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-                    closeOsc.connect(closeGain).connect(ctx.destination);
-                    closeOsc.start(now); closeOsc.stop(now + dur + 0.1);
-                    nodes.push(closeOsc);
-
-                    // 闭眼噪声（从亮到暗）
-                    const cnBuf = createNoiseBuffer(ctx, dur + 0.2, 'pink');
-                    const cnSrc = ctx.createBufferSource();
-                    cnSrc.buffer = cnBuf;
-                    const cnLP = ctx.createBiquadFilter();
-                    cnLP.type = 'lowpass';
-                    cnLP.frequency.setValueAtTime(5000, now);
-                    cnLP.frequency.exponentialRampToValueAtTime(100, now + dur);
-                    const cnGain = ctx.createGain();
-                    cnGain.gain.setValueAtTime(vol * nl * 0.18, now);
-                    cnGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-                    cnSrc.connect(cnLP).connect(cnGain).connect(ctx.destination);
-                    cnSrc.start(now); cnSrc.stop(now + dur + 0.1);
-                    nodes.push(cnSrc);
-
-                    // ========== 短暂静默（许愿/黑暗） ==========
-                    const openStart = now + dur + p.pauseBetween;
-
-                    // ========== 睁眼 ==========
-                    // 频率升起
-                    const openOsc = ctx.createOscillator();
-                    const openGain = ctx.createGain();
-                    openOsc.type = 'sine';
-                    openOsc.frequency.setValueAtTime(p.openLowFreq, openStart);
-                    openOsc.frequency.exponentialRampToValueAtTime(p.openHighFreq, openStart + dur);
-                    openGain.gain.setValueAtTime(0.001, openStart);
-                    openGain.gain.linearRampToValueAtTime(vol * 0.25, openStart + dur * 0.75);
-                    openGain.gain.exponentialRampToValueAtTime(0.001, openStart + dur + 0.3);
-                    openOsc.connect(openGain).connect(ctx.destination);
-                    openOsc.start(openStart); openOsc.stop(openStart + dur + 0.4);
-                    nodes.push(openOsc);
-
-                    // 睁眼噪声（从暗到亮）
-                    const onBuf = createNoiseBuffer(ctx, dur + 0.5, 'white');
-                    const onSrc = ctx.createBufferSource();
-                    onSrc.buffer = onBuf;
-                    const onHP = ctx.createBiquadFilter();
-                    onHP.type = 'bandpass';
-                    onHP.frequency.setValueAtTime(100, openStart);
-                    onHP.frequency.exponentialRampToValueAtTime(3000, openStart + dur);
-                    onHP.Q.value = 0.5;
-                    const onGain = ctx.createGain();
-                    onGain.gain.setValueAtTime(0.001, openStart);
-                    onGain.gain.linearRampToValueAtTime(vol * nl * 0.15, openStart + dur * 0.8);
-                    onGain.gain.exponentialRampToValueAtTime(0.001, openStart + dur + 0.3);
-                    onSrc.connect(onHP).connect(onGain).connect(ctx.destination);
-                    onSrc.start(openStart); onSrc.stop(openStart + dur + 0.4);
-                    nodes.push(onSrc);
-
-                    // 睁眼"光感"：高频正弦波闪现
-                    const lightOsc = ctx.createOscillator();
-                    const lightGain = ctx.createGain();
-                    lightOsc.type = 'sine';
-                    lightOsc.frequency.value = p.openHighFreq * 1.5;
-                    const lightStart = openStart + dur * 0.5;
-                    lightGain.gain.setValueAtTime(0.001, lightStart);
-                    lightGain.gain.linearRampToValueAtTime(vol * 0.06, lightStart + 0.1);
-                    lightGain.gain.exponentialRampToValueAtTime(0.001, lightStart + 0.5);
-                    lightOsc.connect(lightGain).connect(ctx.destination);
-                    lightOsc.start(lightStart); lightOsc.stop(lightStart + 0.6);
-                    nodes.push(lightOsc);
-
-                    return nodes;
-                }
-            },
-
+        const DESK_Y = H * 0.78;
+        const DESK_H = H - DESK_Y;
+        const CAKE_CX = W / 2;
+        const LAYER_H = 50;
+        const LAYERS = [
+            { w: 180, color: '#5c3a1a' },
+            { w: 140, color: '#e8a0a0' },
+            { w: 100, color: '#f5ede3' },
         ];
 
-        // ==================== 渲染卡片 ====================
-        const grid = document.getElementById('cardGrid');
+        const CANDLE_COLORS = ['#ff4444', '#ffdd44', '#4488ff', '#44dd44', '#ff66aa'];
+        const CANDLE_W = 8;
+        const CANDLE_H = 25;
+        const CANDLE_COUNT = 5;
+        const FLAME_W = 10;
+        const FLAME_H = 14;
 
-        sounds.forEach(sound => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.id = 'card-' + sound.id;
-            const paramValues = {};
-            sound.params.forEach(p => { paramValues[p.key] = p.val; });
+        // ============================================================
+        //  闭眼状态
+        // ============================================================
+        let closeState = {
+            progress: 0,
+            phase: 'idle',
+            startTime: 0,
+            isClosed: false,
+            isOpening: false,
+        };
 
-            let paramsHTML = sound.params.map(p => {
-                const step = p.step || (p.max - p.min > 100 ? 1 : 0.1);
-                return `
-      <div class="param-row">
-        <span class="param-label">${p.label}</span>
-        <input type="range" class="param-slider"
-          data-sound="${sound.id}" data-key="${p.key}"
-          min="${p.min}" max="${p.max}" step="${step}" value="${p.val}">
-        <span class="param-value" id="val-${sound.id}-${p.key}">${p.val}${p.unit}</span>
-      </div>
-    `;
-            }).join('');
+        const CLOSE_DELAY = 1800;
+        const CLOSE_DURATION = 4500;
+        const OPEN_DURATION = 1500;
 
-            card.innerHTML = `
-    <div class="card-header">
-      <div class="card-title"><span class="icon">${sound.icon}</span>${sound.title}</div>
-      <span class="card-scene">${sound.scene}</span>
-    </div>
-    <div class="card-desc">${sound.desc}</div>
-    <div class="improve-tag">✦ ${sound.improve}</div>
-    ${paramsHTML}
-    <button class="play-btn ${sound.btnClass}" id="btn-${sound.id}"
-      onclick="playSound('${sound.id}')">
-      ▶ 播放 ${sound.title}
-    </button>
-  `;
-            grid.appendChild(card);
+        let infoEl = document.getElementById('info');
+        let restartBtn = document.getElementById('restart-btn');
 
-            card.querySelectorAll('.param-slider').forEach(slider => {
-                slider.addEventListener('input', e => {
-                    const key = e.target.dataset.key;
-                    const sid = e.target.dataset.sound;
-                    const val = parseFloat(e.target.value);
-                    paramValues[key] = val;
-                    const pDef = sound.params.find(pp => pp.key === key);
-                    document.getElementById(`val-${sid}-${key}`).textContent = val + (pDef ? pDef.unit : '');
-                });
+        // ============================================================
+        //  工具函数
+        // ============================================================
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+        function easeInOutSine(t) {
+            return -(Math.cos(Math.PI * t) - 1) / 2;
+        }
+
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function getCakeLayerY(index) {
+            return DESK_Y - (index + 1) * LAYER_H;
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(c => clamp(Math.round(c), 0, 255).toString(16).padStart(2, '0')).join('');
+        }
+
+        function lightenColor(hex, amount) {
+            const { r, g, b } = hexToRgb(hex);
+            return rgbToHex(Math.min(255, r + amount), Math.min(255, g + amount), Math.min(255, b + amount));
+        }
+
+        function darkenColor(hex, amount) {
+            const { r, g, b } = hexToRgb(hex);
+            return rgbToHex(Math.max(0, r - amount), Math.max(0, g - amount), Math.max(0, b - amount));
+        }
+
+        // ============================================================
+        //  绘制函数（背景、桌面、蛋糕、蜡烛、火焰）
+        // ============================================================
+        function drawBackground() {
+            const grad = ctx.createRadialGradient(CAKE_CX, DESK_Y - 60, 30, CAKE_CX, DESK_Y - 60, 450);
+            grad.addColorStop(0, '#2a1e18');
+            grad.addColorStop(0.4, '#1e1612');
+            grad.addColorStop(0.8, '#14100d');
+            grad.addColorStop(1, '#0a0808');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            const grad2 = ctx.createRadialGradient(CAKE_CX, 0, 20, CAKE_CX, 0, 350);
+            grad2.addColorStop(0, 'rgba(255, 180, 100, 0.04)');
+            grad2.addColorStop(1, 'rgba(255, 180, 100, 0)');
+            ctx.fillStyle = grad2;
+            ctx.fillRect(0, 0, W, H);
+
+            const envGlow = ctx.createRadialGradient(CAKE_CX, DESK_Y - 40, 20, CAKE_CX, DESK_Y - 40, 400);
+            envGlow.addColorStop(0, 'rgba(255, 180, 100, 0.08)');
+            envGlow.addColorStop(0.5, 'rgba(255, 140, 70, 0.04)');
+            envGlow.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            ctx.fillStyle = envGlow;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        function drawDesk() {
+            ctx.save();
+            const shadowGrad = ctx.createLinearGradient(0, DESK_Y, 0, H);
+            shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            shadowGrad.addColorStop(0.15, 'rgba(0,0,0,0.3)');
+            shadowGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = shadowGrad;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+
+            const deskGrad = ctx.createLinearGradient(0, DESK_Y, 0, H);
+            deskGrad.addColorStop(0, 'rgba(70, 40, 25, 0.85)');
+            deskGrad.addColorStop(0.5, 'rgba(55, 32, 18, 0.90)');
+            deskGrad.addColorStop(1, 'rgba(40, 22, 12, 0.95)');
+            ctx.fillStyle = deskGrad;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+
+            ctx.strokeStyle = 'rgba(90, 55, 35, 0.25)';
+            ctx.lineWidth = 0.5;
+            for (let y = DESK_Y + 4; y < H; y += 6) {
+                const offset = Math.sin(y * 0.03) * 3 + Math.sin(y * 0.07 + 1) * 2;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x < W; x += 2) {
+                    const wave = Math.sin(x * 0.02 + y * 0.01) * 1.5 + Math.sin(x * 0.05 + y * 0.02) * 0.8;
+                    ctx.lineTo(x, y + wave + offset * 0.3);
+                }
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(120, 80, 50, 0.12)';
+            ctx.lineWidth = 0.3;
+            for (let y = DESK_Y + 2; y < H; y += 9) {
+                const offset = Math.sin(y * 0.04 + 2) * 4;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x < W; x += 3) {
+                    const wave = Math.sin(x * 0.015 + y * 0.008) * 2 + Math.sin(x * 0.04 + y * 0.015 + 1) * 1;
+                    ctx.lineTo(x, y + wave + offset * 0.2);
+                }
+                ctx.stroke();
+            }
+
+            const highlight = ctx.createLinearGradient(0, DESK_Y, 0, DESK_Y + 20);
+            highlight.addColorStop(0, 'rgba(180, 130, 90, 0.10)');
+            highlight.addColorStop(1, 'rgba(180, 130, 90, 0)');
+            ctx.fillStyle = highlight;
+            ctx.fillRect(0, DESK_Y, W, 20);
+            ctx.restore();
+        }
+
+        function drawCandleGlow(time) {
+            ctx.save();
+            const glow1 = ctx.createRadialGradient(CAKE_CX, DESK_Y - 50, 20, CAKE_CX, DESK_Y - 50, 350);
+            glow1.addColorStop(0, `rgba(255, 200, 120, ${0.06 + 0.02 * Math.sin(time * 0.5 + 1)})`);
+            glow1.addColorStop(0.3, `rgba(255, 170, 90, ${0.04 + 0.015 * Math.sin(time * 0.4 + 2)})`);
+            glow1.addColorStop(0.7, `rgba(255, 140, 70, ${0.02 + 0.01 * Math.sin(time * 0.3 + 3)})`);
+            glow1.addColorStop(1, 'rgba(255, 100, 50, 0)');
+            ctx.fillStyle = glow1;
+            ctx.fillRect(0, 0, W, H);
+
+            const candlePositions = getCandlePositions();
+            for (let i = 0; i < candlePositions.length; i++) {
+                const cx = candlePositions[i];
+                const cy = DESK_Y - LAYER_H * 3 - CANDLE_H + 2;
+                const pulse = 0.85 + 0.15 * Math.sin(time * 1.2 + i * 1.8);
+                const radius = 60 * pulse;
+                const glow = ctx.createRadialGradient(cx, cy, 5, cx, cy, radius);
+                const alpha = 0.12 + 0.06 * Math.sin(time * 0.7 + i * 1.2);
+                glow.addColorStop(0, `rgba(255, 210, 140, ${alpha})`);
+                glow.addColorStop(0.4, `rgba(255, 180, 100, ${alpha * 0.5})`);
+                glow.addColorStop(1, 'rgba(255, 150, 80, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+            }
+
+            const deskGlow = ctx.createRadialGradient(CAKE_CX, DESK_Y + 20, 30, CAKE_CX, DESK_Y + 20, 240);
+            deskGlow.addColorStop(0, `rgba(255, 190, 110, ${0.04 + 0.02 * Math.sin(time * 0.6 + 0.5)})`);
+            deskGlow.addColorStop(0.5, `rgba(255, 160, 80, ${0.02 + 0.01 * Math.sin(time * 0.5 + 1.5)})`);
+            deskGlow.addColorStop(1, 'rgba(255, 130, 60, 0)');
+            ctx.fillStyle = deskGlow;
+            ctx.fillRect(0, DESK_Y, W, DESK_H);
+            ctx.restore();
+        }
+
+        function drawCake() {
+            ctx.save();
+            for (let i = 1; i < LAYERS.length; i++) {
+                const layer = LAYERS[i];
+                const w = layer.w;
+                const x = CAKE_CX - w / 2;
+                const y = getCakeLayerY(i);
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetY = 4;
+                ctx.fillStyle = 'rgba(0,0,0,0)';
+                ctx.fillRect(x + 4, y + 2, w - 8, 6);
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetY = 0;
+            }
+
+            for (let i = 0; i < LAYERS.length; i++) {
+                const layer = LAYERS[i];
+                const w = layer.w;
+                const x = CAKE_CX - w / 2;
+                const y = getCakeLayerY(i);
+                const h = LAYER_H;
+
+                ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                ctx.shadowBlur = 15;
+                ctx.shadowOffsetX = 3;
+                ctx.shadowOffsetY = 5;
+
+                const grad = ctx.createLinearGradient(x, y, x + w, y);
+                grad.addColorStop(0, darkenColor(layer.color, 30));
+                grad.addColorStop(0.2, lightenColor(layer.color, 10));
+                grad.addColorStop(0.5, layer.color);
+                grad.addColorStop(0.8, darkenColor(layer.color, 15));
+                grad.addColorStop(1, darkenColor(layer.color, 40));
+                ctx.fillStyle = grad;
+                roundRect(ctx, x, y, w, h, 5);
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                const hlGrad = ctx.createLinearGradient(x, y + 3, x + w, y + 8);
+                hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
+                hlGrad.addColorStop(0.25, `rgba(255,255,255,${i === 2 ? 0.4 : 0.2})`);
+                hlGrad.addColorStop(0.75, `rgba(255,255,255,${i === 2 ? 0.3 : 0.12})`);
+                hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = hlGrad;
+                ctx.fillRect(x + 8, y + 3, w - 16, 6);
+
+                const sideGrad = ctx.createLinearGradient(x + w - 10, y, x + w, y + h);
+                sideGrad.addColorStop(0, 'rgba(0,0,0,0.05)');
+                sideGrad.addColorStop(0.5, 'rgba(0,0,0,0.2)');
+                sideGrad.addColorStop(1, 'rgba(0,0,0,0.4)');
+                ctx.fillStyle = sideGrad;
+                ctx.fillRect(x + w - 10, y, 10, h);
+
+                const leftGrad = ctx.createLinearGradient(x, y, x + 5, y + h);
+                leftGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
+                leftGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+                leftGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = leftGrad;
+                ctx.fillRect(x, y, 5, h);
+
+                drawCreamPiping(i);
+            }
+            ctx.restore();
+        }
+
+        function drawCreamPiping(layerIndex) {
+            const layer = LAYERS[layerIndex];
+            const w = layer.w;
+            const x = CAKE_CX - w / 2;
+            const y = getCakeLayerY(layerIndex);
+
+            let mainColor, dotColor;
+            if (layerIndex === 0) {
+                mainColor = 'rgba(255, 180, 170, 0.9)';
+                dotColor = 'rgba(255, 210, 200, 0.7)';
+            } else if (layerIndex === 1) {
+                mainColor = 'rgba(255, 220, 160, 0.9)';
+                dotColor = 'rgba(255, 235, 190, 0.7)';
+            } else {
+                mainColor = 'rgba(190, 220, 255, 0.9)';
+                dotColor = 'rgba(210, 235, 255, 0.7)';
+            }
+
+            const radius = layerIndex === 0 ? 11 : (layerIndex === 1 ? 9 : 8);
+            const spacing = layerIndex === 0 ? 22 : (layerIndex === 1 ? 20 : 18);
+            const topY = y + 3;
+
+            ctx.save();
+            const startX = x + radius + 5;
+            const endX = x + w - radius - 5;
+
+            for (let px = startX; px < endX; px += spacing) {
+                const offset = Math.sin(px * 0.5 + layerIndex * 2) * 1.5;
+                const cx = px + offset;
+                const cy = topY;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, Math.PI, 0, false);
+                ctx.strokeStyle = mainColor;
+                ctx.lineWidth = 3.5;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                ctx.fillStyle = dotColor;
+                ctx.beginPath();
+                ctx.arc(cx - 2, cy - 2, radius * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (layerIndex === 2) {
+                for (let px = x + 18; px < x + w - 18; px += 24) {
+                    const cx = px + Math.sin(px * 0.5) * 3;
+                    const cy = topY + 8 + Math.sin(px * 0.4 + 1) * 5;
+                    ctx.fillStyle = 'rgba(255, 200, 180, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(cx - 2, cy - 2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (layerIndex === 1) {
+                for (let px = x + 14; px < x + w - 14; px += 26) {
+                    const cx = px + Math.sin(px * 0.6 + 2) * 2;
+                    const cy = topY + 6 + Math.sin(px * 0.5 + 1.5) * 4;
+                    ctx.fillStyle = 'rgba(255, 230, 170, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                for (let px = x + 12; px < x + w - 12; px += 28) {
+                    const cx = px + Math.sin(px * 0.7 + 1) * 2;
+                    const cy = topY + 5 + Math.sin(px * 0.6 + 2) * 3;
+                    ctx.fillStyle = 'rgba(255, 200, 190, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+        }
+
+        function getCandlePositions() {
+            const topW = LAYERS[2].w;
+            const startX = CAKE_CX - topW / 2 + 8;
+            const endX = CAKE_CX + topW / 2 - 8;
+            const positions = [];
+            for (let i = 0; i < CANDLE_COUNT; i++) {
+                const t = (i + 0.5) / CANDLE_COUNT;
+                positions.push(lerp(startX, endX, t));
+            }
+            return positions;
+        }
+
+        function drawCandles() {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+            ctx.save();
+
+            for (let i = 0; i < positions.length; i++) {
+                const cx = positions[i];
+                const cy = topY;
+                const color = CANDLE_COLORS[i % CANDLE_COLORS.length];
+
+                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                ctx.shadowBlur = 6;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 2;
+
+                const grad = ctx.createLinearGradient(cx - CANDLE_W / 2, cy, cx + CANDLE_W / 2, cy);
+                grad.addColorStop(0, darkenColor(color, 25));
+                grad.addColorStop(0.3, lightenColor(color, 20));
+                grad.addColorStop(0.7, color);
+                grad.addColorStop(1, darkenColor(color, 15));
+
+                ctx.fillStyle = grad;
+                roundRect(ctx, cx - CANDLE_W / 2, cy - CANDLE_H, CANDLE_W, CANDLE_H, 1.5);
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                const hlGrad = ctx.createLinearGradient(cx - CANDLE_W / 2, cy - CANDLE_H, cx - CANDLE_W / 2 + 2.5, cy);
+                hlGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
+                hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+                hlGrad.addColorStop(1, 'rgba(255,255,255,0.05)');
+                ctx.fillStyle = hlGrad;
+                ctx.fillRect(cx - CANDLE_W / 2 + 0.5, cy - CANDLE_H + 1, 2, CANDLE_H - 2);
+
+                ctx.fillStyle = 'rgba(255, 240, 220, 0.25)';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - CANDLE_H + 0.5, CANDLE_W / 2 - 0.5, 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(cx, cy - CANDLE_H + 1, 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // 火焰绘制 —— 受闭眼影响：闭眼过程中火焰逐渐熄灭
+        function drawFlames(time, closeProgress) {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+
+            const flameBrightness = 1 - closeProgress * 1.2;
+            const flameAlpha = clamp(flameBrightness, 0, 1);
+
+            ctx.save();
+
+            for (let i = 0; i < positions.length; i++) {
+                const cx = positions[i];
+                const baseY = topY - CANDLE_H + 1;
+
+                const phase = i * 1.3 + 0.7;
+                const scaleX = 0.92 + 0.08 * Math.sin(time * 1.2 + phase);
+                const scaleY = 0.90 + 0.10 * Math.sin(time * 1.6 + phase * 0.7);
+                const offsetY = 1.2 * Math.sin(time * 2.0 + phase * 1.2);
+
+                const flameX = cx;
+                const flameY = baseY + offsetY - 2;
+
+                if (flameAlpha > 0.02) {
+                    const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase)) * (0.3 + 0.7 * flameAlpha);
+                    const glow = ctx.createRadialGradient(flameX, flameY, 2, flameX, flameY, glowRadius);
+                    const glowAlpha = (0.12 + 0.05 * Math.sin(time * 0.7 + phase)) * flameAlpha;
+                    glow.addColorStop(0, `rgba(255, 200, 100, ${glowAlpha})`);
+                    glow.addColorStop(0.5, `rgba(255, 160, 70, ${glowAlpha * 0.5})`);
+                    glow.addColorStop(1, 'rgba(255, 120, 50, 0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(flameX, flameY, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (flameAlpha < 0.01) continue;
+
+                ctx.save();
+                ctx.translate(flameX, flameY);
+                ctx.scale(scaleX, scaleY);
+
+                const grad = ctx.createRadialGradient(0, -3, 1, 0, 0, FLAME_H * 0.6);
+                const r1 = Math.round(255 * flameAlpha);
+                const r2 = Math.round(221 * flameAlpha);
+                const r3 = Math.round(170 * flameAlpha);
+                const r4 = Math.round(119 * flameAlpha);
+                const r5 = Math.round(68 * flameAlpha);
+
+                grad.addColorStop(0, `rgba(255, 251, 230, ${flameAlpha})`);
+                grad.addColorStop(0.15,
+                    `rgba(255, ${Math.round(221 * flameAlpha)}, ${Math.round(68 * flameAlpha)}, ${flameAlpha})`);
+                grad.addColorStop(0.4, `rgba(255, ${Math.round(170 * flameAlpha)}, 0, ${flameAlpha})`);
+                grad.addColorStop(0.7, `rgba(255, ${Math.round(119 * flameAlpha)}, 0, ${flameAlpha})`);
+                grad.addColorStop(1, `rgba(255, ${Math.round(68 * flameAlpha)}, 0, ${flameAlpha * 0.5})`);
+
+                ctx.beginPath();
+                const w = FLAME_W / 2;
+                const h = FLAME_H / 2;
+                ctx.moveTo(0, -h);
+                ctx.bezierCurveTo(w * 0.8, -h * 0.4, w, -h * 0.1, w, h * 0.2);
+                ctx.bezierCurveTo(w, h * 0.6, w * 0.6, h, 0, h * 0.85);
+                ctx.bezierCurveTo(-w * 0.6, h, -w, h * 0.6, -w, h * 0.2);
+                ctx.bezierCurveTo(-w, -h * 0.1, -w * 0.8, -h * 0.4, 0, -h);
+                ctx.closePath();
+
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                const coreGrad = ctx.createRadialGradient(0, -2, 0.5, 0, 0, FLAME_H * 0.25);
+                coreGrad.addColorStop(0, `rgba(255, 255, 240, ${0.9 * flameAlpha})`);
+                coreGrad.addColorStop(0.3, `rgba(255, 230, 150, ${0.6 * flameAlpha})`);
+                coreGrad.addColorStop(1, `rgba(255, 200, 80, 0)`);
+                ctx.fillStyle = coreGrad;
+                ctx.beginPath();
+                ctx.ellipse(0, -2, FLAME_W * 0.25, FLAME_H * 0.25, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                const baseGlow = ctx.createRadialGradient(cx, baseY + 1, 1, cx, baseY + 1, 12);
+                const bAlpha = (0.15 + 0.08 * Math.sin(time * 0.8 + phase)) * flameAlpha;
+                baseGlow.addColorStop(0, `rgba(255, 200, 100, ${bAlpha})`);
+                baseGlow.addColorStop(1, 'rgba(255, 150, 70, 0)');
+                ctx.fillStyle = baseGlow;
+                ctx.beginPath();
+                ctx.arc(cx, baseY + 1, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ============================================================
+        //  装饰：礼物堆、气球、横幅
+        // ============================================================
+
+        function drawGift(x, y, w, h, boxColor, ribbonColor, shadowOffset) {
+            shadowOffset = shadowOffset || 5;
+            if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) return;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = shadowOffset;
+
+            const gradBox = ctx.createLinearGradient(x, y, x + w, y + h);
+            gradBox.addColorStop(0, lightenColor(boxColor, 25));
+            gradBox.addColorStop(0.5, boxColor);
+            gradBox.addColorStop(1, darkenColor(boxColor, 30));
+            ctx.fillStyle = gradBox;
+            roundRect(ctx, x, y, w, h, 4);
+            ctx.fill();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            ctx.fillStyle = ribbonColor;
+            ctx.fillRect(x + w / 2 - 3, y, 6, h);
+            ctx.fillRect(x, y + h / 2 - 3, w, 6);
+
+            ctx.beginPath();
+            ctx.arc(x + w / 2 - 7, y - 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w / 2 + 7, y - 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.fillRect(x + 6, y + 3, w - 12, 4);
+            ctx.restore();
+        }
+
+        const giftPyramidData = (() => {
+            const layerDefs = [
+                { layer: 5, yBase: -160, count: 1, xStart: 140, xEnd: 170, sizeMin: 30, sizeMax: 40 },
+                { layer: 4, yBase: -128, count: 2, xStart: 120, xEnd: 190, sizeMin: 34, sizeMax: 44 },
+                { layer: 3, yBase: -96, count: 3, xStart: 100, xEnd: 210, sizeMin: 38, sizeMax: 48 },
+                { layer: 2, yBase: -64, count: 4, xStart: 80, xEnd: 225, sizeMin: 42, sizeMax: 54 },
+                { layer: 1, yBase: -32, count: 5, xStart: 60, xEnd: 240, sizeMin: 46, sizeMax: 58 },
+                { layer: 0, yBase: 0, count: 6, xStart: 40, xEnd: 260, sizeMin: 50, sizeMax: 64 },
+            ];
+
+            const allGifts = [];
+            const colorPalette = [
+                ['#e74c3c', '#f1c40f'],
+                ['#2980b9', '#ecf0f1'],
+                ['#27ae60', '#f1c40f'],
+                ['#f39c12', '#e74c3c'],
+                ['#8e44ad', '#f1c40f'],
+                ['#1abc9c', '#e67e22'],
+                ['#e67e22', '#2c3e50'],
+                ['#2c3e50', '#f1c40f'],
+                ['#c0392b', '#ecf0f1'],
+                ['#16a085', '#f39c12'],
+                ['#d35400', '#f1c40f'],
+                ['#9b59b6', '#ecf0f1'],
+            ];
+
+            let idx = 0;
+            for (let ld of layerDefs) {
+                const { layer, yBase, count, xStart, xEnd, sizeMin, sizeMax } = ld;
+                const availableWidth = xEnd - xStart;
+
+                let rawWidths = [];
+                let totalRawWidth = 0;
+                for (let i = 0; i < count; i++) {
+                    let w = sizeMin + Math.random() * (sizeMax - sizeMin);
+                    rawWidths.push(w);
+                    totalRawWidth += w;
+                }
+
+                let scale = availableWidth / totalRawWidth;
+                let currentX = xStart;
+
+                for (let i = 0; i < count; i++) {
+                    const w = rawWidths[i] * scale;
+                    const h = w * (0.78 + Math.random() * 0.12);
+                    const x = currentX;
+                    const y = DESK_Y + yBase - h;
+
+                    const ci = idx % colorPalette.length;
+                    const [boxColor, ribbonColor] = colorPalette[ci];
+                    const darkAmt = (5 - layer) * 2;
+                    const finalColor = darkenColor(boxColor, darkAmt);
+                    const shadowOff = Math.max(3, 8 - layer);
+
+                    allGifts.push({
+                        x,
+                        y,
+                        w,
+                        h,
+                        color: finalColor,
+                        ribbon: ribbonColor,
+                        layer: layer,
+                        shadowOff: shadowOff
+                    });
+
+                    currentX += w;
+                    idx++;
+                }
+            }
+
+            allGifts.sort((a, b) => b.layer - a.layer);
+            return allGifts;
+        })();
+
+        function drawGiftPyramid() {
+            for (let g of giftPyramidData) {
+                drawGift(g.x, g.y, g.w, g.h, g.color, g.ribbon, g.shadowOff);
+            }
+        }
+
+        const balloons = [];
+        const balloonColors = ['#ff6b81', '#ffd93d', '#6bcfff', '#a29bfe', '#ff9ff3', '#ff9f43', '#00d2d3', '#f368e0',
+            '#ff6b81', '#ffd93d'
+        ];
+        const numBalloons = 12;
+
+        for (let i = 0; i < numBalloons; i++) {
+            balloons.push({
+                x: 570 + Math.random() * 210,
+                y: 210 + Math.random() * 160,
+                color: balloonColors[i % balloonColors.length],
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.4 + Math.random() * 0.3,
+                swingSpeed: 0.015 + Math.random() * 0.015,
+                radius: 14 + Math.floor(Math.random() * 8)
             });
+        }
 
-            card._paramValues = paramValues;
+        function drawBalloons(time) {
+            for (let b of balloons) {
+                const baseX = b.x;
+                const baseY = DESK_Y - 2;
+
+                const grad = ctx.createRadialGradient(baseX, baseY, 1, baseX, baseY, 10);
+                grad.addColorStop(0, b.color);
+                grad.addColorStop(0.5, lightenColor(b.color, 50));
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(baseX, baseY, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = b.color;
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(baseX, baseY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(baseX - 1.5, baseY - 1.5, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            for (let b of balloons) {
+                const floatOffset = Math.sin(time * b.speed + b.phase) * 5;
+                const swingOffset = Math.sin(time * b.swingSpeed * 2 + b.phase) * 4;
+
+                const currentX = b.x + swingOffset;
+                const currentY = b.y + floatOffset;
+
+                const baseX = b.x;
+                const baseY = DESK_Y - 2;
+                ctx.beginPath();
+                ctx.moveTo(currentX, currentY + b.radius * 0.9);
+                ctx.lineTo(baseX, baseY);
+                ctx.strokeStyle = 'rgba(200,200,200,0.3)';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 3;
+
+                ctx.beginPath();
+                ctx.ellipse(currentX, currentY, b.radius, b.radius * 1.3, 0, 0, Math.PI * 2);
+                ctx.fillStyle = b.color;
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.ellipse(currentX - b.radius * 0.25, currentY - b.radius * 0.3, b.radius * 0.3, b.radius * 0.4, -0.2, 0,
+                    Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(currentX, currentY + b.radius * 0.9);
+                ctx.lineTo(currentX - 2, currentY + b.radius * 1.1);
+                ctx.lineTo(currentX + 2, currentY + b.radius * 1.1);
+                ctx.fillStyle = darkenColor(b.color, 30);
+                ctx.fill();
+            }
+        }
+
+        function drawBanner() {
+            const bannerW = W - 20;
+            const bannerH = 55;
+            const bx = (W - bannerW) / 2;
+            const by = 80;
+            const curveDepth = 22;
+
+            ctx.save();
+
+            const gradient = ctx.createLinearGradient(bx, 0, bx, by + bannerH + curveDepth);
+            gradient.addColorStop(0, '#e74c3c');
+            gradient.addColorStop(0.5, '#c0392b');
+            gradient.addColorStop(1, '#a93226');
+
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 4;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.quadraticCurveTo(CAKE_CX, by + curveDepth, bx + bannerW, by);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.quadraticCurveTo(CAKE_CX, by + bannerH + curveDepth * 2, bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.quadraticCurveTo(CAKE_CX, by + curveDepth, bx + bannerW, by);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.quadraticCurveTo(CAKE_CX, by + bannerH + curveDepth * 2, bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.stroke();
+
+            const triSize = 20;
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx - triSize, by + curveDepth / 2 + bannerH / 2);
+            ctx.lineTo(bx, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(bx + bannerW, by);
+            ctx.lineTo(bx + bannerW + triSize, by + curveDepth / 2 + bannerH / 2);
+            ctx.lineTo(bx + bannerW, by + bannerH + curveDepth);
+            ctx.closePath();
+            ctx.fill();
+
+            const cakeX = CAKE_CX - 150;
+            const cakeY = by + bannerH / 2 + curveDepth * 0.8;
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(cakeX - 12, cakeY, 24, 14);
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(cakeX, cakeY, 12, Math.PI, 0);
+            ctx.fill();
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(cakeX, cakeY - 3, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            const giftX = CAKE_CX + 150;
+            const giftY = by + bannerH / 2 + curveDepth * 0.8;
+            ctx.fillStyle = '#e67e22';
+            ctx.fillRect(giftX - 10, giftY - 14, 20, 16);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(giftX - 10, giftY - 14, 20, 16);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(giftX - 4, giftY - 14, 8, 16);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 40px "Arial", "Microsoft YaHei", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 2;
+
+            const text = '生日快乐';
+            const chars = text.split('');
+            const charWidth = 50;
+            const startX = CAKE_CX - (chars.length - 1) * charWidth / 2;
+
+            for (let i = 0; i < chars.length; i++) {
+                const x = startX + i * charWidth;
+                const normalizedX = (2 * (x - CAKE_CX)) / bannerW;
+                const droop = curveDepth * (1 - normalizedX * normalizedX);
+
+                const y = by + bannerH / 2 + droop;
+
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillText(chars[i], x, y + 1);
+                ctx.fillStyle = '#fff8e7';
+                ctx.fillText(chars[i], x, y);
+            }
+
+            ctx.font = 'bold 14px "Arial", "Microsoft YaHei", sans-serif';
+            const enText = 'HAPPY BIRTHDAY';
+            ctx.fillStyle = '#f1c40f';
+            const enY = by + bannerH + curveDepth + 3;
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 2;
+            ctx.fillText(enText, CAKE_CX, enY);
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+            for (let i = 0; i < 10; i++) {
+                const angle = i / 10 * Math.PI * 2 + 0.3;
+                const dist = 130 + Math.sin(i * 1.3) * 15;
+                const sx = CAKE_CX + Math.cos(angle) * dist;
+                const sy = by + bannerH / 2 + Math.sin(angle) * dist * 0.35;
+                ctx.beginPath();
+                for (let j = 0; j < 5; j++) {
+                    const a = (j * 4 * Math.PI / 5) - Math.PI / 2;
+                    const px = sx + 4 * Math.cos(a);
+                    const py = sy + 4 * Math.sin(a);
+                    if (j === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            for (let i = 0; i < 8; i++) {
+                const sx = bx + 40 + i * (bannerW / 8);
+                const normalizedX = (2 * (sx - CAKE_CX)) / bannerW;
+                const droop = curveDepth * (1 - normalizedX * normalizedX);
+                ctx.beginPath();
+                ctx.arc(sx, by + 12 + droop * 0.6, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ============================================================
+        //  ★★★ 闭眼遮罩 (径向渐变，洞内清晰透出蛋糕) ★★★
+        // ============================================================
+        function drawEyeCloseMask(progress) {
+            const p = clamp(progress, 0, 1);
+            if (p <= 0) return;
+
+            const cx = W / 2;
+            const cy = H / 2;
+            const maxR = Math.max(W, H) * 0.9;
+
+            const eased = easeInOutSine(p);
+            const currentR = maxR * (1 - eased);
+
+            ctx.save();
+
+            // 径向渐变：中心透明 -> 边缘黑色
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+            const transparentR = Math.min(currentR * 1.25, maxR);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(Math.min(0.8, transparentR / maxR), 'rgba(0,0,0,0)');
+            grad.addColorStop(Math.min(0.95, (transparentR + 40) / maxR), 'rgba(0,0,0,1)');
+            grad.addColorStop(1, 'rgba(0,0,0,1)');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            // 完全闭合时确保全黑
+            if (p >= 1) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            ctx.restore();
+
+            // 闭眼过程中的微光星尘 (半闭眼到闭眼之间)
+            if (p > 0.5 && p < 1) {
+                const alpha = (p - 0.5) / 0.5 * 0.12;
+                ctx.save();
+                for (let i = 0; i < 18; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 80 + Math.random() * 350;
+                    const sx = cx + Math.cos(angle) * dist;
+                    const sy = cy + Math.sin(angle) * dist * 0.6;
+                    const size = 0.5 + Math.random() * 1.5;
+                    ctx.globalAlpha = (0.3 + Math.random() * 0.7) * alpha;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // ============================================================
+        //  主循环
+        // ============================================================
+        let startTime = performance.now();
+
+        function render(now) {
+            const time = (now - startTime) / 1000;
+
+            // ---- 更新闭眼状态 ----
+            const elapsed = now - closeState.startTime;
+
+            if (closeState.phase === 'idle') {
+                if (elapsed > CLOSE_DELAY) {
+                    closeState.phase = 'closing';
+                    closeState.startTime = now;
+                    infoEl.classList.add('active');
+                }
+            } else if (closeState.phase === 'closing') {
+                const progress = (now - closeState.startTime) / CLOSE_DURATION;
+                closeState.progress = clamp(progress, 0, 1);
+                if (closeState.progress >= 1) {
+                    closeState.phase = 'closed';
+                    closeState.isClosed = true;
+                    infoEl.textContent = '✨ 愿望已许 ✨';
+                    infoEl.classList.remove('active');
+                    infoEl.classList.add('closed');
+                    restartBtn.classList.add('show');
+                }
+            } else if (closeState.phase === 'opening') {
+                const progress = (now - closeState.startTime) / OPEN_DURATION;
+                closeState.progress = clamp(1 - progress, 0, 1);
+                if (closeState.progress <= 0) {
+                    closeState.phase = 'idle';
+                    closeState.isClosed = false;
+                    closeState.isOpening = false;
+                    closeState.progress = 0;
+                    closeState.startTime = now;
+                    infoEl.textContent = '✨ 许个愿吧 ✨';
+                    infoEl.classList.remove('closed');
+                    infoEl.classList.add('active');
+                    restartBtn.classList.remove('show');
+                }
+            }
+
+            // ---- 绘制场景 ----
+            ctx.clearRect(0, 0, W, H);
+            drawBackground();
+            drawDesk();
+            drawCandleGlow(time);
+            drawCake();
+
+            drawGiftPyramid();
+            drawBalloons(time);
+            drawBanner();
+
+            drawCandles();
+
+            // 火焰传递闭眼进度 (火焰逐渐熄灭)
+            drawFlames(time, closeState.progress);
+
+            // ---- 绘制闭眼遮罩 (覆盖在所有内容之上) ----
+            drawEyeCloseMask(closeState.progress);
+
+            requestAnimationFrame(render);
+        }
+
+        // ============================================================
+        //  重新睁开
+        // ============================================================
+        function reopenEyes() {
+            if (closeState.phase === 'closed' || closeState.phase === 'closing') {
+                closeState.phase = 'opening';
+                closeState.isOpening = true;
+                closeState.startTime = performance.now();
+                restartBtn.classList.remove('show');
+                infoEl.textContent = '🌙 慢慢睁开...';
+                infoEl.classList.remove('closed');
+                infoEl.classList.add('active');
+            }
+        }
+
+        restartBtn.addEventListener('click', reopenEyes);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                reopenEyes();
+            }
         });
 
-        function playSound(id) {
-            const sound = sounds.find(s => s.id === id);
-            if (!sound) return;
-            const card = document.getElementById('card-' + id);
-            const btn = document.getElementById('btn-' + id);
-            stopAll();
-            const params = { ...card._paramValues };
-            btn.classList.add('playing');
-            btn.textContent = '⏵ 播放中...';
-            const nodes = sound.play(params);
-            activeNodes = nodes;
-
-            let maxDur = 3000;
-            sound.params.forEach(p => {
-                if (['duration', 'boomDuration', 'tailDecay', 'chordDecay', 'reverbSize', 'transitionDur', 'pauseBetween'].includes(p.key)) {
-                    maxDur = Math.max(maxDur, (params[p.key] || 0) * 1000 + 800);
-                }
-            });
-            if (id === 'bless') maxDur = (params.slideCount * params.slideDur * 0.55 + 3) * 1000;
-            if (id === 'transition') maxDur = (params.transitionDur * 2 + params.pauseBetween + 1) * 1000;
-
-            const tid = setTimeout(() => {
-                btn.classList.remove('playing');
-                btn.textContent = '▶ 播放 ' + sound.title;
-            }, Math.min(maxDur, 12000));
-            activeTimeouts.push(tid);
+        // ============================================================
+        //  自适应
+        // ============================================================
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = window.innerWidth - 40;
+            const containerHeight = window.innerHeight - 40;
+            const scale = Math.min(containerWidth / W, containerHeight / H, 1.2);
+            canvas.style.width = (W * scale) + 'px';
+            canvas.style.height = (H * scale) + 'px';
         }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ============================================================
+        //  启动
+        // ============================================================
+        closeState.startTime = performance.now();
+        requestAnimationFrame(render);
+
+        console.log('🎂 生日蛋糕 · 闭眼许愿效果 ✨');
+        console.log('🕯️ 闭上眼睛许个愿吧 ... 按 R 键或点击按钮重新睁开');
     </script>
 </body>
 

@@ -1860,88 +1860,98 @@
         }
 
         /**
-         * 清理 Vditor 渲染的 HTML，去除编辑器特有的类名和结构
-         * 【核心修复】对公式块使用 textContent 提取纯文本，保留 $$ 符号，使 KaTeX auto-render 能识别
-         */
+        * 清理 Vditor 渲染的 HTML（唯一正确版本）
+        * - 表格：提取预览区的 <table>，移除编辑器标记
+        * - 公式：提取 $$...$$ 纯文本，供 KaTeX auto-render 渲染
+        * - 其他：保留渲染后的 HTML，移除 Vditor 专用类名
+        */
         function cleanVditorHtml(html) {
             var div = document.createElement('div');
             div.innerHTML = html;
 
-            // ---- 处理公式块：直接提取文本内容（包含 $$），不添加额外符号 ----
-            var markers = div.querySelectorAll('.vditor-ir__marker, .vditor-ir__marker--pre, .vditor-ir__preview');
-            markers.forEach(function (el) {
-                var text = el.textContent || '';
-                // 如果包含 $$，说明是公式块
-                if (/\$\$/.test(text)) {
-                    var parent = el.parentNode;
-                    var plainText = el.textContent || '';
-                    plainText = plainText.trim();
-                    if (plainText) {
-                        // 直接创建文本节点插入，保留原始 $$...$$ 格式
-                        var textNode = document.createTextNode(plainText);
-                        parent.insertBefore(textNode, el);
+            // ---------- 1. 处理所有 data-type="html-block" 块 ----------
+            var blocks = div.querySelectorAll('[data-type="html-block"]');
+            blocks.forEach(function (block) {
+                var preview = block.querySelector('.vditor-ir__preview');
+                var marker = block.querySelector('.vditor-ir__marker code');
+
+                if (preview) {
+                    var table = preview.querySelector('table');
+                    if (table) {
+                        var newTable = table.cloneNode(true);
+                        block.parentNode.replaceChild(newTable, block);
+                        return;
                     }
-                    parent.removeChild(el);
-                    return;
                 }
 
-                // 非公式块：保留结构，但移除多余的外层 wrapper 类
-                if (el.innerHTML.trim() === '' || el.innerHTML === '&nbsp;') {
-                    el.remove();
-                    return;
+                if (marker) {
+                    var text = marker.textContent || '';
+                    var match = text.match(/\$\$([^$]*)\$\$/);
+                    if (match) {
+                        var latex = match[1].trim();
+                        var wrapper = document.createElement('div');
+                        var textNode = document.createTextNode('\\(' + latex + '\\)');
+                        wrapper.appendChild(textNode);
+                        block.parentNode.replaceChild(wrapper, block);
+                        return;
+                    }
                 }
-                var parent = el.parentNode;
-                while (el.firstChild) {
-                    parent.insertBefore(el.firstChild, el);
+
+                if (preview) {
+                    var content = preview.innerHTML;
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = content;
+                    block.parentNode.replaceChild(wrapper, block);
+                } else {
+                    var textContent = block.textContent || '';
+                    var textNode = document.createTextNode(textContent);
+                    block.parentNode.replaceChild(textNode, block);
                 }
-                parent.removeChild(el);
             });
 
-            // ---- 移除所有 vditor-ir__ 开头的类 ----
-            var allElements = div.querySelectorAll('*');
-            for (var i = 0; i < allElements.length; i++) {
-                var el = allElements[i];
-                var classes = el.className ? el.className.split(' ') : [];
-                var filtered = [];
-                for (var j = 0; j < classes.length; j++) {
-                    if (classes[j] && !classes[j].startsWith('vditor-ir__') && !classes[j].startsWith('vditor-')) {
-                        filtered.push(classes[j]);
-                    }
+            // ---------- 2. 处理直接渲染的公式（div.language-math / language-latex） ----------
+            var mathDivs = div.querySelectorAll('div.language-math, div.language-latex');
+            mathDivs.forEach(function (el) {
+                var latex = el.textContent || '';
+                latex = latex.trim();
+                if (latex) {
+                    var wrapper = document.createElement('div'); // 块级容器，保证换行
+                    var textNode = document.createTextNode('\\(' + latex + '\\)');
+                    wrapper.appendChild(textNode);
+                    el.parentNode.replaceChild(wrapper, el);
+                } else {
+                    el.remove();
                 }
-                el.className = filtered.join(' ');
-            }
+            });
 
-            // ---- 移除 Vditor 数据属性 ----
-            var dataElements = div.querySelectorAll('[data-type], [data-block], [data-render]');
-            for (var i = 0; i < dataElements.length; i++) {
-                var el = dataElements[i];
+            // ---------- 3. 清理所有元素上的 Vditor 类名和数据属性 ----------
+            var allElements = div.querySelectorAll('*');
+            allElements.forEach(function (el) {
+                var classes = el.className ? el.className.split(' ') : [];
+                var filtered = classes.filter(function (cls) {
+                    return cls && !cls.startsWith('vditor-ir__') && !cls.startsWith('vditor-');
+                });
+                el.className = filtered.join(' ');
                 el.removeAttribute('data-type');
                 el.removeAttribute('data-block');
                 el.removeAttribute('data-render');
-            }
-
-            // ---- 移除 .vditor-reset 类 ----
-            var resets = div.querySelectorAll('.vditor-reset');
-            resets.forEach(function (el) {
-                el.className = '';
+                // 不设置 el.textContent
             });
 
-            // ---- 清理空段落 ----
+            // ---------- 4. 清理空段落 ----------
             var emptyP = div.querySelectorAll('p:empty');
-            emptyP.forEach(function (el) { el.remove(); });
+            emptyP.forEach(function (p) { p.remove(); });
 
-            // ---- 修复表格空单元格 ----
+            // ---------- 5. 修复表格空单元格 ----------
             var tds = div.querySelectorAll('td, th');
             tds.forEach(function (td) {
-                if (td.innerHTML.trim() === '') {
-                    td.innerHTML = '&nbsp;';
-                }
+                if (td.innerHTML.trim() === '') td.innerHTML = '&nbsp;';
             });
 
             return div.innerHTML;
         }
         /**
-         * 生成完整的 HTML 模板（完美复刻第二个文件的样式 + 强化公式渲染）
+        * 生成完整的 HTML 模板（完美复刻第二个文件的样式 + 强化公式渲染）
          */
         function generateHTMLTemplate(content) {
             return `<!DOCTYPE html>
@@ -2315,190 +2325,16 @@
 
         function exportToHTML() {
             showHint('⏳ 正在生成 HTML...');
-            var markdown = vditor.getValue();
-            if (!markdown || markdown.trim() === '') {
+            var html = vditor.getHTML();
+            if (!html || html.trim() === '') {
                 showHint('⚠️ 编辑器内容为空，无法导出');
                 return;
             }
-
-            // 方案1：使用 vditor.preview.render，但禁用数学渲染
-            function renderWithPreview() {
-                return new Promise(function (resolve, reject) {
-                    try {
-                        if (vditor.preview && typeof vditor.preview.render === 'function') {
-                            var container = document.createElement('div');
-                            container.style.cssText =
-                                'position:fixed;left:-9999px;top:0;width:800px;padding:40px;background:#fff;z-index:99999;';
-                            document.body.appendChild(container);
-
-                            var previewOpts = {
-                                value: markdown,
-                                mode: 'preview',
-                                anchor: 0,
-                                customEmoji: (vditor.options.preview && vditor.options.preview.customEmoji) || {},
-                                emoji: (vditor.options.preview && vditor.options.preview.emoji) || [],
-                                hljs: (vditor.options.preview && vditor.options.preview.hljs) || { style: 'github' },
-                                math: false,   // 🔑 关键：禁用公式渲染，保留原始 LaTeX
-                                sanitize: false
-                            };
-                            vditor.preview.render(previewOpts, container);
-                            setTimeout(function () {
-                                var html = container.innerHTML;
-                                html = cleanVditorHtml(html);
-                                document.body.removeChild(container);
-                                resolve(html);
-                            }, 800);
-                        } else {
-                            reject(new Error('vditor.preview.render 不可用'));
-                        }
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            }
-
-            // 方案2：降级 - 使用 vditor.getHTML() 并手动清理
-            function renderWithGetHTML() {
-                try {
-                    var html = vditor.getHTML();
-                    html = cleanVditorHtml(html);
-                    return html;
-                } catch (e) {
-                    console.warn('getHTML 降级失败:', e);
-                    return null;
-                }
-            }
-
-            // 方案3：最终降级 - 从 DOM 提取
-            function renderFromDOM() {
-                try {
-                    var editor = document.querySelector('.vditor-ir');
-                    if (editor) {
-                        var html = editor.innerHTML;
-                        html = cleanVditorHtml(html);
-                        return html;
-                    }
-                    return null;
-                } catch (e) {
-                    console.warn('DOM 提取降级失败:', e);
-                    return null;
-                }
-            }
-
-            renderWithPreview()
-                .then(function (html) {
-                    var fullHTML = generateHTMLTemplate(html);
-                    downloadFile(fullHTML, 'export.html');
-                    showHint('✅ HTML 导出成功（预览渲染）');
-                })
-                .catch(function (err) {
-                    console.warn('预览渲染失败，使用降级方案:', err);
-                    var html = renderWithGetHTML();
-                    if (html !== null && html.trim() !== '') {
-                        var fullHTML = generateHTMLTemplate(html);
-                        downloadFile(fullHTML, 'export.html');
-                        showHint('✅ HTML 导出成功（getHTML 降级）');
-                        return;
-                    }
-                    html = renderFromDOM();
-                    if (html !== null && html.trim() !== '') {
-                        var fullHTML = generateHTMLTemplate(html);
-                        downloadFile(fullHTML, 'export.html');
-                        showHint('✅ HTML 导出成功（DOM 降级）');
-                        return;
-                    }
-                    showHint('❌ 导出失败: 无法获取编辑器内容');
-                });
+            html = cleanVditorHtml(html);
+            var fullHTML = generateHTMLTemplate(html);
+            downloadFile(fullHTML, 'export.html');
+            showHint('✅ HTML 导出成功');
         }
-
-        /**
-         * 清理 Vditor 渲染的 HTML，保留原始 LaTeX 代码
-         * 关键：检测到包含 $$ 的块，直接提取其文本内容（即原始公式），不添加额外符号
-         */
-        function cleanVditorHtml(html) {
-            var div = document.createElement('div');
-            div.innerHTML = html;
-
-            // ---- 第一步：提取所有可能包含公式的块，并替换为纯文本 ----
-            // Vditor 可能将公式放在 .vditor-ir__marker, .vditor-ir__preview, code 等标签中
-            var selectors = [
-                '.vditor-ir__marker',
-                '.vditor-ir__marker--pre',
-                '.vditor-ir__preview',
-                'code[data-type="html-block"]',
-                'code.language-tex'
-            ];
-            var elements = div.querySelectorAll(selectors.join(','));
-            elements.forEach(function (el) {
-                var text = el.textContent || '';
-                // 如果包含 $$，说明是公式块
-                if (/\$\$/.test(text)) {
-                    var parent = el.parentNode;
-                    // 直接使用 textContent 获取原始文本（因为 math:false 下不会被渲染）
-                    var plainText = text.trim();
-                    if (plainText) {
-                        var textNode = document.createTextNode(plainText);
-                        parent.insertBefore(textNode, el);
-                    }
-                    parent.removeChild(el);
-                    return;
-                }
-                // 对于非公式的块，保留内容但移除类
-                if (el.innerHTML.trim() === '' || el.innerHTML === '&nbsp;') {
-                    el.remove();
-                    return;
-                }
-                var parent = el.parentNode;
-                while (el.firstChild) {
-                    parent.insertBefore(el.firstChild, el);
-                }
-                parent.removeChild(el);
-            });
-
-            // ---- 第二步：移除所有 vditor-ir__ 和 vditor- 开头的类 ----
-            var allElements = div.querySelectorAll('*');
-            for (var i = 0; i < allElements.length; i++) {
-                var el = allElements[i];
-                var classes = el.className ? el.className.split(' ') : [];
-                var filtered = [];
-                for (var j = 0; j < classes.length; j++) {
-                    if (classes[j] && !classes[j].startsWith('vditor-ir__') && !classes[j].startsWith('vditor-')) {
-                        filtered.push(classes[j]);
-                    }
-                }
-                el.className = filtered.join(' ');
-            }
-
-            // ---- 第三步：移除 Vditor 数据属性 ----
-            var dataElements = div.querySelectorAll('[data-type], [data-block], [data-render]');
-            for (var i = 0; i < dataElements.length; i++) {
-                var el = dataElements[i];
-                el.removeAttribute('data-type');
-                el.removeAttribute('data-block');
-                el.removeAttribute('data-render');
-            }
-
-            // ---- 第四步：移除 .vditor-reset 类 ----
-            var resets = div.querySelectorAll('.vditor-reset');
-            resets.forEach(function (el) {
-                el.className = '';
-            });
-
-            // ---- 第五步：清理空段落 ----
-            var emptyP = div.querySelectorAll('p:empty');
-            emptyP.forEach(function (el) { el.remove(); });
-
-            // ---- 第六步：修复表格空单元格 ----
-            var tds = div.querySelectorAll('td, th');
-            tds.forEach(function (td) {
-                if (td.innerHTML.trim() === '') {
-                    td.innerHTML = '&nbsp;';
-                }
-            });
-
-            return div.innerHTML;
-        }
-
         /**
          * 生成导出的 HTML 模板（与您的正常文件风格一致）
          */
