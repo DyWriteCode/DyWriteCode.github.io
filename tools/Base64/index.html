@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 编解码工具</title>
+    <style>
+        /* ===== 全局样式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, sans-serif;
+            background: linear-gradient(145deg, #f6f9fc, #e9f0f8);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 780px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 36px;
+            padding: 36px 40px 40px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12), 0 8px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* ===== 头部 ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .header .icon {
+            font-size: 34px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b1e33;
+            background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .badge {
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(45, 106, 159, 0.12);
+            color: #1a4a7a;
+            padding: 4px 14px;
+            border-radius: 40px;
+            margin-left: auto;
+            border: 1px solid rgba(45, 106, 159, 0.15);
+            -webkit-text-fill-color: #1a4a7a;
+        }
+
+        /* ===== 公共字段 ===== */
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d3b5a;
+            margin-bottom: 6px;
+        }
+
+        .field-label .hint {
+            font-weight: 400;
+            font-size: 12px;
+            color: #7a8fa6;
+            margin-left: 4px;
+        }
+
+        /* ===== 字符集选择行 ===== */
+        .charset-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .charset-row label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d3b5a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .charset-row label input[type="radio"] {
+            accent-color: #2d6a9f;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .charset-row .charset-info {
+            font-size: 12px;
+            color: #7a8fa6;
+            margin-left: 4px;
+        }
+
+        /* ===== 次数控制 ===== */
+        .count-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .count-row .count-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #f2f7fc;
+            border-radius: 14px;
+            padding: 2px;
+            border: 1.5px solid #dbe4ed;
+        }
+
+        .count-row .count-control button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            font-weight: 300;
+            color: #1d3b5a;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .count-row .count-control button:hover {
+            background: rgba(45, 106, 159, 0.08);
+        }
+
+        .count-row .count-control .count-value {
+            width: 52px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #0b1e33;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 6px 0;
+            font-family: inherit;
+        }
+
+        .count-row .count-control .count-value::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .count-row .count-control .count-value[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .count-row .count-display {
+            font-size: 14px;
+            color: #4a6f8f;
+            font-weight: 500;
+        }
+
+        .count-row .count-display span {
+            font-weight: 700;
+            color: #0b1e33;
+        }
+
+        /* ===== 文本域 ===== */
+        textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid #dbe4ed;
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+            resize: vertical;
+            min-height: 110px;
+            background: #fff;
+            transition: border .2s, box-shadow .2s;
+            outline: none;
+            color: #0f2a44;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            border-color: #2d6a9f;
+            box-shadow: 0 0 0 4px rgba(45, 106, 159, 0.08);
+        }
+
+        textarea::placeholder {
+            color: #a7bbc8;
+        }
+
+        textarea[readonly] {
+            background: #fafcfe;
+            color: #0f2a44;
+        }
+
+        /* ===== 按钮 ===== */
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0 4px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1 0 auto;
+            min-width: 80px;
+            color: #fff;
+            background: #eef3f8;
+            color: #1d3b5a;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #1a4a7a, #2d6a9f);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(45, 106, 159, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 106, 159, 0.30);
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #0f7b5a, #1a9b7a);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(26, 155, 122, 0.25);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 155, 122, 0.30);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #2d6a9f;
+            border: 1.5px solid #dbe4ed;
+        }
+
+        .btn-outline:hover {
+            background: #f0f5fb;
+            border-color: #b6cedb;
+        }
+
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: 13px;
+            min-width: auto;
+            flex: 0 1 auto;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            transform: none !important;
+            cursor: not-allowed;
+            box-shadow: none !important;
+        }
+
+        /* ===== 结果区域 ===== */
+        .result-area {
+            margin-top: 6px;
+        }
+
+        .result-area .result-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== 日志 ===== */
+        .log-area {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #f2f7fc;
+            border-radius: 14px;
+            border: 1px solid #e3edf5;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            color: #1d3b5a;
+            line-height: 1.7;
+            transition: all .2s;
+        }
+
+        .log-area .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .log-area .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-area .log-entry .log-time {
+            color: #7a8fa6;
+            margin-right: 10px;
+            font-size: 11px;
+        }
+
+        .log-area .log-entry.log-success {
+            color: #0f7b5a;
+        }
+
+        .log-area .log-entry.log-error {
+            color: #b13e3e;
+        }
+
+        .log-area .log-entry.log-info {
+            color: #2d6a9f;
+        }
+
+        .log-empty {
+            color: #a7bbc8;
+            font-style: italic;
+        }
+
+        .log-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .log-area::-webkit-scrollbar-thumb {
+            background: #c9dae8;
+            border-radius: 8px;
+        }
+
+        /* ===== 底部 ===== */
+        .footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #e3edf5;
+            font-size: 12px;
+            color: #7a8fa6;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .footer-bar .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-bar .status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .footer-bar .status .dot.idle {
+            background: #a7bbc8;
+        }
+
+        .footer-bar .status .dot.busy {
+            background: #f5b342;
+            animation: pulse 0.8s infinite alternate;
+        }
+
+        .footer-bar .status .dot.done {
+            background: #1a9b7a;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.4;
+                transform: scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width:640px) {
+            .container {
+                padding: 24px 18px 28px;
+                border-radius: 28px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header .badge {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
+
+            .count-row .count-control .count-value {
+                width: 40px;
+                font-size: 16px;
+            }
+
+            .count-row .count-control button {
+                width: 34px;
+                height: 34px;
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 14px;
+                min-width: 60px;
+            }
+
+            textarea {
+                font-size: 14px;
+                min-height: 80px;
+            }
+
+            .action-row {
+                gap: 6px;
+            }
+
+            .footer-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .charset-row {
+                gap: 8px;
+            }
+
+            .charset-row label {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width:420px) {
+            .container {
+                padding: 16px 12px 20px;
+                border-radius: 20px;
+            }
+
+            .header .icon {
+                font-size: 26px;
+            }
+
+            .header h1 {
+                font-size: 17px;
+            }
+
+            .btn {
+                font-size: 13px;
+                padding: 6px 12px;
+                min-width: 50px;
+            }
+
+            .action-row .btn {
+                flex: 1 1 40%;
+            }
+
+            .charset-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <span class="icon">📦</span>
+            <h1>Base64 编解码</h1>
+            <span class="badge">支持多次 · 字符集选择</span>
+        </div>
+
+        <!-- 字符集选择 -->
+        <div class="field-group">
+            <div class="field-label">🔤 字符集 <span class="hint">（标准 / URL 安全）</span></div>
+            <div class="charset-row">
+                <label>
+                    <input type="radio" name="charset" value="standard" checked>
+                    标准 (A-Z a-z 0-9 + / =)
+                </label>
+                <label>
+                    <input type="radio" name="charset" value="urlsafe">
+                    URL 安全 (- _ 替代 + /)
+                </label>
+                <span class="charset-info">编码/解码时自动适配</span>
+            </div>
+        </div>
+
+        <!-- 次数控制 -->
+        <div class="field-group">
+            <div class="field-label">🔄 编码 / 解码 次数 <span class="hint">（1 ~ 100）</span></div>
+            <div class="count-row">
+                <div class="count-control">
+                    <button id="countDec" type="button">−</button>
+                    <input type="number" class="count-value" id="countInput" value="1" min="1" max="100">
+                    <button id="countInc" type="button">+</button>
+                </div>
+                <div class="count-display">将执行 <span id="countDisplay">1</span> 次</div>
+            </div>
+        </div>
+
+        <!-- 输入 -->
+        <div class="field-group">
+            <div class="field-label">📝 输入内容</div>
+            <textarea id="inputArea" placeholder="在此输入要编码或解码的内容…">Hello, 世界！</textarea>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-row">
+            <button class="btn btn-primary" id="encodeBtn">🔒 编码</button>
+            <button class="btn btn-success" id="decodeBtn">🔓 解码</button>
+            <button class="btn btn-outline" id="clearBtn">🗑️ 清空</button>
+            <button class="btn btn-outline" id="swapBtn">⇄ 交换</button>
+        </div>
+
+        <!-- 输出 -->
+        <div class="field-group result-area">
+            <div class="field-label">📋 输出结果 <span class="hint" id="resultHint"></span></div>
+            <textarea id="outputArea" placeholder="结果将显示在这里…" readonly></textarea>
+            <div class="result-actions">
+                <button class="btn btn-outline btn-sm" id="copyBtn">📄 复制结果</button>
+                <button class="btn btn-outline btn-sm" id="copyInputBtn">📄 复制输入</button>
+                <button class="btn btn-outline btn-sm" id="diagnoseBtn">🔍 诊断</button>
+            </div>
+        </div>
+
+        <!-- 日志 -->
+        <div class="log-area" id="logArea">
+            <div class="log-empty">💡 准备就绪，开始操作吧</div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer-bar">
+            <div class="status">
+                <span class="dot idle" id="statusDot"></span>
+                <span id="statusText">就绪</span>
+            </div>
+            <span>⚡ 标准 Base64 · 多次编解码</span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ===== DOM 引用 =====
+            const inputArea = document.getElementById('inputArea');
+            const outputArea = document.getElementById('outputArea');
+            const encodeBtn = document.getElementById('encodeBtn');
+            const decodeBtn = document.getElementById('decodeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const swapBtn = document.getElementById('swapBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyInputBtn = document.getElementById('copyInputBtn');
+            const diagnoseBtn = document.getElementById('diagnoseBtn');
+            const countInput = document.getElementById('countInput');
+            const countDec = document.getElementById('countDec');
+            const countInc = document.getElementById('countInc');
+            const countDisplay = document.getElementById('countDisplay');
+            const resultHint = document.getElementById('resultHint');
+            const logArea = document.getElementById('logArea');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const charsetRadios = document.querySelectorAll('input[name="charset"]');
+
+            // ===== 工具函数 =====
+
+            function getCount() {
+                let v = parseInt(countInput.value, 10);
+                if (isNaN(v) || v < 1) v = 1;
+                if (v > 100) v = 100;
+                countInput.value = v;
+                countDisplay.textContent = v;
+                return v;
+            }
+
+            function setStatus(text, type) {
+                statusText.textContent = text;
+                statusDot.className = 'dot ' + (type || 'idle');
+            }
+
+            function addLog(message, type) {
+                const time = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = 'log-entry' + (type ? ' log-' + type : '');
+                entry.innerHTML = `<span class="log-time">${time}</span>${message}`;
+                const empty = logArea.querySelector('.log-empty');
+                if (empty) empty.remove();
+                logArea.appendChild(entry);
+                logArea.scrollTop = logArea.scrollHeight;
+                while (logArea.children.length > 80) {
+                    logArea.removeChild(logArea.firstChild);
+                }
+            }
+
+            function clearLog() {
+                logArea.innerHTML = '';
+                const empty = document.createElement('div');
+                empty.className = 'log-empty';
+                empty.textContent = '💡 日志已清空';
+                logArea.appendChild(empty);
+            }
+
+            function setResult(text, hint) {
+                outputArea.value = text;
+                resultHint.textContent = hint || '';
+            }
+
+            function getInput() { return inputArea.value; }
+
+            function setInput(text) { inputArea.value = text; }
+
+            // ===== 获取当前字符集模式 =====
+            function getCharsetMode() {
+                for (const radio of charsetRadios) {
+                    if (radio.checked) return radio.value;
+                }
+                return 'standard';
+            }
+
+            // ===== Base64 核心操作 =====
+
+            // 标准 Base64 编码 (btoa 不支持 Unicode，使用 TextEncoder)
+            function base64EncodeStandard(str) {
+                const bytes = new TextEncoder().encode(str);
+                let bin = '';
+                for (const b of bytes) {
+                    bin += String.fromCharCode(b);
+                }
+                return btoa(bin);
+            }
+
+            // 标准 Base64 解码 (atob 后转 UTF-8)
+            function base64DecodeStandard(str) {
+                const bin = atob(str);
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) {
+                    bytes[i] = bin.charCodeAt(i);
+                }
+                return new TextDecoder('utf-8').decode(bytes);
+            }
+
+            // URL 安全 Base64 编码
+            function base64EncodeUrlSafe(str) {
+                const standard = base64EncodeStandard(str);
+                return standard.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            }
+
+            // URL 安全 Base64 解码
+            function base64DecodeUrlSafe(str) {
+                // 补全 padding
+                let padded = str.replace(/-/g, '+').replace(/_/g, '/');
+                while (padded.length % 4 !== 0) {
+                    padded += '=';
+                }
+                return base64DecodeStandard(padded);
+            }
+
+            // 自动选择编码
+            function base64Encode(str, mode) {
+                if (mode === 'urlsafe') {
+                    return base64EncodeUrlSafe(str);
+                }
+                return base64EncodeStandard(str);
+            }
+
+            // 自动选择解码
+            function base64Decode(str, mode) {
+                if (mode === 'urlsafe') {
+                    return base64DecodeUrlSafe(str);
+                }
+                return base64DecodeStandard(str);
+            }
+
+            // ===== 多次编解码 =====
+
+            function multiEncode(plaintext, times, mode) {
+                let data = plaintext;
+                for (let i = 0; i < times; i++) {
+                    try {
+                        data = base64Encode(data, mode);
+                    } catch (e) {
+                        throw new Error('第 ' + (i + 1) + ' 次编码失败: ' + e.message);
+                    }
+                }
+                return data;
+            }
+
+            function multiDecode(ciphertext, times, mode) {
+                let data = ciphertext.trim();
+                if (!data) throw new Error('内容为空');
+                for (let i = 0; i < times; i++) {
+                    try {
+                        data = base64Decode(data, mode);
+                    } catch (e) {
+                        throw new Error('第 ' + (i + 1) + ' 次解码失败: ' + e.message);
+                    }
+                }
+                return data;
+            }
+
+            // ===== 诊断功能 =====
+
+            function diagnose() {
+                const text = getInput().trim();
+                if (!text) {
+                    addLog('⚠️ 请输入要诊断的内容', 'error');
+                    return;
+                }
+                const mode = getCharsetMode();
+                addLog('🔍 开始诊断 (模式: ' + mode + ')...', 'info');
+
+                // 检查是否为有效 Base64 (标准)
+                let isStandard = false;
+                let isUrlSafe = false;
+                try {
+                    atob(text);
+                    isStandard = true;
+                } catch (_) { /* 不是标准 Base64 */ }
+
+                // 检查 URL 安全格式
+                const urlTest = text.replace(/-/g, '+').replace(/_/g, '/');
+                try {
+                    atob(urlTest);
+                    isUrlSafe = true;
+                } catch (_) { /* 不是 URL 安全 Base64 */ }
+
+                if (isStandard) {
+                    addLog('✅ 是有效的标准 Base64', 'success');
+                    // 尝试解码显示预览
+                    try {
+                        const decoded = base64DecodeStandard(text);
+                        const preview = decoded.length > 50 ? decoded.slice(0, 50) + '…' : decoded;
+                        addLog('📖 解码预览: ' + preview, 'info');
+                    } catch (_) { /* 忽略 */ }
+                } else if (isUrlSafe) {
+                    addLog('✅ 是有效的 URL 安全 Base64', 'success');
+                    try {
+                        const decoded = base64DecodeUrlSafe(text);
+                        const preview = decoded.length > 50 ? decoded.slice(0, 50) + '…' : decoded;
+                        addLog('📖 解码预览: ' + preview, 'info');
+                    } catch (_) { /* 忽略 */ }
+                } else {
+                    addLog('⚠️ 不是有效的 Base64 格式', 'info');
+                    // 尝试作为纯文本编码
+                    try {
+                        const encoded = base64Encode(text, mode);
+                        addLog('💡 作为纯文本编码结果为: ' + encoded.slice(0, 60) + (encoded.length > 60 ? '…' : ''),
+                            'info');
+                    } catch (_) { /* 忽略 */ }
+                }
+                setStatus('诊断完成', 'done');
+            }
+
+            // ===== 操作处理 =====
+
+            function handleEncode() {
+                const plaintext = getInput();
+                if (!plaintext) {
+                    addLog('⚠️ 请输入要编码的内容', 'error');
+                    setStatus('内容为空', 'error');
+                    return;
+                }
+                const times = getCount();
+                const mode = getCharsetMode();
+                setStatus('编码中…', 'busy');
+                encodeBtn.disabled = true;
+                decodeBtn.disabled = true;
+
+                setTimeout(() => {
+                    try {
+                        const start = performance.now();
+                        const result = multiEncode(plaintext, times, mode);
+                        const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+                        setResult(result, `✅ 编码 ${times} 次完成 (${elapsed}s)`);
+                        addLog(`🔒 编码 ${times} 次成功，结果长度 ${result.length} (${mode})`, 'success');
+                        setStatus('编码完成', 'done');
+                    } catch (e) {
+                        addLog('❌ ' + e.message, 'error');
+                        setStatus('编码失败', 'error');
+                        setResult('', '');
+                    } finally {
+                        encodeBtn.disabled = false;
+                        decodeBtn.disabled = false;
+                    }
+                }, 50);
+            }
+
+            function handleDecode() {
+                const ciphertext = getInput();
+                if (!ciphertext) {
+                    addLog('⚠️ 请输入要解码的内容', 'error');
+                    setStatus('内容为空', 'error');
+                    return;
+                }
+                const times = getCount();
+                const mode = getCharsetMode();
+                setStatus('解码中…', 'busy');
+                encodeBtn.disabled = true;
+                decodeBtn.disabled = true;
+
+                setTimeout(() => {
+                    try {
+                        const start = performance.now();
+                        const result = multiDecode(ciphertext, times, mode);
+                        const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+                        setResult(result, `✅ 解码 ${times} 次完成 (${elapsed}s)`);
+                        addLog(`🔓 解码 ${times} 次成功，结果长度 ${result.length} (${mode})`, 'success');
+                        setStatus('解码完成', 'done');
+                    } catch (e) {
+                        addLog('❌ ' + e.message, 'error');
+                        setStatus('解码失败', 'error');
+                        setResult('', '');
+                    } finally {
+                        encodeBtn.disabled = false;
+                        decodeBtn.disabled = false;
+                    }
+                }, 50);
+            }
+
+            function handleClear() {
+                setInput('');
+                setResult('', '');
+                clearLog();
+                setStatus('已清空', 'idle');
+                addLog('🗑️ 已清空所有内容', 'info');
+            }
+
+            function handleSwap() {
+                const inputVal = getInput();
+                const outputVal = outputArea.value;
+                if (outputVal) {
+                    setInput(outputVal);
+                    setResult(inputVal, '⇄ 已交换');
+                    addLog('⇄ 输入与输出交换', 'info');
+                } else {
+                    addLog('⚠️ 输出为空，无法交换', 'error');
+                }
+            }
+
+            function handleCopy(text, label) {
+                if (!text) {
+                    addLog('⚠️ 没有内容可复制', 'error');
+                    return;
+                }
+                navigator.clipboard.writeText(text).then(() => {
+                    addLog(`📄 已复制 ${label} 到剪贴板`, 'success');
+                    setStatus('已复制', 'done');
+                }).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try {
+                        document.execCommand('copy');
+                        addLog(`📄 已复制 ${label} 到剪贴板`, 'success');
+                        setStatus('已复制', 'done');
+                    } catch (_) {
+                        addLog('⚠️ 复制失败，请手动复制', 'error');
+                    }
+                    document.body.removeChild(ta);
+                });
+            }
+
+            // ===== 事件绑定 =====
+
+            // 次数控制
+            countDec.addEventListener('click', function () {
+                let v = parseInt(countInput.value, 10) || 1;
+                v = Math.max(1, v - 1);
+                countInput.value = v;
+                countDisplay.textContent = v;
+                getCount();
+            });
+            countInc.addEventListener('click', function () {
+                let v = parseInt(countInput.value, 10) || 1;
+                v = Math.min(100, v + 1);
+                countInput.value = v;
+                countDisplay.textContent = v;
+                getCount();
+            });
+            countInput.addEventListener('change', function () { getCount(); });
+            countInput.addEventListener('input', function () {
+                let v = parseInt(this.value, 10);
+                if (!isNaN(v) && v >= 1 && v <= 100) {
+                    countDisplay.textContent = v;
+                } else {
+                    const valid = getCount();
+                    countDisplay.textContent = valid;
+                }
+            });
+
+            // 主要操作
+            encodeBtn.addEventListener('click', handleEncode);
+            decodeBtn.addEventListener('click', handleDecode);
+            clearBtn.addEventListener('click', handleClear);
+            swapBtn.addEventListener('click', handleSwap);
+            copyBtn.addEventListener('click', function () { handleCopy(outputArea.value, '输出结果'); });
+            copyInputBtn.addEventListener('click', function () { handleCopy(getInput(), '输入内容'); });
+            diagnoseBtn.addEventListener('click', diagnose);
+
+            // 键盘快捷键
+            inputArea.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleEncode();
+                } else if (e.key === 'Enter' && e.shiftKey) {
+                    e.preventDefault();
+                    handleDecode();
+                }
+            });
+
+            // 字符集切换时记录日志
+            for (const radio of charsetRadios) {
+                radio.addEventListener('change', function () {
+                    if (this.checked) {
+                        addLog('🔤 切换到 ' + (this.value === 'urlsafe' ? 'URL 安全' : '标准') + ' 字符集', 'info');
+                    }
+                });
+            }
+
+            // ===== 初始化 =====
+            (function init() {
+                getCount();
+                setStatus('就绪', 'idle');
+                addLog('🚀 Base64 编解码工具已加载', 'info');
+                addLog('💡 提示: Ctrl+Enter 编码 ｜ Shift+Enter 解码', 'info');
+                // 预置演示：编码 "Hello, 世界！"
+                try {
+                    const demoText = 'Hello, 世界！';
+                    const demoEnc = base64EncodeStandard(demoText);
+                    addLog('📌 演示: 标准编码 "' + demoText + '" => "' + demoEnc + '"', 'info');
+                } catch (_) { /* 忽略 */ }
+            })();
+
+        })();
+    </script>
+
+</body>
+
+</html>

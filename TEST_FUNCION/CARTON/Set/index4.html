@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎂 许个愿吧 · 睁眼蛋糕 · 祝福化光</title>
+    <title>🎂 许个愿吧 · 星河祝福</title>
     <style>
         * {
             margin: 0;
@@ -75,7 +75,7 @@
             opacity: 1;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width:600px) {
             #info {
                 font-size: 10px;
                 bottom: 16px;
@@ -91,63 +91,39 @@
 
 <body>
     <canvas id="mainCanvas"></canvas>
-    <div id="info">✨ 许个愿吧 · 生日快乐 ✨</div>
+    <div id="info">✨ 许个愿吧 · 星河祝福 ✨</div>
     <div class="status-tip" id="statusTip"></div>
 
     <script>
         // ================================================================
-        //  1. Canvas 初始化
+        //  0. 工具函数
         // ================================================================
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d', { alpha: true });
-        let W, H;
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
-        function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // ================================================================
-        //  2. 离屏 Canvas（800x600 蛋糕场景）
-        // ================================================================
-        const OFF_W = 800;
-        const OFF_H = 600;
-        const offCanvas = document.createElement('canvas');
-        offCanvas.width = OFF_W;
-        offCanvas.height = OFF_H;
-        const offCtx = offCanvas.getContext('2d');
-
-        // ================================================================
-        //  3. 工具函数
-        // ================================================================
         function lerp(a, b, t) { return a + (b - a) * t; }
 
-        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-        function roundRect(ctx, x, y, w, h, r) {
-            r = Math.min(r, w / 2, h / 2);
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + w - r, y);
-            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-            ctx.lineTo(x + w, y + h - r);
-            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            ctx.lineTo(x + r, y + h);
-            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.closePath();
-        }
+        function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+        function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+        function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
+
+        function easeInOutSine(t) { return -(Math.cos(Math.PI * t) - 1) / 2; }
+
+        function smoothstep(e0, e1, x) { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); }
+
+        function rand(a, b) { return Math.random() * (b - a) + a; }
+
+        function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : { r: 0, g: 0, b: 0 };
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {
+                r: 0,
+                g: 0, b: 0
+            };
         }
 
         function rgbToHex(r, g, b) {
@@ -164,18 +140,53 @@
             return rgbToHex(Math.max(0, r - amount), Math.max(0, g - amount), Math.max(0, b - amount));
         }
 
-        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+        function roundRect(ctx, x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
 
-        function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-
-        function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-
-        function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
-
-        function easeInCubic(t) { return t * t * t; }
+        function hash(x, y) {
+            let h = x * 374761393 + y * 668265263;
+            h = (h ^ (h >> 13)) * 1274126177;
+            return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff;
+        }
 
         // ================================================================
-        //  4. 蛋糕场景（基于 cake.html）
+        //  1. Canvas 初始化
+        // ================================================================
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        let W, H;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // ================================================================
+        //  2. 离屏 Canvas（蛋糕场景）
+        // ================================================================
+        const OFF_W = 800;
+        const OFF_H = 600;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = OFF_W;
+        offCanvas.height = OFF_H;
+        const offCtx = offCanvas.getContext('2d');
+
+        // ================================================================
+        //  3. 蛋糕场景绘制（来自 index4.html）
         // ================================================================
         const DESK_Y = OFF_H * 0.78;
         const DESK_H = OFF_H - DESK_Y;
@@ -193,9 +204,9 @@
         const FLAME_W = 10;
         const FLAME_H = 14;
 
-        function getCakeLayerY(index) {
-            return DESK_Y - (index + 1) * LAYER_H;
-        }
+        let flamesExtinguished = false;
+
+        function getCakeLayerY(index) { return DESK_Y - (index + 1) * LAYER_H; }
 
         function getCandlePositions() {
             const topW = LAYERS[2].w;
@@ -209,7 +220,6 @@
             return positions;
         }
 
-        // ---- 绘制背景 ----
         function drawBackground() {
             const grad = offCtx.createRadialGradient(CAKE_CX, DESK_Y - 60, 30, CAKE_CX, DESK_Y - 60, 450);
             grad.addColorStop(0, '#2a1e18');
@@ -231,7 +241,6 @@
             offCtx.fillRect(0, 0, OFF_W, OFF_H);
         }
 
-        // ---- 桌面 ----
         function drawDesk() {
             offCtx.save();
             const shadowGrad = offCtx.createLinearGradient(0, DESK_Y, 0, OFF_H);
@@ -278,9 +287,8 @@
             offCtx.restore();
         }
 
-        // ---- 蜡烛光晕 ----
-        function drawCandleGlow(time, flamesVisible) {
-            if (!flamesVisible) return;
+        function drawCandleGlow(time) {
+            if (flamesExtinguished) return;
             offCtx.save();
             const glow1 = offCtx.createRadialGradient(CAKE_CX, DESK_Y - 50, 20, CAKE_CX, DESK_Y - 50, 350);
             glow1.addColorStop(0, `rgba(255, 200, 120, ${0.06 + 0.02 * Math.sin(time * 0.5 + 1)})`);
@@ -289,7 +297,6 @@
             glow1.addColorStop(1, 'rgba(255, 100, 50, 0)');
             offCtx.fillStyle = glow1;
             offCtx.fillRect(0, 0, OFF_W, OFF_H);
-
             const candlePositions = getCandlePositions();
             for (let i = 0; i < candlePositions.length; i++) {
                 const cx = candlePositions[i];
@@ -304,7 +311,6 @@
                 offCtx.fillStyle = glow;
                 offCtx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
             }
-
             const deskGlow = offCtx.createRadialGradient(CAKE_CX, DESK_Y + 20, 30, CAKE_CX, DESK_Y + 20, 240);
             deskGlow.addColorStop(0, `rgba(255, 190, 110, ${0.04 + 0.02 * Math.sin(time * 0.6 + 0.5)})`);
             deskGlow.addColorStop(0.5, `rgba(255, 160, 80, ${0.02 + 0.01 * Math.sin(time * 0.5 + 1.5)})`);
@@ -314,7 +320,6 @@
             offCtx.restore();
         }
 
-        // ---- 蛋糕主体 ----
         function drawCreamPiping(layerIndex) {
             const layer = LAYERS[layerIndex];
             const w = layer.w;
@@ -450,7 +455,6 @@
             offCtx.restore();
         }
 
-        // ---- 蜡烛 ----
         function drawCandles() {
             const positions = getCandlePositions();
             const topY = getCakeLayerY(2);
@@ -493,15 +497,11 @@
             offCtx.restore();
         }
 
-        // ---- ★ 火焰（支持闭眼熄灭） ----
-        function drawFlames(time, closeProgress) {
-            const flameAlpha = clamp(1 - closeProgress * 1.2, 0, 1);
-            if (flameAlpha < 0.01) return;
-
+        function drawFlames(time) {
+            if (flamesExtinguished) return;
             const positions = getCandlePositions();
             const topY = getCakeLayerY(2);
             offCtx.save();
-
             for (let i = 0; i < positions.length; i++) {
                 const cx = positions[i];
                 const baseY = topY - CANDLE_H + 1;
@@ -511,10 +511,9 @@
                 const offsetY = 1.2 * Math.sin(time * 2.0 + phase * 1.2);
                 const flameX = cx;
                 const flameY = baseY + offsetY - 2;
-
-                const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase)) * (0.3 + 0.7 * flameAlpha);
+                const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase));
                 const glow = offCtx.createRadialGradient(flameX, flameY, 2, flameX, flameY, glowRadius);
-                const glowA = (0.12 + 0.05 * Math.sin(time * 0.7 + phase)) * flameAlpha;
+                const glowA = 0.12 + 0.05 * Math.sin(time * 0.7 + phase);
                 glow.addColorStop(0, `rgba(255, 200, 100, ${glowA})`);
                 glow.addColorStop(0.5, `rgba(255, 160, 70, ${glowA * 0.5})`);
                 glow.addColorStop(1, 'rgba(255, 120, 50, 0)');
@@ -522,19 +521,15 @@
                 offCtx.beginPath();
                 offCtx.arc(flameX, flameY, glowRadius, 0, Math.PI * 2);
                 offCtx.fill();
-
                 offCtx.save();
                 offCtx.translate(flameX, flameY);
                 offCtx.scale(scaleX, scaleY);
-
                 const grad = offCtx.createRadialGradient(0, -3, 1, 0, 0, FLAME_H * 0.6);
-                const a = flameAlpha;
-                grad.addColorStop(0, `rgba(255, 251, 230, ${a})`);
-                grad.addColorStop(0.15, `rgba(255, ${Math.round(221 * a)}, ${Math.round(68 * a)}, ${a})`);
-                grad.addColorStop(0.4, `rgba(255, ${Math.round(170 * a)}, 0, ${a})`);
-                grad.addColorStop(0.7, `rgba(255, ${Math.round(119 * a)}, 0, ${a})`);
-                grad.addColorStop(1, `rgba(255, ${Math.round(68 * a)}, 0, ${a * 0.5})`);
-
+                grad.addColorStop(0, 'rgba(255, 251, 230, 1)');
+                grad.addColorStop(0.15, 'rgba(255, 221, 68, 1)');
+                grad.addColorStop(0.4, 'rgba(255, 170, 0, 1)');
+                grad.addColorStop(0.7, 'rgba(255, 119, 0, 1)');
+                grad.addColorStop(1, 'rgba(255, 68, 0, 0.5)');
                 offCtx.beginPath();
                 const w = FLAME_W / 2,
                     h = FLAME_H / 2;
@@ -546,19 +541,17 @@
                 offCtx.closePath();
                 offCtx.fillStyle = grad;
                 offCtx.fill();
-
                 const coreGrad = offCtx.createRadialGradient(0, -2, 0.5, 0, 0, FLAME_H * 0.25);
-                coreGrad.addColorStop(0, `rgba(255, 255, 240, ${0.9 * a})`);
-                coreGrad.addColorStop(0.3, `rgba(255, 230, 150, ${0.6 * a})`);
-                coreGrad.addColorStop(1, `rgba(255, 200, 80, 0)`);
+                coreGrad.addColorStop(0, 'rgba(255, 255, 240, 0.9)');
+                coreGrad.addColorStop(0.3, 'rgba(255, 230, 150, 0.6)');
+                coreGrad.addColorStop(1, 'rgba(255, 200, 80, 0)');
                 offCtx.fillStyle = coreGrad;
                 offCtx.beginPath();
                 offCtx.ellipse(0, -2, FLAME_W * 0.25, FLAME_H * 0.25, 0, 0, Math.PI * 2);
                 offCtx.fill();
                 offCtx.restore();
-
                 const baseGlow = offCtx.createRadialGradient(cx, baseY + 1, 1, cx, baseY + 1, 12);
-                const bA = (0.15 + 0.08 * Math.sin(time * 0.8 + phase)) * a;
+                const bA = 0.15 + 0.08 * Math.sin(time * 0.8 + phase);
                 baseGlow.addColorStop(0, `rgba(255, 200, 100, ${bA})`);
                 baseGlow.addColorStop(1, 'rgba(255, 150, 70, 0)');
                 offCtx.fillStyle = baseGlow;
@@ -569,7 +562,6 @@
             offCtx.restore();
         }
 
-        // ---- 礼物 ----
         function drawGift(x, y, w, h, boxColor, ribbonColor, shadowOffset) {
             shadowOffset = shadowOffset || 5;
             if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) return;
@@ -603,7 +595,7 @@
             offCtx.restore();
         }
 
-        const giftPyramidData = (() => {
+        const giftPyramidData = (function () {
             const layerDefs = [
                 { layer: 5, yBase: -160, count: 1, xStart: 140, xEnd: 170, sizeMin: 30, sizeMax: 40 },
                 { layer: 4, yBase: -128, count: 2, xStart: 120, xEnd: 190, sizeMin: 34, sizeMax: 44 },
@@ -665,7 +657,6 @@
             }
         }
 
-        // ---- 气球 ----
         const balloons = [];
         const balloonColors = ['#ff6b81', '#ffd93d', '#6bcfff', '#a29bfe', '#ff9ff3', '#ff9f43', '#00d2d3', '#f368e0',
             '#ff6b81', '#ffd93d'
@@ -745,7 +736,6 @@
             }
         }
 
-        // ---- 横幅 ----
         function drawBanner() {
             const bannerW = OFF_W - 20;
             const bannerH = 55;
@@ -874,34 +864,22 @@
             offCtx.restore();
         }
 
-        // ---- 完整蛋糕场景 ----
-        function drawCakeScene(time, closeProgress) {
+        function drawCakeScene(time) {
             offCtx.clearRect(0, 0, OFF_W, OFF_H);
             drawBackground();
             drawDesk();
-            drawCandleGlow(time, true);
             drawCakeBody();
+            drawCandleGlow(time);
             drawGiftPyramid();
             drawBalloons(time);
             drawBanner();
             drawCandles();
-            drawFlames(time, closeProgress || 0);
+            drawFlames(time);
         }
 
         // ================================================================
-        //  5. 初始睁眼逻辑（clip 方式）
+        //  4. 蛋糕绘制到主画布
         // ================================================================
-        const CONFIG = {
-            eyeDuration: 2000,
-            liftDuration: 4000,
-        };
-
-        let startTime = 0;
-        let liftStartTime = null;
-        let animId = null;
-        let flamesVisible = true;
-
-        // ---- 获取蛋糕实际绘制区域 ---- 
         let cakeDrawInfo = { offsetX: 0, offsetY: 0, drawW: 0, drawH: 0, scale: 1 };
 
         function updateCakeDrawInfo() {
@@ -915,7 +893,6 @@
             cakeDrawInfo = { offsetX, offsetY: offsetYPos, drawW, drawH, scale };
         }
 
-        // 绘制蛋糕到主画布（无遮罩）
         function drawCakeToMain() {
             updateCakeDrawInfo();
             const { offsetX, offsetY, drawW, drawH } = cakeDrawInfo;
@@ -924,77 +901,82 @@
             ctx.restore();
         }
 
-        // 使用 clip 在椭圆区域内绘制蛋糕（用于初始睁眼）
-        function drawCakeWithClip(progress) {
-            const p = Math.min(Math.max(progress, 0), 1);
+        // ================================================================
+        //  5. 睁眼/闭眼遮罩
+        // ================================================================
+
+        function drawCakeWithOpenMask(progress) {
+            const p = clamp(progress, 0, 1);
             const cx = W / 2;
             const cy = H * 0.72;
             const maxR = Math.max(W, H) * 0.75;
             const ratio = 0.75;
             const rx = p * maxR;
             const ry = p * maxR * ratio;
-
             ctx.save();
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = '#0a0808';
             ctx.fillRect(0, 0, W, H);
             ctx.beginPath();
             ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
             ctx.clip();
             drawCakeToMain();
             ctx.restore();
+            if (p > 0.05 && p < 0.95) {
+                const glowAlpha = 0.035 * (1 - Math.abs(p - 0.5) * 2);
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.6);
+                grad.addColorStop(0, 'rgba(255, 240, 220, 0)');
+                grad.addColorStop(0.7, 'rgba(255, 240, 220, 0)');
+                grad.addColorStop(0.88, `rgba(180, 200, 255, ${glowAlpha * 0.6})`);
+                grad.addColorStop(1, 'rgba(180, 200, 255, 0)');
+                ctx.globalCompositeOperation = 'screen';
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, Math.max(W, H) * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+            }
         }
 
-        // ================================================================
-        //  ★★★ 闭眼遮罩（基于蛋糕实际显示区域） ★★★
-        //  从蛋糕边缘向中心平滑收缩，保证在任何屏幕下效果一致
-        // ================================================================
         function drawEyeCloseMask(progress) {
             const p = clamp(progress, 0, 1);
-            // 获取蛋糕绘制区域
-            const { offsetX, offsetY, drawW, drawH } = cakeDrawInfo;
-            // 蛋糕区域的中心点
-            const cx = offsetX + drawW / 2;
-            const cy = offsetY + drawH / 2;
-            // 蛋糕区域半长轴（取宽高较大者，确保遮罩覆盖整个蛋糕）
-            const maxR = Math.max(drawW, drawH) * 0.55; // 稍微放大一点，确保边缘覆盖
-
-            // 直接使用 progress（已缓动），半径线性缩小
-            const currentR = maxR * (1 - p);
-
-            ctx.save();
-
-            // 如果几乎完全闭合，直接全黑
-            if (currentR < 1.5) {
+            if (p >= 0.99) {
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
-                ctx.restore();
                 return;
             }
-
-            // 径向渐变：中心透明，边缘黑色
-            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
-            const transparentR = Math.min(currentR * 1.25, maxR);
+            if (p <= 0) return;
+            const { offsetX, offsetY, drawW, drawH } = cakeDrawInfo;
+            const cx = offsetX + drawW / 2;
+            const cy = offsetY + drawH / 2;
+            const maxR = Math.max(drawW, drawH) * 0.65;
+            const currentR = maxR * (1 - easeInOutSine(p));
+            const blur = Math.max(10, maxR * 0.25 * (1 - p * 0.8));
+            if (currentR < 5) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                return;
+            }
+            const grad = ctx.createRadialGradient(
+                cx, cy, Math.max(0, currentR - blur),
+                cx, cy, currentR + blur
+            );
             grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(Math.min(0.7, transparentR / maxR), 'rgba(0,0,0,0)');
-            grad.addColorStop(Math.min(0.9, (transparentR + 30) / maxR), 'rgba(0,0,0,1)');
+            grad.addColorStop(0.6, 'rgba(0,0,0,0.3)');
             grad.addColorStop(1, 'rgba(0,0,0,1)');
-
+            ctx.save();
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
-
             ctx.restore();
-
-            // 星尘效果（半闭眼时闪烁）
-            if (p > 0.3 && p < 0.9) {
-                const intensity = Math.sin(p * Math.PI) * 0.10;
+            if (p > 0.2 && p < 0.85) {
+                const intensity = Math.sin(p * Math.PI) * 0.08;
                 ctx.save();
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < 18; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const dist = 60 + Math.random() * 350;
+                    const dist = 50 + Math.random() * 300;
                     const sx = cx + Math.cos(angle) * dist;
                     const sy = cy + Math.sin(angle) * dist * 0.7;
-                    const size = 0.8 + Math.random() * 1.8;
-                    const alpha = (0.3 + Math.random() * 0.7) * intensity;
+                    const size = 0.6 + Math.random() * 1.6;
+                    const alpha = (0.2 + Math.random() * 0.6) * intensity;
                     ctx.globalAlpha = alpha;
                     ctx.fillStyle = '#fff';
                     ctx.beginPath();
@@ -1006,10 +988,262 @@
         }
 
         // ================================================================
-        //  6. 自定义闭眼 + 睁眼 + 吹蜡烛 + 烟雾 + 粒子祝福
+        //  6. 烟雾粒子系统（增强：暗色、持续上升、长寿命）
         // ================================================================
+        let smokeParticles = [];
+        let smokeActive = false;
 
-        // ---- 粒子祝福系统 ----
+        function createSmoke() {
+            const positions = getCandlePositions();
+            const topY = getCakeLayerY(2);
+            const { offsetX, offsetY, scale } = cakeDrawInfo;
+            smokeParticles = [];
+            for (let i = 0; i < positions.length; i++) {
+                const cx = offsetX + positions[i] * scale;
+                const cy = offsetY + (topY - CANDLE_H + 2) * scale;
+                // 更多粒子，更暗
+                const count = 14 + Math.floor(Math.random() * 10);
+                for (let j = 0; j < count; j++) {
+                    const angle = rand(0, Math.PI * 2);
+                    const dist = rand(0, 18 * scale);
+                    // 暗灰色调，降低亮度
+                    const gray = rand(40, 100);
+                    smokeParticles.push({
+                        x: cx + Math.cos(angle) * dist,
+                        y: cy + Math.sin(angle) * dist - rand(0, 10 * scale),
+                        vx: rand(-0.8 * scale, 0.8 * scale),
+                        vy: rand(-2.5 * scale, -4.5 * scale), // 上升速度更大
+                        radius: rand(12 * scale, 30 * scale),
+                        alpha: rand(0.4, 0.7), // 降低透明度
+                        life: 1.0,
+                        decay: 0.0005 + rand(0.0002, 0.0012), // 更慢衰减，寿命更长
+                        grow: rand(0.02 * scale, 0.06 * scale),
+                        r: gray + rand(-15, 15),
+                        g: gray + rand(-15, 15),
+                        b: gray + rand(-10, 20),
+                    });
+                }
+            }
+            smokeActive = true;
+            console.log('[createSmoke] 生成烟雾粒子，数量:', smokeParticles.length);
+        }
+
+        function updateSmoke() {
+            if (!smokeActive) return;
+            let alive = false;
+            smokeParticles.forEach(p => {
+                // 持续上升，并带随机飘散
+                p.x += p.vx + rand(-0.05, 0.05);
+                p.y += p.vy;
+                p.vy -= 0.012; // 轻微加速上升（模拟热空气）
+                p.vx += rand(-0.015, 0.015);
+                p.radius += p.grow;
+                p.alpha *= (1 - p.decay);
+                p.life -= p.decay;
+                if (p.alpha > 0.01) alive = true;
+            });
+            smokeParticles = smokeParticles.filter(p => p.alpha > 0.01);
+            if (smokeParticles.length === 0) {
+                smokeActive = false;
+                console.log('[updateSmoke] 烟雾消失');
+            }
+        }
+
+        function drawSmoke() {
+            if (!smokeActive) return;
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            smokeParticles.forEach(p => {
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+                const a = p.alpha * 0.3; // 整体再降低透明度
+                grad.addColorStop(0, `rgba(${p.r}, ${p.g}, ${p.b}, ${a * 0.6})`);
+                grad.addColorStop(0.5, `rgba(${p.r - 10}, ${p.g - 10}, ${p.b - 5}, ${a * 0.35})`);
+                grad.addColorStop(1, `rgba(${p.r - 25}, ${p.g - 25}, ${p.b - 15}, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // ================================================================
+        //  7. 星空场景（纯星空 + 星云，无城市建筑）
+        // ================================================================
+        let stars_stars = [];
+        let stars_clouds = [];
+
+        const STAR_COLORS = [
+            { r: 255, g: 255, b: 255 },
+            { r: 255, g: 245, b: 235 },
+            { r: 235, g: 240, b: 255 },
+            { r: 255, g: 230, b: 210 },
+            { r: 210, g: 220, b: 255 },
+            { r: 255, g: 210, b: 180 },
+        ];
+
+        function stars_generateStars(w, h) {
+            const list = [];
+            const count = 280 + Math.floor(Math.random() * 60);
+            for (let i = 0; i < count; i++) {
+                let magnitude = Math.random();
+                let brightness = Math.pow(magnitude, 2.5);
+                brightness = clamp(brightness, 0.05, 1.0);
+                const size = 0.3 + brightness * 2.7;
+                const isBright = brightness > 0.7 && Math.random() < 0.3;
+                let colorIdx;
+                if (brightness > 0.7) colorIdx = Math.floor(Math.random() * 3);
+                else if (brightness > 0.4) colorIdx = 3 + Math.floor(Math.random() * 2);
+                else colorIdx = Math.floor(Math.random() * STAR_COLORS.length);
+                const color = STAR_COLORS[colorIdx % STAR_COLORS.length];
+                const speed = 0.2 + Math.random() * 0.8;
+                const phase = Math.random() * Math.PI * 2;
+                const flickerAmt = 0.15 + brightness * 0.35;
+                const x = Math.random() * (w - 20) + 10;
+                const y = Math.random() * (h * 0.75) + 10;
+                const randomDelay = (Math.random() - 0.5) * 0.08;
+                list.push({
+                    x,
+                    y,
+                    size,
+                    brightness,
+                    baseAlpha: 0.6 + brightness * 0.4,
+                    alpha: 0,
+                    speed,
+                    phase,
+                    flickerAmt,
+                    color,
+                    isBright,
+                    randomDelay,
+                });
+            }
+            return list;
+        }
+
+        function stars_updateStars(time) {
+            for (const star of stars_stars) {
+                const flicker = Math.sin(time * star.speed + star.phase);
+                const af = 0.5 + 0.5 * flicker;
+                const mod = 1 + star.flickerAmt * (af - 0.5) * 2;
+                star.alpha = star.baseAlpha * mod;
+                star.alpha = clamp(star.alpha, 0.05, 1);
+            }
+        }
+
+        function stars_drawStarsLayer(time) {
+            stars_updateStars(time);
+            const sorted = [...stars_stars].sort((a, b) => b.brightness - a.brightness);
+            for (const star of sorted) {
+                const yNorm = star.y / (H * 0.75);
+                const heightFactor = 1 - yNorm;
+                const atmosphere = 0.5 + 0.5 * heightFactor;
+                const sizeFactor = 0.6 + 0.4 * heightFactor;
+                const finalAlpha = star.alpha * atmosphere;
+                if (finalAlpha < 0.001) continue;
+                const finalSize = star.size * sizeFactor;
+                const { x, y, color, isBright } = star;
+                const { r, g, b } = color;
+                if (finalSize > 0.8 && finalAlpha > 0.02) {
+                    const glowR = finalSize * 2.5;
+                    const grad = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+                    grad.addColorStop(0, `rgba(${r},${g},${b},${finalAlpha * 0.35})`);
+                    grad.addColorStop(0.5, `rgba(${r},${g},${b},${finalAlpha * 0.10})`);
+                    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(x, y, glowR, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = finalAlpha;
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                ctx.arc(x, y, finalSize * 0.85, 0, Math.PI * 2);
+                ctx.fill();
+                if (isBright && finalAlpha > 0.2) {
+                    const len = 10 + finalSize * 4;
+                    for (let ang = 0; ang < Math.PI * 2; ang += Math.PI / 4) {
+                        const cosA = Math.cos(ang),
+                            sinA = Math.sin(ang);
+                        ctx.globalAlpha = finalAlpha * 0.25;
+                        ctx.strokeStyle = `rgba(${r},${g},${b},${finalAlpha * 0.25})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.beginPath();
+                        ctx.moveTo(x + cosA * 1.5, y + sinA * 1.5);
+                        ctx.lineTo(x + cosA * len, y + sinA * len);
+                        ctx.stroke();
+                    }
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function stars_generateClouds(w, h) {
+            const list = [];
+            const count = 25 + Math.floor(Math.random() * 25);
+            for (let i = 0; i < count; i++) {
+                const cx = Math.random() * w;
+                const cy = Math.random() * h * 0.6;
+                const radius = 60 + Math.random() * 250;
+                const alpha = 0.008 + Math.random() * 0.03;
+                const colorShift = Math.random();
+                let r, g, b;
+                if (colorShift < 0.33) {
+                    r = 80;
+                    g = 120;
+                    b = 200;
+                } else if (colorShift < 0.66) {
+                    r = 120;
+                    g = 100;
+                    b = 180;
+                } else {
+                    r = 200;
+                    g = 180;
+                    b = 160;
+                }
+                list.push({ x: cx, y: cy, radius, alpha, r, g, b });
+            }
+            return list;
+        }
+
+        function stars_drawClouds() {
+            if (stars_clouds.length === 0) return;
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            for (const cloud of stars_clouds) {
+                const grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+                grad.addColorStop(0, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, ${cloud.alpha})`);
+                grad.addColorStop(0.5, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, ${cloud.alpha * 0.5})`);
+                grad.addColorStop(1, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function stars_drawFullScene(time) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+            // 只绘制星星和星云，无建筑
+            stars_drawStarsLayer(time);
+            stars_drawClouds();
+            // 暗角
+            const vignette = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+            vignette.addColorStop(0, 'rgba(0,0,0,0)');
+            vignette.addColorStop(1, 'rgba(0,0,0,0.18)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        function stars_initScene() {
+            stars_stars = stars_generateStars(W, H);
+            stars_clouds = stars_generateClouds(W, H);
+        }
+
+        // ================================================================
+        //  8. 祝福粒子系统（保持不变）
+        // ================================================================
         const PARTICLE_CFG = {
             flyDuration: 2000,
             fontSizeMin: 24,
@@ -1044,7 +1278,7 @@
             [BLESSINGS[i], BLESSINGS[j]] = [BLESSINGS[j], BLESSINGS[i]];
         }
 
-        const particleTex = (() => {
+        const particleTex = (function () {
             const c = document.createElement('canvas');
             const size = 28;
             c.width = size;
@@ -1081,11 +1315,8 @@
                 for (let x = 0; x < size; x++) {
                     const idx = (y * size + x) * 4;
                     if (data[idx + 3] > 30) raw.push({
-                        x: x - pad,
-                        y: y - pad,
-                        r: data[idx],
-                        g: data[idx + 1],
-                        b: data[idx + 2]
+                        x: x - pad, y: y - pad, r: data[idx], g: data[idx + 1], b: data[idx +
+                            2]
                     });
                 }
             }
@@ -1109,11 +1340,8 @@
             }
             if (raw.length === 0) {
                 for (let i = 0; i < targetCount; i++) raw.push({
-                    x: rand(-fontSize / 2, fontSize / 2),
-                    y: rand(-fontSize / 2, fontSize / 2),
-                    r: 255,
-                    g: 215,
-                    b: 50
+                    x: rand(-fontSize / 2, fontSize / 2), y: rand(-fontSize / 2,
+                        fontSize / 2), r: 255, g: 215, b: 50
                 });
             }
             const result = [];
@@ -1129,9 +1357,6 @@
             }
             return result;
         }
-
-        const rand = (a, b) => Math.random() * (b - a) + a;
-        const randInt = (a, b) => Math.floor(rand(a, b + 1));
 
         function buildTargetPositions() {
             const chars = ['生', '日', '快', '乐'];
@@ -1173,6 +1398,7 @@
         let flyStartTime = 0;
 
         function initParticles() {
+            console.log('[initParticles] 初始化祝福粒子');
             const targetPos = buildTargetPositions();
             const count = Math.min(BLESSINGS.length, targetPos.length);
             const groupBaseDelay = [0, 1500, 3000, 4500];
@@ -1230,6 +1456,7 @@
                 p.activated = false;
                 p.done = false;
             });
+            console.log('  粒子总数:', allParticles.length);
         }
 
         function createBlessingItem(text, index, total, targetPos, startDelay) {
@@ -1288,7 +1515,10 @@
             ctx.restore();
         }
 
-        function drawGlowText(text, x, y, fs, alpha = 1, blur = 40, color = 'rgba(255,215,0,0.5)') {
+        function drawGlowText(text, x, y, fs, alpha, blur, color) {
+            alpha = alpha || 1;
+            blur = blur || 40;
+            color = color || 'rgba(255,215,0,0.5)';
             if (alpha < 0.05 || fs < 3) return;
             ctx.save();
             ctx.globalAlpha = alpha;
@@ -1354,8 +1584,7 @@
                 const currentFs = Math.max(b.fontSize * textScale, 0.05);
                 let particleAlpha = 0;
                 if (eased > fadeStart * 0.5) {
-                    particleAlpha = easeOutQuad(clamp((eased - fadeStart * 0.5) / (fadeEnd * 1.2 - fadeStart * 0.5),
-                        0, 1));
+                    particleAlpha = easeOutQuad(clamp((eased - fadeStart * 0.5) / (fadeEnd * 1.2 - fadeStart * 0.5), 0, 1));
                 }
                 const mixPos = clamp((eased - fadeStart * 0.3) / (fadeEnd * 1.4 - fadeStart * 0.3), 0, 1);
                 const posEased = easeOutQuad(mixPos);
@@ -1390,7 +1619,6 @@
                 statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
                 statusTip.classList.add('show');
                 setTimeout(() => statusTip.classList.remove('show'), 4000);
-                // 延迟重置状态，允许再次许愿
                 setTimeout(() => {
                     closeState.phase = 'idle';
                     closeState.progress = 0;
@@ -1398,6 +1626,7 @@
                     statusTip.classList.add('show');
                     setTimeout(() => statusTip.classList.remove('show'), 3000);
                 }, 3000);
+                console.log('[updateParticles] 粒子完成，进入 stable 状态');
             }
         }
 
@@ -1417,72 +1646,13 @@
                 });
                 particleState = 'flying';
                 flyStartTime = 0;
+                console.log('[startParticles] 启动粒子动画');
             }
         }
 
-        // ---- 烟雾粒子系统 ----
-        let smokeParticles = [];
-        let smokeActive = false;
-
-        function createSmoke() {
-            const positions = getCandlePositions();
-            const topY = getCakeLayerY(2);
-            smokeParticles = [];
-            for (let i = 0; i < positions.length; i++) {
-                const cx = positions[i];
-                const cy = topY - CANDLE_H + 2;
-                const count = 5 + Math.floor(Math.random() * 4);
-                for (let j = 0; j < count; j++) {
-                    smokeParticles.push({
-                        x: cx + rand(-8, 8),
-                        y: cy + rand(-5, 5),
-                        vx: rand(-0.4, 0.4),
-                        vy: rand(-0.8, -1.8),
-                        radius: rand(6, 16),
-                        alpha: rand(0.4, 0.8),
-                        life: 1.0,
-                        decay: 0.002 + rand(0.001, 0.004),
-                        grow: rand(0.02, 0.07),
-                    });
-                }
-            }
-            smokeActive = true;
-        }
-
-        function updateSmoke() {
-            if (!smokeActive) return;
-            let alive = false;
-            smokeParticles.forEach(p => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy -= 0.008;
-                p.radius += p.grow;
-                p.alpha *= (1 - p.decay);
-                p.life -= p.decay;
-                if (p.alpha > 0.01) alive = true;
-            });
-            smokeParticles = smokeParticles.filter(p => p.alpha > 0.01);
-            if (smokeParticles.length === 0) smokeActive = false;
-        }
-
-        function drawSmoke() {
-            if (!smokeActive) return;
-            ctx.save();
-            ctx.globalCompositeOperation = 'screen';
-            smokeParticles.forEach(p => {
-                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-                grad.addColorStop(0, `rgba(200, 200, 215, ${p.alpha * 0.35})`);
-                grad.addColorStop(0.4, `rgba(180, 180, 195, ${p.alpha * 0.2})`);
-                grad.addColorStop(1, `rgba(150, 150, 165, 0)`);
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            ctx.restore();
-        }
-
-        // ---- 状态管理 ----
+        // ================================================================
+        //  9. 状态管理（核心流程）
+        // ================================================================
         let closeState = {
             progress: 0,
             phase: 'idle',
@@ -1490,20 +1660,27 @@
             isClosed: false,
             isOpening: false,
         };
-
         const CLOSE_DURATION = 3500;
         const HOLD_DURATION = 2000;
         const OPEN_DURATION = 1500;
 
-        let particlesReady = false;
+        let scene = 'cake';
         let blowCandlesDone = false;
+        let smokeStartTime = 0;
+        const SMOKE_WAIT_DURATION = 2800;
+        let transitionPhase = 'idle';
+        let transitionStart = 0;
+        const TRANSITION_DURATION = 1200;
+        let transitionAlpha = 0;
+
+        let particlesReady = false;
         const statusTip = document.getElementById('statusTip');
         const infoEl = document.getElementById('info');
 
-        // ---- 触发闭眼 ----
         function startCloseEye() {
             if (closeState.phase !== 'idle') return;
-
+            console.log('🔵 [startCloseEye] 开始许愿流程');
+            flamesExtinguished = false;
             closeState.phase = 'closing';
             closeState.startTime = performance.now();
             closeState.progress = 0;
@@ -1512,37 +1689,40 @@
             blowCandlesDone = false;
             smokeActive = false;
             smokeParticles = [];
-            flamesVisible = true;
             particleState = 'idle';
-
+            transitionPhase = 'idle';
+            transitionAlpha = 0;
+            scene = 'cake';
             statusTip.textContent = '✦ 闭上眼睛许个愿 ✦';
             statusTip.classList.add('show');
             infoEl.classList.remove('show');
-
-            drawCakeScene(performance.now() / 100, 0);
+            drawCakeScene(performance.now() / 100);
+            console.log('   → 状态已设为 closing，火焰亮着');
         }
 
-        // ---- 更新闭眼状态 ----
         function updateCloseState(timestamp) {
             if (closeState.phase === 'idle') return;
             const elapsed = timestamp - closeState.startTime;
 
             if (closeState.phase === 'closing') {
                 const p = clamp(elapsed / CLOSE_DURATION, 0, 1);
-                closeState.progress = easeInOutCubic(p);
+                const eased = easeInOutSine(p);
+                closeState.progress = eased;
                 if (p >= 1) {
                     closeState.progress = 1;
                     closeState.phase = 'closed';
                     closeState.isClosed = true;
                     closeState.startTime = timestamp;
                     statusTip.textContent = '✦ 默念心愿 2s ✦';
+                    console.log('   → 闭眼完成，进入 closed 状态');
                 }
             } else if (closeState.phase === 'closed') {
                 if (elapsed >= HOLD_DURATION) {
                     closeState.phase = 'opening';
                     closeState.startTime = timestamp;
+                    closeState.isOpening = true;
                     statusTip.textContent = '✦ 睁开眼睛 ✦';
-                    closeState.progress = 1;
+                    console.log('   → 进入 opening 状态');
                 }
             } else if (closeState.phase === 'opening') {
                 const p = clamp(elapsed / OPEN_DURATION, 0, 1);
@@ -1552,19 +1732,14 @@
                     closeState.phase = 'idle';
                     closeState.isClosed = false;
                     closeState.isOpening = false;
+                    console.log('   → 睁眼完成，吹灭蜡烛');
                     if (!blowCandlesDone) {
                         blowCandlesDone = true;
-                        flamesVisible = false;
-                        drawCakeScene(timestamp / 100, 1);
+                        flamesExtinguished = true;
                         createSmoke();
+                        smokeStartTime = performance.now();
                         statusTip.textContent = '✦ 蜡烛吹灭啦 ✦';
-                        if (!particlesReady) {
-                            initParticles();
-                            particlesReady = true;
-                        }
-                        startParticles();
-                        setTimeout(() => statusTip.classList.remove('show'), 2500);
-                        infoEl.classList.add('show');
+                        console.log('   → 蜡烛吹灭，烟雾升起');
                     }
                 }
             }
@@ -1572,54 +1747,85 @@
         }
 
         // ================================================================
-        //  7. 主渲染循环
+        //  10. 主渲染循环
         // ================================================================
+        let startTime = 0;
+        let liftStartTime = null;
+        let animId = null;
+        const CONFIG_INIT = { eyeDuration: 2000, liftDuration: 4000 };
 
         function render(timestamp) {
             if (!startTime) startTime = timestamp;
             const elapsed = timestamp - startTime;
 
-            const eyeRaw = Math.min(elapsed / CONFIG.eyeDuration, 1);
-            const eyeProgress = easeOutCubic(eyeRaw);
+            updateCloseState(timestamp);
 
-            if (eyeProgress >= 1 && liftStartTime === null) {
-                liftStartTime = timestamp;
+            if (blowCandlesDone && scene === 'cake' && transitionPhase === 'idle') {
+                if (timestamp - smokeStartTime > SMOKE_WAIT_DURATION) {
+                    transitionPhase = 'fading';
+                    transitionStart = timestamp;
+                    console.log('   → 烟雾飘散完毕，触发转场');
+                }
             }
 
-            let liftProgress = 0;
-            if (liftStartTime !== null) {
-                const liftElapsed = timestamp - liftStartTime;
-                const raw = Math.min(liftElapsed / CONFIG.liftDuration, 1);
-                liftProgress = easeInOutQuad(raw);
-            }
-
-            const initialDone = (eyeProgress >= 1 && liftProgress >= 1);
-
-            if (initialDone) {
-                if (closeState.phase === 'idle' && particleState !== 'stable' && particleState !== 'flying') {
-                    infoEl.classList.add('show');
+            if (transitionPhase === 'fading') {
+                let progress = (timestamp - transitionStart) / TRANSITION_DURATION;
+                if (progress >= 1) {
+                    progress = 1;
+                    transitionPhase = 'done';
+                    transitionAlpha = 0;
+                    scene = 'stars';
+                    stars_initScene();
                     if (!particlesReady) {
                         initParticles();
                         particlesReady = true;
                     }
-                    drawCakeScene(timestamp / 100, 0);
+                    startParticles();
+                    statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
+                    statusTip.classList.add('show');
+                    setTimeout(() => statusTip.classList.remove('show'), 4000);
+                    infoEl.classList.add('show');
+                    console.log('   → 转场完成，进入星空，祝福粒子启动');
+                } else {
+                    let alpha = 0;
+                    if (progress < 0.5) {
+                        alpha = (progress / 0.5) * 0.6;
+                    } else {
+                        alpha = ((1 - progress) / 0.5) * 0.6;
+                    }
+                    transitionAlpha = alpha;
                 }
-                updateCloseState(timestamp);
             }
+
+            const eyeRaw = Math.min(elapsed / CONFIG_INIT.eyeDuration, 1);
+            const eyeProgress = easeOutCubic(eyeRaw);
+            if (eyeProgress >= 1 && liftStartTime === null) {
+                liftStartTime = timestamp;
+            }
+            let liftProgress = 0;
+            if (liftStartTime !== null) {
+                const liftElapsed = timestamp - liftStartTime;
+                const raw = Math.min(liftElapsed / CONFIG_INIT.liftDuration, 1);
+                liftProgress = easeInOutQuad(raw);
+            }
+            const initialDone = (eyeProgress >= 1 && liftProgress >= 1);
+            const isClosingActive = (closeState.phase !== 'idle');
 
             ctx.clearRect(0, 0, W, H);
 
-            if (!initialDone) {
-                drawCakeWithClip(eyeProgress);
+            if (scene === 'cake') {
+                drawCakeScene(timestamp / 100);
+                if (!initialDone && !isClosingActive) {
+                    drawCakeWithOpenMask(eyeProgress);
+                } else {
+                    drawCakeToMain();
+                    if (isClosingActive) {
+                        drawEyeCloseMask(closeState.progress);
+                    }
+                    if (smokeActive) drawSmoke();
+                }
             } else {
-                // 绘制蛋糕
-                drawCakeToMain();
-
-                // ★ 闭眼遮罩：基于蛋糕实际显示区域
-                drawEyeCloseMask(closeState.progress);
-
-                if (smokeActive) drawSmoke();
-
+                stars_drawFullScene(timestamp / 100);
                 if (particleState === 'flying') {
                     updateParticles(timestamp);
                 } else if (particleState === 'stable') {
@@ -1637,24 +1843,33 @@
                         }
                     });
                 }
-
-                drawCakeScene(timestamp / 100, closeState.progress);
             }
 
-            if (initialDone && closeState.phase === 'idle') {
+            if (transitionPhase === 'fading' || transitionPhase === 'done') {
+                if (transitionAlpha > 0.01) {
+                    ctx.fillStyle = `rgba(255,255,255,${transitionAlpha})`;
+                    ctx.fillRect(0, 0, W, H);
+                }
+            }
+
+            if (initialDone && closeState.phase === 'idle' && !isClosingActive) {
                 infoEl.classList.add('show');
+            } else if (isClosingActive) {
+                infoEl.classList.remove('show');
             }
 
             animId = requestAnimationFrame(render);
         }
 
         // ================================================================
-        //  8. 交互与启动
+        //  11. 交互与启动
         // ================================================================
-
         canvas.addEventListener('click', function (e) {
+            console.log('🖱️ 点击屏幕');
             if (closeState.phase === 'idle' && particleState !== 'stable' && particleState !== 'flying') {
                 startCloseEye();
+            } else {
+                console.log(`   → 当前 phase=${closeState.phase}, particleState=${particleState}，不能触发`);
             }
         });
 
@@ -1664,14 +1879,19 @@
             closeState.progress = 0;
             closeState.phase = 'idle';
             closeState.startTime = 0;
-            drawCakeScene(0, 0);
-            flamesVisible = true;
-            startTime = 0;
-            liftStartTime = null;
-            particlesReady = false;
+            flamesExtinguished = false;
+            blowCandlesDone = false;
             smokeActive = false;
             smokeParticles = [];
-            blowCandlesDone = false;
+            smokeStartTime = 0;
+            transitionPhase = 'idle';
+            transitionAlpha = 0;
+            scene = 'cake';
+            particleState = 'idle';
+            particlesReady = false;
+            drawCakeScene(0);
+            startTime = 0;
+            liftStartTime = null;
             infoEl.classList.remove('show');
             statusTip.textContent = '';
             statusTip.classList.remove('show');
@@ -1679,24 +1899,24 @@
             if (animId) cancelAnimationFrame(animId);
             animId = requestAnimationFrame(render);
 
-            window.addEventListener('resize', () => {
+            window.addEventListener('resize', function () {
                 resize();
                 updateCakeDrawInfo();
-                drawCakeScene(performance.now() / 100, closeState.progress);
+                if (scene === 'cake') drawCakeScene(performance.now() / 100);
+                else stars_initScene();
                 if (particlesReady) initParticles();
                 if (animId) cancelAnimationFrame(animId);
                 startTime = 0;
                 liftStartTime = null;
                 animId = requestAnimationFrame(render);
             });
+
+            console.log('🎂 初始化完成，点击屏幕触发许愿流程：闭眼→许愿→睁眼→吹灭→烟雾飘散→转场→星空祝福');
+            window.__debug = { closeState, cakeDrawInfo };
         }
 
         if (document.readyState === 'complete') init();
         else window.addEventListener('load', init);
-
-        console.log('🎂 修复完成：闭眼遮罩基于蛋糕实际显示区域，适配任意屏幕 ✨');
-        console.log('🕯️ 点击画面许愿 → 平滑闭眼 → 默念心愿 → 平滑睁眼 → 祝福化光！');
-        console.log('📐 蛋糕绘制区域:', cakeDrawInfo);
     </script>
 </body>
 
