@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>星河入梦 · 花火 · 声景</title>
+    <title>星河入梦 · 花火</title>
     <style>
         * {
             margin: 0;
@@ -72,10 +72,6 @@
     <canvas id="mainCanvas"></canvas>
     <div id="info">✦ 华灯 · 陨星 · 星河 ✦</div>
 
-    <!-- ===== 引入声音配置器 ===== -->
-    <script src="sound-configurator.js?v=20260824023511">
-    </script>
-
     <script>
         (function () {
             'use strict';
@@ -142,181 +138,7 @@
             resize();
 
             // ================================================================
-            // 2. 声音系统 (使用 Sound Configurator)
-            // ================================================================
-
-            // ----- 2.1 声音配置 (用户需根据实际音频文件调整 URL 和截断) -----
-            const SOUND_CONFIG = {
-                // 每个声音的配置：url（路径），start（起始秒），end（结束秒）
-                sounds: {
-                    heartbeat: {
-                        url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
-                        start: 0.0,
-                        end: 2.0,
-                    },
-                    city: {
-                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/city.mp3',
-                        start: 0.0,
-                        end: 6.0,
-                    },
-                    space: {
-                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/space.mp3',
-                        start: 0.0,
-                        end: 4.0,
-                    },
-                    meteor: {
-                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/meteor.mp3',
-                        start: 0.0,
-                        end: 3.5,
-                    },
-                    firework_launch: {
-                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_go.mp3',
-                        start: 0.0,
-                        end: 1.8,
-                    },
-                    firework_explode: {
-                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_boom.mp3',
-                        start: 0.0,
-                        end: 2.5,
-                    },
-                },
-                // 流星默认轨迹参数
-                meteor: {
-                    panStart: -0.8, // 左声道起始 (-1 ~ 1)
-                    panEnd: 0.8, // 右声道终点
-                    volumeStart: 0.6,
-                    volumeEnd: 0.2,
-                    duration: 3.5, // 总时长（秒），会与截断取较小值
-                },
-                // 烟花默认参数
-                firework: {
-                    launchDuration: 1.5,
-                    explodeDelay: 0.6, // 发射后多久爆炸
-                    panSpread: 0.6, // 爆炸时立体声扩散度
-                },
-            };
-            let soundSystem = null;
-            let soundEngine = null;
-            let meteorManager = null;
-            let fireworkManager = null;
-
-            // ----- 2.2 背景音控制 -----
-            let bgSounds = {
-                heartbeat: null, // 播放ID
-                city: null,
-                space: null,
-            };
-            let bgVolumes = {
-                heartbeat: 0.5,
-                city: 0.6,
-                space: 0.5,
-            };
-            let bgFadeTargets = {
-                heartbeat: 0,
-                city: 0,
-                space: 0,
-            };
-            let bgFadeSpeed = 0.02;
-
-            // ----- 2.3 流星声音映射 (每个流星对应一个声音ID) -----
-            const meteorSoundMap = new Map(); // showerMeteor.id -> { sourceId, pan, vol, active }
-
-            // ----- 2.4 初始化声音系统 -----
-            async function initSoundSystem() {
-                try {
-                    if (typeof SoundSystem === 'undefined') {
-                        console.warn('⚠️ SoundSystem 未加载，声音功能不可用');
-                        return false;
-                    }
-                    soundSystem = await SoundSystem.create(SOUND_CONFIG);
-                    soundEngine = soundSystem.engine;
-                    meteorManager = soundSystem.meteorManager;
-                    fireworkManager = soundSystem.fireworkManager;
-                    console.log('✅ 声音系统初始化完成');
-                    return true;
-                } catch (err) {
-                    console.warn('⚠️ 声音系统初始化失败:', err);
-                    return false;
-                }
-            }
-
-            // ----- 2.5 背景音播放/停止/渐变 -----
-            function playBgSound(key, volume, loop = true) {
-                if (!soundEngine) return;
-                const cfg = SOUND_CONFIG.sounds[key];
-                if (!cfg) return;
-                // 如果已经在播放，更新音量
-                if (bgSounds[key]) {
-                    soundEngine.setVolume(bgSounds[key], volume);
-                    bgVolumes[key] = volume;
-                    bgFadeTargets[key] = volume;
-                    return;
-                }
-                soundEngine.playSound(key, cfg.start, cfg.end, volume, 0).then(entry => {
-                    if (entry) {
-                        bgSounds[key] = entry.id;
-                        bgVolumes[key] = volume;
-                        bgFadeTargets[key] = volume;
-                        // 循环播放：在onended时重新播放
-                        const source = entry.source;
-                        source.onended = () => {
-                            if (bgSounds[key] && loop) {
-                                soundEngine.playSound(key, cfg.start, cfg.end, bgVolumes[key], 0).then(e => {
-                                    if (e) {
-                                        bgSounds[key] = e.id;
-                                        e.source.onended = source.onended;
-                                    }
-                                });
-                            }
-                        };
-                    }
-                });
-            }
-
-            function stopBgSound(key) {
-                if (!soundEngine) return;
-                if (bgSounds[key]) {
-                    soundEngine.stopSound(bgSounds[key]);
-                    bgSounds[key] = null;
-                }
-                bgVolumes[key] = 0;
-                bgFadeTargets[key] = 0;
-            }
-
-            function fadeBgSound(key, targetVolume, speed) {
-                if (!soundEngine) return;
-                bgFadeTargets[key] = clamp(targetVolume, 0, 1);
-                bgFadeSpeed = speed || 0.02;
-                // 如果目标音量>0且未播放，则启动
-                if (targetVolume > 0.01 && !bgSounds[key]) {
-                    playBgSound(key, 0.01);
-                }
-            }
-
-            function updateBgFades() {
-                if (!soundEngine) return;
-                for (const key of ['heartbeat', 'city', 'space']) {
-                    const current = bgVolumes[key] || 0;
-                    const target = bgFadeTargets[key] || 0;
-                    if (Math.abs(current - target) > 0.001) {
-                        const newVol = lerp(current, target, bgFadeSpeed);
-                        bgVolumes[key] = newVol;
-                        if (bgSounds[key]) {
-                            soundEngine.setVolume(bgSounds[key], newVol);
-                        }
-                        if (target < 0.01 && newVol < 0.01 && bgSounds[key]) {
-                            soundEngine.stopSound(bgSounds[key]);
-                            bgSounds[key] = null;
-                        }
-                    } else if (target < 0.01 && bgSounds[key]) {
-                        soundEngine.stopSound(bgSounds[key]);
-                        bgSounds[key] = null;
-                    }
-                }
-            }
-
-            // ================================================================
-            // 3. 全局状态 & 阶段管理
+            // 2. 全局状态 & 阶段管理
             // ================================================================
             const PHASE = {
                 EPIC: 'epic',
@@ -331,7 +153,7 @@
             let epicEnded = false;
             let closingDone = false;
             let fireworksReady = false;
-            let closingTriggered = false;
+            let closingTriggered = false; // 新增：防止多次触发闭眼
 
             // ---------- 闭眼 ----------
             let closeStartTime = 0;
@@ -344,10 +166,10 @@
             let fwOpened = false;
 
             // ================================================================
-            // 4. 阶段一：Epic (index_1_2 完整逻辑)
+            // 3. 阶段一：index_1_2 完整逻辑（精简整合）
             // ================================================================
 
-            // ---------- 4.1 配置 ----------
+            // ---------- 3.1 配置 ----------
             const CONFIG = {
                 eye: { duration: 2000 },
                 rise: { duration: 4000, maxOffsetY: 1.2 },
@@ -405,7 +227,7 @@
                 visual: { vignetteStrength: 0.18, lensGlowStart: 0.6, lensGlowAlpha: 0.04 }
             };
 
-            // ---------- 4.2 城市星星 ----------
+            // ---------- 3.2 城市星星 ----------
             const CITY_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -512,7 +334,7 @@
                 }
             }
 
-            // ---------- 4.3 太空星星 ----------
+            // ---------- 3.3 太空星星 ----------
             const SPACE_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -620,7 +442,7 @@
                 }
             }
 
-            // ---------- 4.4 悬浮粒子 ----------
+            // ---------- 3.4 悬浮粒子 ----------
             let floatParticles = [];
             const PARTICLE_COUNT = 120;
 
@@ -678,7 +500,7 @@
                 ctx.globalAlpha = 1;
             }
 
-            // ---------- 4.5 星云 ----------
+            // ---------- 3.5 星云 ----------
             let clouds = [];
 
             function initClouds() {
@@ -728,7 +550,7 @@
                 ctx.restore();
             }
 
-            // ---------- 4.6 建筑系统 ----------
+            // ---------- 3.6 建筑系统 ----------
             let buildings = [];
 
             function generateBuildings() {
@@ -961,7 +783,7 @@
                 }
             }
 
-            // ---------- 4.7 行星系统 ----------
+            // ---------- 3.7 行星系统 ----------
             class Planet {
                 constructor(x, y, radius, color, ringLayers, craterCount) {
                     this.x = x;
@@ -1219,7 +1041,7 @@
                 resetMeteor();
             }
 
-            // ---------- 4.8 陨星系统 ----------
+            // ---------- 3.8 陨星系统 ----------
             let meteor = {
                 state: 'attached',
                 x: 0,
@@ -1458,7 +1280,7 @@
                 ctx.globalAlpha = 1;
             }
 
-            // ---------- 4.9 流星雨 ----------
+            // ---------- 3.9 流星雨 ----------
             let showerMeteors = [];
             let showerSpawnTimer = 0;
             let showerActive = false,
@@ -1468,7 +1290,6 @@
 
             function getShowerHeadColor() { return { r: rand(235, 255), g: rand(120, 190), b: rand(15, 60) }; }
 
-            // ★ 生成流星时创建声音轨迹
             function spawnShowerMeteor() {
                 const cfg = CONFIG.shower;
                 if (showerMeteors.length >= cfg.maxCount) return;
@@ -1492,8 +1313,7 @@
                 if (x > W + 50) x = rand(W - 60, W + 30);
                 if (y < -50) y = rand(-20, 40);
                 const brightness = rand(cfg.brightnessMin, cfg.brightnessMax);
-                const meteorObj = {
-                    id: Date.now() + Math.random() * 1000 + showerMeteors.length,
+                showerMeteors.push({
                     x,
                     y,
                     vx,
@@ -1504,53 +1324,7 @@
                     brightness: brightness,
                     headColor: getShowerHeadColor(),
                     trailSegments: cfg.trailSegments,
-                    soundId: null, // 声音ID
-                    soundActive: false,
-                };
-                showerMeteors.push(meteorObj);
-
-                // ★ 为流星创建声音
-                if (soundEngine) {
-                    const cfgSound = SOUND_CONFIG.sounds.meteor;
-                    const pan = (meteorObj.x / W) * 2 - 1;
-                    const vol = 0.15 + 0.3 * (meteorObj.brightness);
-                    soundEngine.playSound('meteor', cfgSound.start, cfgSound.end, vol, pan).then(entry => {
-                        if (entry) {
-                            meteorObj.soundId = entry.id;
-                            meteorObj.soundActive = true;
-                            meteorSoundMap.set(meteorObj.id, {
-                                sourceId: entry.id,
-                                pan: pan,
-                                vol: vol,
-                                active: true,
-                                entry: entry
-                            });
-                        }
-                    });
-                }
-            }
-
-            // ★ 更新流星声音轨迹 (pan/vol 跟随位置)
-            function updateShowerMeteorSounds() {
-                for (const m of showerMeteors) {
-                    if (!m.soundActive || !m.soundId) continue;
-                    const soundData = meteorSoundMap.get(m.id);
-                    if (!soundData || !soundData.active) continue;
-                    // 根据x位置计算pan (-1~1)
-                    const pan = clamp((m.x / W) * 2 - 1, -1, 1);
-                    // 根据生命值计算音量 (逐渐减小)
-                    const lifeRatio = m.life / m.maxLife;
-                    const fadeOutStart = CONFIG.shower.fadeOutStart;
-                    let vol = 0.15 + 0.3 * (m.brightness || 0.5);
-                    if (lifeRatio < fadeOutStart) {
-                        vol *= lifeRatio / fadeOutStart;
-                    }
-                    vol = clamp(vol * 0.7, 0.02, 0.8);
-                    soundEngine.setPan(m.soundId, pan);
-                    soundEngine.setVolume(m.soundId, vol);
-                    soundData.pan = pan;
-                    soundData.vol = vol;
-                }
+                });
             }
 
             function updateShowerMeteors() {
@@ -1561,12 +1335,7 @@
                     m.y += m.vy;
                     m.life--;
                     const margin = 150;
-                    // 停止并清理声音
                     if (m.life <= 0 || m.x < -margin || m.x > W + margin || m.y < -margin || m.y > H + margin) {
-                        if (m.soundId && soundEngine) {
-                            soundEngine.stopSound(m.soundId);
-                            meteorSoundMap.delete(m.id);
-                        }
                         showerMeteors.splice(i, 1);
                         continue;
                     }
@@ -1575,14 +1344,10 @@
                     const now = performance.now();
                     if (now - showerSpawnTimer > rand(cfg.spawnIntervalMin, cfg.spawnIntervalMax)) {
                         const cnt = randInt(1, 2);
-                        for (let i = 0; i < cnt; i++) {
-                            if (showerMeteors.length < cfg.maxCount) spawnShowerMeteor();
-                        }
+                        for (let i = 0; i < cnt; i++) { if (showerMeteors.length < cfg.maxCount) spawnShowerMeteor(); }
                         showerSpawnTimer = now;
                     }
                 }
-                // 更新声音轨迹
-                updateShowerMeteorSounds();
             }
 
             function drawShowerMeteors() {
@@ -1653,7 +1418,7 @@
                 return { r: c1.r + (c2.r - c1.r) * t, g: c1.g + (c2.g - c1.g) * t, b: c1.b + (c2.b - c1.b) * t };
             }
 
-            // ---------- 4.10 视口系统 ----------
+            // ---------- 3.10 视口系统 ----------
             let viewport = {
                 cx: W / 2,
                 cy: H / 2,
@@ -1719,7 +1484,7 @@
                 }
             }
 
-            // ---------- 4.11 Epic 状态机 ----------
+            // ---------- 3.11 Epic 状态机 ----------
             let epicFlowState = 'city_open';
             let cityOpen = { progress: 0, startTime: 0, duration: CONFIG.eye.duration };
             let cityRise = {
@@ -1757,11 +1522,6 @@
                 showerMeteors = [];
                 showerActive = false;
                 showerGenerating = false;
-                // 清理流星声音映射
-                for (const [id, data] of meteorSoundMap) {
-                    if (data.sourceId && soundEngine) soundEngine.stopSound(data.sourceId);
-                }
-                meteorSoundMap.clear();
                 viewport.scale = 1.0;
                 viewport.cx = W / 2;
                 viewport.cy = H / 2;
@@ -1771,14 +1531,10 @@
                 viewport.transitioning = false;
                 viewport.followMode = true;
                 epicEnded = false;
-                closingTriggered = false;
-                // ★ 声音控制：开始城市音
-                fadeBgSound('heartbeat', 0, 0.02);
-                fadeBgSound('city', 0.6, 0.02);
-                fadeBgSound('space', 0, 0.02);
+                closingTriggered = false; // 重置
             }
 
-            // ---------- 4.12 Epic 绘制 ----------
+            // ---------- 3.12 Epic 绘制 ----------
             function drawCityScene(offY, liftProgress, time) {
                 drawCityStars(time, liftProgress);
                 drawClouds(1.0);
@@ -1898,7 +1654,7 @@
                 ctx.restore();
             }
 
-            // ---------- 4.13 Epic 更新 ----------
+            // ---------- 3.13 Epic 更新（修改：流星雨80%触发闭眼） ----------
             function updateEpic(timestamp) {
                 const h = safeH();
                 if (isNaN(h) || h <= 0) return;
@@ -1916,8 +1672,6 @@
                             epicFlowState = 'city_rise';
                             cityRise.startTime = timestamp;
                             cityRise.progress = 0;
-                            // ★ 城市音持续
-                            fadeBgSound('city', 0.6, 0.02);
                         }
                         break;
                     }
@@ -1932,17 +1686,11 @@
                         viewport.cy = H / 2 + cityOffsetY * CONFIG.fade.viewportFollow;
                         viewport.cx = W / 2;
                         viewport.scale = 1.0;
-                        // ★ 城市音渐弱，太空音渐起
-                        fadeBgSound('city', 0.6 * (1 - t), 0.02);
-                        fadeBgSound('space', 0.3 * t, 0.02);
                         if (cityRise.progress >= 1) {
                             epicFlowState = 'city_fade';
                             cityFade.startTime = timestamp;
                             cityFade.progress = 0;
                             fadeStartOffset = cityOffsetY;
-                            // ★ 城市音淡出，太空音渐强
-                            fadeBgSound('city', 0, 0.03);
-                            fadeBgSound('space', 0.5, 0.03);
                         }
                         break;
                     }
@@ -1957,8 +1705,6 @@
                         viewport.targetScale = 1.0;
                         viewport.cx = W / 2;
                         viewport.cy = H / 2 + cityOffsetY * CONFIG.fade.viewportFollow;
-                        // ★ 太空音持续增强
-                        fadeBgSound('space', 0.5 + t * 0.3, 0.02);
                         if (cityFade.progress >= 1) {
                             epicFlowState = 'space_open';
                             spaceOpen.startTime = timestamp;
@@ -1966,8 +1712,6 @@
                             const durFrames = Math.round(CONFIG.spaceOpen.duration / 16.67);
                             startTransition(attachInfo.x, attachInfo.y, CONFIG.spaceOpen.endScale, durFrames);
                             resetMeteor();
-                            // ★ 太空音增强
-                            fadeBgSound('space', 0.8, 0.02);
                         }
                         break;
                     }
@@ -1981,8 +1725,6 @@
                             viewport.targetCy = attachInfo.y;
                             viewport.targetScale = CONFIG.spaceOpen.endScale;
                             setTimeout(() => { infoEl.classList.add('show'); }, 500);
-                            // ★ 太空音持续
-                            fadeBgSound('space', 0.8, 0.02);
                         }
                         break;
                     }
@@ -1994,8 +1736,6 @@
                         }
                         const elapsed = timestamp - meteor.attachStartTime;
                         if (elapsed >= CONFIG.meteor.attachDuration) triggerDetach();
-                        // ★ 太空音持续
-                        fadeBgSound('space', 0.7, 0.01);
                         break;
                     }
                     case 'flying': {
@@ -2016,8 +1756,6 @@
                         if (meteor.history.length > CONFIG.meteor.historyLength) meteor.history.shift();
                         if (!viewport.transitioning) setFollowTarget(meteor.x, meteor.y);
                         if (meteor.flyTimer > meteor.flyDuration) breakMeteor();
-                        // ★ 太空音持续
-                        fadeBgSound('space', 0.6, 0.01);
                         break;
                     }
                     case 'broken': {
@@ -2045,8 +1783,6 @@
                             } else {
                                 epicFlowState = 'retreat';
                                 startTransition(viewport.cx, viewport.cy, 0.08, 120);
-                                // ★ 太空音减弱
-                                fadeBgSound('space', 0.3, 0.02);
                             }
                         }
                         break;
@@ -2059,37 +1795,35 @@
                             showerStartTime = timestamp;
                             showerDuration = CONFIG.shower.duration;
                             showerSpawnTimer = timestamp;
-                            // ★ 太空音持续，音量降低
-                            fadeBgSound('space', 0.2, 0.02);
-                            // 清除旧流星声音
-                            for (const [id, data] of meteorSoundMap) {
-                                if (data.sourceId && soundEngine) soundEngine.stopSound(data.sourceId);
-                            }
-                            meteorSoundMap.clear();
                         }
                         break;
                     }
                     case 'meteor_shower': {
+                        // ★ 修改：在流星雨进行到约80%时触发闭眼
                         if (showerActive) {
                             const elapsed = timestamp - showerStartTime;
+                            // 若未触发闭眼且进度达到80%
                             if (!closingTriggered && elapsed > showerDuration * 0.8) {
                                 closingTriggered = true;
-                                showerGenerating = false;
-                                // ★ 停止生成新流星，但保留现有声音
-                                startClosing();
+                                showerGenerating = false; // 停止生成新流星
+                                startClosing(); // 触发闭眼
                             }
+                            // 原本的结束逻辑（若闭眼未触发，但时间已超过，也触发闭眼，但保留为安全）
                             if (elapsed > showerDuration && !closingTriggered) {
                                 closingTriggered = true;
                                 showerGenerating = false;
                                 startClosing();
                             }
+                            // 如果闭眼已触发，但还在流星雨状态（闭眼过程），我们仍然更新流星
+                            // 但不再生成新的
                         }
-                        updateShowerMeteors();
+                        updateShowerMeteors(); // 更新现有流星
                         if (!viewport.transitioning) {
                             viewport.targetScale = 0.08;
                             viewport.targetCx = attachInfo.x;
                             viewport.targetCy = attachInfo.y;
                         }
+                        // 如果闭眼已完成（closingDone为true），但当前阶段还是meteor_shower，我们可以在闭眼完成后自动切换到烟花？但闭眼完成后会由startClosing内的逻辑切换到烟花，所以这里不需要处理。
                         break;
                     }
                     case 'ended': {
@@ -2102,6 +1836,7 @@
                         if (showerMeteors.length === 0 && !epicEnded) {
                             epicEnded = true;
                             infoEl.classList.remove('show');
+                            // 如果还没触发闭眼（理论上不会），调用闭眼
                             if (!closingTriggered) {
                                 closingTriggered = true;
                                 startClosing();
@@ -2113,11 +1848,9 @@
                 for (const p of planets) p.update();
                 updateFloatParticles(time);
                 updateViewport();
-                // ★ 更新背景音渐变
-                updateBgFades();
             }
 
-            // ---------- 4.14 Epic 绘制入口 ----------
+            // ---------- 3.14 Epic 绘制入口 ----------
             function drawEpic(timestamp) {
                 const time = timestamp / 100;
                 const h = safeH();
@@ -2155,7 +1888,7 @@
             }
 
             // ================================================================
-            // 5. 阶段二：闭眼 (含心跳声)
+            // 4. 阶段二：闭眼
             // ================================================================
             let closingProgress = 0;
 
@@ -2167,18 +1900,6 @@
                 infoEl.textContent = '✦ 晚安，好梦 ✦';
                 infoEl.classList.remove('fireworks');
                 infoEl.classList.add('show');
-                // ★ 心跳声开始
-                fadeBgSound('heartbeat', 0.6, 0.02);
-                // 淡出其他声音
-                fadeBgSound('city', 0, 0.03);
-                fadeBgSound('space', 0, 0.03);
-                // 停止所有流星声音
-                for (const [id, data] of meteorSoundMap) {
-                    if (data.sourceId && soundEngine) soundEngine.stopSound(data.sourceId);
-                }
-                meteorSoundMap.clear();
-                // 停止所有烟花声音
-                if (fireworkManager) fireworkManager.clearAll();
             }
 
             function updateClosing(timestamp) {
@@ -2189,12 +1910,8 @@
                 }
                 const raw = (elapsed - CLOSE_DELAY) / CLOSE_DURATION;
                 closingProgress = Math.min(raw, 1);
-                // ★ 心跳声持续
-                fadeBgSound('heartbeat', 0.6, 0.01);
                 if (closingProgress >= 1) {
                     closingDone = true;
-                    // ★ 心跳声淡出，准备烟花
-                    fadeBgSound('heartbeat', 0, 0.03);
                     startFireworks();
                 }
             }
@@ -2229,10 +1946,10 @@
             }
 
             // ================================================================
-            // 6. 阶段三：烟花 (带发射和爆炸声)
+            // 5. 阶段三：烟花 (背景纯黑，尺寸增大，无交互)
             // ================================================================
 
-            // ---------- 6.1 烟花星空 ----------
+            // ---------- 5.1 烟花星空 ----------
             const FW_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -2315,7 +2032,7 @@
                 }
             }
 
-            // ---------- 6.2 烟花粒子 ----------
+            // ---------- 5.2 烟花粒子 (尺寸增大) ----------
             let fwRockets = [];
             let fwParticles = [];
             let fwWind = 0;
@@ -2420,9 +2137,6 @@
                     this.type = randInt(0, 5);
                     this.alive = true;
                     this.trailCounter = 0;
-                    // ★ 烟花发射声音 - 使用 FireworkManager
-                    this.soundId = null;
-                    this.soundActive = false;
                 }
                 update() {
                     this.speed *= this.acc;
@@ -2438,8 +2152,8 @@
                             this.y + rand(-2, 2),
                             rand(-0.6, 0.6),
                             rand(0.3, 1.8), {
-                            hue: 35, sat: 100, lit: 60, life: rand(12, 22), size: rand(1.2,
-                                2.2), gravity: 0.02, drag: 0.88, trailLength: 3
+                                hue: 35, sat: 100, lit: 60, life: rand(12, 22), size: rand(1.2,
+                                    2.2), gravity: 0.02, drag: 0.88, trailLength: 3
                         }
                         );
                         if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
@@ -2464,33 +2178,14 @@
                         y = this.y,
                         hue = this.hue;
                     const type = this.type;
-                    // ★ 发射声音：使用 FireworkManager 播放爆炸
-                    if (fireworkManager) {
-                        // 每个烟花单独使用 FireworkManager 的 addFirework 会创建完整的发射+爆炸
-                        // 但我们这里已经有发射过程了，所以只触发爆炸声
-                        // 使用 engine.playSound 直接播放爆炸声
-                        if (soundEngine) {
-                            const cfg = SOUND_CONFIG.sounds.firework_explode;
-                            const pan = (x / W) * 2 - 1;
-                            soundEngine.playSound('firework_explode', cfg.start, cfg.end, 0.8, pan).then(entry => {
-                                if (entry) {
-                                    // 自动管理生命周期
-                                    setTimeout(() => {
-                                        if (entry && soundEngine) soundEngine.stopSound(entry.id);
-                                    }, 2500);
-                                }
-                            });
-                        }
-                    }
-                    // 生成爆炸粒子
                     for (let i = 0; i < 30; i++) {
                         const angle = rand(0, Math.PI * 2);
                         const speed = rand(0.3, 2.4);
                         const p = new FWParticle(x, y,
                             Math.cos(angle) * speed,
                             Math.sin(angle) * speed, {
-                            hue: hue + rand(-10, 10), life: rand(40, 65), size: rand(
-                                2.0, 3.6), drag: 0.88, hueOffset: 0, trailLength: 5
+                                hue: hue + rand(-10, 10), life: rand(40, 65), size: rand(
+                                    2.0, 3.6), drag: 0.88, hueOffset: 0, trailLength: 5
                         }
                         );
                         if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
@@ -2502,7 +2197,7 @@
                             const p = new FWParticle(x, y,
                                 Math.cos(angle) * speed,
                                 Math.sin(angle) * speed, {
-                                hue: hue + rand(-22, 22), life: rand(70, 110),
+                                    hue: hue + rand(-22, 22), life: rand(70, 110),
                                 size: rand(2.4, 5.2), hueOffset: rand(12, 30), trailLength: rand(8, 14)
                             }
                             );
@@ -2518,7 +2213,7 @@
                             const p = new FWParticle(x, y,
                                 Math.cos(angle) * speed,
                                 Math.sin(angle) * speed, {
-                                hue: hue + rand(-8, 8), life: rand(75, 110),
+                                    hue: hue + rand(-8, 8), life: rand(75, 110),
                                 size: rand(2.6, 4.5), drag: 0.95, hueOffset: -8, trailLength: rand(7, 12)
                             }
                             );
@@ -2531,9 +2226,9 @@
                             const p = new FWParticle(x, y,
                                 Math.cos(angle) * speed,
                                 Math.sin(angle) * speed - 2.5, {
-                                hue: hue + rand(-12, 12), life: rand(100,
-                                    160), size: rand(2.0, 3.6), gravity: 0.07, drag: 0.96, trailLength: rand(
-                                        12, 18), windSensitivity: rand(1.2, 2.2), isGold: Math.random() < 0.4
+                                    hue: hue + rand(-12, 12), life: rand(100,
+                                        160), size: rand(2.0, 3.6), gravity: 0.07, drag: 0.96, trailLength: rand(
+                                            12, 18), windSensitivity: rand(1.2, 2.2), isGold: Math.random() < 0.4
                             }
                             );
                             if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
@@ -2548,8 +2243,8 @@
                                 const p = new FWParticle(x, y,
                                     Math.cos(angle) * speed,
                                     Math.sin(angle) * speed, {
-                                    hue: hue + j * 5 + rand(-5, 5), life: rand(80,
-                                        120), size: rand(2.6, 5.0), drag: 0.94, trailLength: rand(8, 14),
+                                        hue: hue + j * 5 + rand(-5, 5), life: rand(80,
+                                            120), size: rand(2.6, 5.0), drag: 0.94, trailLength: rand(8, 14),
                                     hueOffset: rand(4, 16)
                                 }
                                 );
@@ -2563,7 +2258,7 @@
                             const p = new FWParticle(x, y,
                                 Math.cos(angle) * speed,
                                 Math.sin(angle) * speed, {
-                                hue: hue + rand(-40, 40), life: rand(55, 90),
+                                    hue: hue + rand(-40, 40), life: rand(55, 90),
                                 size: rand(1.6, 4.2), isWhite: Math.random() < 0.25, twinkleSpeed: rand(
                                     0.15, 0.6), trailLength: rand(5, 10), hueOffset: rand(10, 30)
                             }
@@ -2583,7 +2278,7 @@
                             const p = new FWParticle(x, y,
                                 Math.cos(angle2) * sp,
                                 Math.sin(angle2) * sp - 0.5, {
-                                hue: hue + rand(-20, 20), life: rand(70, 110),
+                                    hue: hue + rand(-20, 20), life: rand(70, 110),
                                 size: rand(2.6, 4.5), drag: 0.93, trailLength: rand(8, 14), gravity: 0.03
                             }
                             );
@@ -2593,37 +2288,12 @@
                 }
             }
 
-            // ★ 发射烟花时播放发射声
             function launchFwFirework(targetX, targetY) {
                 const sx = rand(W * 0.08, W * 0.92);
                 const tx = targetX !== undefined ? targetX : rand(W * 0.08, W * 0.92);
                 const ty = targetY !== undefined ? targetY : rand(H * 0.08, H * 0.42);
                 const rocket = new FWRocket(sx, H + rand(5, 20), tx, ty);
                 fwRockets.push(rocket);
-                // ★ 播放发射声
-                if (soundEngine) {
-                    const cfg = SOUND_CONFIG.sounds.firework_launch;
-                    const pan = (sx / W) * 2 - 1;
-                    soundEngine.playSound('firework_launch', cfg.start, cfg.end, 0.5, pan).then(entry => {
-                        if (entry) {
-                            // 发射声跟随火箭位置
-                            const interval = setInterval(() => {
-                                if (!rocket.alive || !entry) {
-                                    clearInterval(interval);
-                                    return;
-                                }
-                                const newPan = (rocket.x / W) * 2 - 1;
-                                soundEngine.setPan(entry.id, clamp(newPan, -1, 1));
-                                const vol = 0.3 + 0.4 * (1 - rocket.distTraveled / rocket.distTotal);
-                                soundEngine.setVolume(entry.id, clamp(vol, 0.1, 0.8));
-                            }, 50);
-                            setTimeout(() => {
-                                clearInterval(interval);
-                                if (entry && soundEngine) soundEngine.stopSound(entry.id);
-                            }, 2000);
-                        }
-                    });
-                }
             }
 
             function updateFwFireworks() {
@@ -2652,7 +2322,7 @@
                 ctx.globalCompositeOperation = 'source-over';
             }
 
-            // ---------- 6.3 烟花睁眼遮罩 ----------
+            // ---------- 5.3 烟花睁眼遮罩 ----------
             function drawFwOpenMask(progress, time) {
                 const p = clamp(progress, 0, 1);
                 if (p >= 1) {
@@ -2695,7 +2365,7 @@
                 ctx.fillRect(0, 0, W, H);
             }
 
-            // ---------- 6.4 烟花场景 ----------
+            // ---------- 5.4 烟花场景 (背景纯黑) ----------
             function drawFwScene(time) {
                 updateFwStars(time);
                 ctx.fillStyle = '#000';
@@ -2709,7 +2379,7 @@
                 ctx.fillRect(0, 0, W, H);
             }
 
-            // ---------- 6.5 烟花启动 ----------
+            // ---------- 5.5 烟花启动 ----------
             function startFireworks() {
                 currentPhase = PHASE.FIREWORKS;
                 fwStartTime = performance.now();
@@ -2722,12 +2392,9 @@
                 infoEl.textContent = '✦ 星夜 · 花火 ✦';
                 infoEl.classList.add('fireworks');
                 infoEl.classList.add('show');
-                // ★ 初始烟花齐放
-                for (let i = 0; i < 8; i++) {
-                    setTimeout(() => launchFwFirework(), i * 100 + 50);
+                for (let i = 0; i < 6; i++) {
+                    setTimeout(() => launchFwFirework(), i * 120 + 80);
                 }
-                // ★ 背景音：微弱太空音
-                fadeBgSound('space', 0.1, 0.02);
             }
 
             function updateFireworks(timestamp) {
@@ -2736,8 +2403,6 @@
                 const openProgress = Math.min(raw, 1);
                 if (openProgress >= 1) fwOpened = true;
                 updateFwFireworks();
-                // ★ 持续更新背景音渐变
-                updateBgFades();
                 return openProgress;
             }
 
@@ -2750,7 +2415,7 @@
             }
 
             // ================================================================
-            // 7. 交互 (无交互，保持静默)
+            // 6. 交互 ———— 已完全取消
             // ================================================================
             function handleFwPointerDown(x, y) { /* 无互动 */ }
 
@@ -2763,13 +2428,11 @@
             canvas.addEventListener('mouseup', handleFwPointerUp);
             canvas.addEventListener('mouseleave', handleFwPointerUp);
             canvas.addEventListener('touchstart', e => {
-                e.preventDefault();
-                const t = e.touches[0];
+                e.preventDefault(); const t = e.touches[0];
                 handleFwPointerDown(t.clientX, t.clientY);
             }, { passive: false });
             canvas.addEventListener('touchmove', e => {
-                e.preventDefault();
-                const t = e.touches[0];
+                e.preventDefault(); const t = e.touches[0];
                 handleFwPointerMove(t.clientX, t.clientY);
             }, { passive: false });
             canvas.addEventListener('touchend', e => {
@@ -2778,7 +2441,7 @@
             }, { passive: false });
 
             // ================================================================
-            // 8. 主渲染循环
+            // 7. 主渲染循环
             // ================================================================
             let masterStartTime = 0;
             let fwOpenProgress = 0;
@@ -2814,15 +2477,10 @@
             }
 
             // ================================================================
-            // 9. 启动 & 重置
+            // 8. 启动 & 重置
             // ================================================================
-            async function initMaster() {
+            function initMaster() {
                 resize();
-                // ★ 初始化声音系统
-                const soundOk = await initSoundSystem();
-                if (!soundOk) {
-                    console.warn('⚠️ 声音系统不可用，动画将继续但无声');
-                }
                 generateCityStars();
                 initSpaceStars();
                 initClouds();
@@ -2905,7 +2563,7 @@
             if (document.readyState === 'complete') initMaster();
             else window.addEventListener('load', initMaster);
 
-            console.log('✦ 星河入梦 · 花火 ✦ 声景整合完成 (心跳/城市/太空/流星轨迹/烟花发射爆炸)');
+            console.log('✦ 星河入梦 · 花火 ✦ 三阶段整合完成 (无交互，背景纯黑，烟花增大，流星雨80%闭眼)');
         })();
     </script>
 </body>

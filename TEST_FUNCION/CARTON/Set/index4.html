@@ -174,11 +174,6 @@
 
         function easeInCubic(t) { return t * t * t; }
 
-        // ★ test.html 缓动
-        function easeInOutSine(t) {
-            return -(Math.cos(Math.PI * t) - 1) / 2;
-        }
-
         // ================================================================
         //  4. 蛋糕场景（基于 cake.html）
         // ================================================================
@@ -500,7 +495,6 @@
 
         // ---- ★ 火焰（支持闭眼熄灭） ----
         function drawFlames(time, closeProgress) {
-            // closeProgress: 0=全亮, 1=全灭
             const flameAlpha = clamp(1 - closeProgress * 1.2, 0, 1);
             if (flameAlpha < 0.01) return;
 
@@ -518,7 +512,6 @@
                 const flameX = cx;
                 const flameY = baseY + offsetY - 2;
 
-                // 光晕
                 const glowRadius = 18 * (0.92 + 0.08 * Math.sin(time * 1.0 + phase)) * (0.3 + 0.7 * flameAlpha);
                 const glow = offCtx.createRadialGradient(flameX, flameY, 2, flameX, flameY, glowRadius);
                 const glowA = (0.12 + 0.05 * Math.sin(time * 0.7 + phase)) * flameAlpha;
@@ -530,7 +523,6 @@
                 offCtx.arc(flameX, flameY, glowRadius, 0, Math.PI * 2);
                 offCtx.fill();
 
-                // 火焰主体
                 offCtx.save();
                 offCtx.translate(flameX, flameY);
                 offCtx.scale(scaleX, scaleY);
@@ -909,8 +901,10 @@
         let animId = null;
         let flamesVisible = true;
 
-        // 绘制蛋糕到主画布（无遮罩）
-        function drawCakeToMain() {
+        // ---- 获取蛋糕实际绘制区域 ---- 
+        let cakeDrawInfo = { offsetX: 0, offsetY: 0, drawW: 0, drawH: 0, scale: 1 };
+
+        function updateCakeDrawInfo() {
             const scaleX = W / OFF_W;
             const scaleY = H / OFF_H;
             const scale = Math.min(scaleX, scaleY);
@@ -918,8 +912,15 @@
             const drawH = OFF_H * scale;
             const offsetX = (W - drawW) / 2;
             const offsetYPos = (H - drawH) / 2;
+            cakeDrawInfo = { offsetX, offsetY: offsetYPos, drawW, drawH, scale };
+        }
+
+        // 绘制蛋糕到主画布（无遮罩）
+        function drawCakeToMain() {
+            updateCakeDrawInfo();
+            const { offsetX, offsetY, drawW, drawH } = cakeDrawInfo;
             ctx.save();
-            ctx.drawImage(offCanvas, offsetX, offsetYPos, drawW, drawH);
+            ctx.drawImage(offCanvas, offsetX, offsetY, drawW, drawH);
             ctx.restore();
         }
 
@@ -944,51 +945,57 @@
         }
 
         // ================================================================
-        //  ★★★ 闭眼遮罩（来自 test.html） ★★★
-        //  径向渐变：中心透明 -> 边缘黑色，柔和闭眼效果
-        //  使用 easeOutCubic 缓动，从边缘平滑向中心收缩
+        //  ★★★ 闭眼遮罩（基于蛋糕实际显示区域） ★★★
+        //  从蛋糕边缘向中心平滑收缩，保证在任何屏幕下效果一致
         // ================================================================
         function drawEyeCloseMask(progress) {
             const p = clamp(progress, 0, 1);
+            // 获取蛋糕绘制区域
+            const { offsetX, offsetY, drawW, drawH } = cakeDrawInfo;
+            // 蛋糕区域的中心点
+            const cx = offsetX + drawW / 2;
+            const cy = offsetY + drawH / 2;
+            // 蛋糕区域半长轴（取宽高较大者，确保遮罩覆盖整个蛋糕）
+            const maxR = Math.max(drawW, drawH) * 0.55; // 稍微放大一点，确保边缘覆盖
 
-            const cx = W / 2;
-            const cy = H / 2;
-            const maxR = Math.max(W, H) * 0.9;
-
-            // 使用 easeOutCubic 让遮罩从边缘平滑收缩
-            const eased = easeOutCubic(p);
-            const currentR = maxR * (1 - eased);
+            // 直接使用 progress（已缓动），半径线性缩小
+            const currentR = maxR * (1 - p);
 
             ctx.save();
 
+            // 如果几乎完全闭合，直接全黑
+            if (currentR < 1.5) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+                return;
+            }
+
+            // 径向渐变：中心透明，边缘黑色
             const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
             const transparentR = Math.min(currentR * 1.25, maxR);
             grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(Math.min(0.8, transparentR / maxR), 'rgba(0,0,0,0)');
-            grad.addColorStop(Math.min(0.95, (transparentR + 40) / maxR), 'rgba(0,0,0,1)');
+            grad.addColorStop(Math.min(0.7, transparentR / maxR), 'rgba(0,0,0,0)');
+            grad.addColorStop(Math.min(0.9, (transparentR + 30) / maxR), 'rgba(0,0,0,1)');
             grad.addColorStop(1, 'rgba(0,0,0,1)');
 
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
 
-            if (p >= 1) {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, W, H);
-            }
-
             ctx.restore();
 
             // 星尘效果（半闭眼时闪烁）
-            if (p > 0.5 && p < 1) {
-                const alpha = (p - 0.5) / 0.5 * 0.12;
+            if (p > 0.3 && p < 0.9) {
+                const intensity = Math.sin(p * Math.PI) * 0.10;
                 ctx.save();
-                for (let i = 0; i < 18; i++) {
+                for (let i = 0; i < 20; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const dist = 80 + Math.random() * 350;
+                    const dist = 60 + Math.random() * 350;
                     const sx = cx + Math.cos(angle) * dist;
-                    const sy = cy + Math.sin(angle) * dist * 0.6;
-                    const size = 0.5 + Math.random() * 1.5;
-                    ctx.globalAlpha = (0.3 + Math.random() * 0.7) * alpha;
+                    const sy = cy + Math.sin(angle) * dist * 0.7;
+                    const size = 0.8 + Math.random() * 1.8;
+                    const alpha = (0.3 + Math.random() * 0.7) * intensity;
+                    ctx.globalAlpha = alpha;
                     ctx.fillStyle = '#fff';
                     ctx.beginPath();
                     ctx.arc(sx, sy, size, 0, Math.PI * 2);
@@ -1000,8 +1007,6 @@
 
         // ================================================================
         //  6. 自定义闭眼 + 睁眼 + 吹蜡烛 + 烟雾 + 粒子祝福
-        //  ★ 采用 test.html 的 closeState 状态管理 ★
-        //  ★ 已移除重开机制（按钮 + R键） ★
         // ================================================================
 
         // ---- 粒子祝福系统 ----
@@ -1385,9 +1390,8 @@
                 statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
                 statusTip.classList.add('show');
                 setTimeout(() => statusTip.classList.remove('show'), 4000);
-                // 延迟后重置状态，允许再次点击许愿
+                // 延迟重置状态，允许再次许愿
                 setTimeout(() => {
-                    // 重置 closeState 到 idle，允许再次触发
                     closeState.phase = 'idle';
                     closeState.progress = 0;
                     statusTip.textContent = '✦ 点击屏幕许愿 ✦';
@@ -1478,16 +1482,16 @@
             ctx.restore();
         }
 
-        // ---- ★ 采用 test.html 的 closeState 状态管理 ----
+        // ---- 状态管理 ----
         let closeState = {
-            progress: 0, // 0=全开, 1=全闭
-            phase: 'idle', // 'idle' | 'closing' | 'closed' | 'opening'
+            progress: 0,
+            phase: 'idle',
             startTime: 0,
             isClosed: false,
             isOpening: false,
         };
 
-        const CLOSE_DURATION = 4500;
+        const CLOSE_DURATION = 3500;
         const HOLD_DURATION = 2000;
         const OPEN_DURATION = 1500;
 
@@ -1496,12 +1500,10 @@
         const statusTip = document.getElementById('statusTip');
         const infoEl = document.getElementById('info');
 
-        // ---- ★ 触发闭眼（全面重置状态） ----
+        // ---- 触发闭眼 ----
         function startCloseEye() {
-            // 只有在 idle 状态才能触发新的闭眼流程
             if (closeState.phase !== 'idle') return;
 
-            // ★ 全面重置所有相关状态，确保每次点击都从干净状态开始
             closeState.phase = 'closing';
             closeState.startTime = performance.now();
             closeState.progress = 0;
@@ -1517,7 +1519,6 @@
             statusTip.classList.add('show');
             infoEl.classList.remove('show');
 
-            // 重新绘制蛋糕场景（火焰恢复）
             drawCakeScene(performance.now() / 100, 0);
         }
 
@@ -1528,7 +1529,7 @@
 
             if (closeState.phase === 'closing') {
                 const p = clamp(elapsed / CLOSE_DURATION, 0, 1);
-                closeState.progress = easeOutCubic(p);
+                closeState.progress = easeInOutCubic(p);
                 if (p >= 1) {
                     closeState.progress = 1;
                     closeState.phase = 'closed';
@@ -1551,7 +1552,6 @@
                     closeState.phase = 'idle';
                     closeState.isClosed = false;
                     closeState.isOpening = false;
-                    // 睁眼完成！吹灭蜡烛！
                     if (!blowCandlesDone) {
                         blowCandlesDone = true;
                         flamesVisible = false;
@@ -1579,7 +1579,6 @@
             if (!startTime) startTime = timestamp;
             const elapsed = timestamp - startTime;
 
-            // 初始睁眼（使用 clip 方式）
             const eyeRaw = Math.min(elapsed / CONFIG.eyeDuration, 1);
             const eyeProgress = easeOutCubic(eyeRaw);
 
@@ -1613,10 +1612,10 @@
             if (!initialDone) {
                 drawCakeWithClip(eyeProgress);
             } else {
-                // ★ 主场景：绘制蛋糕 + 闭眼遮罩 + 粒子 + 烟雾
+                // 绘制蛋糕
                 drawCakeToMain();
 
-                // ★ 闭眼遮罩：无论 progress 是否为0都调用，保证一致性
+                // ★ 闭眼遮罩：基于蛋糕实际显示区域
                 drawEyeCloseMask(closeState.progress);
 
                 if (smokeActive) drawSmoke();
@@ -1642,6 +1641,10 @@
                 drawCakeScene(timestamp / 100, closeState.progress);
             }
 
+            if (initialDone && closeState.phase === 'idle') {
+                infoEl.classList.add('show');
+            }
+
             animId = requestAnimationFrame(render);
         }
 
@@ -1650,7 +1653,6 @@
         // ================================================================
 
         canvas.addEventListener('click', function (e) {
-            // 只有在 idle 状态且不是 stable（祝福展示中）才能触发
             if (closeState.phase === 'idle' && particleState !== 'stable' && particleState !== 'flying') {
                 startCloseEye();
             }
@@ -1658,6 +1660,7 @@
 
         function init() {
             resize();
+            updateCakeDrawInfo();
             closeState.progress = 0;
             closeState.phase = 'idle';
             closeState.startTime = 0;
@@ -1678,6 +1681,7 @@
 
             window.addEventListener('resize', () => {
                 resize();
+                updateCakeDrawInfo();
                 drawCakeScene(performance.now() / 100, closeState.progress);
                 if (particlesReady) initParticles();
                 if (animId) cancelAnimationFrame(animId);
@@ -1690,8 +1694,9 @@
         if (document.readyState === 'complete') init();
         else window.addEventListener('load', init);
 
-        console.log('🎂 修复完成：闭眼逻辑统一，已移除重开机制，每次点击效果一致 ✨');
-        console.log('🕯️ 点击画面许愿 → 闭眼 → 默念心愿 → 睁眼 → 吹灭蜡烛 → 祝福化光！');
+        console.log('🎂 修复完成：闭眼遮罩基于蛋糕实际显示区域，适配任意屏幕 ✨');
+        console.log('🕯️ 点击画面许愿 → 平滑闭眼 → 默念心愿 → 平滑睁眼 → 祝福化光！');
+        console.log('📐 蛋糕绘制区域:', cakeDrawInfo);
     </script>
 </body>
 
