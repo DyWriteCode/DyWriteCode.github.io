@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitHub 远程文件管理 · 最终修复版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260825054437">
     </script>
     <style>
         /* ===== 样式与之前完全一致（为节省篇幅，此处省略，实际使用请保留完整样式） ===== */
@@ -1301,13 +1301,13 @@
 
     <!-- ===== 右键菜单 ===== -->
     <div id="contextMenu">
-        <button class="menu-item" data-action="newFile"><span class="menu-icon">📄</span> 新建文件</button>
-        <button class="menu-item" data-action="newFolder"><span class="menu-icon">📁</span> 新建文件夹</button>
+        <button class="menu-item" data-action="newFile?v=20260825054437"><span class="menu-icon">📄</span> 新建文件</button>
+        <button class="menu-item" data-action="newFolder?v=20260825054437"><span class="menu-icon">📁</span> 新建文件夹</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="getContent"><span class="menu-icon">📖</span> 获取内容</button>
+        <button class="menu-item" data-action="getContent?v=20260825054437"><span class="menu-icon">📖</span> 获取内容</button>
         <div class="menu-divider"></div>
-        <button class="menu-item danger" data-action="deleteFile"><span class="menu-icon">🗑️</span> 删除文件</button>
-        <button class="menu-item danger" data-action="deleteFolder"><span class="menu-icon">🗑️</span> 删除文件夹</button>
+        <button class="menu-item danger" data-action="deleteFile?v=20260825054437"><span class="menu-icon">🗑️</span> 删除文件</button>
+        <button class="menu-item danger" data-action="deleteFolder?v=20260825054437"><span class="menu-icon">🗑️</span> 删除文件夹</button>
     </div>
 
     <!-- ===== 主应用 ===== -->
