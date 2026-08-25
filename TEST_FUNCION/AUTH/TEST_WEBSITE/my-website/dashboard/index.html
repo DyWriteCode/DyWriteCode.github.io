@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>数据看板</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background: #eef2f5;
+            color: #333;
+        }
+
+        nav {
+            background: #2d3748;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #cbd5e0;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+    </style>
+    <script>
+        window.__PAGE_AUTH_CONFIG__ = {
+            groups: [{ id: 'dashboard', name: '数据看板', match: /^\/dashboard/, password: 'dash2024' }],
+            ui: { title: '📊 看板数据验证', subtitle: '请输入看板专属密码' }
+        };
+    </script>
+    <script src="../js/page-auth.js"></script>
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">返回前台</a>
+        <a href="index.html">看板首页</a>
+    </nav>
+    <div class="container">
+        <h1>📈 数据看板</h1>
+        <p>这是 dashboard 组的页面，密码是 <code>dash2024</code>。</p>
+        <p>它与 admin 组的密码是相互独立的。</p>
+    </div>
+</body>
+
+</html>

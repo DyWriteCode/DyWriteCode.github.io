@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>系统设置</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background: #f7fafc;
+            color: #333;
+        }
+
+        nav {
+            background: #4a5568;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+    </style>
+    <script>
+        window.__PAGE_AUTH_CONFIG__ = {
+            groups: [{ id: 'settings', name: '系统设置', match: '/settings', password: 'set@2024' }],
+            ui: { title: '🔧 设置中心验证', subtitle: '修改系统设置需要高级权限' }
+        };
+    </script>
+    <script src="../js/page-auth.js"></script>
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">返回前台</a>
+        <a href="index.html">设置首页</a>
+    </nav>
+    <div class="container">
+        <h1>🛠️ 系统设置</h1>
+        <p>这是 settings 组的页面，密码是 <code>set@2024</code>。</p>
+        <p>验证通过后，状态会保存在浏览器的 localStorage 中。</p>
+    </div>
+</body>
+
+</html>

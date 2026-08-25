@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>猴子补丁示例</title>
+</head>
+
+<body>
+    <button onclick="testAPI()">Test API</button>
+    <button onclick="patchApi()">Patch API</button>
+    <button onclick="listPatch()">List Patches</button>
+    <button onclick="restoreMethod()">Restore All</button>
+
+    <!-- 引入脚本（确保路径正确） -->
+    <script src="./DIST/monkey-patch.js"></script>
+    <script>
+        // 模拟第三方 API
+        window.ThirdAPI = {
+            send: function (data) {
+                console.log('原始 send:', data);
+                return { status: 'ok', data };
+            }
+        };
+
+        // 列出当前补丁
+        function listPatch() {
+            console.log(getPatches());
+        }
+
+        // 恢复所有补丁
+        function restoreMethod() {
+            restoreAll();
+            console.log('已恢复所有补丁');
+            console.log(getPatches());
+        }
+
+        // 应用补丁：替换 send 方法（使用对象引用）
+        function patchApi() {
+            patchMethod(ThirdAPI, 'send', function (original, data) {
+                console.log('补丁拦截:', data);
+                return original({ ...data, extra: 'patched' });
+            });
+            // 或者使用字符串路径：patchMethod('ThirdAPI', 'send', ...);
+        }
+
+        // 测试函数
+        function testAPI() {
+            const result = ThirdAPI.send({ user: 'alice' });
+            console.log('结果:', result);
+        }
+
+        // 可选：页面加载后自动应用补丁
+        // window.onload = patchApi;
+    </script>
+</body>
+
+</html>

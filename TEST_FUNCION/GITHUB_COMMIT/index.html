@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GitHub 远程文件管理 · 增强版</title>
+    <title>GitHub 远程文件管理 · 最终修复版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js">
     </script>
     <style>
-        /* ===== 基础样式（继承原版） ===== */
+        /* ===== 样式与之前完全一致（为节省篇幅，此处省略，实际使用请保留完整样式） ===== */
         :root {
             --primary: #2b6cb0;
             --primary-dark: #1a4f7a;
@@ -1260,7 +1260,7 @@
             }
         }
 
-        /* ===== 加载指示器 ===== */
+        /* ===== 加载遮罩 ===== */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -1315,7 +1315,7 @@
         <header class="header">
             <div class="header-icon">📂</div>
             <h1>GitHub 文件管理</h1>
-            <span class="sub">REST API v3 · 增强版</span>
+            <span class="sub">REST API v3 · 最终修复版</span>
         </header>
 
         <form id="githubForm" autocomplete="off">
@@ -1530,29 +1530,28 @@
             'use strict';
 
             // ======================================================================
-            //  密文（由 AES 加密解密器生成，固定 IV + CBC 模式，10 轮加密）
+            //  密文（固定 IV + CBC 模式，10 轮加密）
             // ======================================================================
-            const CIPHER_TEXT =
-                "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";
+            var CIPHER_TEXT =
+                "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";
 
-            const FIXED_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef');
+            var FIXED_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef');
 
-            // ===== AES 解密 =====
             function multiDecrypt(ciphertext, password, times) {
-                let data = ciphertext.trim();
+                var data = ciphertext.trim();
                 if (!data) throw new Error('密文为空');
-                for (let i = 0; i < times; i++) {
+                for (var i = 0; i < times; i++) {
                     try {
-                        const decrypted = CryptoJS.AES.decrypt(data, password, {
+                        var decrypted = CryptoJS.AES.decrypt(data, password, {
                             iv: FIXED_IV,
                             mode: CryptoJS.mode.CBC,
                             padding: CryptoJS.pad.Pkcs7
                         });
                         if (decrypted.sigBytes === 0) throw new Error('第 ' + (i + 1) + ' 次解密结果为空');
                         if (i === times - 1) {
-                            const result = decrypted.toString(CryptoJS.enc.Utf8);
+                            var result = decrypted.toString(CryptoJS.enc.Utf8);
                             if (result === '') {
-                                const latin = decrypted.toString(CryptoJS.enc.Latin1);
+                                var latin = decrypted.toString(CryptoJS.enc.Latin1);
                                 if (latin) throw new Error('最终明文 UTF-8 解码为空，Latin1 解码为: ' + latin);
                                 throw new Error('最终明文无法解码（sigBytes=' + decrypted.sigBytes + '）');
                             }
@@ -1568,98 +1567,102 @@
             }
 
             // ===== DOM 引用 =====
-            const $ = id => document.getElementById(id);
-            const form = $('githubForm');
-            const tokenInput = $('token');
-            const ownerInput = $('owner');
-            const repoInput = $('repo');
-            const repoDatalist = $('repoDatalist');
-            const repoClearBtn = $('repoClearBtn');
-            const pathInput = $('path');
-            const messageInput = $('message');
-            const contentInput = $('content');
-            const shaInput = $('sha');
-            const branchInput = $('branch');
-            const branchSelect = $('branchSelect');
-            const btnSelectFile = $('btnSelectFile');
-            const selectedFileName = $('selectedFileName');
+            function $(id) { return document.getElementById(id); }
+            var form = $('githubForm');
+            var tokenInput = $('token');
+            var ownerInput = $('owner');
+            var repoInput = $('repo');
+            var repoDatalist = $('repoDatalist');
+            var repoClearBtn = $('repoClearBtn');
+            var pathInput = $('path');
+            var messageInput = $('message');
+            var contentInput = $('content');
+            var shaInput = $('sha');
+            var branchInput = $('branch');
+            var branchSelect = $('branchSelect');
+            var btnSelectFile = $('btnSelectFile');
+            var selectedFileName = $('selectedFileName');
 
-            const btnVerifyToken = $('btnVerifyToken');
-            const btnLoadRepo = $('btnLoadRepo');
-            const btnSubmit = $('btnSubmit');
-            const btnClear = $('btnClear');
-            const btnAutoDetect = $('btnAutoDetect');
-            const btnToggleTree = $('btnToggleTree');
-            const btnCollapseAll = $('btnCollapseAll');
-            const btnRefreshTree = $('btnRefreshTree');
+            var btnVerifyToken = $('btnVerifyToken');
+            var btnLoadRepo = $('btnLoadRepo');
+            var btnSubmit = $('btnSubmit');
+            var btnClear = $('btnClear');
+            var btnAutoDetect = $('btnAutoDetect');
+            var btnToggleTree = $('btnToggleTree');
+            var btnCollapseAll = $('btnCollapseAll');
+            var btnRefreshTree = $('btnRefreshTree');
 
-            const tokenStatus = $('tokenStatus');
-            const tokenStatusSpinner = $('tokenStatusSpinner');
-            const tokenStatusText = $('tokenStatusText');
+            var tokenStatus = $('tokenStatus');
+            var tokenStatusSpinner = $('tokenStatusSpinner');
+            var tokenStatusText = $('tokenStatusText');
 
-            const repoStatus = $('repoStatus');
-            const repoStatusSpinner = $('repoStatusSpinner');
-            const repoStatusText = $('repoStatusText');
+            var repoStatus = $('repoStatus');
+            var repoStatusSpinner = $('repoStatusSpinner');
+            var repoStatusText = $('repoStatusText');
 
-            const repoDesc = $('repoDesc');
+            var repoDesc = $('repoDesc');
 
-            const treeBrowser = $('treeBrowser');
-            const treeContent = $('treeContent');
-            const treeSearch = $('treeSearch');
-            const treeStats = $('treeStats');
+            var treeBrowser = $('treeBrowser');
+            var treeContent = $('treeContent');
+            var treeSearch = $('treeSearch');
+            var treeStats = $('treeStats');
 
-            const breadcrumb = $('breadcrumb');
-            const fileStatusBar = $('fileStatusBar');
-            const fileStatusIcon = $('fileStatusIcon');
-            const fileStatusText = $('fileStatusText');
+            var breadcrumb = $('breadcrumb');
+            var fileStatusBar = $('fileStatusBar');
+            var fileStatusIcon = $('fileStatusIcon');
+            var fileStatusText = $('fileStatusText');
 
-            const resultArea = $('resultArea');
-            const resultIcon = $('resultIcon');
-            const resultTitle = $('resultTitle');
-            const resultBody = $('resultBody');
+            var resultArea = $('resultArea');
+            var resultIcon = $('resultIcon');
+            var resultTitle = $('resultTitle');
+            var resultBody = $('resultBody');
 
-            const contextMenu = $('contextMenu');
-            const loadingOverlay = $('loadingOverlay');
+            var contextMenu = $('contextMenu');
+            var loadingOverlay = $('loadingOverlay');
 
-            const pwdToggleHeader = $('pwdToggleHeader');
-            const pwdToggleIcon = $('pwdToggleIcon');
-            const pwdBody = $('pwdBody');
-            const pwdInput = $('pwdInput');
-            const pwdEyeBtn = $('pwdEyeBtn');
-            const btnPwdGetToken = $('btnPwdGetToken');
-            const btnPwdClear = $('btnPwdClear');
-            const pwdStatus = $('pwdStatus');
-            const pwdSpinner = $('pwdSpinner');
-            const pwdStatusText = $('pwdStatusText');
+            var pwdToggleHeader = $('pwdToggleHeader');
+            var pwdToggleIcon = $('pwdToggleIcon');
+            var pwdBody = $('pwdBody');
+            var pwdInput = $('pwdInput');
+            var pwdEyeBtn = $('pwdEyeBtn');
+            var btnPwdGetToken = $('btnPwdGetToken');
+            var btnPwdClear = $('btnPwdClear');
+            var pwdStatus = $('pwdStatus');
+            var pwdSpinner = $('pwdSpinner');
+            var pwdStatusText = $('pwdStatusText');
 
             // ===== 全局状态 =====
-            let repoTree = [];
-            let childrenMap = {};
-            let repoDefaultBranch = '';
-            let treeVisible = false;
-            let fileExistsCache = {};
-            let repoList = [];
-            let currentUser = null;
-            let currentRepoBranches = [];
-            let pwdBodyOpen = false;
-            let contextTargetNode = null; // 右键点击的节点信息
-            let isContextMenuOpen = false;
+            var repoTree = [];
+            var childrenMap = {};
+            var repoDefaultBranch = '';
+            var treeVisible = false;
+            var fileExistsCache = {};
+            var repoList = [];
+            var currentUser = null;
+            var currentRepoBranches = [];
+            var pwdBodyOpen = false;
+            var contextTargetNode = null;
+            var isContextMenuOpen = false;
 
             // ===== 辅助函数 =====
             function getVal(el) { return el.value ? el.value.trim() : ''; }
 
+            function normalizePath(p) {
+                return p.replace(/%2F/gi, '/');
+            }
+
             function utf8ToBase64(str) {
-                const encoder = new TextEncoder();
-                const bytes = encoder.encode(str);
-                let binary = '';
-                for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                var encoder = new TextEncoder();
+                var bytes = encoder.encode(str);
+                var binary = '';
+                for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
                 return btoa(binary);
             }
 
             function base64ToUtf8(base64) {
-                const binary = atob(base64);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                var binary = atob(base64);
+                var bytes = new Uint8Array(binary.length);
+                for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                 return new TextDecoder('utf-8').decode(bytes);
             }
 
@@ -1683,8 +1686,8 @@
 
             function getFileIcon(name, type) {
                 if (type === 'tree') return '📁';
-                const ext = name.split('.').pop().toLowerCase();
-                const icons = {
+                var ext = name.split('.').pop().toLowerCase();
+                var icons = {
                     js: '🟨',
                     ts: '🔷',
                     jsx: '⚛️',
@@ -1727,7 +1730,7 @@
 
             function highlightText(text, filter) {
                 if (!filter) return escapeHtml(text);
-                const idx = text.toLowerCase().indexOf(filter.toLowerCase());
+                var idx = text.toLowerCase().indexOf(filter.toLowerCase());
                 if (idx === -1) return escapeHtml(text);
                 return escapeHtml(text.substring(0, idx)) +
                     '<span class="highlight">' + escapeHtml(text.substring(idx, idx + filter.length)) + '</span>' +
@@ -1770,7 +1773,7 @@
                 tokenStatus.className = 'token-status visible ' + type;
                 tokenStatusSpinner.style.display = type === 'loading' ? 'inline-block' : 'none';
                 if (type === 'success' && userInfo) {
-                    const avatarHtml = userInfo.avatar_url ?
+                    var avatarHtml = userInfo.avatar_url ?
                         '<span class="user-avatar"><img src="' + userInfo.avatar_url + '" alt="avatar" /></span>' :
                         '';
                     tokenStatusText.innerHTML =
@@ -1806,36 +1809,63 @@
 
             function hideFileStatus() { fileStatusBar.classList.remove('visible'); }
 
+            // ---- 自动生成提交信息（强制更新） ----
+            function setCommitMessage(type, path) {
+                var cleanPath = path.replace(/\/$/, '');
+                var parts = cleanPath.split('/');
+                var name = parts.length > 0 ? parts[parts.length - 1] : 'file';
+                var msg = '';
+                switch (type) {
+                    case 'add':
+                        msg = 'add: ' + name;
+                        break;
+                    case 'update':
+                        msg = 'update: ' + name;
+                        break;
+                    case 'delete':
+                        msg = 'del: ' + name;
+                        break;
+                    case 'deleteFolder':
+                        msg = 'del: ' + name + '/';
+                        break;
+                    default:
+                        msg = 'update: ' + name;
+                }
+                messageInput.value = msg;
+                messageInput.dispatchEvent(new Event('input'));
+            }
+
             // ===== 目录树构建 =====
             function buildTree(flatTree) {
                 childrenMap = {};
-                flatTree.sort((a, b) => {
-                    const aIsDir = a.type === 'tree' ? 0 : 1;
-                    const bIsDir = b.type === 'tree' ? 0 : 1;
+                flatTree.sort(function (a, b) {
+                    var aIsDir = a.type === 'tree' ? 0 : 1;
+                    var bIsDir = b.type === 'tree' ? 0 : 1;
                     if (aIsDir !== bIsDir) return aIsDir - bIsDir;
                     return a.path.localeCompare(b.path);
                 });
-                for (const node of flatTree) {
-                    const parts = node.path.split('/');
-                    const parentPath = parts.slice(0, -1).join('/');
+                for (var i = 0; i < flatTree.length; i++) {
+                    var node = flatTree[i];
+                    var parts = node.path.split('/');
+                    var parentPath = parts.slice(0, -1).join('/');
                     if (!childrenMap[parentPath]) childrenMap[parentPath] = [];
                     childrenMap[parentPath].push(node);
                 }
             }
 
             function renderTree(filter) {
-                const f = (filter || '').toLowerCase().trim();
+                var f = (filter || '').toLowerCase().trim();
                 treeContent.innerHTML = '';
-                let filteredPaths = repoTree;
+                var filteredPaths = repoTree;
                 if (f) {
-                    filteredPaths = repoTree.filter(n => n.path.toLowerCase().includes(f));
+                    filteredPaths = repoTree.filter(function (n) { return n.path.toLowerCase().includes(f); });
                 }
                 if (filteredPaths.length === 0) {
                     treeContent.innerHTML = '<div class="tree-empty">' + (f ? '没有匹配的文件' : '仓库为空') + '</div>';
                     treeStats.textContent = '0 项';
                     return;
                 }
-                const rootChildren = childrenMap[''] || [];
+                var rootChildren = childrenMap[''] || [];
                 if (rootChildren.length === 0 && !f) {
                     treeContent.innerHTML = '<div class="tree-empty">仓库为空</div>';
                     treeStats.textContent = '0 项';
@@ -1844,161 +1874,165 @@
                 if (f) {
                     renderFlatList(filteredPaths, f);
                 } else {
-                    const fragment = document.createDocumentFragment();
-                    for (const child of rootChildren) {
-                        fragment.appendChild(createTreeNode(child, 0));
+                    var fragment = document.createDocumentFragment();
+                    for (var i = 0; i < rootChildren.length; i++) {
+                        fragment.appendChild(createTreeNode(rootChildren[i], 0));
                     }
                     treeContent.appendChild(fragment);
                 }
-                const dirCount = repoTree.filter(n => n.type === 'tree').length;
-                const fileCount = repoTree.filter(n => n.type === 'blob').length;
+                var dirCount = repoTree.filter(function (n) { return n.type === 'tree'; }).length;
+                var fileCount = repoTree.filter(function (n) { return n.type === 'blob'; }).length;
                 treeStats.textContent = dirCount + ' 目录, ' + fileCount + ' 文件';
             }
 
             function renderFlatList(nodes, filter) {
-                const fragment = document.createDocumentFragment();
-                for (const node of nodes) {
-                    const row = document.createElement('div');
+                var fragment = document.createDocumentFragment();
+                for (var i = 0; i < nodes.length; i++) {
+                    var node = nodes[i];
+                    var row = document.createElement('div');
                     row.className = 'tree-node-row';
                     row.style.paddingLeft = '14px';
-                    const icon = getFileIcon(node.path.split('/').pop(), node.type);
+                    var icon = getFileIcon(node.path.split('/').pop(), node.type);
                     row.innerHTML =
                         '<span class="node-icon">' + icon + '</span>' +
                         '<span class="node-name">' + highlightText(node.path, filter) + '</span>';
-                    row.addEventListener('click', function () {
-                        handleNodeClick(node);
-                    });
-                    row.addEventListener('contextmenu', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showContextMenu(e.clientX, e.clientY, node);
-                    });
+                    row.addEventListener('click', function (n) {
+                        return function () { handleNodeClick(n); };
+                    }(node));
+                    row.addEventListener('contextmenu', function (n) {
+                        return function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showContextMenu(e.clientX, e.clientY, n);
+                        };
+                    }(node));
                     fragment.appendChild(row);
                 }
                 treeContent.appendChild(fragment);
             }
 
             function createTreeNode(node, depth) {
-                const container = document.createElement('div');
+                var container = document.createElement('div');
                 container.className = 'tree-node';
-                const name = node.path.split('/').pop();
-                const isDir = node.type === 'tree';
-                const hasChildren = childrenMap[node.path] && childrenMap[node.path].length > 0;
-                const icon = getFileIcon(name, node.type);
-                const row = document.createElement('div');
+                var name = node.path.split('/').pop();
+                var isDir = node.type === 'tree';
+                var hasChildren = childrenMap[node.path] && childrenMap[node.path].length > 0;
+                var icon = getFileIcon(name, node.type);
+                var row = document.createElement('div');
                 row.className = 'tree-node-row';
                 row.style.paddingLeft = (14 + depth * 20) + 'px';
                 row.dataset.path = node.path;
                 row.dataset.type = node.type;
-                let toggleClass = 'toggle';
+                var toggleClass = 'toggle';
                 if (!isDir) toggleClass += ' hidden';
                 row.innerHTML =
                     '<span class="' + toggleClass + '">▶</span>' +
                     '<span class="node-icon">' + icon + '</span>' +
                     '<span class="node-name">' + escapeHtml(name) + '</span>' +
                     (isDir && hasChildren ? '<span class="node-meta">' + childrenMap[node.path].length + '</span>' : '');
-                const childContainer = document.createElement('div');
+                var childContainer = document.createElement('div');
                 childContainer.className = 'tree-children';
                 if (isDir && hasChildren) {
-                    for (const child of childrenMap[node.path]) {
-                        childContainer.appendChild(createTreeNode(child, depth + 1));
+                    var children = childrenMap[node.path];
+                    for (var i = 0; i < children.length; i++) {
+                        childContainer.appendChild(createTreeNode(children[i], depth + 1));
                     }
                 }
-                row.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    if (isDir) {
-                        const toggle = row.querySelector('.toggle');
-                        const isExpanded = childContainer.classList.contains('expanded');
-                        if (isExpanded) {
-                            childContainer.classList.remove('expanded');
-                            toggle.classList.remove('expanded');
+                row.addEventListener('click', function (n) {
+                    return function (e) {
+                        e.stopPropagation();
+                        if (isDir) {
+                            var toggle = row.querySelector('.toggle');
+                            var isExpanded = childContainer.classList.contains('expanded');
+                            if (isExpanded) {
+                                childContainer.classList.remove('expanded');
+                                toggle.classList.remove('expanded');
+                            } else {
+                                childContainer.classList.add('expanded');
+                                toggle.classList.add('expanded');
+                            }
+                            pathInput.value = normalizePath(n.path + '/');
+                            updateBreadcrumb(pathInput.value);
+                            hideFileStatus();
+                            shaInput.value = '';
+                            contentInput.value = '';
+                            clearSelected();
+                            row.classList.add('selected');
+                            setCommitMessage('add', pathInput.value);
                         } else {
-                            childContainer.classList.add('expanded');
-                            toggle.classList.add('expanded');
+                            handleNodeClick(n);
                         }
-                        // 点击目录：填入路径（带/）
-                        pathInput.value = node.path + '/';
-                        updateBreadcrumb(pathInput.value);
-                        hideFileStatus();
-                        shaInput.value = '';
-                        // 高亮
-                        clearSelected();
-                        row.classList.add('selected');
-                    } else {
-                        // 点击文件：获取内容
-                        handleNodeClick(node);
-                    }
-                });
-                row.addEventListener('contextmenu', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showContextMenu(e.clientX, e.clientY, node);
-                });
+                    };
+                }(node));
+                row.addEventListener('contextmenu', function (n) {
+                    return function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showContextMenu(e.clientX, e.clientY, n);
+                    };
+                }(node));
                 container.appendChild(row);
                 container.appendChild(childContainer);
                 return container;
             }
 
             function clearSelected() {
-                treeContent.querySelectorAll('.tree-node-row.selected').forEach(el => el.classList.remove('selected'));
+                var rows = treeContent.querySelectorAll('.tree-node-row.selected');
+                for (var i = 0; i < rows.length; i++) rows[i].classList.remove('selected');
             }
 
             // ===== 处理节点点击（文件 → 获取内容） =====
             async function handleNodeClick(node) {
+                var cleanPath = normalizePath(node.path);
                 if (node.type === 'tree') {
-                    // 目录：填入路径（带/）
-                    pathInput.value = node.path + '/';
+                    pathInput.value = cleanPath + '/';
                     updateBreadcrumb(pathInput.value);
                     hideFileStatus();
                     shaInput.value = '';
+                    contentInput.value = '';
                     clearSelected();
-                    const rows = treeContent.querySelectorAll('.tree-node-row');
-                    rows.forEach(r => {
-                        if (r.dataset.path === node.path) r.classList.add('selected');
-                    });
+                    var rows = treeContent.querySelectorAll('.tree-node-row');
+                    for (var i = 0; i < rows.length; i++) {
+                        if (rows[i].dataset.path === node.path) rows[i].classList.add('selected');
+                    }
+                    setCommitMessage('add', pathInput.value);
                     return;
                 }
-                // 文件：获取内容
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
-                const branch = getVal(branchSelect) || repoDefaultBranch;
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect) || repoDefaultBranch;
                 if (!token || !owner || !repo || !branch) {
                     showResult('error', '信息不完整', '请先验证 Token 并加载仓库。', true);
                     return;
                 }
-                pathInput.value = node.path;
-                updateBreadcrumb(node.path);
+                pathInput.value = cleanPath;
+                updateBreadcrumb(cleanPath);
                 clearSelected();
-                const rows = treeContent.querySelectorAll('.tree-node-row');
-                rows.forEach(r => {
-                    if (r.dataset.path === node.path) r.classList.add('selected');
-                });
+                var rows2 = treeContent.querySelectorAll('.tree-node-row');
+                for (var j = 0; j < rows2.length; j++) {
+                    if (rows2[j].dataset.path === node.path) rows2[j].classList.add('selected');
+                }
                 showFileStatus('checking', '⏳', '正在获取文件内容…');
                 try {
-                    const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' +
-                        encodeURIComponent(node.path) + '?ref=' + encodeURIComponent(branch);
-                    const resp = await fetch(url, { headers: apiHeaders() });
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(cleanPath) +
+                        '?ref=' + encodeURIComponent(branch);
+                    var resp = await fetch(url, { headers: apiHeaders() });
                     if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
+                        var err = await resp.json().catch(function () { return {}; });
                         showFileStatus('error', '❌', '获取失败: ' + (err.message || 'HTTP ' + resp.status));
                         return;
                     }
-                    const data = await resp.json();
+                    var data = await resp.json();
                     if (data.encoding === 'base64' && data.content) {
-                        const decoded = base64ToUtf8(data.content);
+                        var decoded = base64ToUtf8(data.content);
                         contentInput.value = decoded;
                         shaInput.value = data.sha || '';
-                        fileExistsCache[node.path] = { exists: true, sha: data.sha, size: data.size };
+                        fileExistsCache[cleanPath] = { exists: true, sha: data.sha, size: data.size };
                         showFileStatus('update', '✅', '已加载文件内容 · SHA: <code>' + (data.sha ? data.sha.substring(0,
                             10) + '…' : '') + '</code> · 大小: ' + formatSize(data.size));
-                        // 自动填充提交信息
-                        if (!getVal(messageInput)) {
-                            messageInput.value = 'update: 更新 ' + node.path;
-                        }
-                        // 触发内容变化事件
+                        setCommitMessage('update', cleanPath);
                         contentInput.dispatchEvent(new Event('input'));
-                        // 滚动到编辑区
                         contentInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
                         showFileStatus('error', '❌', '文件内容格式不支持（仅支持文本文件）');
@@ -2012,87 +2046,96 @@
             function updateBreadcrumb(path) {
                 breadcrumb.innerHTML = '';
                 if (!path) return;
-                const parts = path.split('/').filter(Boolean);
-                let accumulated = '';
-                const rootCrumb = document.createElement('span');
+                var parts = path.split('/').filter(Boolean);
+                var accumulated = '';
+                var rootCrumb = document.createElement('span');
                 rootCrumb.className = 'crumb';
                 rootCrumb.textContent = '📁 ' + (getVal(repoInput) || 'repo');
                 rootCrumb.addEventListener('click', function () {
                     pathInput.value = '';
                     updateBreadcrumb('');
                     hideFileStatus();
+                    contentInput.value = '';
                 });
                 breadcrumb.appendChild(rootCrumb);
-                for (let i = 0; i < parts.length; i++) {
-                    const sep = document.createElement('span');
+                for (var i = 0; i < parts.length; i++) {
+                    var sep = document.createElement('span');
                     sep.className = 'sep';
                     sep.textContent = '›';
                     breadcrumb.appendChild(sep);
                     accumulated += (accumulated ? '/' : '') + parts[i];
-                    const crumb = document.createElement('span');
-                    const isLast = (i === parts.length - 1);
+                    var crumb = document.createElement('span');
+                    var isLast = (i === parts.length - 1);
                     if (isLast && !path.endsWith('/')) {
                         crumb.className = 'crumb current';
                     } else {
                         crumb.className = 'crumb';
-                        const targetPath = accumulated + (isLast && path.endsWith('/') ? '/' : '');
-                        crumb.addEventListener('click', function () {
-                            if (isLast && path.endsWith('/')) {
-                                pathInput.value = accumulated + '/';
-                            } else {
-                                pathInput.value = accumulated;
-                            }
-                            updateBreadcrumb(pathInput.value);
-                            autoDetectFile(pathInput.value);
-                        });
+                        var targetPath = accumulated + (isLast && path.endsWith('/') ? '/' : '');
+                        crumb.addEventListener('click', function (tp) {
+                            return function () {
+                                if (isLast && path.endsWith('/')) {
+                                    pathInput.value = accumulated + '/';
+                                } else {
+                                    pathInput.value = tp;
+                                }
+                                updateBreadcrumb(pathInput.value);
+                                autoDetectFile(pathInput.value);
+                            };
+                        }(targetPath));
                     }
                     crumb.textContent = parts[i];
                     breadcrumb.appendChild(crumb);
                 }
             }
 
-            // ===== 自动检测文件 =====
+            // ===== 自动检测文件（并填充 commit 消息） =====
             async function autoDetectFile(path) {
+                path = normalizePath(path);
                 if (!path || path.endsWith('/')) {
                     hideFileStatus();
                     shaInput.value = '';
+                    setCommitMessage('add', path || 'file');
                     return;
                 }
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
                 if (!token || !owner || !repo) return;
-                const branch = getVal(branchSelect) || repoDefaultBranch;
+                var branch = getVal(branchSelect) || repoDefaultBranch;
                 if (!branch) return;
                 if (fileExistsCache[path] !== undefined) {
-                    const cached = fileExistsCache[path];
+                    var cached = fileExistsCache[path];
                     if (cached.exists) {
                         showFileStatus('update', '🔄',
                             '文件已存在 · SHA: <code>' + cached.sha.substring(0, 10) + '…</code> · 大小: ' + formatSize(
                                 cached.size) + ' · 将执行 <strong>更新</strong> 操作');
                         shaInput.value = cached.sha;
+                        setCommitMessage('update', path);
                     } else {
                         showFileStatus('create', '✨', '文件不存在 · 将执行 <strong>创建</strong> 新文件操作');
                         shaInput.value = '';
+                        setCommitMessage('add', path);
                     }
                     return;
                 }
                 showFileStatus('checking', '⏳', '正在检测文件状态…');
                 try {
-                    const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURIComponent(
-                        path) + '?ref=' + encodeURIComponent(branch);
-                    const resp = await fetch(url, { headers: apiHeaders() });
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path) +
+                        '?ref=' + encodeURIComponent(branch);
+                    var resp = await fetch(url, { headers: apiHeaders() });
                     if (resp.ok) {
-                        const data = await resp.json();
+                        var data = await resp.json();
                         fileExistsCache[path] = { exists: true, sha: data.sha, size: data.size };
                         showFileStatus('update', '🔄',
                             '文件已存在 · SHA: <code>' + data.sha.substring(0, 10) + '…</code> · 大小: ' + formatSize(
                                 data.size) + ' · 将执行 <strong>更新</strong> 操作');
                         shaInput.value = data.sha;
+                        setCommitMessage('update', path);
                     } else if (resp.status === 404) {
                         fileExistsCache[path] = { exists: false, sha: '', size: 0 };
                         showFileStatus('create', '✨', '文件不存在 · 将执行 <strong>创建</strong> 新文件操作');
                         shaInput.value = '';
+                        setCommitMessage('add', path);
                     } else {
                         hideFileStatus();
                     }
@@ -2104,12 +2147,12 @@
             // ===== 右键菜单 =====
             function showContextMenu(x, y, node) {
                 contextTargetNode = node;
-                const isDir = node.type === 'tree';
-                const isRoot = node.path === '';
-                // 显示/隐藏菜单项
-                const items = contextMenu.querySelectorAll('.menu-item');
-                items.forEach(item => {
-                    const action = item.dataset.action;
+                var isDir = node.type === 'tree';
+                var isRoot = node.path === '';
+                var items = contextMenu.querySelectorAll('.menu-item');
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    var action = item.dataset.action;
                     item.style.display = 'flex';
                     if (action === 'newFile' || action === 'newFolder') {
                         item.style.display = isDir ? 'flex' : 'none';
@@ -2120,18 +2163,16 @@
                     } else if (action === 'getContent') {
                         item.style.display = (!isDir) ? 'flex' : 'none';
                     }
-                });
-                // 定位
+                }
                 contextMenu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
                 contextMenu.style.top = Math.min(y, window.innerHeight - 300) + 'px';
                 contextMenu.style.display = 'block';
                 isContextMenuOpen = true;
-                // 高亮对应节点
                 clearSelected();
-                const rows = treeContent.querySelectorAll('.tree-node-row');
-                rows.forEach(r => {
-                    if (r.dataset.path === node.path) r.classList.add('selected');
-                });
+                var rows = treeContent.querySelectorAll('.tree-node-row');
+                for (var j = 0; j < rows.length; j++) {
+                    if (rows[j].dataset.path === node.path) rows[j].classList.add('selected');
+                }
             }
 
             function hideContextMenu() {
@@ -2140,68 +2181,68 @@
                 contextTargetNode = null;
             }
 
-            // ===== 右键菜单操作 =====
-            async function menuNewFile() {
-                if (!contextTargetNode) return;
-                const dirPath = contextTargetNode.path;
-                const fileName = prompt('请输入新文件名：', 'new-file.js');
+            // ===== 右键菜单操作（接收 node 参数） =====
+            async function menuNewFile(node) {
+                if (!node) return;
+                var dirPath = normalizePath(node.path);
+                var fileName = prompt('请输入新文件名：', 'new-file.js');
                 if (!fileName) return;
-                const fullPath = dirPath ? dirPath + '/' + fileName : fileName;
+                var fullPath = dirPath ? dirPath + '/' + fileName : fileName;
+                fullPath = normalizePath(fullPath);
                 pathInput.value = fullPath;
                 updateBreadcrumb(fullPath);
                 contentInput.value = '';
                 shaInput.value = '';
-                messageInput.value = 'feat: 创建 ' + fullPath;
                 hideFileStatus();
+                setCommitMessage('add', fullPath);
                 clearSelected();
-                // 聚焦到内容区
                 contentInput.focus();
                 showResult('info', '📄 新建文件', '已准备创建文件 <strong>' + fullPath + '</strong>，请填写内容后点击「提交文件」。', false);
-                // 刷新目录树（稍后用户提交后会自动刷新）
             }
 
-            async function menuNewFolder() {
-                if (!contextTargetNode) return;
-                const dirPath = contextTargetNode.path;
-                const folderName = prompt('请输入新文件夹名：', 'new-folder');
+            async function menuNewFolder(node) {
+                if (!node) return;
+                var dirPath = normalizePath(node.path);
+                var folderName = prompt('请输入新文件夹名：', 'new-folder');
                 if (!folderName) return;
-                const fullPath = dirPath ? dirPath + '/' + folderName : folderName;
-                // 在文件夹下创建 .gitkeep
-                const keepPath = fullPath + '/.gitkeep';
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
-                const branch = getVal(branchSelect) || repoDefaultBranch;
+                var fullPath = dirPath ? dirPath + '/' + folderName : folderName;
+                fullPath = normalizePath(fullPath);
+                var keepPath = fullPath + '/.gitkeep';
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect) || repoDefaultBranch;
                 if (!token || !owner || !repo || !branch) {
                     showResult('error', '信息不完整', '请先验证 Token 并加载仓库。', true);
                     return;
                 }
                 try {
                     showLoading(true);
-                    const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURIComponent(
-                        keepPath);
-                    const payload = {
-                        message: 'chore: 创建目录 ' + fullPath,
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(keepPath);
+                    var payload = {
+                        message: 'add: ' + folderName + '/',
                         content: utf8ToBase64(''),
                         branch: branch,
                     };
-                    const resp = await fetch(url, {
+                    var resp = await fetch(url, {
                         method: 'PUT',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    const data = await resp.json().catch(() => ({}));
+                    var data = await resp.json().catch(function () { return {}; });
                     if (!resp.ok) {
                         showResult('error', '创建文件夹失败', '<strong>' + (data.message || 'HTTP ' + resp.status) + '</strong>',
                             true);
                         return;
                     }
                     showResult('success', '📁 文件夹已创建', '文件夹 <strong>' + fullPath + '</strong> 已创建（通过 .gitkeep 占位）。', false);
-                    // 刷新目录树
-                    await loadRepo();
-                    // 选中新文件夹
+                    await loadRepo(true);
                     pathInput.value = fullPath + '/';
                     updateBreadcrumb(pathInput.value);
+                    contentInput.value = '';
+                    shaInput.value = '';
+                    hideFileStatus();
+                    setCommitMessage('add', fullPath + '/');
                 } catch (err) {
                     showResult('error', '创建文件夹失败', '⚠️ ' + (err.message || '未知错误'), true);
                 } finally {
@@ -2210,57 +2251,62 @@
                 }
             }
 
-            async function menuDeleteFile() {
-                if (!contextTargetNode) return;
-                const filePath = contextTargetNode.path;
+            // 🛠️ 核心修复：删除文件直接使用 node.sha，不再额外请求
+            async function menuDeleteFile(node) {
+                if (!node) return;
+                var filePath = normalizePath(node.path);
                 if (!confirm('⚠️ 确定要删除文件「' + filePath + '」吗？此操作不可撤销！')) return;
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
-                const branch = getVal(branchSelect) || repoDefaultBranch;
-                // 获取 SHA
-                let sha = '';
-                try {
-                    const checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' +
-                        encodeURIComponent(filePath) + '?ref=' + encodeURIComponent(branch);
-                    const checkResp = await fetch(checkUrl, { headers: apiHeaders() });
-                    if (!checkResp.ok) throw new Error('无法获取文件信息');
-                    const checkData = await checkResp.json();
-                    sha = checkData.sha;
-                } catch (err) {
-                    showResult('error', '删除失败', '⚠️ 无法获取文件 SHA: ' + (err.message || '未知错误'), true);
-                    return;
+
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect) || repoDefaultBranch;
+
+                // 优先使用节点自带的 sha
+                var sha = node.sha;
+                if (!sha) {
+                    // 若节点无 sha（极少数情况），尝试从缓存或网络获取
+                    try {
+                        var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
+                            filePath) + '?ref=' + encodeURIComponent(branch);
+                        var checkResp = await fetch(checkUrl, { headers: apiHeaders() });
+                        if (!checkResp.ok) throw new Error('HTTP ' + checkResp.status);
+                        var checkData = await checkResp.json();
+                        sha = checkData.sha;
+                    } catch (err) {
+                        showResult('error', '删除失败', '⚠️ 无法获取文件 SHA: ' + (err.message || '未知错误'), true);
+                        return;
+                    }
                 }
+
                 try {
                     showLoading(true);
-                    const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURIComponent(
-                        filePath);
-                    const payload = {
-                        message: 'delete: 删除 ' + filePath,
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(filePath);
+                    var payload = {
+                        message: 'del: ' + filePath.split('/').pop(),
                         sha: sha,
                         branch: branch,
                     };
-                    const resp = await fetch(url, {
+                    var resp = await fetch(url, {
                         method: 'DELETE',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    const data = await resp.json().catch(() => ({}));
+                    var data = await resp.json().catch(function () { return {}; });
                     if (!resp.ok) {
                         showResult('error', '删除失败', '<strong>' + (data.message || 'HTTP ' + resp.status) + '</strong>',
                             true);
                         return;
                     }
                     showResult('success', '🗑️ 文件已删除', '文件 <strong>' + filePath + '</strong> 已成功删除。', false);
-                    // 清空相关缓存
                     delete fileExistsCache[filePath];
                     if (getVal(pathInput) === filePath) {
                         pathInput.value = '';
                         shaInput.value = '';
+                        contentInput.value = '';
                         hideFileStatus();
                     }
-                    // 刷新目录树
-                    await loadRepo();
+                    await loadRepo(true);
                 } catch (err) {
                     showResult('error', '删除失败', '⚠️ ' + (err.message || '未知错误'), true);
                 } finally {
@@ -2269,41 +2315,40 @@
                 }
             }
 
-            async function menuDeleteFolder() {
-                if (!contextTargetNode) return;
-                const folderPath = contextTargetNode.path;
+            async function menuDeleteFolder(node) {
+                if (!node) return;
+                var folderPath = normalizePath(node.path);
                 if (!confirm('⚠️ 确定要删除文件夹「' + folderPath + '」及其所有内容吗？此操作不可撤销！')) return;
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
-                const branch = getVal(branchSelect) || repoDefaultBranch;
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect) || repoDefaultBranch;
                 if (!token || !owner || !repo || !branch) {
                     showResult('error', '信息不完整', '请先验证 Token 并加载仓库。', true);
                     return;
                 }
                 try {
                     showLoading(true);
-                    // 获取该文件夹下的所有文件
-                    const allFiles = repoTree.filter(n =>
-                        n.type === 'blob' && n.path.startsWith(folderPath + '/')
-                    );
+                    var allFiles = repoTree.filter(function (n) {
+                        return n.type === 'blob' && n.path.startsWith(folderPath + '/');
+                    });
                     if (allFiles.length === 0) {
                         showResult('error', '删除失败', '文件夹 <strong>' + folderPath + '</strong> 为空或不存在。', true);
                         return;
                     }
-                    // 逐个删除文件
-                    let deleted = 0;
-                    let failed = [];
-                    for (const file of allFiles) {
+                    var deleted = 0;
+                    var failed = [];
+                    for (var i = 0; i < allFiles.length; i++) {
+                        var file = allFiles[i];
                         try {
-                            const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' +
-                                encodeURIComponent(file.path);
-                            const payload = {
-                                message: 'delete: 删除 ' + file.path,
+                            var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
+                                file.path);
+                            var payload = {
+                                message: 'del: ' + file.path.split('/').pop(),
                                 sha: file.sha,
                                 branch: branch,
                             };
-                            const resp = await fetch(url, {
+                            var resp = await fetch(url, {
                                 method: 'DELETE',
                                 headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                                 body: JSON.stringify(payload),
@@ -2312,25 +2357,25 @@
                                 deleted++;
                                 delete fileExistsCache[file.path];
                             } else {
-                                const errData = await resp.json().catch(() => ({}));
+                                var errData = await resp.json().catch(function () { return {}; });
                                 failed.push(file.path + ' (' + (errData.message || 'HTTP ' + resp.status) + ')');
                             }
                         } catch (e) {
                             failed.push(file.path + ' (' + e.message + ')');
                         }
                     }
-                    let msg = '删除了 ' + deleted + ' 个文件';
+                    var msg = '删除了 ' + deleted + ' 个文件';
                     if (failed.length > 0) {
                         msg += '，<span style="color:var(--danger);">' + failed.length + ' 个失败</span>：' + failed.join('; ');
                     } else {
                         msg += '，文件夹 <strong>' + folderPath + '</strong> 已清空。';
                     }
                     showResult('success', '🗑️ 删除完成', msg, false);
-                    // 刷新目录树
-                    await loadRepo();
+                    await loadRepo(true);
                     if (getVal(pathInput) === folderPath || getVal(pathInput).startsWith(folderPath + '/')) {
                         pathInput.value = '';
                         shaInput.value = '';
+                        contentInput.value = '';
                         hideFileStatus();
                     }
                 } catch (err) {
@@ -2341,33 +2386,35 @@
                 }
             }
 
-            async function menuGetContent() {
-                if (!contextTargetNode) return;
-                await handleNodeClick(contextTargetNode);
+            async function menuGetContent(node) {
+                if (!node) return;
+                await handleNodeClick(node);
                 hideContextMenu();
             }
 
             // ===== Token 验证 & 仓库操作 =====
-            async function verifyToken(showStatus = true) {
-                const token = getVal(tokenInput);
+            async function verifyToken(showStatus) {
+                if (showStatus === undefined) showStatus = true;
+                var token = getVal(tokenInput);
                 if (!token) {
                     if (showStatus) showTokenStatus('error', '⚠️ 请先输入 Personal Access Token');
                     return false;
                 }
+                token = token.trim();
                 if (showStatus) showTokenStatus('loading', '正在验证 Token…');
                 try {
-                    const resp = await fetch('https://api.github.com/user', {
+                    var resp = await fetch('https://api.github.com/user', {
                         headers: {
                             'Authorization': 'Bearer ' + token,
                             'Accept': 'application/vnd.github.v3+json',
                         }
                     });
                     if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
+                        var err = await resp.json().catch(function () { return {}; });
                         if (showStatus) showTokenStatus('error', '❌ Token 无效: ' + (err.message || 'HTTP ' + resp.status));
                         return false;
                     }
-                    const user = await resp.json();
+                    var user = await resp.json();
                     currentUser = user;
                     ownerInput.value = user.login;
                     if (showStatus) {
@@ -2386,11 +2433,12 @@
                 }
             }
 
-            async function fetchUserRepos(showStatus = true) {
-                const token = getVal(tokenInput);
+            async function fetchUserRepos(showStatus) {
+                if (showStatus === undefined) showStatus = true;
+                var token = getVal(tokenInput);
                 if (!token) return;
                 try {
-                    const resp = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&type=all', {
+                    var resp = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&type=all', {
                         headers: {
                             'Authorization': 'Bearer ' + token,
                             'Accept': 'application/vnd.github.v3+json',
@@ -2400,20 +2448,22 @@
                         if (showStatus) showTokenStatus('error', '❌ 获取仓库列表失败: HTTP ' + resp.status);
                         return;
                     }
-                    const repos = await resp.json();
-                    repoList = repos.map(r => ({
-                        name: r.name,
-                        description: r.description || '',
-                        default_branch: r.default_branch || 'main',
-                    }));
+                    var repos = await resp.json();
+                    repoList = repos.map(function (r) {
+                        return {
+                            name: r.name,
+                            description: r.description || '',
+                            default_branch: r.default_branch || 'main',
+                        };
+                    });
                     repoDatalist.innerHTML = '';
-                    for (const repo of repoList) {
-                        const opt = document.createElement('option');
-                        opt.value = repo.name;
+                    for (var i = 0; i < repoList.length; i++) {
+                        var opt = document.createElement('option');
+                        opt.value = repoList[i].name;
                         repoDatalist.appendChild(opt);
                     }
                     if (showStatus) {
-                        const user = currentUser;
+                        var user = currentUser;
                         if (user && tokenStatus.classList.contains('visible')) {
                             showTokenStatus('success', '已加载 ' + repoList.length + ' 个仓库', {
                                 login: user.login,
@@ -2429,7 +2479,7 @@
             }
 
             function updateRepoInfo(repoName) {
-                const found = repoList.find(r => r.name === repoName);
+                var found = repoList.find(function (r) { return r.name === repoName; });
                 if (found) {
                     repoDesc.textContent = found.description || '（无简介）';
                     repoDesc.className = 'repo-desc';
@@ -2442,31 +2492,31 @@
             }
 
             async function loadBranches(repoName) {
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
                 if (!token || !owner || !repoName) {
                     branchSelect.innerHTML = '<option value="">— 请先选择仓库 —</option>';
                     return;
                 }
                 try {
-                    const resp = await fetch('https://api.github.com/repos/' + owner + '/' + repoName + '/branches', {
+                    var resp = await fetch('https://api.github.com/repos/' + owner + '/' + repoName + '/branches', {
                         headers: apiHeaders()
                     });
                     if (!resp.ok) {
                         branchSelect.innerHTML = '<option value="">— 获取分支失败 —</option>';
                         return;
                     }
-                    const branches = await resp.json();
-                    currentRepoBranches = branches.map(b => b.name);
+                    var branches = await resp.json();
+                    currentRepoBranches = branches.map(function (b) { return b.name; });
                     branchSelect.innerHTML = '';
-                    for (const b of currentRepoBranches) {
-                        const opt = document.createElement('option');
-                        opt.value = b;
-                        opt.textContent = b;
+                    for (var i = 0; i < currentRepoBranches.length; i++) {
+                        var opt = document.createElement('option');
+                        opt.value = currentRepoBranches[i];
+                        opt.textContent = currentRepoBranches[i];
                         branchSelect.appendChild(opt);
                     }
-                    const found = repoList.find(r => r.name === repoName);
-                    const defaultBranch = found ? found.default_branch : (currentRepoBranches.length > 0 ? currentRepoBranches[
+                    var found = repoList.find(function (r) { return r.name === repoName; });
+                    var defaultBranch = found ? found.default_branch : (currentRepoBranches.length > 0 ? currentRepoBranches[
                         0] : '');
                     if (defaultBranch && currentRepoBranches.includes(defaultBranch)) {
                         branchSelect.value = defaultBranch;
@@ -2479,24 +2529,25 @@
                 }
             }
 
-            // ===== 加载仓库（核心） =====
-            async function loadRepo() {
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
+            async function loadRepo(preserveResult) {
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
                 if (!token || !owner || !repo) {
                     showResult('error', '信息不完整', '请填写 Token、仓库所有者和仓库名称。', true);
                     return;
                 }
                 setLoading(btnLoadRepo, true);
                 showRepoStatus('loading', '正在获取仓库信息…');
-                clearResult();
+                if (!preserveResult) {
+                    clearResult();
+                }
                 fileExistsCache = {};
                 try {
-                    const repoUrl = 'https://api.github.com/repos/' + owner + '/' + repo;
-                    const repoResp = await fetch(repoUrl, { headers: apiHeaders() });
+                    var repoUrl = 'https://api.github.com/repos/' + owner + '/' + repo;
+                    var repoResp = await fetch(repoUrl, { headers: apiHeaders() });
                     if (!repoResp.ok) {
-                        const err = await repoResp.json().catch(() => ({}));
+                        var err = await repoResp.json().catch(function () { return {}; });
                         showRepoStatus('error', '获取仓库失败: ' + (err.message || 'HTTP ' + repoResp.status));
                         treeBrowser.classList.remove('visible');
                         treeVisible = false;
@@ -2504,30 +2555,30 @@
                         setLoading(btnLoadRepo, false);
                         return;
                     }
-                    const repoData = await repoResp.json();
+                    var repoData = await repoResp.json();
                     repoDefaultBranch = repoData.default_branch || 'main';
                     if (!branchSelect.value) {
                         branchSelect.value = repoDefaultBranch;
                     }
                     branchInput.value = branchSelect.value;
                     showRepoStatus('loading', '正在获取目录结构 (' + branchSelect.value + ')…');
-                    const treeUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' +
+                    var treeUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' +
                         encodeURIComponent(branchSelect.value) + '?recursive=1';
-                    const treeResp = await fetch(treeUrl, { headers: apiHeaders() });
+                    var treeResp = await fetch(treeUrl, { headers: apiHeaders() });
                     if (!treeResp.ok) {
-                        const err = await treeResp.json().catch(() => ({}));
-                        showRepoStatus('error', '获取目录失败: ' + (err.message || 'HTTP ' + treeResp.status));
+                        var err2 = await treeResp.json().catch(function () { return {}; });
+                        showRepoStatus('error', '获取目录失败: ' + (err2.message || 'HTTP ' + treeResp.status));
                         setLoading(btnLoadRepo, false);
                         return;
                     }
-                    const treeData = await treeResp.json();
+                    var treeData = await treeResp.json();
                     repoTree = treeData.tree || [];
-                    repoTree = repoTree.filter(n => n.type === 'tree' || n.type === 'blob');
+                    repoTree = repoTree.filter(function (n) { return n.type === 'tree' || n.type === 'blob'; });
                     buildTree(repoTree);
                     showRepoStatus('success',
                         '✅ ' + owner + '/' + repo + ' · 分支: ' + branchSelect.value +
-                        ' · ' + repoTree.filter(n => n.type === 'tree').length + ' 目录, ' +
-                        repoTree.filter(n => n.type === 'blob').length + ' 文件');
+                        ' · ' + repoTree.filter(function (n) { return n.type === 'tree'; }).length + ' 目录, ' +
+                        repoTree.filter(function (n) { return n.type === 'blob'; }).length + ' 文件');
                     treeBrowser.classList.add('visible');
                     treeVisible = true;
                     btnToggleTree.textContent = '📁 收起';
@@ -2543,15 +2594,16 @@
             // ===== 提交文件 =====
             async function submitFile(e) {
                 e.preventDefault();
-                const token = getVal(tokenInput);
-                const owner = getVal(ownerInput);
-                const repo = getVal(repoInput);
-                let path = getVal(pathInput);
-                const message = getVal(messageInput);
-                const contentRaw = contentInput.value;
-                let sha = getVal(shaInput) || undefined;
-                const branch = getVal(branchSelect) || repoDefaultBranch;
-                const fields = [
+                var token = getVal(tokenInput);
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var path = getVal(pathInput);
+                path = normalizePath(path);
+                var message = getVal(messageInput);
+                var contentRaw = contentInput.value;
+                var sha = getVal(shaInput) || undefined;
+                var branch = getVal(branchSelect) || repoDefaultBranch;
+                var fields = [
                     { val: token, name: 'Token' },
                     { val: owner, name: '仓库所有者' },
                     { val: repo, name: '仓库名称' },
@@ -2559,9 +2611,9 @@
                     { val: message, name: '提交信息' },
                     { val: contentRaw, name: '文件内容' },
                 ];
-                for (const f of fields) {
-                    if (!f.val) {
-                        showResult('error', '表单不完整', '<strong>请填写「' + f.name + '」字段。</strong>', true);
+                for (var i = 0; i < fields.length; i++) {
+                    if (!fields[i].val) {
+                        showResult('error', '表单不完整', '<strong>请填写「' + fields[i].name + '」字段。</strong>', true);
                         return;
                     }
                 }
@@ -2572,25 +2624,25 @@
                 path = path.replace(/\/+$/, '');
                 if (!sha) {
                     try {
-                        const checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' +
-                            encodeURIComponent(path) + '?ref=' + encodeURIComponent(branch);
-                        const checkResp = await fetch(checkUrl, { headers: apiHeaders() });
+                        var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
+                            path) + '?ref=' + encodeURIComponent(branch);
+                        var checkResp = await fetch(checkUrl, { headers: apiHeaders() });
                         if (checkResp.ok) {
-                            const checkData = await checkResp.json();
+                            var checkData = await checkResp.json();
                             sha = checkData.sha;
                             shaInput.value = sha;
                         }
                     } catch (_) { /* ignore */ }
                 }
-                let contentBase64;
+                var contentBase64;
                 try {
                     contentBase64 = utf8ToBase64(contentRaw);
                 } catch (encErr) {
                     showResult('error', '编码失败', '⚠️ 文件内容编码失败：' + (encErr.message || '未知错误'), true);
                     return;
                 }
-                const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURIComponent(path);
-                const payload = {
+                var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
+                var payload = {
                     message: message,
                     content: contentBase64,
                     branch: branch,
@@ -2599,12 +2651,12 @@
                 try {
                     setLoading(btnSubmit, true);
                     clearResult();
-                    const resp = await fetch(url, {
+                    var resp = await fetch(url, {
                         method: 'PUT',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    const data = await resp.json().catch(() => ({}));
+                    var data = await resp.json().catch(function () { return {}; });
                     if (!resp.ok) {
                         if (resp.status === 409) {
                             showResult('error', '文件冲突',
@@ -2627,11 +2679,11 @@
                             escapeHtml(JSON.stringify(data, null, 2)) + '</pre></details>', true);
                         return;
                     }
-                    const commitUrl = data.commit && data.commit.html_url || '';
-                    const fileUrl = data.content && data.content.html_url || '';
-                    const shaResult = (data.content && data.content.sha) || '';
-                    const isUpdate = !!sha;
-                    let successHTML =
+                    var commitUrl = data.commit && data.commit.html_url || '';
+                    var fileUrl = data.content && data.content.html_url || '';
+                    var shaResult = (data.content && data.content.sha) || '';
+                    var isUpdate = !!sha;
+                    var successHTML =
                         '✅ 文件 <strong>' + path + '</strong> 已成功' + (isUpdate ? '更新' : '创建') + '！' +
                         '<div style="margin-top:12px;background:var(--gray-100);padding:12px 16px;border-radius:8px;">' +
                         '<div class="detail-row"><span class="label">SHA</span><span style="font-family:monospace;">' +
@@ -2651,9 +2703,7 @@
                     delete fileExistsCache[path];
                     shaInput.value = '';
                     hideFileStatus();
-                    // 刷新目录树
-                    await loadRepo();
-                    // 选中刚刚提交的文件
+                    await loadRepo(true);
                     pathInput.value = path;
                     updateBreadcrumb(path);
                 } catch (err) {
@@ -2665,24 +2715,24 @@
 
             // ===== 文件选择 =====
             function handleFileSelect() {
-                const input = document.createElement('input');
+                var input = document.createElement('input');
                 input.type = 'file';
                 input.accept =
                     '.js,.ts,.jsx,.tsx,.html,.css,.scss,.less,.json,.xml,.yaml,.yml,.toml,.md,.txt,.py,.rb,.go,.rs,.java,.php,.c,.cpp,.h,.sh,.bash,.zsh,.gitignore,.env,.lock,.svg,.png,.jpg,.gif,.ico';
                 input.onchange = function (e) {
-                    const file = e.target.files[0];
+                    var file = e.target.files[0];
                     if (!file) return;
-                    const reader = new FileReader();
+                    var reader = new FileReader();
                     reader.onload = function (ev) {
                         try {
-                            const text = ev.target.result;
+                            var text = ev.target.result;
                             contentInput.value = text;
-                            const fileName = file.name;
-                            const currentPath = getVal(pathInput);
+                            var fileName = file.name;
+                            var currentPath = getVal(pathInput);
                             if (!currentPath || !currentPath.includes('/')) {
                                 pathInput.value = fileName;
                             } else {
-                                const dir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+                                var dir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
                                 pathInput.value = dir + fileName;
                             }
                             selectedFileName.textContent = '📎 ' + fileName;
@@ -2716,7 +2766,7 @@
             }
 
             async function handlePwdGetToken() {
-                const password = pwdInput.value;
+                var password = pwdInput.value;
                 if (!password) {
                     showPwdStatus('error', '⚠️ 请输入密码');
                     return;
@@ -2724,11 +2774,13 @@
                 setLoading(btnPwdGetToken, true);
                 showPwdStatus('loading', '🔐 正在解密… 第 1/10 轮');
                 try {
-                    const token = multiDecrypt(CIPHER_TEXT, password, 10);
+                    var token = multiDecrypt(CIPHER_TEXT, password, 10);
+                    token = token.trim();
                     if (token && token.startsWith('github_pat_') && token.length >= 40) {
                         tokenInput.value = token;
+                        tokenInput.dispatchEvent(new Event('input', { bubbles: true }));
                         showPwdStatus('success', '✅ Token 解密成功！已自动填入，正在验证…');
-                        const ok = await verifyToken(true);
+                        var ok = await verifyToken(true);
                         if (ok) {
                             showPwdStatus('success', '✅ Token 有效，已自动填入并验证通过');
                         } else {
@@ -2745,11 +2797,9 @@
             }
 
             // ===== 事件绑定 =====
-
-            // Token 验证
             btnVerifyToken.addEventListener('click', function () { verifyToken(true); });
 
-            let tokenVerifyTimer;
+            var tokenVerifyTimer;
             tokenInput.addEventListener('blur', function () {
                 clearTimeout(tokenVerifyTimer);
                 tokenVerifyTimer = setTimeout(function () {
@@ -2758,11 +2808,10 @@
             });
             tokenInput.addEventListener('input', function () { hideTokenStatus(); });
 
-            // 仓库输入
-            let repoInfoTimer;
+            var repoInfoTimer;
             repoInput.addEventListener('input', function () {
                 clearTimeout(repoInfoTimer);
-                const val = getVal(repoInput);
+                var val = getVal(repoInput);
                 repoClearBtn.classList.toggle('visible', !!val);
                 if (val) {
                     repoInfoTimer = setTimeout(function () { updateRepoInfo(val); }, 400);
@@ -2791,8 +2840,8 @@
             });
 
             btnSelectFile.addEventListener('click', handleFileSelect);
-            btnLoadRepo.addEventListener('click', loadRepo);
-            btnRefreshTree.addEventListener('click', loadRepo);
+            btnLoadRepo.addEventListener('click', function () { loadRepo(false); });
+            btnRefreshTree.addEventListener('click', function () { loadRepo(false); });
 
             ownerInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
@@ -2803,7 +2852,7 @@
             repoInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    loadRepo();
+                    loadRepo(false);
                 }
             });
 
@@ -2838,6 +2887,8 @@
                     selectedFileName.textContent = '';
                     pathInput.value = '';
                     pwdInput.value = '';
+                    messageInput.value = '';
+                    tokenInput.value = '';
                     tokenInput.focus();
                     hideContextMenu();
                 }, 10);
@@ -2860,17 +2911,19 @@
             });
 
             btnCollapseAll.addEventListener('click', function () {
-                treeContent.querySelectorAll('.tree-children.expanded').forEach(el => el.classList.remove('expanded'));
-                treeContent.querySelectorAll('.toggle.expanded').forEach(el => el.classList.remove('expanded'));
+                var expanded = treeContent.querySelectorAll('.tree-children.expanded');
+                for (var i = 0; i < expanded.length; i++) expanded[i].classList.remove('expanded');
+                var toggles = treeContent.querySelectorAll('.toggle.expanded');
+                for (var j = 0; j < toggles.length; j++) toggles[j].classList.remove('expanded');
             });
 
-            let searchTimer;
+            var searchTimer;
             treeSearch.addEventListener('input', function () {
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(function () { renderTree(treeSearch.value); }, 250);
             });
 
-            let pathTimer;
+            var pathTimer;
             pathInput.addEventListener('input', function () {
                 clearTimeout(pathTimer);
                 updateBreadcrumb(pathInput.value);
@@ -2878,7 +2931,7 @@
             });
 
             btnAutoDetect.addEventListener('click', function () {
-                const path = getVal(pathInput);
+                var path = getVal(pathInput);
                 if (!path) {
                     showResult('error', '请先填写路径', '请在路径输入框中填写或选择文件路径。', true);
                     return;
@@ -2893,35 +2946,49 @@
                 }
             });
 
-            // ===== 右键菜单事件 =====
-            // 点击菜单项
+            // ===== 右键菜单事件（先保存节点，再执行操作） =====
             contextMenu.addEventListener('click', function (e) {
-                const item = e.target.closest('.menu-item');
+                var item = e.target.closest('.menu-item');
                 if (!item) return;
-                const action = item.dataset.action;
+                var action = item.dataset.action;
+                var node = contextTargetNode;
+                if (!node) {
+                    // fallback: 从选中的行获取
+                    var selectedRow = treeContent.querySelector('.tree-node-row.selected');
+                    if (selectedRow) {
+                        var path = selectedRow.dataset.path;
+                        var type = selectedRow.dataset.type;
+                        // 从 repoTree 中查找完整节点
+                        var found = repoTree.find(function (n) { return n.path === path; });
+                        if (found) node = found;
+                    }
+                }
                 hideContextMenu();
+                if (!node) {
+                    showResult('error', '操作失败', '未能获取目标节点，请重试。', true);
+                    return;
+                }
                 switch (action) {
                     case 'newFile':
-                        menuNewFile();
+                        menuNewFile(node);
                         break;
                     case 'newFolder':
-                        menuNewFolder();
+                        menuNewFolder(node);
                         break;
                     case 'deleteFile':
-                        menuDeleteFile();
+                        menuDeleteFile(node);
                         break;
                     case 'deleteFolder':
-                        menuDeleteFolder();
+                        menuDeleteFolder(node);
                         break;
                     case 'getContent':
-                        menuGetContent();
+                        menuGetContent(node);
                         break;
                     default:
                         break;
                 }
             });
 
-            // 点击其他地方隐藏右键菜单
             document.addEventListener('click', function (e) {
                 if (isContextMenuOpen && !contextMenu.contains(e.target)) {
                     hideContextMenu();
@@ -2934,17 +3001,7 @@
                 if (isContextMenuOpen) hideContextMenu();
             });
 
-            // 阻止树节点上的默认右键菜单
-            treeContent.addEventListener('contextmenu', function (e) {
-                // 如果点击的是空白区域，不显示菜单
-                if (e.target.closest('.tree-empty')) {
-                    e.preventDefault();
-                    return;
-                }
-                // 如果点击的是树节点，由节点自己的事件处理
-            });
-
-            // ===== 密码获取 Token 事件 =====
+            // 密码获取 Token 事件
             pwdToggleHeader.addEventListener('click', togglePwdBody);
             btnPwdGetToken.addEventListener('click', handlePwdGetToken);
             pwdInput.addEventListener('keydown', function (e) {
@@ -2954,7 +3011,7 @@
                 }
             });
             pwdEyeBtn.addEventListener('click', function () {
-                const input = pwdInput;
+                var input = pwdInput;
                 if (input.type === 'password') {
                     input.type = 'text';
                     pwdEyeBtn.textContent = '🙈';
@@ -2969,14 +3026,12 @@
                 pwdInput.focus();
             });
 
-            // ===== 自动验证 =====
             if (getVal(tokenInput)) {
                 setTimeout(function () { verifyToken(true); }, 500);
             }
 
-            console.log('✅ GitHub 文件管理工具（增强版）已加载');
-            console.log('💡 右键点击目录树节点可进行文件/文件夹操作');
-            console.log('💡 单击文件可自动加载内容到编辑区');
+            console.log('✅ GitHub 文件管理工具（最终修复版）已加载');
+            console.log('💡 修复：删除文件直接使用节点 SHA，不再额外请求，稳定可靠。');
         })();
     </script>
 

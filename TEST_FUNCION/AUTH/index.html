@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>TEST_FUNCION</title>
+    <style>
+        /* ===== 全局重置 & 明亮基调 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            /* 纯白背景，明亮干净 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 24px;
+        }
+
+        /* ===== 卡片容器 — 极简白 ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+            background: transparent;
+            /* 无背景，让白色卡片浮在纯白之上 */
+            padding: 8px;
+            border-radius: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+            border: none;
+        }
+
+        /* ===== 每个链接卡片 — 干净白卡 ===== */
+        .grid a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 16px;
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            color: #1e293b;
+            /* 深灰文字，易读 */
+            background: #ffffff;
+            /* 纯白卡片 */
+            border-radius: 20px;
+            border: 1px solid #e9edf2;
+            /* 极浅灰边框 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.03);
+            /* 几乎看不见的阴影，只给一点层次 */
+            transition: all 0.2s ease;
+            text-align: center;
+            min-height: 80px;
+            word-break: break-word;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        /* ===== 悬停效果 — 轻快上浮 + 浅阴影 ===== */
+        .grid a:hover {
+            transform: translateY(-4px);
+            background: #fafcfd;
+            /* 极淡灰白，几乎不变 */
+            border-color: #d0d7de;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+            color: #0f172a;
+        }
+
+        .grid a:active {
+            transform: translateY(0px) scale(0.97);
+            transition-duration: 0.06s;
+        }
+
+        /* ===== 去掉之前的多彩背景，全部统一 ===== */
+        /* 不再需要 nth-child 特殊色 */
+
+        /* ===== 响应式调整 ===== */
+        @media (max-width: 600px) {
+            .grid {
+                gap: 14px;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                padding: 4px;
+            }
+
+            .grid a {
+                padding: 20px 12px;
+                font-size: 0.95rem;
+                min-height: 64px;
+                border-radius: 16px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .grid {
+                gap: 12px;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid a {
+                padding: 16px 8px;
+                font-size: 0.85rem;
+                min-height: 56px;
+                border-radius: 14px;
+            }
+        }
+
+        /* ===== 无深色模式干扰，始终明亮 ===== */
+        /* 如需暗色，可另行添加，但用户要求明亮，故不做 */
+    </style>
+</head>
+
+<body>
+    <div class="grid">
+        <a href="./TEST_WEBSITE/my-website/index.html">TEST_WEBSITE</a>
+    </div>
+</body>
+
+</html>
