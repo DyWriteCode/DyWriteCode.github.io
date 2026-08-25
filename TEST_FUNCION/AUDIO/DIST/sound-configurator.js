@@ -1,8 +1,8 @@
 // sound-configurator.js
 /**
  * Sound Configurator - 声音配置与播放核心
- * @version 1.0.0
- * @description 管理心跳、城市、太空、流星、烟花等音效，支持预加载、轨迹控制
+ * @version 1.1.0
+ * @description 管理心跳、城市、太空、流星、烟花、生日快乐等音效，支持预加载、轨迹控制、循环播放
  * @dependencies 无 (使用原生 Web Audio API 和 fetch)
  *
  * @example
@@ -21,7 +21,7 @@
  * // ES Module
  * import SoundSystem from './sound-configurator.js';
  * const system = await SoundSystem.create();
- * system.engine.playSound('space', 0, 4);
+ * system.engine.playSound('birthday', 0, 12, 0.8, 0, true); // 循环播放
  */
 
 (function (global) {
@@ -32,6 +32,7 @@
     // ============================================================
     const DEFAULT_CONFIG = {
         sounds: {
+            birthday: { url: 'birthday.mp3', start: 0.0, end: 12.0 },
             heartbeat: { url: 'heartbeat.mp3', start: 0.0, end: 2.0 },
             city: { url: 'city_ambient.mp3', start: 0.0, end: 6.0 },
             space: { url: 'space_hum.mp3', start: 0.0, end: 4.0 },
@@ -106,11 +107,58 @@
             }
         }
 
-        // ----- 合成后备音 (内部) -----
+        // ----- 合成后备音 (包含生日快乐) -----
         _synthesizeFallback(key) {
             const ctx = this.getContext();
             const sr = ctx.sampleRate;
             const synths = {
+                birthday: () => {
+                    const dur = 12.0;
+                    const buf = ctx.createBuffer(1, sr * dur, sr);
+                    const d = buf.getChannelData(0);
+
+                    const freq = {
+                        C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23,
+                        G4: 392.00, A4: 440.00, B4: 493.88, C5: 523.25,
+                        D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99,
+                        A5: 880.00, B5: 987.77
+                    };
+                    const melody = [
+                        ['G4', 0.30, 0.7], ['G4', 0.30, 0.7], ['A4', 0.30, 0.7],
+                        ['G4', 0.30, 0.7], ['C5', 0.40, 0.75], ['B4', 0.40, 0.7],
+                        ['G4', 0.30, 0.7], ['G4', 0.30, 0.7], ['A4', 0.30, 0.7],
+                        ['G4', 0.30, 0.7], ['D5', 0.40, 0.75], ['C5', 0.40, 0.7],
+                        ['G4', 0.30, 0.7], ['G4', 0.30, 0.7], ['G4', 0.30, 0.7],
+                        ['E5', 0.30, 0.75], ['C5', 0.40, 0.75], ['B4', 0.40, 0.7],
+                        ['A4', 0.40, 0.7], ['F5', 0.30, 0.75], ['F5', 0.30, 0.75],
+                        ['E5', 0.30, 0.75], ['C5', 0.40, 0.75], ['D5', 0.40, 0.75],
+                        ['C5', 0.50, 0.7]
+                    ];
+                    let currentTime = 0;
+                    const gap = 0.015;
+                    for (const [note, duration, volume] of melody) {
+                        const f = freq[note] || 440;
+                        const start = currentTime;
+                        const end = start + duration;
+                        const samplesStart = Math.floor(start * sr);
+                        const samplesEnd = Math.floor(end * sr);
+                        for (let i = samplesStart; i < Math.min(samplesEnd, d.length); i++) {
+                            const t = (i / sr) - start;
+                            let env = 1;
+                            if (t < 0.02) env = t / 0.02;
+                            else if (t > duration - 0.02) env = (duration - t) / 0.02;
+                            const val = Math.sin(2 * Math.PI * f * t) * 0.6 +
+                                Math.sin(2 * Math.PI * f * 2 * t) * 0.1 +
+                                Math.sin(2 * Math.PI * f * 3 * t) * 0.05;
+                            d[i] += val * env * volume * 0.7;
+                        }
+                        currentTime = end + gap;
+                    }
+                    let max = 0;
+                    for (let i = 0; i < d.length; i++) if (Math.abs(d[i]) > max) max = Math.abs(d[i]);
+                    if (max > 0.01) for (let i = 0; i < d.length; i++) d[i] /= max * 1.05;
+                    return buf;
+                },
                 heartbeat: () => {
                     const dur = 2.0;
                     const buf = ctx.createBuffer(1, sr * dur, sr);
@@ -211,9 +259,9 @@
             return gen();
         }
 
-        // ----- 播放方法 -----
-        async playSound(key, startTime, endTime, volume = 0.8, pan = 0) {
-            const buffer = await this.loadSound(key, key); // 缓存中已有
+        // ----- 播放方法（支持 loop）-----
+        async playSound(key, startTime, endTime, volume = 0.8, pan = 0, loop = false) {
+            const buffer = await this.loadSound(key, key);
             if (!buffer) return null;
 
             const ctx = this.getContext();
@@ -234,7 +282,13 @@
             const actualEnd = Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
             const duration = actualEnd - actualStart;
 
-            source.start(0, actualStart, duration);
+            if (loop) {
+                source.loop = true;
+                source.loopStart = actualStart;
+                source.loopEnd = actualEnd;
+            }
+
+            source.start(0, actualStart, loop ? undefined : duration);
 
             const id = ++this.sourceIdCounter;
             const entry = {
@@ -244,6 +298,7 @@
                 gainNode,
                 panner,
                 isPlaying: true,
+                loop: loop,
                 stop: () => {
                     try { source.stop(); } catch (_) { }
                     entry.isPlaying = false;
@@ -253,8 +308,10 @@
             this.activeSources.set(id, entry);
 
             source.onended = () => {
-                entry.isPlaying = false;
-                this.activeSources.delete(id);
+                if (!loop) {
+                    entry.isPlaying = false;
+                    this.activeSources.delete(id);
+                }
             };
 
             return entry;
@@ -348,7 +405,8 @@
                 cfg.start,
                 cfg.end,
                 meteor.volStart,
-                meteor.panStart
+                meteor.panStart,
+                false
             );
             if (entry) {
                 meteor.sourceId = entry.id;
@@ -467,7 +525,8 @@
                 launchCfg.start,
                 launchCfg.end,
                 0.7,
-                0
+                0,
+                false
             );
             fw.launchId = launchEntry?.id || null;
 
@@ -501,7 +560,8 @@
                     explodeCfg.start,
                     explodeCfg.end,
                     0.9,
-                    pan
+                    pan,
+                    false
                 );
                 fw.explodeId = explodeEntry?.id || null;
                 if (explodeEntry) {
@@ -568,9 +628,7 @@
     // 主入口：创建声音系统（含预加载）
     // ============================================================
     async function createSoundSystem(customConfig = {}) {
-        // 深度合并配置
         const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-        // 合并 sounds
         if (customConfig.sounds) {
             for (const [key, val] of Object.entries(customConfig.sounds)) {
                 if (config.sounds[key]) {
@@ -605,7 +663,7 @@
     // 导出
     // ============================================================
     const SoundSystem = {
-        version: '1.0.0',
+        version: '1.1.0',
         DEFAULT_CONFIG,
         AudioEngine,
         MeteorManager,
@@ -613,18 +671,15 @@
         create: createSoundSystem,
     };
 
-    // 浏览器全局
     if (typeof window !== 'undefined') {
         window.SoundSystem = SoundSystem;
     }
 
-    // CommonJS / Node.js
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = SoundSystem;
         module.exports.default = SoundSystem;
     }
 
-    // AMD
     if (typeof define === 'function' && define.amd) {
         define([], function () {
             return SoundSystem;

@@ -4,9 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🎵 声音配置测试面板 - 预加载</title>
+    <title>🎵 声音配置测试面板 - 模块化示例</title>
     <style>
-        /* ----- 全局重置 & 字体 ----- */
         * {
             margin: 0;
             padding: 0;
@@ -54,7 +53,6 @@
             padding-left: 16px;
         }
 
-        /* 预加载状态条 */
         #preloadStatus {
             background: #0e121e;
             border: 1px solid #1a263a;
@@ -79,7 +77,6 @@
             background: #0a1a12;
         }
 
-        /* ----- 卡片网格 ----- */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -122,6 +119,12 @@
             padding: 2px 12px;
             border-radius: 30px;
             border: 1px solid #2e3d5a;
+        }
+
+        .birthday-badge {
+            background: #5a3a1a;
+            color: #f0c060;
+            border-color: #8a6a2a;
         }
 
         .control-row {
@@ -190,6 +193,15 @@
             background: #2a7a4a;
         }
 
+        .btn-warning {
+            background: #5a4a1a;
+            border-color: #8a7a2a;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #7a5a2a;
+        }
+
         .btn-sm {
             padding: 3px 12px;
             font-size: 12px;
@@ -217,33 +229,48 @@
             background: #0a1a1a;
         }
 
-        .slider-group {
+        .loop-toggle {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 12px;
             color: #6a7a9a;
+            cursor: pointer;
+            user-select: none;
         }
 
-        .slider-group input[type="range"] {
-            width: 80px;
-            height: 3px;
+        .loop-toggle input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 34px;
+            height: 18px;
             background: #1a263a;
-            border-radius: 10px;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
+            border-radius: 30px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.25s;
+            flex-shrink: 0;
         }
 
-        .slider-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
+        .loop-toggle input[type="checkbox"]::after {
+            content: '';
+            position: absolute;
             width: 14px;
             height: 14px;
-            background: #4a7aaa;
+            background: #4a5a7a;
             border-radius: 50%;
-            cursor: pointer;
-            border: 1px solid #6a9aca;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.25s, background 0.25s;
+        }
+
+        .loop-toggle input[type="checkbox"]:checked {
+            background: #2a6a4a;
+        }
+
+        .loop-toggle input[type="checkbox"]:checked::after {
+            transform: translateX(16px);
+            background: #6ae0b0;
         }
 
         .instance-list {
@@ -316,51 +343,13 @@
             color: #6ae0b0;
         }
 
-        .mt-2 {
-            margin-top: 10px;
-        }
-
-        .flex {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .flex-wrap {
-            flex-wrap: wrap;
-        }
-
-        .gap-4 {
-            gap: 4px;
-        }
-
         .text-muted {
             color: #5a6a8a;
             font-size: 12px;
         }
 
-        .w-full {
-            width: 100%;
-        }
-
-        @media (max-width: 640px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .instance-item {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .instance-item .controls {
-                justify-content: flex-start;
-            }
-        }
-
-        .instance-list {
-            scrollbar-width: thin;
-            scrollbar-color: #2a3a5a #0e121e;
+        .flex-wrap {
+            flex-wrap: wrap;
         }
 
         .footnote {
@@ -379,6 +368,21 @@
             font-size: 12px;
             color: #8a9ab8;
         }
+
+        @media (max-width: 640px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .instance-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .instance-item .controls {
+                justify-content: flex-start;
+            }
+        }
     </style>
 </head>
 
@@ -387,19 +391,42 @@
     <div class="app">
         <h1>
             🎵 声音配置测试面板
-            <small>预加载 · config 驱动</small>
+            <small>模块化 · 使用 sound-configurator.js</small>
         </h1>
         <div class="sub">
             ⚙️ 所有声音路径 &amp; 截断参数在 <code
                 style="background:#0e121e;padding:2px 10px;border-radius:6px;color:#8a9ab8;">config</code> 中配置
+            &nbsp;·&nbsp; 🎂 新增「生日快乐」背景曲
         </div>
 
-        <!-- 预加载状态 -->
         <div id="preloadStatus" class="loading">⏳ 正在预加载音频文件...</div>
 
-        <!-- ===== 网格 ===== -->
-        <div class="grid" id="appGrid">
-            <!-- 1. 心跳 -->
+        <div class="grid">
+            <!-- 🎂 生日快乐 -->
+            <div class="card" data-sound="birthday" style="border-color:#5a4a2a;">
+                <div class="card-header">
+                    <h2>🎂 生日快乐</h2>
+                    <span class="badge birthday-badge">🎵 背景曲 · 可循环</span>
+                </div>
+                <div class="control-row">
+                    <span class="label">截断</span>
+                    <span class="text-muted" id="birthdayRange">0.00 – 12.00 s</span>
+                </div>
+                <div class="control-row">
+                    <button class="btn btn-success play-btn" data-sound="birthday">▶ 播放</button>
+                    <button class="btn btn-danger stop-btn" data-sound="birthday" disabled>■ 停止</button>
+                    <span class="status" id="birthdayStatus">● 就绪</span>
+                    <label class="loop-toggle">
+                        <input type="checkbox" id="birthdayLoop" />
+                        🔁 循环
+                    </label>
+                </div>
+                <div style="margin-top:6px;font-size:12px;color:#6a7a9a;">
+                    💡 开启「循环」后可作为背景音乐无限播放
+                </div>
+            </div>
+
+            <!-- 心跳 -->
             <div class="card" data-sound="heartbeat">
                 <div class="card-header">
                     <h2>💓 心跳</h2>
@@ -416,7 +443,7 @@
                 </div>
             </div>
 
-            <!-- 2. 城市嘈杂 -->
+            <!-- 城市 -->
             <div class="card" data-sound="city">
                 <div class="card-header">
                     <h2>🏙️ 城市嘈杂</h2>
@@ -433,7 +460,7 @@
                 </div>
             </div>
 
-            <!-- 3. 太空嗡鸣 -->
+            <!-- 太空 -->
             <div class="card" data-sound="space">
                 <div class="card-header">
                     <h2>🛸 太空嗡鸣</h2>
@@ -450,8 +477,8 @@
                 </div>
             </div>
 
-            <!-- 4. 流星管理器 -->
-            <div class="card" style="grid-column: span 1;">
+            <!-- 流星管理器 -->
+            <div class="card">
                 <div class="card-header">
                     <h2>☄️ 流星坠落</h2>
                     <span class="badge" id="meteorCount">0 个</span>
@@ -468,8 +495,8 @@
                 </div>
             </div>
 
-            <!-- 5. 烟花管理器 -->
-            <div class="card" style="grid-column: span 1;">
+            <!-- 烟花管理器 -->
+            <div class="card">
                 <div class="card-header">
                     <h2>🎆 烟花</h2>
                     <span class="badge" id="fireworkCount">0 个</span>
@@ -489,18 +516,24 @@
 
         <div class="footnote">
             ⚡ 所有音频使用 Web Audio API · 页面启动时自动预加载 <code>config</code> 中的所有音频 · 截断参数在 <code>config.sounds</code> 中调整
+            <br />
+            🎂 「生日快乐」支持循环播放，开启后作为背景音乐无限循环
         </div>
     </div>
 
+    <!-- 引入 sound-configurator.js 模块 (请确保文件路径正确) -->
+    <script src="./DIST/sound-configurator.js"></script>
+
     <script>
-        // ================================================================
-        //  📦  CONFIG  —  声音路径 & 截断参数
-        // ================================================================
         const config = {
-            // 每个声音的配置：url（路径），start（起始秒），end（结束秒）
             sounds: {
+                birthday: {
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/birthday.mp3',
+                    start: 0.0,
+                    end: 12.0,
+                },
                 heartbeat: {
-                    url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
+                    url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3',
                     start: 0.0,
                     end: 2.0,
                 },
@@ -530,592 +563,124 @@
                     end: 2.5,
                 },
             },
-            // 流星默认轨迹参数
             meteor: {
-                panStart: -0.8, // 左声道起始 (-1 ~ 1)
-                panEnd: 0.8, // 右声道终点
+                panStart: -0.8,
+                panEnd: 0.8,
                 volumeStart: 0.6,
                 volumeEnd: 0.2,
-                duration: 3.5, // 总时长（秒），会与截断取较小值
+                duration: 3.5,
             },
-            // 烟花默认参数
             firework: {
                 launchDuration: 1.5,
-                explodeDelay: 0.6, // 发射后多久爆炸
-                panSpread: 0.6, // 爆炸时立体声扩散度
+                explodeDelay: 0.6,
+                panSpread: 0.6,
             },
         };
-        // ================================================================
-        //  🎛️  音频引擎 (Web Audio API)
-        // ================================================================
-        class AudioEngine {
-            constructor() {
-                this.ctx = null;
-                this.buffers = {};
-                this.activeSources = new Map();
-                this.sourceIdCounter = 0;
-                this.isPreloading = false;
-            }
 
-            getContext() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                return this.ctx;
-            }
-
-            // 预加载所有配置的音频
-            async preloadAll(soundConfigs) {
-                this.isPreloading = true;
-                const entries = Object.entries(soundConfigs);
-                const loadPromises = entries.map(([key, cfg]) => {
-                    if (cfg.url) {
-                        // loadSound 内部会处理失败并回退到合成音
-                        return this.loadSound(key, cfg.url).catch(err => {
-                            console.warn(`预加载 ${key} 失败，使用合成后备音`, err);
-                            return null;
-                        });
-                    }
-                    return Promise.resolve();
-                });
-                await Promise.all(loadPromises);
-                this.isPreloading = false;
-                console.log('✅ 所有音频预加载完成');
-            }
-
-            async loadSound(key, url) {
-                if (this.buffers[key]) return this.buffers[key];
-                try {
-                    const resp = await fetch(url);
-                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                    const arrayBuffer = await resp.arrayBuffer();
-                    const ctx = this.getContext();
-                    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-                    this.buffers[key] = audioBuffer;
-                    return audioBuffer;
-                } catch (err) {
-                    console.warn(`⚠️ 加载音频 "${key}" 失败 (${url})，使用合成音代替`, err);
-                    const synth = this.synthesizeFallback(key);
-                    this.buffers[key] = synth;
-                    return synth;
-                }
-            }
-
-            // ----- 合成后备音 (与之前一致) -----
-            synthesizeFallback(key) {
-                const ctx = this.getContext();
-                const sampleRate = ctx.sampleRate;
-                let duration = 3.0;
-                switch (key) {
-                    case 'heartbeat':
-                        duration = 2.0;
-                        return this.synthHeartbeat(ctx, sampleRate);
-                    case 'city':
-                        duration = 6.0;
-                        return this.synthCity(ctx, sampleRate);
-                    case 'space':
-                        duration = 4.0;
-                        return this.synthSpace(ctx, sampleRate);
-                    case 'meteor':
-                        duration = 3.5;
-                        return this.synthMeteor(ctx, sampleRate);
-                    case 'firework_launch':
-                        duration = 1.8;
-                        return this.synthFireworkLaunch(ctx, sampleRate);
-                    case 'firework_explode':
-                        duration = 2.5;
-                        return this.synthFireworkExplode(ctx, sampleRate);
-                    default:
-                        duration = 2.0;
-                        return this.synthGeneric(ctx, sampleRate);
-                }
-            }
-
-            synthHeartbeat(ctx, sr) {
-                const dur = 2.0;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    let env = 0;
-                    if (t < 0.15) env = Math.sin(t / 0.15 * Math.PI) * 0.8;
-                    else if (t < 0.3) env = Math.sin((t - 0.15) / 0.15 * Math.PI) * 0.4;
-                    else if (t > 1.0 && t < 1.15) env = Math.sin((t - 1.0) / 0.15 * Math.PI) * 0.7;
-                    else if (t > 1.15 && t < 1.3) env = Math.sin((t - 1.15) / 0.15 * Math.PI) * 0.3;
-                    const freq = 60 + 30 * Math.sin(t * 8);
-                    d[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.5;
-                }
-                return buf;
-            }
-
-            synthCity(ctx, sr) {
-                const dur = 6.0;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    let noise = (Math.random() * 2 - 1) * 0.3;
-                    const hum = Math.sin(2 * Math.PI * 120 * t) * 0.1;
-                    const ring = Math.sin(2 * Math.PI * 800 * t) * Math.exp(-t * 0.5) * 0.05;
-                    const spike = (Math.random() > 0.995) ? (Math.random() * 2 - 1) * 0.2 : 0;
-                    const env = Math.exp(-t * 0.08) * 0.8 + 0.2;
-                    d[i] = (noise + hum + ring + spike) * env * 0.6;
-                }
-                return buf;
-            }
-
-            synthSpace(ctx, sr) {
-                const dur = 4.0;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    const freq = 80 + 40 * Math.sin(t * 0.5);
-                    const v = Math.sin(2 * Math.PI * freq * t) * 0.3 +
-                        Math.sin(2 * Math.PI * (freq * 1.5) * t) * 0.1;
-                    d[i] = v * Math.exp(-t * 0.05) * 0.6;
-                }
-                return buf;
-            }
-
-            synthMeteor(ctx, sr) {
-                const dur = 3.5;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    const freq = 800 - t * 200 + Math.sin(t * 30) * 50;
-                    const env = Math.exp(-t * 1.2) * 0.7 + 0.1;
-                    const noise = (Math.random() * 2 - 1) * 0.15 * env;
-                    const tone = Math.sin(2 * Math.PI * freq * t) * env * 0.5;
-                    d[i] = (tone + noise) * 0.5;
-                }
-                return buf;
-            }
-
-            synthFireworkLaunch(ctx, sr) {
-                const dur = 1.8;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    const freq = 150 + t * 600;
-                    const env = Math.sin(t / dur * Math.PI) * 0.8;
-                    const noise = (Math.random() * 2 - 1) * 0.2 * env;
-                    const tone = Math.sin(2 * Math.PI * freq * t) * env * 0.5;
-                    d[i] = (tone + noise) * 0.5;
-                }
-                return buf;
-            }
-
-            synthFireworkExplode(ctx, sr) {
-                const dur = 2.5;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    const env = Math.exp(-t * 1.8) * 0.9;
-                    const noise = (Math.random() * 2 - 1) * 0.6 * env;
-                    const low = Math.sin(2 * Math.PI * 80 * t) * env * 0.3;
-                    const mid = Math.sin(2 * Math.PI * 300 * t) * Math.exp(-t * 2.5) * 0.2;
-                    d[i] = (noise + low + mid) * 0.6;
-                }
-                return buf;
-            }
-
-            synthGeneric(ctx, sr) {
-                const dur = 2.0;
-                const buf = ctx.createBuffer(1, sr * dur, sr);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < d.length; i++) {
-                    const t = i / sr;
-                    d[i] = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t * 0.5) * 0.3;
-                }
-                return buf;
-            }
-
-            // ----- 播放逻辑 (与之前一致) -----
-            async playSound(key, startTime, endTime, volume = 0.8, pan = 0) {
-                const buffer = await this.loadSound(key, config.sounds[key]?.url || '');
-                if (!buffer) return null;
-
-                const ctx = this.getContext();
-                const source = ctx.createBufferSource();
-                source.buffer = buffer;
-
-                const gainNode = ctx.createGain();
-                gainNode.gain.value = Math.min(1, Math.max(0, volume));
-
-                const panner = ctx.createStereoPanner();
-                panner.pan.value = Math.min(1, Math.max(-1, pan));
-
-                source.connect(gainNode);
-                gainNode.connect(panner);
-                panner.connect(ctx.destination);
-
-                const actualStart = Math.min(Math.max(0, startTime || 0), buffer.duration - 0.05);
-                const actualEnd = Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
-                const duration = actualEnd - actualStart;
-
-                source.start(0, actualStart, duration);
-
-                const id = ++this.sourceIdCounter;
-                const entry = {
-                    id,
-                    key,
-                    source,
-                    gainNode,
-                    panner,
-                    startTime: actualStart,
-                    endTime: actualEnd,
-                    isPlaying: true,
-                    stop: () => {
-                        try { source.stop(); } catch (_) { }
-                        entry.isPlaying = false;
-                        this.activeSources.delete(id);
-                    },
-                };
-                this.activeSources.set(id, entry);
-
-                source.onended = () => {
-                    entry.isPlaying = false;
-                    this.activeSources.delete(id);
-                };
-
-                return entry;
-            }
-
-            stopSound(id) {
-                const entry = this.activeSources.get(id);
-                if (entry) {
-                    entry.stop();
-                    this.activeSources.delete(id);
-                    return true;
-                }
-                return false;
-            }
-
-            stopAll() {
-                for (const [id, entry] of this.activeSources) {
-                    entry.stop();
-                }
-                this.activeSources.clear();
-            }
-
-            setVolume(id, vol) {
-                const entry = this.activeSources.get(id);
-                if (entry) {
-                    entry.gainNode.gain.value = Math.min(1, Math.max(0, vol));
-                }
-            }
-
-            setPan(id, pan) {
-                const entry = this.activeSources.get(id);
-                if (entry) {
-                    entry.panner.pan.value = Math.min(1, Math.max(-1, pan));
-                }
-            }
-
-            isPlaying(id) {
-                const entry = this.activeSources.get(id);
-                return entry ? entry.isPlaying : false;
-            }
-        }
-
-        // ================================================================
-        //  🧩  流星管理器 (与之前一致)
-        // ================================================================
-        class MeteorManager {
-            constructor(engine) {
-                this.engine = engine;
-                this.meteors = [];
-                this.idCounter = 0;
-                this.onUpdate = null;
-                this.animFrame = null;
-                this.isRunning = false;
-            }
-
-            async addMeteor(panStart, panEnd, volStart, volEnd, duration) {
-                const cfg = config.meteor;
-                const startPan = panStart ?? cfg.panStart;
-                const endPan = panEnd ?? cfg.panEnd;
-                const startVol = volStart ?? cfg.volumeStart;
-                const endVol = volEnd ?? cfg.volumeEnd;
-                const dur = Math.min(duration ?? cfg.duration, config.sounds.meteor.end - config.sounds.meteor.start || 3.5);
-
-                const id = ++this.idCounter;
-                const meteor = {
-                    id,
-                    panStart: startPan,
-                    panEnd: endPan,
-                    volStart: startVol,
-                    volEnd: endVol,
-                    duration: dur,
-                    elapsed: 0,
-                    isPlaying: false,
-                    sourceId: null,
-                    progress: 0,
-                    active: true,
-                };
-
-                this.meteors.push(meteor);
-                this._startAnimation();
-                this._updateUI();
-                return meteor;
-            }
-
-            async playMeteor(meteor) {
-                if (meteor.isPlaying) return;
-                const key = 'meteor';
-                const cfg = config.sounds.meteor;
-                const entry = await this.engine.playSound(
-                    key,
-                    cfg.start,
-                    cfg.end,
-                    meteor.volStart,
-                    meteor.panStart
-                );
-                if (entry) {
-                    meteor.sourceId = entry.id;
-                    meteor.isPlaying = true;
-                    meteor.elapsed = 0;
-                    meteor.progress = 0;
-                    this._updateUI();
-                }
-            }
-
-            stopMeteor(meteor) {
-                if (meteor.sourceId) {
-                    this.engine.stopSound(meteor.sourceId);
-                    meteor.sourceId = null;
-                }
-                meteor.isPlaying = false;
-                this._updateUI();
-            }
-
-            removeMeteor(meteor) {
-                this.stopMeteor(meteor);
-                meteor.active = false;
-                this.meteors = this.meteors.filter(m => m !== meteor);
-                if (this.meteors.length === 0) this._stopAnimation();
-                this._updateUI();
-            }
-
-            clearAll() {
-                for (const m of this.meteors) this.stopMeteor(m);
-                this.meteors = [];
-                this._stopAnimation();
-                this._updateUI();
-            }
-
-            _startAnimation() {
-                if (this.isRunning) return;
-                this.isRunning = true;
-                const step = () => {
-                    if (!this.isRunning) return;
-                    let hasActive = false;
-                    for (const m of this.meteors) {
-                        if (!m.isPlaying) continue;
-                        hasActive = true;
-                        m.elapsed += 0.04;
-                        m.progress = Math.min(1, m.elapsed / m.duration);
-                        const pan = m.panStart + (m.panEnd - m.panStart) * m.progress;
-                        const vol = m.volStart + (m.volEnd - m.volStart) * m.progress;
-                        this.engine.setPan(m.sourceId, pan);
-                        this.engine.setVolume(m.sourceId, vol);
-                        if (m.progress >= 1) this.stopMeteor(m);
-                    }
-                    this._updateUI();
-                    if (hasActive || this.meteors.some(m => m.isPlaying)) {
-                        this.animFrame = requestAnimationFrame(step);
-                    } else {
-                        this.isRunning = false;
-                        this.animFrame = null;
-                    }
-                };
-                this.animFrame = requestAnimationFrame(step);
-            }
-
-            _stopAnimation() {
-                this.isRunning = false;
-                if (this.animFrame) {
-                    cancelAnimationFrame(this.animFrame);
-                    this.animFrame = null;
-                }
-            }
-
-            _updateUI() { if (this.onUpdate) this.onUpdate(this.meteors); }
-            get count() { return this.meteors.length; }
-        }
-
-        // ================================================================
-        //  🎆  烟花管理器 (与之前一致)
-        // ================================================================
-        class FireworkManager {
-            constructor(engine) {
-                this.engine = engine;
-                this.fireworks = [];
-                this.idCounter = 0;
-                this.onUpdate = null;
-                this.timeouts = [];
-            }
-
-            async addFirework() {
-                const id = ++this.idCounter;
-                const fw = { id, isPlaying: false, launchId: null, explodeId: null, active: true, phase: 'idle' };
-                this.fireworks.push(fw);
-                this._updateUI();
-                await this._playFirework(fw);
-                return fw;
-            }
-
-            async _playFirework(fw) {
-                if (fw.isPlaying) return;
-                fw.isPlaying = true;
-                fw.phase = 'launching';
-                this._updateUI();
-
-                const launchCfg = config.sounds.firework_launch;
-                const launchEntry = await this.engine.playSound(
-                    'firework_launch',
-                    launchCfg.start,
-                    launchCfg.end,
-                    0.7,
-                    0
-                );
-                fw.launchId = launchEntry?.id || null;
-
-                let launchProgress = 0;
-                const launchInterval = setInterval(() => {
-                    if (!fw.active || !fw.isPlaying) { clearInterval(launchInterval); return; }
-                    launchProgress += 0.05;
-                    const vol = 0.4 + launchProgress * 0.5;
-                    const pan = Math.sin(launchProgress * 3) * 0.2;
-                    if (fw.launchId) {
-                        this.engine.setVolume(fw.launchId, Math.min(1, vol));
-                        this.engine.setPan(fw.launchId, pan);
-                    }
-                    if (launchProgress >= 1) clearInterval(launchInterval);
-                }, 50);
-
-                const delay = config.firework.explodeDelay || 0.6;
-                const timeoutId = setTimeout(async () => {
-                    if (!fw.active || !fw.isPlaying) return;
-                    if (fw.launchId) {
-                        this.engine.stopSound(fw.launchId);
-                        fw.launchId = null;
-                    }
-                    fw.phase = 'exploding';
-                    this._updateUI();
-                    const explodeCfg = config.sounds.firework_explode;
-                    const panSpread = config.firework.panSpread || 0.6;
-                    const pan = (Math.random() * 2 - 1) * panSpread;
-                    const explodeEntry = await this.engine.playSound(
-                        'firework_explode',
-                        explodeCfg.start,
-                        explodeCfg.end,
-                        0.9,
-                        pan
-                    );
-                    fw.explodeId = explodeEntry?.id || null;
-                    if (explodeEntry) {
-                        const checkDone = () => {
-                            if (!fw.active) return;
-                            if (!this.engine.isPlaying(explodeEntry.id)) {
-                                fw.isPlaying = false;
-                                fw.phase = 'done';
-                                this._updateUI();
-                            } else { setTimeout(checkDone, 200); }
-                        };
-                        setTimeout(checkDone, 100);
-                    } else {
-                        fw.isPlaying = false;
-                        fw.phase = 'done';
-                        this._updateUI();
-                    }
-                }, delay * 1000);
-
-                this.timeouts.push(timeoutId);
-                fw._cleanup = () => {
-                    clearInterval(launchInterval);
-                    clearTimeout(timeoutId);
-                    if (fw.launchId) this.engine.stopSound(fw.launchId);
-                    if (fw.explodeId) this.engine.stopSound(fw.explodeId);
-                    fw.launchId = null;
-                    fw.explodeId = null;
-                    fw.isPlaying = false;
-                };
-            }
-
-            stopFirework(fw) {
-                if (fw._cleanup) fw._cleanup();
-                fw.isPlaying = false;
-                fw.phase = 'idle';
-                this._updateUI();
-            }
-            removeFirework(fw) {
-                this.stopFirework(fw);
-                fw.active = false;
-                this.fireworks = this.fireworks.filter(f => f !== fw);
-                this._updateUI();
-            }
-            clearAll() {
-                for (const fw of this.fireworks) this.stopFirework(fw);
-                this.fireworks = [];
-                this.timeouts.forEach(t => clearTimeout(t));
-                this.timeouts = [];
-                this._updateUI();
-            }
-            get count() { return this.fireworks.length; }
-            _updateUI() { if (this.onUpdate) this.onUpdate(this.fireworks); }
-        }
-
-        // ================================================================
-        //  🖥️  UI 控制器 (包含预加载逻辑)
-        // ================================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            const engine = new AudioEngine();
+        document.addEventListener('DOMContentLoaded', async () => {
             const preloadStatus = document.getElementById('preloadStatus');
 
-            // ----- 预加载所有音频 -----
-            const allPlayBtns = document.querySelectorAll('.play-btn');
-            const addMeteorBtn = document.getElementById('addMeteorBtn');
-            const addFireworkBtn = document.getElementById('addFireworkBtn');
+            const system = await SoundSystem.create(config);
+            const { engine, meteorManager, fireworkManager } = system;
 
-            // 初始禁用所有操作按钮
-            const disableAllControls = (disabled = true) => {
-                allPlayBtns.forEach(btn => btn.disabled = disabled);
-                addMeteorBtn.disabled = disabled;
-                addFireworkBtn.disabled = disabled;
-                // 停止按钮不受影响，但保持逻辑
+            preloadStatus.textContent = '✅ 所有音频预加载完成，可以播放';
+            preloadStatus.className = 'ready';
+
+            document.querySelectorAll('.play-btn, #addMeteorBtn, #addFireworkBtn').forEach(el => el.disabled = false);
+
+            // 🎂 生日快乐
+            const birthdayCfg = config.sounds.birthday;
+            const birthdayPlayBtn = document.querySelector('.play-btn[data-sound="birthday"]');
+            const birthdayStopBtn = document.querySelector('.stop-btn[data-sound="birthday"]');
+            const birthdayStatus = document.getElementById('birthdayStatus');
+            const birthdayLoopCheck = document.getElementById('birthdayLoop');
+
+            let birthdayCurrentId = null;
+
+            const updateBirthdayButtons = () => {
+                const playing = birthdayCurrentId !== null && engine.isPlaying(birthdayCurrentId);
+                birthdayPlayBtn.disabled = playing;
+                birthdayStopBtn.disabled = !playing;
+                birthdayStatus.textContent = playing ? '▶ 播放中' : '● 就绪';
+                birthdayStatus.className = 'status' + (playing ? ' playing' : '');
             };
-            disableAllControls(true);
 
-            preloadStatus.textContent = '⏳ 正在预加载音频文件...';
-            preloadStatus.className = 'loading';
+            const playBirthday = async () => {
+                try {
+                    const loop = birthdayLoopCheck.checked;
+                    const entry = await engine.playSound(
+                        'birthday',
+                        birthdayCfg.start,
+                        birthdayCfg.end,
+                        0.75,
+                        0,
+                        loop
+                    );
+                    if (entry) {
+                        birthdayCurrentId = entry.id;
+                        updateBirthdayButtons();
 
-            // 开始预加载
-            engine.preloadAll(config.sounds).then(() => {
-                preloadStatus.textContent = '✅ 所有音频预加载完成，可以播放';
-                preloadStatus.className = 'ready';
-                disableAllControls(false);
-                // 更新简单播放器的按钮状态（因为之前可能被手动禁用）
-                for (const key of ['heartbeat', 'city', 'space']) {
-                    const status = simpleStatusMap[key];
-                    if (status) status.updateButtons();
+                        if (loop) {
+                            const intervalId = setInterval(() => {
+                                if (!birthdayCurrentId) { clearInterval(intervalId); return; }
+                                if (!engine.isPlaying(birthdayCurrentId)) {
+                                    clearInterval(intervalId);
+                                    if (birthdayLoopCheck.checked) {
+                                        playBirthday();
+                                    } else {
+                                        birthdayCurrentId = null;
+                                        updateBirthdayButtons();
+                                    }
+                                }
+                            }, 200);
+                            entry._loopInterval = intervalId;
+                        } else {
+                            const checkDone = () => {
+                                if (!birthdayCurrentId) return;
+                                if (!engine.isPlaying(birthdayCurrentId)) {
+                                    birthdayCurrentId = null;
+                                    updateBirthdayButtons();
+                                } else {
+                                    setTimeout(checkDone, 200);
+                                }
+                            };
+                            setTimeout(checkDone, 100);
+                        }
+                    }
+                } catch (e) {
+                    console.error('播放生日歌失败', e);
                 }
-            }).catch(err => {
-                // 理论上不会触发，因为 loadSound 捕获了所有错误
-                preloadStatus.textContent = '⚠️ 预加载出现问题，但已使用合成音后备';
-                preloadStatus.className = 'ready';
-                disableAllControls(false);
-                console.warn('预加载异常', err);
+            };
+
+            birthdayPlayBtn.addEventListener('click', playBirthday);
+
+            birthdayStopBtn.addEventListener('click', () => {
+                if (birthdayCurrentId !== null) {
+                    const entry = engine.activeSources.get(birthdayCurrentId);
+                    if (entry && entry._loopInterval) clearInterval(entry._loopInterval);
+                    engine.stopSound(birthdayCurrentId);
+                    birthdayCurrentId = null;
+                    updateBirthdayButtons();
+                }
             });
 
-            // ----- 简单声音播放器 (心跳 / 城市 / 太空) -----
-            const simpleKeys = ['heartbeat', 'city', 'space'];
-            const simpleStatusMap = {};
+            birthdayLoopCheck.addEventListener('change', () => {
+                if (birthdayCurrentId !== null && engine.isPlaying(birthdayCurrentId)) {
+                    const entry = engine.activeSources.get(birthdayCurrentId);
+                    if (entry && entry._loopInterval) clearInterval(entry._loopInterval);
+                    engine.stopSound(birthdayCurrentId);
+                    birthdayCurrentId = null;
+                    updateBirthdayButtons();
+                    if (birthdayLoopCheck.checked) {
+                        setTimeout(playBirthday, 100);
+                    }
+                }
+            });
 
+            updateBirthdayButtons();
+
+            // 简单播放器
+            const simpleKeys = ['heartbeat', 'city', 'space'];
             for (const key of simpleKeys) {
                 const cfg = config.sounds[key];
                 const playBtn = document.querySelector(`.play-btn[data-sound="${key}"]`);
@@ -1131,17 +696,11 @@
 
                 const updateButtons = () => {
                     const playing = currentId !== null && engine.isPlaying(currentId);
-                    // 只有不在预加载状态时才启用（预加载完成后由 disableAllControls 控制）
-                    const preloading = engine.isPreloading;
-                    playBtn.disabled = playing || preloading;
-                    stopBtn.disabled = !playing || preloading;
-                    if (statusEl) {
-                        statusEl.textContent = playing ? '▶ 播放中' : '● 就绪';
-                        statusEl.className = 'status' + (playing ? ' playing' : '');
-                    }
+                    playBtn.disabled = playing;
+                    stopBtn.disabled = !playing;
+                    statusEl.textContent = playing ? '▶ 播放中' : '● 就绪';
+                    statusEl.className = 'status' + (playing ? ' playing' : '');
                 };
-
-                simpleStatusMap[key] = { updateButtons };
 
                 playBtn.addEventListener('click', async () => {
                     try {
@@ -1150,7 +709,8 @@
                             cfg.start,
                             cfg.end,
                             0.8,
-                            0
+                            0,
+                            false
                         );
                         if (entry) {
                             currentId = entry.id;
@@ -1178,12 +738,10 @@
                     }
                 });
 
-                // 初始更新
                 updateButtons();
             }
 
-            // ----- 流星管理器 -----
-            const meteorManager = new MeteorManager(engine);
+            // 流星
             const meteorList = document.getElementById('meteorList');
             const meteorCount = document.getElementById('meteorCount');
             const clearMeteorsBtn = document.getElementById('clearMeteorsBtn');
@@ -1191,10 +749,10 @@
             const renderMeteors = (meteors) => {
                 if (meteors.length === 0) {
                     meteorList.innerHTML = `
-                        <div class="text-muted" style="padding:10px 0;text-align:center;font-size:13px;">
-                            🌠 暂无流星，点击「添加流星」创建
-                        </div>
-                    `;
+                            <div class="text-muted" style="padding:10px 0;text-align:center;font-size:13px;">
+                                🌠 暂无流星，点击「添加流星」创建
+                            </div>
+                        `;
                     meteorCount.textContent = '0 个';
                     clearMeteorsBtn.disabled = true;
                     return;
@@ -1208,18 +766,18 @@
                     const statusCls = m.isPlaying ? 'active' : '';
                     const progress = (m.progress * 100).toFixed(0);
                     html += `
-                        <div class="instance-item" data-meteor-id="${m.id}">
-                            <span class="name">☄️ #${m.id}</span>
-                            <span class="trail">轨迹 ${m.panStart.toFixed(1)} → ${m.panEnd.toFixed(1)}</span>
-                            <span class="mini-status ${statusCls}">${statusText}</span>
-                            <span class="text-muted" style="font-size:11px;">${progress}%</span>
-                            <div class="controls">
-                                <button class="btn btn-primary btn-sm meteor-play" data-id="${m.id}" ${m.isPlaying ? 'disabled' : ''}>▶</button>
-                                <button class="btn btn-danger btn-sm meteor-stop" data-id="${m.id}" ${!m.isPlaying ? 'disabled' : ''}>■</button>
-                                <button class="btn btn-sm meteor-remove" data-id="${m.id}" style="background:#3a2a2a;border-color:#5a3a3a;">✕</button>
+                            <div class="instance-item" data-meteor-id="${m.id}">
+                                <span class="name">☄️ #${m.id}</span>
+                                <span class="trail">轨迹 ${m.panStart.toFixed(1)} → ${m.panEnd.toFixed(1)}</span>
+                                <span class="mini-status ${statusCls}">${statusText}</span>
+                                <span class="text-muted" style="font-size:11px;">${progress}%</span>
+                                <div class="controls">
+                                    <button class="btn btn-primary btn-sm meteor-play" data-id="${m.id}" ${m.isPlaying ? 'disabled' : ''}>▶</button>
+                                    <button class="btn btn-danger btn-sm meteor-stop" data-id="${m.id}" ${!m.isPlaying ? 'disabled' : ''}>■</button>
+                                    <button class="btn btn-sm meteor-remove" data-id="${m.id}" style="background:#3a2a2a;border-color:#5a3a3a;">✕</button>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 }
                 meteorList.innerHTML = html;
 
@@ -1248,15 +806,13 @@
 
             meteorManager.onUpdate = renderMeteors;
 
-            addMeteorBtn.addEventListener('click', async () => {
+            document.getElementById('addMeteorBtn').addEventListener('click', async () => {
                 const panStart = (Math.random() * 2 - 1) * 0.9;
                 const panEnd = (Math.random() * 2 - 1) * 0.9;
                 const volStart = 0.4 + Math.random() * 0.4;
                 const volEnd = 0.1 + Math.random() * 0.2;
                 const duration = 2.0 + Math.random() * 2.0;
-                const meteor = await meteorManager.addMeteor(
-                    panStart, panEnd, volStart, volEnd, duration
-                );
+                const meteor = await meteorManager.addMeteor(panStart, panEnd, volStart, volEnd, duration);
                 await meteorManager.playMeteor(meteor);
             });
 
@@ -1264,8 +820,7 @@
                 meteorManager.clearAll();
             });
 
-            // ----- 烟花管理器 -----
-            const fireworkManager = new FireworkManager(engine);
+            // 烟花
             const fireworkList = document.getElementById('fireworkList');
             const fireworkCount = document.getElementById('fireworkCount');
             const clearFireworksBtn = document.getElementById('clearFireworksBtn');
@@ -1273,10 +828,10 @@
             const renderFireworks = (fireworks) => {
                 if (fireworks.length === 0) {
                     fireworkList.innerHTML = `
-                        <div class="text-muted" style="padding:10px 0;text-align:center;font-size:13px;">
-                            🎆 暂无烟花，点击「添加烟花」创建
-                        </div>
-                    `;
+                            <div class="text-muted" style="padding:10px 0;text-align:center;font-size:13px;">
+                                🎆 暂无烟花，点击「添加烟花」创建
+                            </div>
+                        `;
                     fireworkCount.textContent = '0 个';
                     clearFireworksBtn.disabled = true;
                     return;
@@ -1291,15 +846,15 @@
                     const phaseText = phaseMap[fw.phase] || fw.phase;
                     const isActive = fw.phase === 'launching' || fw.phase === 'exploding';
                     html += `
-                        <div class="instance-item" data-firework-id="${fw.id}">
-                            <span class="name">🎆 #${fw.id}</span>
-                            <span class="trail">${phaseText}</span>
-                            <span class="mini-status ${isActive ? 'active' : ''}">${isActive ? '▶ 播放中' : '●'}</span>
-                            <div class="controls">
-                                <button class="btn btn-danger btn-sm firework-remove" data-id="${fw.id}" style="background:#3a2a2a;border-color:#5a3a3a;">✕ 移除</button>
+                            <div class="instance-item" data-firework-id="${fw.id}">
+                                <span class="name">🎆 #${fw.id}</span>
+                                <span class="trail">${phaseText}</span>
+                                <span class="mini-status ${isActive ? 'active' : ''}">${isActive ? '▶ 播放中' : '●'}</span>
+                                <div class="controls">
+                                    <button class="btn btn-danger btn-sm firework-remove" data-id="${fw.id}" style="background:#3a2a2a;border-color:#5a3a3a;">✕ 移除</button>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 }
                 fireworkList.innerHTML = html;
 
@@ -1314,7 +869,7 @@
 
             fireworkManager.onUpdate = renderFireworks;
 
-            addFireworkBtn.addEventListener('click', async () => {
+            document.getElementById('addFireworkBtn').addEventListener('click', async () => {
                 await fireworkManager.addFirework();
             });
 
@@ -1322,14 +877,11 @@
                 fireworkManager.clearAll();
             });
 
-            // ----- 初始渲染 -----
             renderMeteors([]);
             renderFireworks([]);
 
-            // 暴露调试
             window.__audioDebug = { engine, config, meteorManager, fireworkManager };
-            console.log('🔊 当前声音配置:');
-            console.log(JSON.stringify(config, null, 2));
+            console.log('🔊 当前声音配置:', config);
             console.log('💡 提示: 修改 config 对象即可调整音频路径和截断参数');
         });
     </script>

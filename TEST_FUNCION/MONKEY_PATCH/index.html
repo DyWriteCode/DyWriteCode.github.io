@@ -1,56 +1,528 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 
 <head>
-    <title>猴子补丁示例</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猴子补丁 · 可视化测试台</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 32px 36px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .sub {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 24px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 16px;
+            background: #f8fafc;
+            padding: 10px 16px;
+            border-radius: 6px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #cbd5e1;
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+
+        /* 终端输出面板 */
+        .terminal {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            max-height: 420px;
+            min-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 8px;
+            border: 1px solid #1e293b;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .terminal::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terminal::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .terminal::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-info {
+            color: #94a3b8;
+        }
+
+        .log-success {
+            color: #4ade80;
+        }
+
+        .log-warn {
+            color: #fbbf24;
+        }
+
+        .log-error {
+            color: #f87171;
+        }
+
+        .log-muted {
+            color: #475569;
+            font-style: italic;
+        }
+
+        .timestamp {
+            color: #475569;
+            margin-right: 12px;
+            user-select: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 12px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .badge-active {
+            background: #22c55e;
+            color: #fff;
+        }
+
+        .badge-inactive {
+            background: #64748b;
+            color: #fff;
+        }
+
+        .footer-info {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #64748b;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 13px;
+        }
+
+        .clear-btn:hover {
+            color: #e2e8f0;
+        }
+    </style>
 </head>
 
 <body>
-    <button onclick="testAPI()">Test API</button>
-    <button onclick="patchApi()">Patch API</button>
-    <button onclick="listPatch()">List Patches</button>
-    <button onclick="restoreMethod()">Restore All</button>
+    <div class="container">
+        <h1>
+            🐵 猴子补丁 · 可视化测试台
+            <span id="statusBadge" class="status-badge badge-inactive">未补丁</span>
+        </h1>
+        <div class="sub">
+            ⚡ 所有 <code>console.log / warn / error</code> 输出将实时显示在下方终端中。
+            点击按钮测试 API 替换与拦截效果。
+        </div>
 
-    <!-- 引入脚本（确保路径正确） -->
-    <script src="./DIST/monkey-patch.js?v=20260825054902"></script>
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="testAPI()">📡 测试 API (send)</button>
+            <button class="btn btn-success" onclick="applyPatch()">🔧 应用补丁</button>
+            <button class="btn btn-warning" onclick="listPatches()">📋 查看补丁列表</button>
+            <button class="btn btn-danger" onclick="restoreMethod()">↩️ 恢复所有补丁</button>
+            <button class="btn btn-outline" onclick="clearLogs()">🗑️ 清空日志</button>
+        </div>
+
+        <!-- 终端输出区域 -->
+        <div id="terminal" class="terminal">
+            <div class="log-entry log-muted">⏳ 正在初始化环境...</div>
+        </div>
+
+        <div class="footer-info">
+            <span>💡 提示：点击“应用补丁”后，再点击“测试 API”观察变化</span>
+            <span>📦 <span id="patchCount">0</span> 个补丁已生效</span>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 1. 日志捕获脚本（必须放在最前面，以捕获后续所有 console 调用） -->
+    <!-- ============================================================ -->
     <script>
-        // 模拟第三方 API
+        (function () {
+            const terminal = document.getElementById('terminal');
+
+            // 日志格式化
+            function formatArg(arg) {
+                if (arg === undefined) return 'undefined';
+                if (arg === null) return 'null';
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }
+
+            function appendToTerminal(message, type = 'info') {
+                if (!terminal) return;
+                const entry = document.createElement('div');
+                entry.className = `log-entry log-${type}`;
+
+                const time = new Date().toLocaleTimeString();
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'timestamp';
+                timeSpan.textContent = `[${time}]`;
+                entry.appendChild(timeSpan);
+
+                const textNode = document.createTextNode(message);
+                entry.appendChild(textNode);
+
+                terminal.appendChild(entry);
+                terminal.scrollTop = terminal.scrollHeight;
+
+                // 限制条目防止内存溢出
+                while (terminal.children.length > 200) {
+                    terminal.removeChild(terminal.firstChild);
+                }
+            }
+
+            // 保存原始方法
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            const originalInfo = console.info;
+
+            // 重写 console 方法
+            console.log = function (...args) {
+                originalLog.apply(console, args);
+                const msg = args.map(formatArg).join(' ');
+                appendToTerminal(msg, 'info');
+            };
+
+            console.warn = function (...args) {
+                originalWarn.apply(console, args);
+                const msg = args.map(formatArg).join(' ');
+                appendToTerminal('⚠️ ' + msg, 'warn');
+            };
+
+            console.error = function (...args) {
+                originalError.apply(console, args);
+                const msg = args.map(formatArg).join(' ');
+                appendToTerminal('❌ ' + msg, 'error');
+            };
+
+            console.info = function (...args) {
+                originalInfo.apply(console, args);
+                const msg = args.map(formatArg).join(' ');
+                appendToTerminal('ℹ️ ' + msg, 'info');
+            };
+
+            // 自定义成功日志（用于补丁工具）
+            const originalSuccess = console.success || function () { };
+            console.success = function (...args) {
+                originalSuccess.apply(console, args);
+                const msg = args.map(formatArg).join(' ');
+                appendToTerminal('✅ ' + msg, 'success');
+            };
+
+            // 挂载全局清空函数
+            window.clearLogs = function () {
+                if (terminal) {
+                    terminal.innerHTML = '';
+                    appendToTerminal('📋 日志已清空', 'muted');
+                }
+            };
+
+            // 更新补丁数量显示
+            window.updatePatchCount = function (count) {
+                const el = document.getElementById('patchCount');
+                if (el) el.textContent = count || 0;
+                const badge = document.getElementById('statusBadge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = `✅ ${count} 个补丁已生效`;
+                        badge.className = 'status-badge badge-active';
+                    } else {
+                        badge.textContent = '⏸️ 未补丁';
+                        badge.className = 'status-badge badge-inactive';
+                    }
+                }
+            };
+
+            console.log('📡 日志捕获系统已就绪');
+        })();
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- 2. 引入猴子补丁核心库 -->
+    <!-- ============================================================ -->
+    <script src="./DIST/monkey-patch.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- 3. 主应用逻辑 -->
+    <!-- ============================================================ -->
+    <script>
+        // ---------- 模拟第三方 API ----------
         window.ThirdAPI = {
             send: function (data) {
-                console.log('原始 send:', data);
-                return { status: 'ok', data };
+                const result = { status: 'ok', data, from: 'ThirdAPI.send' };
+                console.log('[原始] send 调用结果:', result);
+                return result;
+            },
+            auth: function (token) {
+                const result = { status: 'authenticated', token, from: 'ThirdAPI.auth' };
+                console.log('[原始] auth 调用结果:', result);
+                return result;
             }
         };
 
-        // 列出当前补丁
-        function listPatch() {
-            console.log(getPatches());
+        // ---------- 辅助函数 ----------
+        function updatePatchCountUI() {
+            try {
+                const patches = getPatches ? getPatches() : { methods: [], fetch: [], xhr: [] };
+                const total = patches.methods.length + patches.fetch.length + patches.xhr.length;
+                if (window.updatePatchCount) window.updatePatchCount(total);
+            } catch (e) {
+                // ignore
+            }
         }
 
-        // 恢复所有补丁
-        function restoreMethod() {
-            restoreAll();
-            console.log('已恢复所有补丁');
-            console.log(getPatches());
-        }
+        // ---------- 按钮绑定的全局函数 ----------
 
-        // 应用补丁：替换 send 方法（使用对象引用）
-        function patchApi() {
-            patchMethod(ThirdAPI, 'send', function (original, data) {
-                console.log('补丁拦截:', data);
-                return original({ ...data, extra: 'patched' });
+        // 1. 测试 API（调用原始/补丁后的方法）
+        window.testAPI = function () {
+            console.log('🧪 开始测试 API 调用...');
+            try {
+                const result1 = ThirdAPI.send({ user: 'alice', action: 'login' });
+                console.log('📤 send 返回值:', result1);
+
+                const result2 = ThirdAPI.auth('abc123');
+                console.log('📤 auth 返回值:', result2);
+            } catch (err) {
+                console.error('测试调用出错:', err.message);
+            }
+        };
+
+        // 2. 应用补丁（使用方法替换）
+        window.applyPatch = function () {
+            console.log('🔧 正在应用猴子补丁...');
+
+            // 使用直接对象引用，更稳健
+            const success1 = patchMethod(ThirdAPI, 'send', function (original, data) {
+                console.log('🔄 [补丁拦截] send 被调用, 原始数据:', data);
+                // 修改数据后调用原始方法
+                const modified = { ...data, _patched: true, timestamp: Date.now() };
+                const result = original(modified);
+                // 修改返回值
+                return {
+                    ...result,
+                    patched: true,
+                    message: '数据已被猴子补丁增强 ✨'
+                };
             });
-            // 或者使用字符串路径：patchMethod('ThirdAPI', 'send', ...);
-        }
 
-        // 测试函数
-        function testAPI() {
-            const result = ThirdAPI.send({ user: 'alice' });
-            console.log('结果:', result);
-        }
+            const success2 = patchMethod(ThirdAPI, 'auth', function (original, token) {
+                console.log('🔄 [补丁拦截] auth 被调用, token:', token);
+                const newToken = 'patched_' + token + '_' + Date.now().toString(36);
+                return original(newToken);
+            });
 
-        // 可选：页面加载后自动应用补丁
-        // window.onload = patchApi;
+            if (success1 && success2) {
+                console.success('✅ 补丁应用成功！(send 和 auth 已被替换)');
+            } else {
+                console.warn('⚠️ 部分补丁应用失败，请检查目标对象是否存在');
+            }
+
+            // 刷新补丁计数
+            updatePatchCountUI();
+
+            // 额外提示
+            console.log('💡 现在点击 "测试 API" 查看补丁效果');
+        };
+
+        // 3. 查看补丁列表
+        window.listPatches = function () {
+            try {
+                if (typeof getPatches !== 'function') {
+                    console.error('❌ getPatches 函数未定义，请确保 monkey-patch.js 已正确加载');
+                    return;
+                }
+                const patches = getPatches();
+                console.log('📋 当前补丁列表:', patches);
+                const total = patches.methods.length + patches.fetch.length + patches.xhr.length;
+                console.log(`📊 共计 ${total} 条补丁规则 (方法: ${patches.methods.length}, Fetch: ${patches.fetch.length}, XHR: ${patches.xhr.length})`);
+                updatePatchCountUI();
+            } catch (err) {
+                console.error('获取补丁列表出错:', err);
+            }
+        };
+
+        // 4. 恢复所有补丁
+        window.restoreMethod = function () {
+            try {
+                if (typeof restoreAll !== 'function') {
+                    console.error('❌ restoreAll 函数未定义');
+                    return;
+                }
+                restoreAll();
+                console.log('↩️ 已恢复所有补丁，API 回归原始行为');
+                updatePatchCountUI();
+            } catch (err) {
+                console.error('恢复补丁出错:', err);
+            }
+        };
+
+        // 5. 清空日志（已挂载到全局，直接调用 clearLogs()）
+
+        // ---------- 初始化 ----------
+        // 页面加载完成后，初始化补丁计数，并自动应用补丁以便演示
+        window.addEventListener('DOMContentLoaded', function () {
+            // 延迟一小下，等待 monkey-patch 完全初始化
+            setTimeout(() => {
+                console.log('🚀 环境初始化完成');
+                console.log(`📦 MonkeyPatch 工具状态: ${typeof patchMethod === 'function' ? '✅ 已加载' : '❌ 未加载'}`);
+
+                // 检查并更新补丁状态
+                updatePatchCountUI();
+
+                // 如果尚未应用补丁，自动应用一次以便演示（但用户可以手动取消）
+                try {
+                    const patches = getPatches ? getPatches() : null;
+                    if (patches && patches.methods.length === 0) {
+                        console.log('⚡ 检测到未应用任何补丁，自动应用演示补丁...');
+                        window.applyPatch();
+                    } else {
+                        console.log('ℹ️ 已有补丁生效，跳过自动应用');
+                    }
+                } catch (e) {
+                    // 如果 getPatches 不可用，直接应用
+                    window.applyPatch();
+                }
+
+                // 输出一些提示
+                console.log('💡 操作提示：点击 "测试 API" 查看效果，点击 "恢复所有补丁" 还原');
+            }, 300);
+        });
+
+        // 暴露更新计数的函数
+        window.updatePatchCountUI = updatePatchCountUI;
     </script>
 </body>
 
