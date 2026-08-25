@@ -32,7 +32,6 @@
             cursor: default;
         }
 
-        /* ---- 覆盖层 (开始按钮) ---- */
         #startOverlay {
             position: fixed;
             top: 0;
@@ -115,7 +114,6 @@
             letter-spacing: 2px;
         }
 
-        /* ---- 底部信息 ---- */
         #info {
             position: fixed;
             bottom: 28px;
@@ -233,7 +231,6 @@
 <body>
     <canvas id="mainCanvas"></canvas>
 
-    <!-- 覆盖层 -->
     <div id="startOverlay">
         <div class="title">✦ 星河入梦 ✦</div>
         <div class="sub">花火 · 许愿 · 祝福</div>
@@ -245,16 +242,14 @@
     <div class="status-tip" id="statusTip"></div>
     <button id="sound-toggle">🔇 音效已静音</button>
 
-    <!-- ============================================================ -->
-    <!-- 1. 声音系统 (sound-configurator.js 完整内联)                    -->
-    <!-- ============================================================ -->
     <script>
-        // sound-configurator.js - 完整内联版本 (不变)
+        // ================================================================
+        // sound-configurator.js (完整内联 v1.1.0)
+        // ================================================================
         (function (global) {
             'use strict';
 
             const DEFAULT_CONFIG = {
-                // 每个声音的配置：url（路径），start（起始秒），end（结束秒）
                 sounds: {
                     heartbeat: {
                         url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
@@ -286,20 +281,23 @@
                         start: 0.0,
                         end: 2.5,
                     },
+                    birthday: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/birthday.mp3',
+                        start: 0.0,
+                        end: 12.0,
+                    },
                 },
-                // 流星默认轨迹参数
                 meteor: {
-                    panStart: -0.8, // 左声道起始 (-1 ~ 1)
-                    panEnd: 0.8, // 右声道终点
+                    panStart: -0.8,
+                    panEnd: 0.8,
                     volumeStart: 0.6,
                     volumeEnd: 0.2,
-                    duration: 3.5, // 总时长（秒），会与截断取较小值
+                    duration: 3.5,
                 },
-                // 烟花默认参数
                 firework: {
                     launchDuration: 1.5,
-                    explodeDelay: 0.6, // 发射后多久爆炸
-                    panSpread: 0.6, // 爆炸时立体声扩散度
+                    explodeDelay: 0.6,
+                    panSpread: 0.6,
                 },
             };
 
@@ -358,6 +356,69 @@
                     const ctx = this.getContext();
                     const sr = ctx.sampleRate;
                     const synths = {
+                        birthday: () => {
+                            const dur = 12.0;
+                            const buf = ctx.createBuffer(1, sr * dur, sr);
+                            const d = buf.getChannelData(0);
+                            const freq = {
+                                C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00,
+                                B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00,
+                                B5: 987.77
+                            };
+                            const melody = [
+                                ['G4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['A4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['C5', 0.40, 0.75],
+                                ['B4', 0.40, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['A4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['D5', 0.40, 0.75],
+                                ['C5', 0.40, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['G4', 0.30, 0.7],
+                                ['E5', 0.30, 0.75],
+                                ['C5', 0.40, 0.75],
+                                ['B4', 0.40, 0.7],
+                                ['A4', 0.40, 0.7],
+                                ['F5', 0.30, 0.75],
+                                ['F5', 0.30, 0.75],
+                                ['E5', 0.30, 0.75],
+                                ['C5', 0.40, 0.75],
+                                ['D5', 0.40, 0.75],
+                                ['C5', 0.50, 0.7]
+                            ];
+                            let currentTime = 0;
+                            const gap = 0.015;
+                            for (const [note, duration, volume] of melody) {
+                                const f = freq[note] || 440;
+                                const start = currentTime;
+                                const end = start + duration;
+                                const samplesStart = Math.floor(start * sr);
+                                const samplesEnd = Math.floor(end * sr);
+                                for (let i = samplesStart; i < Math.min(samplesEnd, d.length); i++) {
+                                    const t = (i / sr) - start;
+                                    let env = 1;
+                                    if (t < 0.02) env = t / 0.02;
+                                    else if (t > duration - 0.02) env = (duration - t) / 0.02;
+                                    const val = Math.sin(2 * Math.PI * f * t) * 0.6 +
+                                        Math.sin(2 * Math.PI * f * 2 * t) * 0.1 +
+                                        Math.sin(2 * Math.PI * f * 3 * t) * 0.05;
+                                    d[i] += val * env * volume * 0.7;
+                                }
+                                currentTime = end + gap;
+                            }
+                            let max = 0;
+                            for (let i = 0; i < d.length; i++)
+                                if (Math.abs(d[i]) > max) max = Math.abs(d[i]);
+                            if (max > 0.01)
+                                for (let i = 0; i < d.length; i++) d[i] /= max * 1.05;
+                            return buf;
+                        },
                         heartbeat: () => {
                             const dur = 2.0;
                             const buf = ctx.createBuffer(1, sr * dur, sr);
@@ -458,7 +519,7 @@
                     return gen();
                 }
 
-                async playSound(key, startTime, endTime, volume = 0.8, pan = 0) {
+                async playSound(key, startTime, endTime, volume = 0.8, pan = 0, loop = false) {
                     if (this._muted) return null;
                     const buffer = await this.loadSound(key, key);
                     if (!buffer) return null;
@@ -475,7 +536,12 @@
                     const actualStart = Math.min(Math.max(0, startTime || 0), buffer.duration - 0.05);
                     const actualEnd = Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
                     const duration = actualEnd - actualStart;
-                    source.start(0, actualStart, duration);
+                    if (loop) {
+                        source.loop = true;
+                        source.loopStart = actualStart;
+                        source.loopEnd = actualEnd;
+                    }
+                    source.start(0, actualStart, loop ? undefined : duration);
                     const id = ++this.sourceIdCounter;
                     const entry = {
                         id,
@@ -484,6 +550,7 @@
                         gainNode,
                         panner,
                         isPlaying: true,
+                        loop: loop,
                         stop: () => {
                             try { source.stop(); } catch (_) { }
                             entry.isPlaying = false;
@@ -492,8 +559,10 @@
                     };
                     this.activeSources.set(id, entry);
                     source.onended = () => {
-                        entry.isPlaying = false;
-                        this.activeSources.delete(id);
+                        if (!loop) {
+                            entry.isPlaying = false;
+                            this.activeSources.delete(id);
+                        }
                     };
                     return entry;
                 }
@@ -825,7 +894,6 @@
                 }
 
                 const engine = new AudioEngine();
-                // 这里会等待所有音频预加载完成
                 await engine.preloadAll(config.sounds);
 
                 const meteorManager = new MeteorManager(engine, config);
@@ -840,7 +908,7 @@
             }
 
             const SoundSystem = {
-                version: '1.0.0',
+                version: '1.1.0',
                 DEFAULT_CONFIG,
                 AudioEngine,
                 MeteorManager,
@@ -860,19 +928,16 @@
             }
             return SoundSystem;
         })(this);
-        console.log('🔊 声音系统已加载 (sound-configurator.js v1.0.0)');
+        console.log('🔊 声音系统已加载 (sound-configurator.js v1.1.0)');
     </script>
 
-    <!-- ============================================================ -->
-    <!-- 2. 主动画 + 声音集成 (视觉事件直连音效)                         -->
-    <!-- ============================================================ -->
     <script>
         (function () {
             'use strict';
 
-            // ============================================================
-            // 0. 全局配置
-            // ============================================================
+            // ================================================================
+            // 全局配置
+            // ================================================================
             const CONFIG_MASTER = {
                 showerTriggerRatio: 0.5,
                 firstCloseDuration: 3500,
@@ -886,9 +951,9 @@
                 cakeOpenDuration: 1500,
             };
 
-            // ============================================================
-            // 1. 工具函数 (精简保留)
-            // ============================================================
+            // ================================================================
+            // 工具函数
+            // ================================================================
             function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
             function lerp(a, b, t) { return a + (b - a) * t; }
@@ -937,10 +1002,10 @@
 
             function hexToRgb(hex) {
                 const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                    r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3],
-                        16)
-                } : { r: 0, g: 0, b: 0 };
+                return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {
+                    r: 0,
+                    g: 0, b: 0
+                };
             }
 
             function rgbToHex(r, g, b) {
@@ -972,9 +1037,9 @@
                 ctx.closePath();
             }
 
-            // ============================================================
-            // 2. Canvas 初始化
-            // ============================================================
+            // ================================================================
+            // Canvas 初始化
+            // ================================================================
             const canvas = document.getElementById('mainCanvas');
             const ctx = canvas.getContext('2d', { alpha: true });
             const infoEl = document.getElementById('info');
@@ -992,9 +1057,9 @@
             window.addEventListener('resize', resize);
             resize();
 
-            // ============================================================
-            // 3. 声音系统 (初始化 + 管理)
-            // ============================================================
+            // ================================================================
+            // 声音系统
+            // ================================================================
             let soundSystem = null;
             let soundEngine = null;
             let meteorManager = null;
@@ -1004,8 +1069,8 @@
             let currentCitySoundId = null;
             let currentSpaceSoundId = null;
             let heartbeatSoundId = null;
+            let birthdaySoundId = null;
 
-            // 声音切换按钮 (动画开始后显示)
             soundToggle.addEventListener('click', async () => {
                 if (!soundInitialized) {
                     await initSoundSystem();
@@ -1013,6 +1078,7 @@
                 soundMuted = !soundMuted;
                 if (soundEngine) {
                     soundEngine.setMuted(soundMuted);
+                    if (soundMuted) birthdaySoundId = null;
                 }
                 soundToggle.textContent = soundMuted ? '🔇 音效已静音' : '🔊 音效已开启';
                 soundToggle.classList.add('show');
@@ -1021,10 +1087,6 @@
                 }
             });
 
-            /**
-             * 初始化声音系统（内部会等待所有音频预加载完成）
-             * 在预加载完成前，不会 resolve
-             */
             async function initSoundSystem() {
                 if (soundInitialized) return;
                 try {
@@ -1037,12 +1099,12 @@
                     soundEngine.setMuted(false);
                     soundToggle.textContent = '🔊 音效已开启';
                     soundToggle.classList.add('show');
-                    console.log('✅ 声音系统初始化成功 (默认开启)');
+                    console.log('✅ 声音系统初始化成功');
                 } catch (err) {
                     console.warn('⚠️ 声音系统初始化失败:', err);
                     soundToggle.textContent = '❌ 音效不可用';
                     soundToggle.classList.add('show');
-                    throw err; // 让上层捕获
+                    throw err;
                 }
             }
 
@@ -1054,15 +1116,16 @@
                         break;
                     case MASTER_PHASE.FIREWORKS:
                         break;
+                    case MASTER_PHASE.CAKE_TRANSITION:
                     case MASTER_PHASE.CAKE_FLOW:
-                        playCakeSound();
+                        playBirthdayMusic();
                         break;
                     default:
                         break;
                 }
             }
 
-            // --- 音效播放函数 (背景氛围) ---
+            // --- 背景氛围音效 ---
             async function playCityAmbient() {
                 if (!soundInitialized || soundMuted) return;
                 if (currentCitySoundId && soundEngine.isPlaying(currentCitySoundId)) return;
@@ -1085,7 +1148,6 @@
                 if (heartbeatSoundId) soundEngine.stopSound(heartbeatSoundId);
                 const entry = await soundEngine.playSound('heartbeat', 0, 2, 0.35, 0);
                 if (entry) heartbeatSoundId = entry.id;
-                // 自动停止 (在2秒后)
                 setTimeout(() => {
                     if (heartbeatSoundId) {
                         soundEngine.stopSound(heartbeatSoundId);
@@ -1121,13 +1183,40 @@
                 stopHeartbeat();
             }
 
-            // --- 短音效：单颗流星 (流星雨用) ---
+            // --- Birthday 音乐 (核心新增) ---
+            async function playBirthdayMusic() {
+                if (!soundInitialized || soundMuted || !soundEngine) return;
+                // 如果已经在播放则跳过
+                if (birthdaySoundId && soundEngine.isPlaying(birthdaySoundId)) return;
+                // 停止旧实例
+                if (birthdaySoundId) {
+                    soundEngine.stopSound(birthdaySoundId);
+                    birthdaySoundId = null;
+                }
+                // 从配置中读取生日歌时长 (默认12秒)
+                const cfg = soundSystem.config.sounds.birthday;
+                const dur = (cfg && cfg.end) ? cfg.end - (cfg.start || 0) : 12;
+                const entry = await soundEngine.playSound('birthday', cfg?.start || 0, cfg?.end || 12, 0.55, 0, true);
+                if (entry) {
+                    birthdaySoundId = entry.id;
+                    console.log('🎂 Birthday 音乐已开始循环播放');
+                }
+            }
+
+            function stopBirthdayMusic() {
+                if (birthdaySoundId) {
+                    soundEngine.stopSound(birthdaySoundId);
+                    birthdaySoundId = null;
+                    console.log('🎂 Birthday 音乐已停止');
+                }
+            }
+
+            // --- 短音效 ---
             async function playShowerMeteorSound(pan, volume) {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
                 await soundEngine.playSound('meteor', 0, 1.5, volume || 0.5, pan || 0);
             }
 
-            // --- 烟花发射和爆炸直连 ---
             async function playFireworkLaunchSound(pan) {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
                 await soundEngine.playSound('firework_launch', 0, 1.8, 0.7, pan || 0);
@@ -1138,19 +1227,22 @@
                 await soundEngine.playSound('firework_explode', 0, 2.5, 0.9, pan || 0);
             }
 
-            // --- 蛋糕音效 ---
+            // --- 蛋糕音效 (含 birthday) ---
             function playCakeSound() {
                 if (!soundInitialized || soundMuted) return;
+                // 播放生日歌 (主旋律)
+                playBirthdayMusic();
+                // 辅以环境音
                 playHeartbeat();
                 playSpaceAmbient();
                 setTimeout(() => {
                     if (soundInitialized && !soundMuted) {
-                        soundEngine.playSound('city', 0, 4, 0.15, 0);
+                        soundEngine.playSound('city', 0, 4, 0.12, 0);
                     }
                 }, 500);
             }
 
-            // --- 根据Epic状态播放背景氛围 ---
+            // --- Epic 状态音效 ---
             function playEpicSoundByState(state) {
                 if (!soundInitialized || soundMuted) return;
                 switch (state) {
@@ -1190,9 +1282,9 @@
                 }
             }
 
-            // ============================================================
-            // 4. 主阶段管理
-            // ============================================================
+            // ================================================================
+            // 主阶段管理
+            // ================================================================
             const MASTER_PHASE = {
                 EPIC: 'epic',
                 CLOSING: 'closing',
@@ -1210,9 +1302,9 @@
             let cakeFlowInitialized = false;
             let cakeFlowStarted = false;
 
-            // ============================================================
-            // 5. 阶段一：Epic (视觉部分)
-            // ============================================================
+            // ================================================================
+            // 阶段一：Epic (视觉部分 — 保留完整)
+            // ================================================================
             const CONFIG = {
                 eye: { duration: 2000 },
                 rise: { duration: 4000, maxOffsetY: 1.2 },
@@ -1270,7 +1362,7 @@
                 visual: { vignetteStrength: 0.18, lensGlowStart: 0.6, lensGlowAlpha: 0.04 }
             };
 
-            // ---------- 城市星星 ----------
+            // --- 城市星星 ---
             const CITY_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -1387,7 +1479,7 @@
                 }
             }
 
-            // ---------- 太空星星 ----------
+            // --- 太空星星 ---
             const SPACE_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -1495,7 +1587,7 @@
                 }
             }
 
-            // ---------- 悬浮粒子 ----------
+            // --- 悬浮粒子 ---
             let floatParticles = [];
             const PARTICLE_COUNT = 120;
 
@@ -1553,7 +1645,7 @@
                 ctx.globalAlpha = 1;
             }
 
-            // ---------- 星云 ----------
+            // --- 星云 ---
             let clouds = [];
 
             function initClouds() {
@@ -1603,7 +1695,7 @@
                 ctx.restore();
             }
 
-            // ---------- 建筑系统 ----------
+            // --- 建筑系统 ---
             let buildings = [];
 
             function generateBuildings() {
@@ -1640,8 +1732,7 @@
                                 bw = 34 + Math.random() * 26 + t * 24;
                                 bh = (60 + Math.random() * 46) * (0.5 + t * 0.9);
                             }
-                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) bh *= Math.random() > 0.5 ? 1.25 :
-                                0.78;
+                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) bh *= Math.random() > 0.5 ? 1.25 : 0.78;
                             prevBh = bh;
                             bw = Math.min(bw, cellW * 0.85);
                             const jit = (Math.random() - 0.5) * cellW * 0.5;
@@ -1691,8 +1782,8 @@
                                         cr++;
                                     }
                                 }
-                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math
-                                    .random() * 0.15);
+                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math.random() *
+                                    0.15);
                                 for (let r2 = 0; r2 < rowsW; r2++) {
                                     if (!rowStates[r2]) continue;
                                     for (let c2 = 0; c2 < colsW; c2++) {
@@ -1704,8 +1795,8 @@
                                         if (rnd < 0.02) color = '248,113,113';
                                         else if (rnd < 0.07) color = '122,183,212';
                                         else color = Math.random() > 0.5 ? '251,191,36' : '252,211,77';
-                                        let alpha = (layerType === 'mid') ? (0.3 + Math.random() * 0.7) : (0.7 +
-                                            Math.random() * 0.3);
+                                        let alpha = (layerType === 'mid') ? (0.3 + Math.random() * 0.7) : (0.7 + Math
+                                            .random() * 0.3);
                                         windows.push({ x: wx, y: wy, w: winW, h: winH, lit: true, color, alpha });
                                     }
                                 }
@@ -1839,7 +1930,7 @@
                 }
             }
 
-            // ---------- 行星系统 ----------
+            // --- 行星系统 ---
             class Planet {
                 constructor(x, y, radius, color, ringLayers, craterCount) {
                     this.x = x;
@@ -2097,7 +2188,7 @@
                 resetMeteor();
             }
 
-            // ---------- 陨星系统 ----------
+            // --- 陨星系统 ---
             let meteor = {
                 state: 'attached',
                 x: 0,
@@ -2160,7 +2251,6 @@
                 viewport.targetScale = CONFIG.spaceOpen.endScale;
                 viewport.transitioning = false;
                 epicFlowState = 'flying';
-                // 单颗陨星音效
                 if (soundInitialized && !soundMuted && soundEngine) {
                     soundEngine.playSound('meteor', 0, 3.5, 0.6, 0.2);
                 }
@@ -2343,7 +2433,7 @@
                 ctx.globalAlpha = 1;
             }
 
-            // ---------- 流星雨 ----------
+            // --- 流星雨 ---
             let showerMeteors = [];
             let showerSpawnTimer = 0;
             let showerActive = false,
@@ -2389,7 +2479,6 @@
                     trailSegments: cfg.trailSegments,
                 };
                 showerMeteors.push(meteorObj);
-                // 每一颗流星雨流星触发独立音效
                 const pan = clamp((meteorObj.x / W) * 2 - 1, -1, 1);
                 const vol = 0.3 + 0.3 * brightness;
                 playShowerMeteorSound(pan, vol);
@@ -2486,7 +2575,7 @@
                 return { r: c1.r + (c2.r - c1.r) * t, g: c1.g + (c2.g - c1.g) * t, b: c1.b + (c2.b - c1.b) * t };
             }
 
-            // ---------- 视口系统 ----------
+            // --- 视口系统 ---
             let viewport = {
                 cx: W / 2,
                 cy: H / 2,
@@ -2552,7 +2641,7 @@
                 }
             }
 
-            // ---------- Epic 状态机 ----------
+            // --- Epic 状态机 ---
             let epicFlowState = 'city_open';
             let cityOpen = { progress: 0, startTime: 0, duration: CONFIG.eye.duration };
             let cityRise = {
@@ -2608,7 +2697,7 @@
                 lastEpicState = '';
             }
 
-            // ---------- Epic 绘制 ----------
+            // --- Epic 绘制 ---
             function drawCityScene(offY, liftProgress, time) {
                 drawCityStars(time, liftProgress);
                 drawClouds(1.0);
@@ -2728,7 +2817,7 @@
                 ctx.restore();
             }
 
-            // ---------- Epic 更新 ----------
+            // --- Epic 更新 ---
             function updateEpic(timestamp) {
                 const h = safeH();
                 if (isNaN(h) || h <= 0) return;
@@ -2922,7 +3011,6 @@
                 updateViewport();
             }
 
-            // ---------- Epic 绘制入口 ----------
             function drawEpic(timestamp) {
                 const time = timestamp / 100;
                 const h = safeH();
@@ -2959,9 +3047,9 @@
                 ctx.fillText(status, 16, 26);
             }
 
-            // ============================================================
-            // 6. 阶段二：闭眼 (CLOSING)
-            // ============================================================
+            // ================================================================
+            // 阶段二：闭眼 (CLOSING)
+            // ================================================================
             let closingProgress = 0;
             let closeStartTime = 0;
             const CLOSE_DURATION = CONFIG_MASTER.firstCloseDuration;
@@ -3022,9 +3110,9 @@
                 }
             }
 
-            // ============================================================
-            // 7. 阶段三：烟花 (FIREWORKS)
-            // ============================================================
+            // ================================================================
+            // 阶段三：烟花 (FIREWORKS)
+            // ================================================================
             const FW_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
                 { r: 235, g: 240, b: 255 }, { r: 255, g: 230, b: 210 },
@@ -3116,7 +3204,6 @@
                 }
             }
 
-            // 烟花粒子
             let fwRockets = [];
             let fwParticles = [];
             let fwWind = 0;
@@ -3221,7 +3308,6 @@
                     this.type = randInt(0, 5);
                     this.alive = true;
                     this.trailCounter = 0;
-                    // 发射音效
                     const pan = clamp(((sx / W) * 2 - 1), -1, 1);
                     playFireworkLaunchSound(pan);
                 }
@@ -3271,7 +3357,6 @@
                         y = this.y,
                         hue = this.hue;
                     const type = this.type;
-                    // 爆炸音效
                     const pan = clamp(((x / W) * 2 - 1), -1, 1);
                     playFireworkExplodeSound(pan);
 
@@ -3446,7 +3531,6 @@
                 ctx.globalCompositeOperation = 'source-over';
             }
 
-            // 烟花睁眼遮罩
             function drawFwOpenMask(progress, time) {
                 const p = clamp(progress, 0, 1);
                 if (p >= 1) {
@@ -3502,7 +3586,6 @@
                 ctx.fillRect(0, 0, W, H);
             }
 
-            // 烟花启动
             let fwStartTime = 0;
             let fwOpened = false;
             const FW_OPEN_DURATION = 2500;
@@ -3552,10 +3635,9 @@
                 }
             }
 
-            // ============================================================
-            // 8. 蛋糕过渡 + 蛋糕许愿 (保留全部)
-            // ============================================================
-            // 离屏 Canvas
+            // ================================================================
+            // 蛋糕过渡 + 蛋糕许愿 (优化：自动播放生日歌)
+            // ================================================================
             const OFF_W = 800;
             const OFF_H = 600;
             const offCanvas = document.createElement('canvas');
@@ -4253,7 +4335,6 @@
                 drawCakeFlames(time);
             }
 
-            // 蛋糕绘制到主画布
             let cakeDrawInfo = { offsetX: 0, offsetY: 0, drawW: 0, drawH: 0, scale: 1 };
 
             function updateCakeDrawInfo() {
@@ -4275,7 +4356,6 @@
                 ctx.restore();
             }
 
-            // 蛋糕闭眼/睁眼遮罩
             function drawCakeWithOpenMask(progress) {
                 const p = clamp(progress, 0, 1);
                 const cx = W / 2;
@@ -4358,7 +4438,7 @@
                 }
             }
 
-            // 烟雾粒子系统
+            // --- 烟雾粒子 ---
             let cakeSmokeParticles = [];
             let cakeSmokeActive = false;
 
@@ -4430,7 +4510,7 @@
                 ctx.restore();
             }
 
-            // 星空场景 (用于蛋糕祝福)
+            // --- 星空场景 (用于蛋糕祝福) ---
             let stars_stars = [];
             let stars_clouds = [];
             const STAR_COLORS = [
@@ -4599,9 +4679,9 @@
                 stars_clouds = stars_generateClouds(W, H);
             }
 
-            // ============================================================
-            // 9. 蛋糕过渡 (CAKE_TRANSITION)
-            // ============================================================
+            // ================================================================
+            // 蛋糕过渡 (CAKE_TRANSITION) — 在此启动 birthday 音乐
+            // ================================================================
             function startCakeTransition() {
                 currentPhase = MASTER_PHASE.CAKE_TRANSITION;
                 cakeTransitionProgress = 0;
@@ -4610,6 +4690,10 @@
                 infoEl.classList.remove('show');
                 statusTip.textContent = '✦ 许个愿吧 · 星河祝福 ✦';
                 statusTip.classList.add('show');
+
+                // ★ 核心优化：进入蛋糕过渡时自动播放生日歌 (循环)
+                playBirthdayMusic();
+
                 initCakeFlow();
             }
 
@@ -4641,9 +4725,9 @@
                 }
             }
 
-            // ============================================================
-            // 10. 蛋糕流程 (CAKE_FLOW)
-            // ============================================================
+            // ================================================================
+            // 蛋糕流程 (CAKE_FLOW)
+            // ================================================================
             let cakeCloseState = {
                 progress: 0,
                 phase: 'idle',
@@ -4670,7 +4754,6 @@
             let targetCharPositions = [];
             let flyStartTime = 0;
 
-            // 简短粒子系统 (用于祝福文字)
             const PARTICLE_CFG = {
                 flyDuration: 2000,
                 fontSizeMin: 24,
@@ -4696,8 +4779,7 @@
             let BLESSINGS = [];
             while (BLESSINGS.length < PARTICLE_CFG.particlesPerChar * 4) {
                 BASE_BLESSINGS.forEach(t => {
-                    if (BLESSINGS.length < PARTICLE_CFG.particlesPerChar * 4) BLESSINGS.push(
-                        t);
+                    if (BLESSINGS.length < PARTICLE_CFG.particlesPerChar * 4) BLESSINGS.push(t);
                 });
             }
             for (let i = BLESSINGS.length - 1; i > 0; i--) {
@@ -5092,7 +5174,7 @@
                 flyStartTime = 0;
             }
 
-            // 蛋糕流程主函数
+            // --- 蛋糕流程主函数 ---
             function initCakeFlow() {
                 flamesExtinguished = false;
                 cakeCloseState.phase = 'idle';
@@ -5113,6 +5195,8 @@
                     initParticles();
                     particlesReady = true;
                 }
+                // 停止之前可能残留的生日歌，由上层 startCakeTransition 统一播放
+                // 但为了保险，这里不停止，只确保不重复
             }
 
             function startCakeFlow() {
@@ -5138,6 +5222,7 @@
                     initParticles();
                     particlesReady = true;
                 }
+                // 播放蛋糕音效 (含 birthday 音乐)
                 if (soundInitialized && !soundMuted) {
                     playCakeSound();
                 }
@@ -5154,6 +5239,7 @@
                                 if (soundInitialized && !soundMuted) {
                                     stopHeartbeat();
                                     stopSpaceAmbient();
+                                    // 生日歌继续播放，不停止
                                 }
                             }
                         } else if (cakeTransitionPhase === 'fading') {
@@ -5177,6 +5263,7 @@
                                 if (soundInitialized && !soundMuted) {
                                     playSpaceAmbient();
                                     soundEngine.playSound('heartbeat', 0, 2, 0.2, 0);
+                                    // 生日歌保持播放
                                 }
                             } else {
                                 let alpha = 0;
@@ -5324,9 +5411,9 @@
                 }
             }
 
-            // ============================================================
-            // 11. 主渲染循环
-            // ============================================================
+            // ================================================================
+            // 主渲染循环
+            // ================================================================
             let masterStartTime = 0;
             let fwOpenProgress = 0;
             let animationStarted = false;
@@ -5367,9 +5454,9 @@
                 animId = requestAnimationFrame(masterRender);
             }
 
-            // ============================================================
-            // 12. 初始化流程 (由按钮触发)
-            // ============================================================
+            // ================================================================
+            // 初始化流程 (由按钮触发)
+            // ================================================================
             function initMaster() {
                 if (animationStarted) return;
                 animationStarted = true;
@@ -5399,35 +5486,27 @@
                 animId = requestAnimationFrame(masterRender);
             }
 
-            // ----- 点击“开始”按钮的处理 (预加载 + 心跳前奏) -----
+            // ----- 点击“开始”按钮 (预加载 + 心跳前奏) -----
             startBtn.addEventListener('click', async function (e) {
                 e.preventDefault();
 
-                // 1. 禁用按钮，显示加载状态
                 startBtn.disabled = true;
                 startBtn.textContent = '加载中…';
 
                 try {
-                    // 2. 初始化声音系统（内部包含预加载）
-                    // 这里会等待所有音频（包括后备合成音）加载完成
                     if (!soundInitialized) {
                         await initSoundSystem();
                     }
-                    // 确保声音开启
                     if (soundEngine) {
                         soundEngine.setMuted(false);
                         soundMuted = false;
                         soundToggle.textContent = '🔊 音效已开启';
                     }
 
-                    // 预加载完成，现在开始心跳前奏
-                    // 3. 播放心跳声 (2秒后自动停止)
                     playHeartbeat();
 
-                    // 4. 隐藏覆盖层 (淡出)
                     startOverlay.classList.add('hidden');
 
-                    // 5. 黑屏2秒后启动动画 (与心跳时长对齐)
                     setTimeout(() => {
                         initMaster();
                     }, 2000);
@@ -5440,7 +5519,7 @@
                 }
             });
 
-            // 窗口resize处理
+            // 窗口resize
             window.addEventListener('resize', () => {
                 resize();
                 generateCityStars();
@@ -5504,8 +5583,8 @@
                 if (particlesReady) initParticles();
             });
 
-            console.log('✦ 星河入梦 · 花火 → 蛋糕许愿 · 星河祝福 ✦ (含预加载 + 心跳前奏)');
-            console.log('🔊 点击“开始”后先预加载音频，再心跳2秒后睁眼');
+            console.log('✦ 星河入梦 · 花火 → 蛋糕许愿 · 星河祝福 ✦ (含 birthday 自动播放)');
+            console.log('🔊 点击“开始”后预加载音频，心跳2秒后睁眼，蛋糕场景自动播放生日歌');
         })();
     </script>
 </body>

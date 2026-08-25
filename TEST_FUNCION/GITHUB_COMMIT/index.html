@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GitHub 远程文件管理 · 最终修复版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260825054902">
+    <title>GitHub 远程文件管理 · 防御增强版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js">
     </script>
     <style>
-        /* ===== 样式与之前完全一致（为节省篇幅，此处省略，实际使用请保留完整样式） ===== */
+        /* ===== 样式与原版一致（为节省篇幅保留核心样式） ===== */
         :root {
             --primary: #2b6cb0;
             --primary-dark: #1a4f7a;
@@ -506,7 +506,6 @@
             flex-shrink: 0;
         }
 
-        /* ===== 目录树 ===== */
         .tree-browser {
             border: 1.5px solid var(--gray-200);
             border-radius: var(--radius-sm);
@@ -675,7 +674,6 @@
             padding: 0 1px;
         }
 
-        /* ===== 右键菜单 ===== */
         #contextMenu {
             display: none;
             position: fixed;
@@ -729,7 +727,6 @@
             flex-shrink: 0;
         }
 
-        /* ===== 路径与文件状态 ===== */
         .path-selector {
             display: flex;
             gap: 8px;
@@ -837,7 +834,6 @@
             font-family: var(--mono);
         }
 
-        /* ===== 按钮 & 操作 ===== */
         .actions {
             display: flex;
             flex-wrap: wrap;
@@ -1039,7 +1035,6 @@
             opacity: 1;
         }
 
-        /* ===== 密码获取 Token ===== */
         .pwd-token-section {
             margin-top: 12px;
             border: 1.5px dashed var(--gray-300);
@@ -1182,7 +1177,6 @@
             margin-top: 2px;
         }
 
-        /* ===== 响应式 ===== */
         @media (max-width:600px) {
             .pwd-token-section .pwd-row {
                 flex-direction: column;
@@ -1260,7 +1254,6 @@
             }
         }
 
-        /* ===== 加载遮罩 ===== */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -1294,33 +1287,29 @@
 
 <body>
 
-    <!-- ===== 加载遮罩 ===== -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner-large"></div>
     </div>
 
-    <!-- ===== 右键菜单 ===== -->
     <div id="contextMenu">
-        <button class="menu-item" data-action="newFile?v=20260825054902"><span class="menu-icon">📄</span> 新建文件</button>
-        <button class="menu-item" data-action="newFolder?v=20260825054902"><span class="menu-icon">📁</span> 新建文件夹</button>
+        <button class="menu-item" data-action="newFile"><span class="menu-icon">📄</span> 新建文件</button>
+        <button class="menu-item" data-action="newFolder"><span class="menu-icon">📁</span> 新建文件夹</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="getContent?v=20260825054902"><span class="menu-icon">📖</span> 获取内容</button>
+        <button class="menu-item" data-action="getContent"><span class="menu-icon">📖</span> 获取内容</button>
         <div class="menu-divider"></div>
-        <button class="menu-item danger" data-action="deleteFile?v=20260825054902"><span class="menu-icon">🗑️</span> 删除文件</button>
-        <button class="menu-item danger" data-action="deleteFolder?v=20260825054902"><span class="menu-icon">🗑️</span> 删除文件夹</button>
+        <button class="menu-item danger" data-action="deleteFile"><span class="menu-icon">🗑️</span> 删除文件</button>
+        <button class="menu-item danger" data-action="deleteFolder"><span class="menu-icon">🗑️</span> 删除文件夹</button>
     </div>
 
-    <!-- ===== 主应用 ===== -->
     <div class="app-container" id="app">
         <header class="header">
             <div class="header-icon">📂</div>
             <h1>GitHub 文件管理</h1>
-            <span class="sub">REST API v3 · 最终修复版</span>
+            <span class="sub">防御增强 · 熔断器优化</span>
         </header>
 
         <form id="githubForm" autocomplete="off">
 
-            <!-- Step 1: 认证 -->
             <div class="section">
                 <div class="section-title">
                     <span class="step-num">1</span> 身份认证
@@ -1343,7 +1332,6 @@
                         </div>
                     </div>
 
-                    <!-- 通过密码获取 Token -->
                     <div class="pwd-token-section" id="pwdTokenSection">
                         <div class="pwd-header" id="pwdToggleHeader">
                             <span>🔐 通过密码获取 Token</span>
@@ -1379,7 +1367,6 @@
                 </div>
             </div>
 
-            <!-- Step 2: 仓库 -->
             <div class="section">
                 <div class="section-title">
                     <span class="step-num">2</span> 选择仓库
@@ -1426,7 +1413,6 @@
                 </div>
             </div>
 
-            <!-- Step 3: 路径选择 -->
             <div class="section">
                 <div class="section-title">
                     <span class="step-num">3</span> 选择文件路径
@@ -1463,7 +1449,6 @@
                 </div>
             </div>
 
-            <!-- Step 4: 提交内容 -->
             <div class="section">
                 <div class="section-title">
                     <span class="step-num">4</span> 提交内容
@@ -1496,7 +1481,6 @@
                 </div>
             </div>
 
-            <!-- Actions -->
             <div class="actions">
                 <button type="submit" class="btn btn-primary" id="btnSubmit">
                     🚀 提交文件
@@ -1510,7 +1494,6 @@
             </div>
         </form>
 
-        <!-- Result -->
         <div class="result-area" id="resultArea">
             <div class="result-header" id="resultHeader">
                 <span class="status-icon" id="resultIcon">📌</span>
@@ -1522,12 +1505,239 @@
         <div class="footer-note">
             💡 使用 GitHub REST API · 所有请求均在前端发出 · 令牌仅存在于内存中 · Ctrl+Enter 快速提交
             <br>📌 右键点击目录树节点可进行文件/文件夹操作 · 单击文件自动加载内容
+            <br>🛡️ 防御策略：智能重试（指数退避）· 熔断器（仅对5xx/超时/429计数）· 请求超时 · 预连接
         </div>
     </div>
 
     <script>
         (function () {
             'use strict';
+
+            // ======================================================================
+            //  🔧 防御性编程：API 请求核心（智能重试 + 熔断器 + 超时）
+            //  优化：404/415 等客户端错误不触发熔断器
+            // ======================================================================
+
+            var RETRY_CONFIG = {
+                maxRetries: 3,
+                baseDelay: 800,
+                maxDelay: 12000,
+                timeout: 30000,
+                retryableStatuses: [408, 429, 500, 502, 503, 504],
+                retryOnNetworkError: true,
+            };
+
+            var circuitBreaker = {
+                failures: 0,
+                lastFailureTime: 0,
+                state: 'CLOSED',
+                threshold: 5,
+                timeout: 30000,
+            };
+
+            function ApiError(status, statusText, body, url, method) {
+                this.name = 'ApiError';
+                this.status = status;
+                this.statusText = statusText;
+                this.body = body;
+                this.url = url;
+                this.method = method || 'GET';
+                this.message = 'HTTP ' + status + ': ' + statusText + ' (' + url + ')';
+                if (body && typeof body === 'object') {
+                    this.message += ' - ' + (body.message || JSON.stringify(body).slice(0, 200));
+                }
+            }
+            ApiError.prototype = Object.create(Error.prototype);
+            ApiError.prototype.constructor = ApiError;
+
+            // ---- 判断是否应计入熔断器失败次数 ----
+            function shouldCountFailure(error) {
+                // 如果是 ApiError，只对 5xx, 429, 408 计数
+                if (error instanceof ApiError) {
+                    var status = error.status;
+                    if (status >= 500 && status <= 599) return true;
+                    if (status === 429 || status === 408) return true;
+                    return false; // 4xx 客户端错误不计数（404, 415 等）
+                }
+                // 网络错误或超时计入
+                if (error.isTimeout || error.isNetworkError || error.name === 'TypeError' || error.name === 'AbortError') {
+                    return true;
+                }
+                // 其他未知错误也计入（保险）
+                return true;
+            }
+
+            async function apiRequest(url, options, retryOptions) {
+                options = options || {};
+                var config = Object.assign({}, RETRY_CONFIG, retryOptions || {});
+                var method = options.method || 'GET';
+
+                if (circuitBreaker.state === 'OPEN') {
+                    var now = Date.now();
+                    if (now - circuitBreaker.lastFailureTime > circuitBreaker.timeout) {
+                        circuitBreaker.state = 'HALF_OPEN';
+                    } else {
+                        var err = new Error('⛔ 熔断器已打开，请求被拒绝（连续失败 ' + circuitBreaker.failures + ' 次）');
+                        err.isCircuitOpen = true;
+                        throw err;
+                    }
+                }
+
+                var lastError = null;
+                var delay = config.baseDelay;
+                var maxAttempts = config.maxRetries + 1;
+
+                for (var attempt = 0; attempt < maxAttempts; attempt++) {
+                    try {
+                        var controller = new AbortController();
+                        var timeoutId = setTimeout(function () { controller.abort(); }, config.timeout);
+
+                        var fetchOptions = Object.assign({}, options);
+                        fetchOptions.signal = controller.signal;
+                        if (attempt > 0) {
+                            fetchOptions.headers = Object.assign({}, fetchOptions.headers || {});
+                            fetchOptions.headers['X-Retry-Count'] = String(attempt);
+                        }
+
+                        var response = await fetch(url, fetchOptions);
+                        clearTimeout(timeoutId);
+
+                        if (response.ok) {
+                            if (circuitBreaker.state === 'HALF_OPEN' || circuitBreaker.failures > 0) {
+                                circuitBreaker.state = 'CLOSED';
+                                circuitBreaker.failures = 0;
+                            }
+                            return response;
+                        }
+
+                        var isRetryable = config.retryableStatuses.indexOf(response.status) !== -1;
+
+                        // DELETE 404 视为成功
+                        if (method === 'DELETE' && response.status === 404) {
+                            var mockResponse = new Response('{"message":"Resource already deleted"}', {
+                                status: 200,
+                                statusText: 'OK',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                            return mockResponse;
+                        }
+
+                        if (isRetryable && attempt < config.maxRetries) {
+                            lastError = new ApiError(response.status, response.statusText, null, url, method);
+                            try {
+                                var clone = response.clone();
+                                var bodyText = await clone.text();
+                                try { lastError.body = JSON.parse(bodyText); } catch (_) { lastError.body = bodyText; }
+                            } catch (_) { /* ignore */ }
+                            // 继续重试
+                        } else {
+                            var errBody = null;
+                            try {
+                                var clone2 = response.clone();
+                                var text2 = await clone2.text();
+                                try { errBody = JSON.parse(text2); } catch (_) { errBody = text2; }
+                            } catch (_) { /* ignore */ }
+                            var apiErr = new ApiError(response.status, response.statusText, errBody, url, method);
+                            // 判断是否应计数（客户端错误不计数）
+                            if (shouldCountFailure(apiErr)) {
+                                circuitBreaker.failures++;
+                                circuitBreaker.lastFailureTime = Date.now();
+                                if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                                    circuitBreaker.state = 'OPEN';
+                                }
+                            }
+                            throw apiErr;
+                        }
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            lastError = new Error('⏱️ 请求超时 (' + config.timeout + 'ms)');
+                            lastError.isTimeout = true;
+                        } else if (error.name === 'ApiError') {
+                            lastError = error;
+                        } else if (error.message && error.message.includes('熔断器')) {
+                            throw error;
+                        } else {
+                            lastError = error;
+                            lastError.isNetworkError = true;
+                        }
+
+                        var shouldRetry = false;
+                        if (config.retryOnNetworkError && attempt < config.maxRetries) {
+                            if (lastError.isTimeout || lastError.isNetworkError || lastError.name === 'TypeError') {
+                                shouldRetry = true;
+                            }
+                        }
+                        if (lastError instanceof ApiError && lastError.status && config.retryableStatuses.indexOf(lastError
+                            .status) !== -1) {
+                            shouldRetry = true;
+                        }
+
+                        if (!shouldRetry) {
+                            // 只有需要计数的错误才更新熔断器
+                            if (shouldCountFailure(lastError)) {
+                                circuitBreaker.failures++;
+                                circuitBreaker.lastFailureTime = Date.now();
+                                if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                                    circuitBreaker.state = 'OPEN';
+                                }
+                            }
+                            throw lastError;
+                        }
+                    }
+
+                    if (attempt < config.maxRetries) {
+                        var jitter = Math.random() * 0.3 * delay;
+                        var waitTime = Math.min(delay + jitter, config.maxDelay);
+                        await new Promise(function (resolve) { setTimeout(resolve, waitTime); });
+                        delay = Math.min(delay * 2, config.maxDelay);
+                    }
+                }
+
+                // 所有重试失败
+                if (lastError) {
+                    if (shouldCountFailure(lastError)) {
+                        circuitBreaker.failures++;
+                        circuitBreaker.lastFailureTime = Date.now();
+                        if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                            circuitBreaker.state = 'OPEN';
+                        }
+                    }
+                    throw lastError;
+                }
+                var genericErr = new Error('❌ 请求失败，已重试 ' + config.maxRetries + ' 次');
+                throw genericErr;
+            }
+
+            async function apiRequestJSON(url, options, retryOptions) {
+                var response = await apiRequest(url, options, retryOptions);
+                return response.json();
+            }
+
+            async function apiRequestText(url, options, retryOptions) {
+                var response = await apiRequest(url, options, retryOptions);
+                return response.text();
+            }
+
+            function preconnectGitHub() {
+                var link = document.createElement('link');
+                link.rel = 'preconnect';
+                link.href = 'https://api.github.com';
+                document.head.appendChild(link);
+                setTimeout(function () {
+                    fetch('https://api.github.com/zen', {
+                        method: 'GET',
+                        headers: { 'Accept': 'text/plain' },
+                    }).catch(function () { /* 静默失败 */ });
+                }, 1000);
+                console.log('🔗 已预热 GitHub API 连接');
+            }
+
+            function resetCircuitBreaker() {
+                circuitBreaker.state = 'CLOSED';
+                circuitBreaker.failures = 0;
+                circuitBreaker.lastFailureTime = 0;
+                console.log('🔄 熔断器已重置');
+            }
 
             // ======================================================================
             //  密文（固定 IV + CBC 模式，10 轮加密）
@@ -1809,7 +2019,6 @@
 
             function hideFileStatus() { fileStatusBar.classList.remove('visible'); }
 
-            // ---- 自动生成提交信息（强制更新） ----
             function setCommitMessage(type, path) {
                 var cleanPath = path.replace(/\/$/, '');
                 var parts = cleanPath.split('/');
@@ -1896,16 +2105,16 @@
                     row.innerHTML =
                         '<span class="node-icon">' + icon + '</span>' +
                         '<span class="node-name">' + highlightText(node.path, filter) + '</span>';
-                    row.addEventListener('click', function (n) {
+                    row.addEventListener('click', (function (n) {
                         return function () { handleNodeClick(n); };
-                    }(node));
-                    row.addEventListener('contextmenu', function (n) {
+                    })(node));
+                    row.addEventListener('contextmenu', (function (n) {
                         return function (e) {
                             e.preventDefault();
                             e.stopPropagation();
                             showContextMenu(e.clientX, e.clientY, n);
                         };
-                    }(node));
+                    })(node));
                     fragment.appendChild(row);
                 }
                 treeContent.appendChild(fragment);
@@ -1938,7 +2147,7 @@
                         childContainer.appendChild(createTreeNode(children[i], depth + 1));
                     }
                 }
-                row.addEventListener('click', function (n) {
+                row.addEventListener('click', (function (n) {
                     return function (e) {
                         e.stopPropagation();
                         if (isDir) {
@@ -1963,14 +2172,14 @@
                             handleNodeClick(n);
                         }
                     };
-                }(node));
-                row.addEventListener('contextmenu', function (n) {
+                })(node));
+                row.addEventListener('contextmenu', (function (n) {
                     return function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         showContextMenu(e.clientX, e.clientY, n);
                     };
-                }(node));
+                })(node));
                 container.appendChild(row);
                 container.appendChild(childContainer);
                 return container;
@@ -2017,13 +2226,7 @@
                 try {
                     var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(cleanPath) +
                         '?ref=' + encodeURIComponent(branch);
-                    var resp = await fetch(url, { headers: apiHeaders() });
-                    if (!resp.ok) {
-                        var err = await resp.json().catch(function () { return {}; });
-                        showFileStatus('error', '❌', '获取失败: ' + (err.message || 'HTTP ' + resp.status));
-                        return;
-                    }
-                    var data = await resp.json();
+                    var data = await apiRequestJSON(url, { headers: apiHeaders() });
                     if (data.encoding === 'base64' && data.content) {
                         var decoded = base64ToUtf8(data.content);
                         contentInput.value = decoded;
@@ -2037,8 +2240,14 @@
                     } else {
                         showFileStatus('error', '❌', '文件内容格式不支持（仅支持文本文件）');
                     }
-                } catch (err) {
-                    showFileStatus('error', '❌', '网络错误: ' + (err.message || '请求失败'));
+                } catch (error) {
+                    if (error.status === 404) {
+                        showFileStatus('error', '❌', '文件不存在');
+                    } else {
+                        var errMsg = error.message || '请求失败';
+                        if (error.body && error.body.message) errMsg = error.body.message;
+                        showFileStatus('error', '❌', '获取失败: ' + errMsg);
+                    }
                 }
             }
 
@@ -2071,7 +2280,7 @@
                     } else {
                         crumb.className = 'crumb';
                         var targetPath = accumulated + (isLast && path.endsWith('/') ? '/' : '');
-                        crumb.addEventListener('click', function (tp) {
+                        crumb.addEventListener('click', (function (tp) {
                             return function () {
                                 if (isLast && path.endsWith('/')) {
                                     pathInput.value = accumulated + '/';
@@ -2081,14 +2290,14 @@
                                 updateBreadcrumb(pathInput.value);
                                 autoDetectFile(pathInput.value);
                             };
-                        }(targetPath));
+                        })(targetPath));
                     }
                     crumb.textContent = parts[i];
                     breadcrumb.appendChild(crumb);
                 }
             }
 
-            // ===== 自动检测文件（并填充 commit 消息） =====
+            // ===== 自动检测文件 =====
             async function autoDetectFile(path) {
                 path = normalizePath(path);
                 if (!path || path.endsWith('/')) {
@@ -2122,16 +2331,15 @@
                 try {
                     var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path) +
                         '?ref=' + encodeURIComponent(branch);
-                    var resp = await fetch(url, { headers: apiHeaders() });
-                    if (resp.ok) {
-                        var data = await resp.json();
-                        fileExistsCache[path] = { exists: true, sha: data.sha, size: data.size };
-                        showFileStatus('update', '🔄',
-                            '文件已存在 · SHA: <code>' + data.sha.substring(0, 10) + '…</code> · 大小: ' + formatSize(
-                                data.size) + ' · 将执行 <strong>更新</strong> 操作');
-                        shaInput.value = data.sha;
-                        setCommitMessage('update', path);
-                    } else if (resp.status === 404) {
+                    var data = await apiRequestJSON(url, { headers: apiHeaders() });
+                    fileExistsCache[path] = { exists: true, sha: data.sha, size: data.size };
+                    showFileStatus('update', '🔄',
+                        '文件已存在 · SHA: <code>' + data.sha.substring(0, 10) + '…</code> · 大小: ' + formatSize(data
+                            .size) + ' · 将执行 <strong>更新</strong> 操作');
+                    shaInput.value = data.sha;
+                    setCommitMessage('update', path);
+                } catch (error) {
+                    if (error.status === 404) {
                         fileExistsCache[path] = { exists: false, sha: '', size: 0 };
                         showFileStatus('create', '✨', '文件不存在 · 将执行 <strong>创建</strong> 新文件操作');
                         shaInput.value = '';
@@ -2139,8 +2347,6 @@
                     } else {
                         hideFileStatus();
                     }
-                } catch (err) {
-                    hideFileStatus();
                 }
             }
 
@@ -2181,7 +2387,7 @@
                 contextTargetNode = null;
             }
 
-            // ===== 右键菜单操作（接收 node 参数） =====
+            // ===== 右键菜单操作 =====
             async function menuNewFile(node) {
                 if (!node) return;
                 var dirPath = normalizePath(node.path);
@@ -2224,18 +2430,13 @@
                         content: utf8ToBase64(''),
                         branch: branch,
                     };
-                    var resp = await fetch(url, {
+                    var data = await apiRequestJSON(url, {
                         method: 'PUT',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    var data = await resp.json().catch(function () { return {}; });
-                    if (!resp.ok) {
-                        showResult('error', '创建文件夹失败', '<strong>' + (data.message || 'HTTP ' + resp.status) + '</strong>',
-                            true);
-                        return;
-                    }
-                    showResult('success', '📁 文件夹已创建', '文件夹 <strong>' + fullPath + '</strong> 已创建（通过 .gitkeep 占位）。', false);
+                    showResult('success', '📁 文件夹已创建', '文件夹 <strong>' + fullPath + '</strong> 已创建（通过 .gitkeep 占位）。',
+                        false);
                     await loadRepo(true);
                     pathInput.value = fullPath + '/';
                     updateBreadcrumb(pathInput.value);
@@ -2243,15 +2444,16 @@
                     shaInput.value = '';
                     hideFileStatus();
                     setCommitMessage('add', fullPath + '/');
-                } catch (err) {
-                    showResult('error', '创建文件夹失败', '⚠️ ' + (err.message || '未知错误'), true);
+                } catch (error) {
+                    var errMsg = error.message || '未知错误';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '创建文件夹失败', '⚠️ ' + errMsg, true);
                 } finally {
                     showLoading(false);
                     hideContextMenu();
                 }
             }
 
-            // 🛠️ 核心修复：删除文件直接使用 node.sha，不再额外请求
             async function menuDeleteFile(node) {
                 if (!node) return;
                 var filePath = normalizePath(node.path);
@@ -2262,19 +2464,30 @@
                 var repo = getVal(repoInput);
                 var branch = getVal(branchSelect) || repoDefaultBranch;
 
-                // 优先使用节点自带的 sha
                 var sha = node.sha;
                 if (!sha) {
-                    // 若节点无 sha（极少数情况），尝试从缓存或网络获取
                     try {
                         var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
                             filePath) + '?ref=' + encodeURIComponent(branch);
-                        var checkResp = await fetch(checkUrl, { headers: apiHeaders() });
-                        if (!checkResp.ok) throw new Error('HTTP ' + checkResp.status);
-                        var checkData = await checkResp.json();
+                        var checkData = await apiRequestJSON(checkUrl, { headers: apiHeaders() });
                         sha = checkData.sha;
-                    } catch (err) {
-                        showResult('error', '删除失败', '⚠️ 无法获取文件 SHA: ' + (err.message || '未知错误'), true);
+                    } catch (error) {
+                        if (error.status === 404) {
+                            showResult('info', '文件已不存在', '文件 <strong>' + filePath + '</strong> 已经不存在了。', false);
+                            delete fileExistsCache[filePath];
+                            if (getVal(pathInput) === filePath) {
+                                pathInput.value = '';
+                                shaInput.value = '';
+                                contentInput.value = '';
+                                hideFileStatus();
+                            }
+                            await loadRepo(true);
+                            hideContextMenu();
+                            return;
+                        }
+                        var errMsg2 = error.message || '未知错误';
+                        if (error.body && error.body.message) errMsg2 = error.body.message;
+                        showResult('error', '删除失败', '⚠️ 无法获取文件 SHA: ' + errMsg2, true);
                         return;
                     }
                 }
@@ -2287,17 +2500,11 @@
                         sha: sha,
                         branch: branch,
                     };
-                    var resp = await fetch(url, {
+                    await apiRequestJSON(url, {
                         method: 'DELETE',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    var data = await resp.json().catch(function () { return {}; });
-                    if (!resp.ok) {
-                        showResult('error', '删除失败', '<strong>' + (data.message || 'HTTP ' + resp.status) + '</strong>',
-                            true);
-                        return;
-                    }
                     showResult('success', '🗑️ 文件已删除', '文件 <strong>' + filePath + '</strong> 已成功删除。', false);
                     delete fileExistsCache[filePath];
                     if (getVal(pathInput) === filePath) {
@@ -2307,8 +2514,10 @@
                         hideFileStatus();
                     }
                     await loadRepo(true);
-                } catch (err) {
-                    showResult('error', '删除失败', '⚠️ ' + (err.message || '未知错误'), true);
+                } catch (error) {
+                    var errMsg3 = error.message || '未知错误';
+                    if (error.body && error.body.message) errMsg3 = error.body.message;
+                    showResult('error', '删除失败', '⚠️ ' + errMsg3, true);
                 } finally {
                     showLoading(false);
                     hideContextMenu();
@@ -2348,20 +2557,17 @@
                                 sha: file.sha,
                                 branch: branch,
                             };
-                            var resp = await fetch(url, {
+                            await apiRequestJSON(url, {
                                 method: 'DELETE',
                                 headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                                 body: JSON.stringify(payload),
                             });
-                            if (resp.ok) {
-                                deleted++;
-                                delete fileExistsCache[file.path];
-                            } else {
-                                var errData = await resp.json().catch(function () { return {}; });
-                                failed.push(file.path + ' (' + (errData.message || 'HTTP ' + resp.status) + ')');
-                            }
+                            deleted++;
+                            delete fileExistsCache[file.path];
                         } catch (e) {
-                            failed.push(file.path + ' (' + e.message + ')');
+                            var eMsg = e.message || '未知错误';
+                            if (e.body && e.body.message) eMsg = e.body.message;
+                            failed.push(file.path + ' (' + eMsg + ')');
                         }
                     }
                     var msg = '删除了 ' + deleted + ' 个文件';
@@ -2378,8 +2584,10 @@
                         contentInput.value = '';
                         hideFileStatus();
                     }
-                } catch (err) {
-                    showResult('error', '删除失败', '⚠️ ' + (err.message || '未知错误'), true);
+                } catch (error) {
+                    var errMsg = error.message || '未知错误';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '删除失败', '⚠️ ' + errMsg, true);
                 } finally {
                     showLoading(false);
                     hideContextMenu();
@@ -2403,18 +2611,12 @@
                 token = token.trim();
                 if (showStatus) showTokenStatus('loading', '正在验证 Token…');
                 try {
-                    var resp = await fetch('https://api.github.com/user', {
+                    var user = await apiRequestJSON('https://api.github.com/user', {
                         headers: {
                             'Authorization': 'Bearer ' + token,
                             'Accept': 'application/vnd.github.v3+json',
                         }
                     });
-                    if (!resp.ok) {
-                        var err = await resp.json().catch(function () { return {}; });
-                        if (showStatus) showTokenStatus('error', '❌ Token 无效: ' + (err.message || 'HTTP ' + resp.status));
-                        return false;
-                    }
-                    var user = await resp.json();
                     currentUser = user;
                     ownerInput.value = user.login;
                     if (showStatus) {
@@ -2427,8 +2629,10 @@
                     }
                     await fetchUserRepos(showStatus);
                     return true;
-                } catch (err) {
-                    if (showStatus) showTokenStatus('error', '❌ 网络错误: ' + (err.message || '请求失败'));
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    if (showStatus) showTokenStatus('error', '❌ Token 无效: ' + errMsg);
                     return false;
                 }
             }
@@ -2438,17 +2642,12 @@
                 var token = getVal(tokenInput);
                 if (!token) return;
                 try {
-                    var resp = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&type=all', {
+                    var repos = await apiRequestJSON('https://api.github.com/user/repos?per_page=100&sort=updated&type=all', {
                         headers: {
                             'Authorization': 'Bearer ' + token,
                             'Accept': 'application/vnd.github.v3+json',
                         }
                     });
-                    if (!resp.ok) {
-                        if (showStatus) showTokenStatus('error', '❌ 获取仓库列表失败: HTTP ' + resp.status);
-                        return;
-                    }
-                    var repos = await resp.json();
                     repoList = repos.map(function (r) {
                         return {
                             name: r.name,
@@ -2473,8 +2672,10 @@
                             });
                         }
                     }
-                } catch (err) {
-                    if (showStatus) showTokenStatus('error', '❌ 获取仓库列表失败: ' + (err.message || '请求失败'));
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    if (showStatus) showTokenStatus('error', '❌ 获取仓库列表失败: ' + errMsg);
                 }
             }
 
@@ -2499,14 +2700,8 @@
                     return;
                 }
                 try {
-                    var resp = await fetch('https://api.github.com/repos/' + owner + '/' + repoName + '/branches', {
-                        headers: apiHeaders()
-                    });
-                    if (!resp.ok) {
-                        branchSelect.innerHTML = '<option value="">— 获取分支失败 —</option>';
-                        return;
-                    }
-                    var branches = await resp.json();
+                    var branches = await apiRequestJSON('https://api.github.com/repos/' + owner + '/' + repoName +
+                        '/branches', { headers: apiHeaders() });
                     currentRepoBranches = branches.map(function (b) { return b.name; });
                     branchSelect.innerHTML = '';
                     for (var i = 0; i < currentRepoBranches.length; i++) {
@@ -2524,7 +2719,7 @@
                         branchSelect.value = currentRepoBranches[0];
                     }
                     branchInput.value = branchSelect.value;
-                } catch (err) {
+                } catch (error) {
                     branchSelect.innerHTML = '<option value="">— 加载分支失败 —</option>';
                 }
             }
@@ -2545,17 +2740,7 @@
                 fileExistsCache = {};
                 try {
                     var repoUrl = 'https://api.github.com/repos/' + owner + '/' + repo;
-                    var repoResp = await fetch(repoUrl, { headers: apiHeaders() });
-                    if (!repoResp.ok) {
-                        var err = await repoResp.json().catch(function () { return {}; });
-                        showRepoStatus('error', '获取仓库失败: ' + (err.message || 'HTTP ' + repoResp.status));
-                        treeBrowser.classList.remove('visible');
-                        treeVisible = false;
-                        btnToggleTree.textContent = '📁 浏览';
-                        setLoading(btnLoadRepo, false);
-                        return;
-                    }
-                    var repoData = await repoResp.json();
+                    var repoData = await apiRequestJSON(repoUrl, { headers: apiHeaders() });
                     repoDefaultBranch = repoData.default_branch || 'main';
                     if (!branchSelect.value) {
                         branchSelect.value = repoDefaultBranch;
@@ -2564,14 +2749,7 @@
                     showRepoStatus('loading', '正在获取目录结构 (' + branchSelect.value + ')…');
                     var treeUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' +
                         encodeURIComponent(branchSelect.value) + '?recursive=1';
-                    var treeResp = await fetch(treeUrl, { headers: apiHeaders() });
-                    if (!treeResp.ok) {
-                        var err2 = await treeResp.json().catch(function () { return {}; });
-                        showRepoStatus('error', '获取目录失败: ' + (err2.message || 'HTTP ' + treeResp.status));
-                        setLoading(btnLoadRepo, false);
-                        return;
-                    }
-                    var treeData = await treeResp.json();
+                    var treeData = await apiRequestJSON(treeUrl, { headers: apiHeaders() });
                     repoTree = treeData.tree || [];
                     repoTree = repoTree.filter(function (n) { return n.type === 'tree' || n.type === 'blob'; });
                     buildTree(repoTree);
@@ -2584,8 +2762,13 @@
                     btnToggleTree.textContent = '📁 收起';
                     renderTree('');
                     treeSearch.value = '';
-                } catch (err) {
-                    showRepoStatus('error', '网络错误: ' + (err.message || '请求失败'));
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showRepoStatus('error', '加载失败: ' + errMsg);
+                    treeBrowser.classList.remove('visible');
+                    treeVisible = false;
+                    btnToggleTree.textContent = '📁 浏览';
                 } finally {
                     setLoading(btnLoadRepo, false);
                 }
@@ -2626,13 +2809,10 @@
                     try {
                         var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
                             path) + '?ref=' + encodeURIComponent(branch);
-                        var checkResp = await fetch(checkUrl, { headers: apiHeaders() });
-                        if (checkResp.ok) {
-                            var checkData = await checkResp.json();
-                            sha = checkData.sha;
-                            shaInput.value = sha;
-                        }
-                    } catch (_) { /* ignore */ }
+                        var checkData = await apiRequestJSON(checkUrl, { headers: apiHeaders() });
+                        sha = checkData.sha;
+                        shaInput.value = sha;
+                    } catch (_) { /* 文件不存在，忽略 */ }
                 }
                 var contentBase64;
                 try {
@@ -2651,34 +2831,11 @@
                 try {
                     setLoading(btnSubmit, true);
                     clearResult();
-                    var resp = await fetch(url, {
+                    var data = await apiRequestJSON(url, {
                         method: 'PUT',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    var data = await resp.json().catch(function () { return {}; });
-                    if (!resp.ok) {
-                        if (resp.status === 409) {
-                            showResult('error', '文件冲突',
-                                '⚠️ 文件 <strong>' + path + '</strong> 已存在，但未提供正确的 SHA。<br>已尝试自动获取，请重试或手动填写 SHA。',
-                                true);
-                            return;
-                        }
-                        if (resp.status === 422) {
-                            showResult('error', '验证失败',
-                                '<strong>' + (data.message || '请求参数有误') + '</strong><br>' +
-                                '<details style="margin-top:8px;"><summary style="cursor:pointer;color:var(--primary);">查看详情</summary>' +
-                                '<pre style="background:var(--gray-100);padding:10px;border-radius:6px;font-size:12px;overflow:auto;margin-top:6px;">' +
-                                escapeHtml(JSON.stringify(data, null, 2)) + '</pre></details>', true);
-                            return;
-                        }
-                        showResult('error', '提交失败',
-                            '<strong>' + (data.message || 'HTTP ' + resp.status) + '</strong><br>' +
-                            '<details style="margin-top:8px;"><summary style="cursor:pointer;color:var(--primary);">查看详情</summary>' +
-                            '<pre style="background:var(--gray-100);padding:10px;border-radius:6px;font-size:12px;overflow:auto;margin-top:6px;">' +
-                            escapeHtml(JSON.stringify(data, null, 2)) + '</pre></details>', true);
-                        return;
-                    }
                     var commitUrl = data.commit && data.commit.html_url || '';
                     var fileUrl = data.content && data.content.html_url || '';
                     var shaResult = (data.content && data.content.sha) || '';
@@ -2706,8 +2863,16 @@
                     await loadRepo(true);
                     pathInput.value = path;
                     updateBreadcrumb(path);
-                } catch (err) {
-                    showResult('error', '网络错误', '⚠️ ' + (err.message || '请求失败，请检查网络连接。'), true);
+                } catch (error) {
+                    if (error.status === 409) {
+                        showResult('error', '文件冲突',
+                            '⚠️ 文件 <strong>' + path + '</strong> 已存在，但未提供正确的 SHA。<br>已尝试自动获取，请重试或手动填写 SHA。',
+                            true);
+                    } else {
+                        var errMsg2 = error.message || '请求失败';
+                        if (error.body && error.body.message) errMsg2 = error.body.message;
+                        showResult('error', '提交失败', '⚠️ ' + errMsg2, true);
+                    }
                 } finally {
                     setLoading(btnSubmit, false);
                 }
@@ -2891,6 +3056,7 @@
                     tokenInput.value = '';
                     tokenInput.focus();
                     hideContextMenu();
+                    resetCircuitBreaker();
                 }, 10);
             });
 
@@ -2946,19 +3112,17 @@
                 }
             });
 
-            // ===== 右键菜单事件（先保存节点，再执行操作） =====
+            // ===== 右键菜单事件 =====
             contextMenu.addEventListener('click', function (e) {
                 var item = e.target.closest('.menu-item');
                 if (!item) return;
                 var action = item.dataset.action;
                 var node = contextTargetNode;
                 if (!node) {
-                    // fallback: 从选中的行获取
                     var selectedRow = treeContent.querySelector('.tree-node-row.selected');
                     if (selectedRow) {
                         var path = selectedRow.dataset.path;
                         var type = selectedRow.dataset.type;
-                        // 从 repoTree 中查找完整节点
                         var found = repoTree.find(function (n) { return n.path === path; });
                         if (found) node = found;
                     }
@@ -3026,12 +3190,17 @@
                 pwdInput.focus();
             });
 
+            // ===== 预连接 =====
+            preconnectGitHub();
+
             if (getVal(tokenInput)) {
                 setTimeout(function () { verifyToken(true); }, 500);
             }
 
-            console.log('✅ GitHub 文件管理工具（最终修复版）已加载');
-            console.log('💡 修复：删除文件直接使用节点 SHA，不再额外请求，稳定可靠。');
+            console.log('✅ GitHub 文件管理工具（防御增强版）已加载');
+            console.log('🛡️ 熔断器策略：仅对 5xx/超时/429 计数，404/415 等客户端错误不触发熔断');
+            console.log('💡 当前熔断器状态: ' + circuitBreaker.state + ' (失败次数: ' + circuitBreaker.failures + ')');
+
         })();
     </script>
 
