@@ -254,25 +254,52 @@
             'use strict';
 
             const DEFAULT_CONFIG = {
+                // 每个声音的配置：url（路径），start（起始秒），end（结束秒）
                 sounds: {
-                    heartbeat: { url: 'heartbeat.mp3', start: 0.0, end: 2.0 },
-                    city: { url: 'city_ambient.mp3', start: 0.0, end: 6.0 },
-                    space: { url: 'space_hum.mp3', start: 0.0, end: 4.0 },
-                    meteor: { url: 'meteor_fall.mp3', start: 0.0, end: 3.5 },
-                    firework_launch: { url: 'firework_launch.mp3', start: 0.0, end: 1.8 },
-                    firework_explode: { url: 'firework_explode.mp3', start: 0.0, end: 2.5 },
+                    heartbeat: {
+                        url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
+                        start: 0.0,
+                        end: 2.0,
+                    },
+                    city: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/city.mp3',
+                        start: 0.0,
+                        end: 6.0,
+                    },
+                    space: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/space.mp3',
+                        start: 0.0,
+                        end: 4.0,
+                    },
+                    meteor: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/meteor.mp3',
+                        start: 0.0,
+                        end: 3.5,
+                    },
+                    firework_launch: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_go.mp3',
+                        start: 0.0,
+                        end: 1.8,
+                    },
+                    firework_explode: {
+                        url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_boom.mp3',
+                        start: 0.0,
+                        end: 2.5,
+                    },
                 },
+                // 流星默认轨迹参数
                 meteor: {
-                    panStart: -0.8,
-                    panEnd: 0.8,
+                    panStart: -0.8, // 左声道起始 (-1 ~ 1)
+                    panEnd: 0.8, // 右声道终点
                     volumeStart: 0.6,
                     volumeEnd: 0.2,
-                    duration: 3.5,
+                    duration: 3.5, // 总时长（秒），会与截断取较小值
                 },
+                // 烟花默认参数
                 firework: {
                     launchDuration: 1.5,
-                    explodeDelay: 0.6,
-                    panSpread: 0.6,
+                    explodeDelay: 0.6, // 发射后多久爆炸
+                    panSpread: 0.6, // 爆炸时立体声扩散度
                 },
             };
 
