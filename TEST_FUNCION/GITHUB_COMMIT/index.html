@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GitHub 远程文件管理 · 防御增强版</title>
+    <title>GitHub 远程文件管理</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js">
     </script>
     <style>
-        /* ===== 样式与原版一致（为节省篇幅保留核心样式） ===== */
+        /* ===== 样式保持与原版一致 ===== */
         :root {
             --primary: #2b6cb0;
             --primary-dark: #1a4f7a;
@@ -1305,7 +1305,7 @@
         <header class="header">
             <div class="header-icon">📂</div>
             <h1>GitHub 文件管理</h1>
-            <span class="sub">防御增强 · 熔断器优化</span>
+            <span class="sub">防御增强 · 修复预连接错误</span>
         </header>
 
         <form id="githubForm" autocomplete="off">
@@ -1505,7 +1505,7 @@
         <div class="footer-note">
             💡 使用 GitHub REST API · 所有请求均在前端发出 · 令牌仅存在于内存中 · Ctrl+Enter 快速提交
             <br>📌 右键点击目录树节点可进行文件/文件夹操作 · 单击文件自动加载内容
-            <br>🛡️ 防御策略：智能重试（指数退避）· 熔断器（仅对5xx/超时/429计数）· 请求超时 · 预连接
+            <br>🛡️ 防御策略：智能重试（指数退避）· 熔断器（仅对5xx/超时/429计数）· 请求超时 · 预连接（仅preconnect）
         </div>
     </div>
 
@@ -1550,20 +1550,16 @@
             ApiError.prototype = Object.create(Error.prototype);
             ApiError.prototype.constructor = ApiError;
 
-            // ---- 判断是否应计入熔断器失败次数 ----
             function shouldCountFailure(error) {
-                // 如果是 ApiError，只对 5xx, 429, 408 计数
                 if (error instanceof ApiError) {
                     var status = error.status;
                     if (status >= 500 && status <= 599) return true;
                     if (status === 429 || status === 408) return true;
-                    return false; // 4xx 客户端错误不计数（404, 415 等）
+                    return false;
                 }
-                // 网络错误或超时计入
                 if (error.isTimeout || error.isNetworkError || error.name === 'TypeError' || error.name === 'AbortError') {
                     return true;
                 }
-                // 其他未知错误也计入（保险）
                 return true;
             }
 
@@ -1612,7 +1608,6 @@
 
                         var isRetryable = config.retryableStatuses.indexOf(response.status) !== -1;
 
-                        // DELETE 404 视为成功
                         if (method === 'DELETE' && response.status === 404) {
                             var mockResponse = new Response('{"message":"Resource already deleted"}', {
                                 status: 200,
@@ -1629,7 +1624,6 @@
                                 var bodyText = await clone.text();
                                 try { lastError.body = JSON.parse(bodyText); } catch (_) { lastError.body = bodyText; }
                             } catch (_) { /* ignore */ }
-                            // 继续重试
                         } else {
                             var errBody = null;
                             try {
@@ -1638,7 +1632,6 @@
                                 try { errBody = JSON.parse(text2); } catch (_) { errBody = text2; }
                             } catch (_) { /* ignore */ }
                             var apiErr = new ApiError(response.status, response.statusText, errBody, url, method);
-                            // 判断是否应计数（客户端错误不计数）
                             if (shouldCountFailure(apiErr)) {
                                 circuitBreaker.failures++;
                                 circuitBreaker.lastFailureTime = Date.now();
@@ -1673,7 +1666,6 @@
                         }
 
                         if (!shouldRetry) {
-                            // 只有需要计数的错误才更新熔断器
                             if (shouldCountFailure(lastError)) {
                                 circuitBreaker.failures++;
                                 circuitBreaker.lastFailureTime = Date.now();
@@ -1693,7 +1685,6 @@
                     }
                 }
 
-                // 所有重试失败
                 if (lastError) {
                     if (shouldCountFailure(lastError)) {
                         circuitBreaker.failures++;
@@ -1713,23 +1704,18 @@
                 return response.json();
             }
 
-            async function apiRequestText(url, options, retryOptions) {
-                var response = await apiRequest(url, options, retryOptions);
-                return response.text();
-            }
-
+            // ---- 预连接：仅使用 <link rel="preconnect">，不发送额外请求 ----
             function preconnectGitHub() {
                 var link = document.createElement('link');
                 link.rel = 'preconnect';
                 link.href = 'https://api.github.com';
                 document.head.appendChild(link);
-                setTimeout(function () {
-                    fetch('https://api.github.com/zen', {
-                        method: 'GET',
-                        headers: { 'Accept': 'text/plain' },
-                    }).catch(function () { /* 静默失败 */ });
-                }, 1000);
-                console.log('🔗 已预热 GitHub API 连接');
+                // 可选：也预热 assets 域名
+                var link2 = document.createElement('link');
+                link2.rel = 'preconnect';
+                link2.href = 'https://avatars.githubusercontent.com';
+                document.head.appendChild(link2);
+                console.log('🔗 已预热 GitHub API 连接 (preconnect)');
             }
 
             function resetCircuitBreaker() {
@@ -3190,7 +3176,7 @@
                 pwdInput.focus();
             });
 
-            // ===== 预连接 =====
+            // ===== 预连接（仅 preconnect，无额外请求） =====
             preconnectGitHub();
 
             if (getVal(tokenInput)) {
@@ -3198,7 +3184,7 @@
             }
 
             console.log('✅ GitHub 文件管理工具（防御增强版）已加载');
-            console.log('🛡️ 熔断器策略：仅对 5xx/超时/429 计数，404/415 等客户端错误不触发熔断');
+            console.log('🛡️ 预连接仅使用 <link rel="preconnect">，不再发送 /zen 请求，避免 415 错误');
             console.log('💡 当前熔断器状态: ' + circuitBreaker.state + ' (失败次数: ' + circuitBreaker.failures + ')');
 
         })();
