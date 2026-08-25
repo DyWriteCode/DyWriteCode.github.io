@@ -399,6 +399,13 @@
             &nbsp;·&nbsp; 🎂 新增「生日快乐」背景曲
         </div>
 
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <span id="versionBadge"
+                style="background:#1f2a3e;color:#8a9ab8;font-size:12px;padding:3px 14px;border-radius:30px;border:1px solid #2e3d5a;">v1.1.0</span>
+            <button class="btn btn-warning" id="muteBtn">🔇 静音</button>
+            <span id="muteStatus" style="font-size:12px;color:#6a7a9a;">非静音</span>
+        </div>
+
         <div id="preloadStatus" class="loading">⏳ 正在预加载音频文件...</div>
 
         <div class="grid">
@@ -518,6 +525,8 @@
             ⚡ 所有音频使用 Web Audio API · 页面启动时自动预加载 <code>config</code> 中的所有音频 · 截断参数在 <code>config.sounds</code> 中调整
             <br />
             🎂 「生日快乐」支持循环播放，开启后作为背景音乐无限循环
+            <br />
+            🔇 支持全局静音（调用 <code>engine.setMuted()</code>）· 版本 <code>SoundSystem.version</code>
         </div>
     </div>
 
@@ -531,26 +540,30 @@
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/birthday.mp3',
                     start: 0.0,
                     end: 12.0,
+                    volume: 0.55,
                 },
                 heartbeat: {
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3',
                     start: 0.0,
-                    end: 2.0,
+                    end: 3.0,
+                    volume: 0.65,
                 },
                 city: {
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/city.mp3',
                     start: 0.0,
                     end: 6.0,
+                    volume: 0.65,
                 },
                 space: {
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/space.mp3',
                     start: 0.0,
                     end: 4.0,
+                    volume: 0.50,
                 },
                 meteor: {
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/meteor.mp3',
                     start: 0.0,
-                    end: 3.5,
+                    end: 4.5,
                 },
                 firework_launch: {
                     url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/firework_go.mp3',
@@ -568,7 +581,7 @@
                 panEnd: 0.8,
                 volumeStart: 0.6,
                 volumeEnd: 0.2,
-                duration: 3.5,
+                duration: 4.5,
             },
             firework: {
                 launchDuration: 1.5,
@@ -581,12 +594,33 @@
             const preloadStatus = document.getElementById('preloadStatus');
 
             const system = await SoundSystem.create(config);
-            const { engine, meteorManager, fireworkManager } = system;
+            const { engine, meteorManager, fireworkManager, config: systemConfig } = system;
 
             preloadStatus.textContent = '✅ 所有音频预加载完成，可以播放';
             preloadStatus.className = 'ready';
 
-            document.querySelectorAll('.play-btn, #addMeteorBtn, #addFireworkBtn').forEach(el => el.disabled = false);
+            document.querySelectorAll('.play-btn, #addMeteorBtn, #addFireworkBtn, #muteBtn').forEach(el => el.disabled = false);
+
+            // 显示版本号
+            document.getElementById('versionBadge').textContent = `v${SoundSystem.version}`;
+
+            // 静音按钮
+            const muteBtn = document.getElementById('muteBtn');
+            const muteStatus = document.getElementById('muteStatus');
+            let isMuted = false;
+
+            muteBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                engine.setMuted(isMuted);
+                muteBtn.textContent = isMuted ? '🔊 取消静音' : '🔇 静音';
+                muteStatus.textContent = isMuted ? '已静音' : '非静音';
+                muteStatus.style.color = isMuted ? '#f0c060' : '#6a7a9a';
+                console.log(isMuted ? '🔇 已静音，所有声音停止' : '🔊 取消静音');
+            });
+
+            // 显示合并后的 config（含默认值）
+            console.log('📋 当前声音配置:', systemConfig);
+            console.log('💡 提示: 修改 config 对象即可调整音频路径和截断参数');
 
             // 🎂 生日快乐
             const birthdayCfg = config.sounds.birthday;
@@ -880,9 +914,7 @@
             renderMeteors([]);
             renderFireworks([]);
 
-            window.__audioDebug = { engine, config, meteorManager, fireworkManager };
-            console.log('🔊 当前声音配置:', config);
-            console.log('💡 提示: 修改 config 对象即可调整音频路径和截断参数');
+            window.__audioDebug = { engine, systemConfig, meteorManager, fireworkManager };
         });
     </script>
 

@@ -1,3 +1,4 @@
+
 /**
  *  页面访问验证脚本
  * @version 1.0.0
@@ -223,7 +224,7 @@
 
         function blocker(e) {
             const overlay = document.getElementById('__auth_overlay');
-            if (overlay && overlay.contains(e.target)) {
+            if (overlay && e.target && overlay.contains(e.target)) {
                 return;
             }
             e.stopPropagation();
@@ -273,7 +274,7 @@
 
     function preventScroll(e) {
         const overlay = document.getElementById('__auth_overlay');
-        if (overlay && overlay.contains(e.target)) {
+        if (overlay && e.target && overlay.contains(e.target)) {
             return;
         }
         e.preventDefault();

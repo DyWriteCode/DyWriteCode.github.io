@@ -11,7 +11,7 @@
  * <script>
  *   const { engine, meteorManager, fireworkManager } = await SoundSystem.create({
  *       sounds: {
- *           heartbeat: { url: 'heartbeat.mp3', start: 0, end: 2 }
+ *           heartbeat: { url: 'heartbeat.mp3', start: 0, end: 2, volume: 0.35 }
  *       }
  *   });
  *   await engine.playSound('heartbeat', 0, 2);
@@ -21,7 +21,7 @@
  * // ES Module
  * import SoundSystem from './sound-configurator.js';
  * const system = await SoundSystem.create();
- * system.engine.playSound('birthday', 0, 12, 0.8, 0, true); // 循环播放
+ * system.engine.playSound('birthday', 0, 12, 0.8, 0, true);
  */
 
 (function (global) {
@@ -32,10 +32,10 @@
     // ============================================================
     const DEFAULT_CONFIG = {
         sounds: {
-            birthday: { url: 'birthday.mp3', start: 0.0, end: 12.0 },
-            heartbeat: { url: 'heartbeat.mp3', start: 0.0, end: 2.0 },
-            city: { url: 'city_ambient.mp3', start: 0.0, end: 6.0 },
-            space: { url: 'space_hum.mp3', start: 0.0, end: 4.0 },
+            birthday: { url: 'birthday.mp3', start: 0.0, end: 12.0, volume: 0.55 },
+            heartbeat: { url: 'heartbeat.mp3', start: 0.0, end: 2.0, volume: 0.35 },
+            city: { url: 'city_ambient.mp3', start: 0.0, end: 6.0, volume: 0.35 },
+            space: { url: 'space_hum.mp3', start: 0.0, end: 4.0, volume: 0.30 },
             meteor: { url: 'meteor_fall.mp3', start: 0.0, end: 3.5 },
             firework_launch: { url: 'firework_launch.mp3', start: 0.0, end: 1.8 },
             firework_explode: { url: 'firework_explode.mp3', start: 0.0, end: 2.5 },
@@ -64,6 +64,7 @@
             this.activeSources = new Map();
             this.sourceIdCounter = 0;
             this.isPreloading = false;
+            this._muted = false;
         }
 
         getContext() {
@@ -261,6 +262,7 @@
 
         // ----- 播放方法（支持 loop）-----
         async playSound(key, startTime, endTime, volume = 0.8, pan = 0, loop = false) {
+            if (this._muted) return null;
             const buffer = await this.loadSound(key, key);
             if (!buffer) return null;
 
@@ -352,6 +354,13 @@
             const entry = this.activeSources.get(id);
             return entry ? entry.isPlaying : false;
         }
+
+        setMuted(muted) {
+            this._muted = muted;
+            if (muted) this.stopAll();
+        }
+
+        isMuted() { return this._muted; }
     }
 
     // ============================================================
@@ -398,7 +407,7 @@
         }
 
         async playMeteor(meteor) {
-            if (meteor.isPlaying) return;
+            if (meteor.isPlaying || this.engine.isMuted()) return;
             const cfg = this.config.sounds.meteor;
             const entry = await this.engine.playSound(
                 'meteor',
@@ -498,6 +507,7 @@
         }
 
         async addFirework() {
+            if (this.engine.isMuted()) return null;
             const id = ++this.idCounter;
             const fw = {
                 id,
@@ -514,7 +524,7 @@
         }
 
         async _playFirework(fw) {
-            if (fw.isPlaying) return;
+            if (fw.isPlaying || this.engine.isMuted()) return;
             fw.isPlaying = true;
             fw.phase = 'launching';
             this._updateUI();

@@ -244,7 +244,7 @@
 
     <script>
         // ================================================================
-        // sound-configurator.js (完整内联 v1.1.0)
+        // sound-configurator.js (完整内联 v1.2.0 — 支持 ignoreEndTime)
         // ================================================================
         (function (global) {
             'use strict';
@@ -255,16 +255,19 @@
                         url: "https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/heart.mp3",
                         start: 0.0,
                         end: 2.0,
+                        volume: 1
                     },
                     city: {
                         url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/city.mp3',
                         start: 0.0,
                         end: 6.0,
+                        volume: 1
                     },
                     space: {
                         url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/space.mp3',
                         start: 0.0,
                         end: 4.0,
+                        volume: 1
                     },
                     meteor: {
                         url: 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/TEST_FUNCION/AUDIO/meteor.mp3',
@@ -290,7 +293,7 @@
                 meteor: {
                     panStart: -0.8,
                     panEnd: 0.8,
-                    volumeStart: 0.6,
+                    volumeStart: 0.5,
                     volumeEnd: 0.2,
                     duration: 3.5,
                 },
@@ -301,6 +304,9 @@
                 },
             };
 
+            // ============================================================
+            // AudioEngine — 增加 ignoreEndTime 参数
+            // ============================================================
             class AudioEngine {
                 constructor() {
                     this.ctx = null;
@@ -352,6 +358,7 @@
                     }
                 }
 
+                // ----- 合成后备音 (包含生日快乐) -----
                 _synthesizeFallback(key) {
                     const ctx = this.getContext();
                     const sr = ctx.sampleRate;
@@ -362,8 +369,8 @@
                             const d = buf.getChannelData(0);
                             const freq = {
                                 C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00,
-                                B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00,
-                                B5: 987.77
+                                B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99,
+                                A5: 880.00, B5: 987.77
                             };
                             const melody = [
                                 ['G4', 0.30, 0.7],
@@ -519,7 +526,8 @@
                     return gen();
                 }
 
-                async playSound(key, startTime, endTime, volume = 0.8, pan = 0, loop = false) {
+                // ----- playSound 增加 ignoreEndTime 参数 -----
+                async playSound(key, startTime, endTime, volume = 0.8, pan = 0, loop = false, ignoreEndTime = false) {
                     if (this._muted) return null;
                     const buffer = await this.loadSound(key, key);
                     if (!buffer) return null;
@@ -533,15 +541,21 @@
                     source.connect(gainNode);
                     gainNode.connect(panner);
                     panner.connect(ctx.destination);
+
                     const actualStart = Math.min(Math.max(0, startTime || 0), buffer.duration - 0.05);
-                    const actualEnd = Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
+                    // ★ 核心修改：若 ignoreEndTime === true，则播放完整音频文件
+                    const actualEnd = ignoreEndTime ?
+                        buffer.duration :
+                        Math.min(Math.max(actualStart + 0.05, endTime || buffer.duration), buffer.duration);
                     const duration = actualEnd - actualStart;
+
                     if (loop) {
                         source.loop = true;
                         source.loopStart = actualStart;
                         source.loopEnd = actualEnd;
                     }
                     source.start(0, actualStart, loop ? undefined : duration);
+
                     const id = ++this.sourceIdCounter;
                     const entry = {
                         id,
@@ -611,6 +625,9 @@
                 isMuted() { return this._muted; }
             }
 
+            // ============================================================
+            // MeteorManager / FireworkManager (保持不变)
+            // ============================================================
             class MeteorManager {
                 constructor(engine, config) {
                     this.engine = engine;
@@ -658,7 +675,9 @@
                         cfg.start,
                         cfg.end,
                         meteor.volStart,
-                        meteor.panStart
+                        meteor.panStart,
+                        false, // 不循环
+                        true // ★ ignoreEndTime = true，播放完整音频
                     );
                     if (entry) {
                         meteor.sourceId = entry.id;
@@ -775,7 +794,9 @@
                         launchCfg.start,
                         launchCfg.end,
                         0.7,
-                        0
+                        0,
+                        false,
+                        false
                     );
                     fw.launchId = launchEntry?.id || null;
 
@@ -812,7 +833,9 @@
                             explodeCfg.start,
                             explodeCfg.end,
                             0.9,
-                            pan
+                            pan,
+                            false,
+                            false
                         );
                         fw.explodeId = explodeEntry?.id || null;
                         if (explodeEntry) {
@@ -908,7 +931,7 @@
             }
 
             const SoundSystem = {
-                version: '1.1.0',
+                version: '1.2.0',
                 DEFAULT_CONFIG,
                 AudioEngine,
                 MeteorManager,
@@ -928,7 +951,7 @@
             }
             return SoundSystem;
         })(this);
-        console.log('🔊 声音系统已加载 (sound-configurator.js v1.1.0)');
+        console.log('🔊 声音系统已加载 (sound-configurator.js v1.2.0 — 支持 ignoreEndTime)');
     </script>
 
     <script>
@@ -952,7 +975,7 @@
             };
 
             // ================================================================
-            // 工具函数
+            // 工具函数 (略)
             // ================================================================
             function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -1004,7 +1027,8 @@
                 const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
                 return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : {
                     r: 0,
-                    g: 0, b: 0
+                    g: 0,
+                    b: 0
                 };
             }
 
@@ -1125,12 +1149,13 @@
                 }
             }
 
-            // --- 背景氛围音效 ---
+            // --- 背景氛围音效 (全部改为循环 + ignoreEndTime) ---
             async function playCityAmbient() {
                 if (!soundInitialized || soundMuted) return;
                 if (currentCitySoundId && soundEngine.isPlaying(currentCitySoundId)) return;
                 if (currentCitySoundId) soundEngine.stopSound(currentCitySoundId);
-                const entry = await soundEngine.playSound('city', 0, 6, 0.35, 0);
+                // ★ loop: true, ignoreEndTime: true → 持续循环播放完整音频
+                const entry = await soundEngine.playSound('city', 0, 6, 0.35, 0, true, true);
                 if (entry) currentCitySoundId = entry.id;
             }
 
@@ -1138,7 +1163,8 @@
                 if (!soundInitialized || soundMuted) return;
                 if (currentSpaceSoundId && soundEngine.isPlaying(currentSpaceSoundId)) return;
                 if (currentSpaceSoundId) soundEngine.stopSound(currentSpaceSoundId);
-                const entry = await soundEngine.playSound('space', 0, 4, 0.30, 0);
+                // ★ loop: true, ignoreEndTime: true → 持续循环播放完整音频
+                const entry = await soundEngine.playSound('space', 0, 4, 0.30, 0, true, true);
                 if (entry) currentSpaceSoundId = entry.id;
             }
 
@@ -1146,7 +1172,7 @@
                 if (!soundInitialized || soundMuted) return;
                 if (heartbeatSoundId && soundEngine.isPlaying(heartbeatSoundId)) return;
                 if (heartbeatSoundId) soundEngine.stopSound(heartbeatSoundId);
-                const entry = await soundEngine.playSound('heartbeat', 0, 2, 0.35, 0);
+                const entry = await soundEngine.playSound('heartbeat', 0, 2, 0.35, 0, false, false);
                 if (entry) heartbeatSoundId = entry.id;
                 setTimeout(() => {
                     if (heartbeatSoundId) {
@@ -1183,23 +1209,20 @@
                 stopHeartbeat();
             }
 
-            // --- Birthday 音乐 (核心新增) ---
+            // --- Birthday 音乐 (循环 + ignoreEndTime) ---
             async function playBirthdayMusic() {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
-                // 如果已经在播放则跳过
                 if (birthdaySoundId && soundEngine.isPlaying(birthdaySoundId)) return;
-                // 停止旧实例
                 if (birthdaySoundId) {
                     soundEngine.stopSound(birthdaySoundId);
                     birthdaySoundId = null;
                 }
-                // 从配置中读取生日歌时长 (默认12秒)
                 const cfg = soundSystem.config.sounds.birthday;
-                const dur = (cfg && cfg.end) ? cfg.end - (cfg.start || 0) : 12;
-                const entry = await soundEngine.playSound('birthday', cfg?.start || 0, cfg?.end || 12, 0.55, 0, true);
+                // ★ loop: true, ignoreEndTime: true → 持续循环播放完整音频
+                const entry = await soundEngine.playSound('birthday', cfg?.start || 0, cfg?.end || 12, 0.55, 0, true, true);
                 if (entry) {
                     birthdaySoundId = entry.id;
-                    console.log('🎂 Birthday 音乐已开始循环播放');
+                    console.log('🎂 Birthday 音乐已开始循环播放 (完整音频)');
                 }
             }
 
@@ -1211,33 +1234,33 @@
                 }
             }
 
-            // --- 短音效 ---
+            // --- 短音效 (流星雨单颗流星：播放完整音频) ---
             async function playShowerMeteorSound(pan, volume) {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
-                await soundEngine.playSound('meteor', 0, 1.5, volume || 0.5, pan || 0);
+                // ★ ignoreEndTime: true → 播放完整 meteor 音频 (3.5s)
+                await soundEngine.playSound('meteor', 0, 1.5, volume || 0.5, pan || 0, false, true);
             }
 
-            async function playFireworkLaunchSound(pan) {
+            // 烟花发射 / 爆炸 (保持原样)
+            async function playFireworkLaunchSound(pan, volume) {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
-                await soundEngine.playSound('firework_launch', 0, 1.8, 0.7, pan || 0);
+                await soundEngine.playSound('firework_launch', 0, 1.8, volume || 0.7, pan || 0, false, false);
             }
 
-            async function playFireworkExplodeSound(pan) {
+            async function playFireworkExplodeSound(pan, volume) {
                 if (!soundInitialized || soundMuted || !soundEngine) return;
-                await soundEngine.playSound('firework_explode', 0, 2.5, 0.9, pan || 0);
+                await soundEngine.playSound('firework_explode', 0, 2.5, volume || 0.9, pan || 0, false, false);
             }
 
-            // --- 蛋糕音效 (含 birthday) ---
+            // --- 蛋糕音效 ---
             function playCakeSound() {
                 if (!soundInitialized || soundMuted) return;
-                // 播放生日歌 (主旋律)
                 playBirthdayMusic();
-                // 辅以环境音
                 playHeartbeat();
                 playSpaceAmbient();
                 setTimeout(() => {
                     if (soundInitialized && !soundMuted) {
-                        soundEngine.playSound('city', 0, 4, 0.12, 0);
+                        soundEngine.playSound('city', 0, 4, 0.12, 0, false, true);
                     }
                 }, 500);
             }
@@ -1283,7 +1306,7 @@
             }
 
             // ================================================================
-            // 主阶段管理
+            // 主阶段管理 (保留原有完整视觉逻辑)
             // ================================================================
             const MASTER_PHASE = {
                 EPIC: 'epic',
@@ -1732,7 +1755,8 @@
                                 bw = 34 + Math.random() * 26 + t * 24;
                                 bh = (60 + Math.random() * 46) * (0.5 + t * 0.9);
                             }
-                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) bh *= Math.random() > 0.5 ? 1.25 : 0.78;
+                            if (prevBh > 0 && Math.abs(bh - prevBh) < prevBh * 0.12) bh *= Math.random() > 0.5 ? 1.25 :
+                                0.78;
                             prevBh = bh;
                             bw = Math.min(bw, cellW * 0.85);
                             const jit = (Math.random() - 0.5) * cellW * 0.5;
@@ -1782,7 +1806,8 @@
                                         cr++;
                                     }
                                 }
-                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math.random() *
+                                const lightRate = (layerType === 'mid') ? (0.6 + Math.random() * 0.2) : (0.35 + Math
+                                    .random() *
                                     0.15);
                                 for (let r2 = 0; r2 < rowsW; r2++) {
                                     if (!rowStates[r2]) continue;
@@ -2252,7 +2277,7 @@
                 viewport.transitioning = false;
                 epicFlowState = 'flying';
                 if (soundInitialized && !soundMuted && soundEngine) {
-                    soundEngine.playSound('meteor', 0, 3.5, 0.6, 0.2);
+                    soundEngine.playSound('meteor', 0, 3.5, 0.6, 0.2, false, true);
                 }
             }
 
@@ -2296,7 +2321,7 @@
                 meteor.state = 'broken';
                 epicFlowState = 'broken';
                 if (soundInitialized && !soundMuted && soundEngine) {
-                    soundEngine.playSound('meteor', 0, 1.5, 0.4, 0.2);
+                    soundEngine.playSound('meteor', 0, 1.5, 0.4, 0.2, false, true);
                 }
             }
 
@@ -2466,6 +2491,15 @@
                 if (x > W + 50) x = rand(W - 60, W + 30);
                 if (y < -50) y = rand(-20, 40);
                 const brightness = rand(cfg.brightnessMin, cfg.brightnessMax);
+
+                const yNorm = clamp(y / H, 0, 1);
+                const baseVol = 0.05 + 0.90 * yNorm;
+                const xCenterNorm = Math.abs((x / W) - 0.5) * 2;
+                const centerBoost = 1 - xCenterNorm * 0.35;
+                const randomFactor = 0.75 + 0.50 * Math.random();
+                const vol = Math.min(1, Math.max(0.03, baseVol * centerBoost * randomFactor));
+                const pan = clamp((x / W) * 2 - 1, -1, 1);
+
                 const meteorObj = {
                     x,
                     y,
@@ -2479,8 +2513,6 @@
                     trailSegments: cfg.trailSegments,
                 };
                 showerMeteors.push(meteorObj);
-                const pan = clamp((meteorObj.x / W) * 2 - 1, -1, 1);
-                const vol = 0.3 + 0.3 * brightness;
                 playShowerMeteorSound(pan, vol);
             }
 
@@ -3111,7 +3143,7 @@
             }
 
             // ================================================================
-            // 阶段三：烟花 (FIREWORKS)
+            // 阶段三：烟花 (FIREWORKS) — 立体感增强
             // ================================================================
             const FW_STAR_COLORS = [
                 { r: 255, g: 255, b: 255 }, { r: 255, g: 245, b: 235 },
@@ -3308,9 +3340,25 @@
                     this.type = randInt(0, 5);
                     this.alive = true;
                     this.trailCounter = 0;
-                    const pan = clamp(((sx / W) * 2 - 1), -1, 1);
-                    playFireworkLaunchSound(pan);
+
+                    const yNormLaunch = clamp(sy / H, 0, 1);
+                    const baseLaunchVol = 0.08 + 0.90 * yNormLaunch;
+                    const xCenterNormLaunch = Math.abs((sx / W) - 0.5) * 2;
+                    const centerBoostLaunch = 1 - xCenterNormLaunch * 0.30;
+                    const randLaunch = 0.75 + 0.50 * Math.random();
+                    this.launchVolume = Math.min(1, Math.max(0.03, baseLaunchVol * centerBoostLaunch * randLaunch));
+
+                    const yNormExplode = clamp(ty / H, 0, 1);
+                    const baseExplodeVol = 0.10 + 0.88 * yNormExplode;
+                    const xCenterNormExplode = Math.abs((tx / W) - 0.5) * 2;
+                    const centerBoostExplode = 1 - xCenterNormExplode * 0.30;
+                    const randExplode = 0.75 + 0.50 * Math.random();
+                    this.explodeVolume = Math.min(1, Math.max(0.03, baseExplodeVol * centerBoostExplode * randExplode));
+
+                    const launchPan = clamp(((sx / W) * 2 - 1), -1, 1);
+                    playFireworkLaunchSound(launchPan, this.launchVolume);
                 }
+
                 update() {
                     this.speed *= this.acc;
                     const vx = Math.cos(this.angle) * this.speed;
@@ -3356,9 +3404,14 @@
                     const x = this.x,
                         y = this.y,
                         hue = this.hue;
-                    const type = this.type;
                     const pan = clamp(((x / W) * 2 - 1), -1, 1);
-                    playFireworkExplodeSound(pan);
+                    const yNorm = clamp(y / H, 0, 1);
+                    const baseVol = 0.10 + 0.88 * yNorm;
+                    const xCenterNorm = Math.abs((x / W) - 0.5) * 2;
+                    const centerBoost = 1 - xCenterNorm * 0.30;
+                    const randFactor = 0.75 + 0.50 * Math.random();
+                    const finalVol = Math.min(1, Math.max(0.03, baseVol * centerBoost * randFactor));
+                    playFireworkExplodeSound(pan, finalVol);
 
                     for (let i = 0; i < 30; i++) {
                         const angle = rand(0, Math.PI * 2);
@@ -3376,7 +3429,7 @@
                         );
                         if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
                     }
-                    if (type === 0) {
+                    if (this.type === 0) {
                         for (let i = 0; i < 120; i++) {
                             const angle = rand(0, Math.PI * 2);
                             const speed = rand(2.5, 10.0) * (Math.random() < 0.15 ? 1.6 : 1);
@@ -3392,7 +3445,7 @@
                             );
                             if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
                         }
-                    } else if (type === 1) {
+                    } else if (this.type === 1) {
                         const count = 100;
                         for (let i = 0; i < count; i++) {
                             const angle = (i / count) * Math.PI * 2;
@@ -3412,7 +3465,7 @@
                             );
                             if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
                         }
-                    } else if (type === 2) {
+                    } else if (this.type === 2) {
                         for (let i = 0; i < 100; i++) {
                             const angle = rand(-Math.PI * 0.85, Math.PI * 0.85);
                             const speed = rand(4.0, 9.5);
@@ -3431,7 +3484,7 @@
                             );
                             if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
                         }
-                    } else if (type === 3) {
+                    } else if (this.type === 3) {
                         const rays = randInt(18, 30);
                         for (let r = 0; r < rays; r++) {
                             const angle = (r / rays) * Math.PI * 2;
@@ -3452,7 +3505,7 @@
                                 if (fwParticles.length < FW_MAX_PARTICLES) fwParticles.push(p);
                             }
                         }
-                    } else if (type === 4) {
+                    } else if (this.type === 4) {
                         for (let i = 0; i < 150; i++) {
                             const angle = rand(0, Math.PI * 2);
                             const speed = rand(1.2, 11.0);
@@ -3636,7 +3689,7 @@
             }
 
             // ================================================================
-            // 蛋糕过渡 + 蛋糕许愿 (优化：自动播放生日歌)
+            // 蛋糕过渡 + 蛋糕许愿 (自动播放生日歌)
             // ================================================================
             const OFF_W = 800;
             const OFF_H = 600;
@@ -4680,7 +4733,7 @@
             }
 
             // ================================================================
-            // 蛋糕过渡 (CAKE_TRANSITION) — 在此启动 birthday 音乐
+            // 蛋糕过渡 (CAKE_TRANSITION)
             // ================================================================
             function startCakeTransition() {
                 currentPhase = MASTER_PHASE.CAKE_TRANSITION;
@@ -4691,7 +4744,7 @@
                 statusTip.textContent = '✦ 许个愿吧 · 星河祝福 ✦';
                 statusTip.classList.add('show');
 
-                // ★ 核心优化：进入蛋糕过渡时自动播放生日歌 (循环)
+                // ★ 进入蛋糕场景自动播放生日歌 (循环 + 完整音频)
                 playBirthdayMusic();
 
                 initCakeFlow();
@@ -5195,8 +5248,6 @@
                     initParticles();
                     particlesReady = true;
                 }
-                // 停止之前可能残留的生日歌，由上层 startCakeTransition 统一播放
-                // 但为了保险，这里不停止，只确保不重复
             }
 
             function startCakeFlow() {
@@ -5222,7 +5273,6 @@
                     initParticles();
                     particlesReady = true;
                 }
-                // 播放蛋糕音效 (含 birthday 音乐)
                 if (soundInitialized && !soundMuted) {
                     playCakeSound();
                 }
@@ -5239,7 +5289,6 @@
                                 if (soundInitialized && !soundMuted) {
                                     stopHeartbeat();
                                     stopSpaceAmbient();
-                                    // 生日歌继续播放，不停止
                                 }
                             }
                         } else if (cakeTransitionPhase === 'fading') {
@@ -5262,8 +5311,7 @@
                                 infoEl.textContent = '✨ 星河祝福 · 生日快乐 ✨';
                                 if (soundInitialized && !soundMuted) {
                                     playSpaceAmbient();
-                                    soundEngine.playSound('heartbeat', 0, 2, 0.2, 0);
-                                    // 生日歌保持播放
+                                    soundEngine.playSound('heartbeat', 0, 2, 0.2, 0, false, false);
                                 }
                             } else {
                                 let alpha = 0;
@@ -5318,7 +5366,7 @@
                             cakeSmokeStartTime = performance.now();
                             statusTip.textContent = '✦ 蜡烛吹灭啦 ✦';
                             if (soundInitialized && !soundMuted && soundEngine) {
-                                soundEngine.playSound('meteor', 0, 1.0, 0.3, 0);
+                                soundEngine.playSound('meteor', 0, 1.0, 0.3, 0, false, true);
                             }
                         }
                     }
@@ -5583,8 +5631,9 @@
                 if (particlesReady) initParticles();
             });
 
-            console.log('✦ 星河入梦 · 花火 → 蛋糕许愿 · 星河祝福 ✦ (含 birthday 自动播放)');
+            console.log('✦ 星河入梦 · 花火 → 蛋糕许愿 · 星河祝福 ✦ (烟花/流星立体音量增强)');
             console.log('🔊 点击“开始”后预加载音频，心跳2秒后睁眼，蛋糕场景自动播放生日歌');
+            console.log('🎵 背景音 (城市/太空/生日歌) 已改为持续循环，流星音频完整播放');
         })();
     </script>
 </body>

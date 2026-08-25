@@ -1305,7 +1305,7 @@
         <header class="header">
             <div class="header-icon">📂</div>
             <h1>GitHub 文件管理</h1>
-            <span class="sub">防御增强 · 修复预连接错误</span>
+            <span class="sub">修复：拦截文件夹提交 + 优化提示</span>
         </header>
 
         <form id="githubForm" autocomplete="off">
@@ -1515,7 +1515,6 @@
 
             // ======================================================================
             //  🔧 防御性编程：API 请求核心（智能重试 + 熔断器 + 超时）
-            //  优化：404/415 等客户端错误不触发熔断器
             // ======================================================================
 
             var RETRY_CONFIG = {
@@ -1704,13 +1703,11 @@
                 return response.json();
             }
 
-            // ---- 预连接：仅使用 <link rel="preconnect">，不发送额外请求 ----
             function preconnectGitHub() {
                 var link = document.createElement('link');
                 link.rel = 'preconnect';
                 link.href = 'https://api.github.com';
                 document.head.appendChild(link);
-                // 可选：也预热 assets 域名
                 var link2 = document.createElement('link');
                 link2.rel = 'preconnect';
                 link2.href = 'https://avatars.githubusercontent.com';
@@ -2336,9 +2333,14 @@
                 }
             }
 
-            // ===== 右键菜单 =====
+            // ============================================================
+            //  右键菜单（修复版 + 优化提示）
+            // ============================================================
+
             function showContextMenu(x, y, node) {
+                if (!node) return;
                 contextTargetNode = node;
+
                 var isDir = node.type === 'tree';
                 var isRoot = node.path === '';
                 var items = contextMenu.querySelectorAll('.menu-item');
@@ -2356,24 +2358,75 @@
                         item.style.display = (!isDir) ? 'flex' : 'none';
                     }
                 }
+
                 contextMenu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
                 contextMenu.style.top = Math.min(y, window.innerHeight - 300) + 'px';
                 contextMenu.style.display = 'block';
                 isContextMenuOpen = true;
+
                 clearSelected();
                 var rows = treeContent.querySelectorAll('.tree-node-row');
                 for (var j = 0; j < rows.length; j++) {
-                    if (rows[j].dataset.path === node.path) rows[j].classList.add('selected');
+                    if (rows[j].dataset.path === node.path) {
+                        rows[j].classList.add('selected');
+                    }
                 }
             }
 
             function hideContextMenu() {
                 contextMenu.style.display = 'none';
                 isContextMenuOpen = false;
-                contextTargetNode = null;
             }
 
-            // ===== 右键菜单操作 =====
+            contextMenu.addEventListener('click', async function (e) {
+                var item = e.target.closest('.menu-item');
+                if (!item) return;
+
+                var action = item.dataset.action;
+                var node = contextTargetNode;
+
+                if (!node) {
+                    var selRow = treeContent.querySelector('.tree-node-row.selected');
+                    if (selRow) {
+                        var p = selRow.dataset.path;
+                        var found = repoTree.find(function (n) { return n.path === p; });
+                        if (found) node = found;
+                    }
+                }
+
+                hideContextMenu();
+
+                if (!node) {
+                    showResult('error', '操作失败', '未能获取目标节点，请重试。', true);
+                    return;
+                }
+
+                try {
+                    switch (action) {
+                        case 'newFile':
+                            await menuNewFile(node);
+                            break;
+                        case 'newFolder':
+                            await menuNewFolder(node);
+                            break;
+                        case 'deleteFile':
+                            await menuDeleteFile(node);
+                            break;
+                        case 'deleteFolder':
+                            await menuDeleteFolder(node);
+                            break;
+                        case 'getContent':
+                            await menuGetContent(node);
+                            break;
+                        default:
+                            showResult('error', '未知操作', '未知的操作: ' + action, true);
+                    }
+                } catch (err) {
+                    showResult('error', '操作异常', '⚠️ ' + (err.message || '未知错误'), true);
+                }
+            });
+
+            // ---- 新建文件 ----
             async function menuNewFile(node) {
                 if (!node) return;
                 var dirPath = normalizePath(node.path);
@@ -2392,6 +2445,7 @@
                 showResult('info', '📄 新建文件', '已准备创建文件 <strong>' + fullPath + '</strong>，请填写内容后点击「提交文件」。', false);
             }
 
+            // ---- 新建文件夹（优化提示） ----
             async function menuNewFolder(node) {
                 if (!node) return;
                 var dirPath = normalizePath(node.path);
@@ -2400,6 +2454,7 @@
                 var fullPath = dirPath ? dirPath + '/' + folderName : folderName;
                 fullPath = normalizePath(fullPath);
                 var keepPath = fullPath + '/.gitkeep';
+
                 var token = getVal(tokenInput);
                 var owner = getVal(ownerInput);
                 var repo = getVal(repoInput);
@@ -2416,13 +2471,17 @@
                         content: utf8ToBase64(''),
                         branch: branch,
                     };
-                    var data = await apiRequestJSON(url, {
+                    await apiRequestJSON(url, {
                         method: 'PUT',
                         headers: Object.assign(apiHeaders(), { 'Content-Type': 'application/json' }),
                         body: JSON.stringify(payload),
                     });
-                    showResult('success', '📁 文件夹已创建', '文件夹 <strong>' + fullPath + '</strong> 已创建（通过 .gitkeep 占位）。',
-                        false);
+                    // 优化提示：明确告知无需再提交，引导后续操作
+                    showResult('success', '📁 文件夹已创建',
+                        '文件夹 <strong>' + fullPath + '</strong> 已创建。<br>💡 <strong>注意：</strong>文件夹本身无需提交内容，请在该文件夹下「右键 → 新建文件」来添加代码，或手动在路径后追加文件名（例如 <code>' +
+                        fullPath + '/文件名.js</code>）。',
+                        false
+                    );
                     await loadRepo(true);
                     pathInput.value = fullPath + '/';
                     updateBreadcrumb(pathInput.value);
@@ -2436,10 +2495,10 @@
                     showResult('error', '创建文件夹失败', '⚠️ ' + errMsg, true);
                 } finally {
                     showLoading(false);
-                    hideContextMenu();
                 }
             }
 
+            // ---- 删除文件 ----
             async function menuDeleteFile(node) {
                 if (!node) return;
                 var filePath = normalizePath(node.path);
@@ -2449,8 +2508,8 @@
                 var owner = getVal(ownerInput);
                 var repo = getVal(repoInput);
                 var branch = getVal(branchSelect) || repoDefaultBranch;
-
                 var sha = node.sha;
+
                 if (!sha) {
                     try {
                         var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
@@ -2468,7 +2527,6 @@
                                 hideFileStatus();
                             }
                             await loadRepo(true);
-                            hideContextMenu();
                             return;
                         }
                         var errMsg2 = error.message || '未知错误';
@@ -2506,14 +2564,15 @@
                     showResult('error', '删除失败', '⚠️ ' + errMsg3, true);
                 } finally {
                     showLoading(false);
-                    hideContextMenu();
                 }
             }
 
+            // ---- 删除文件夹 ----
             async function menuDeleteFolder(node) {
                 if (!node) return;
                 var folderPath = normalizePath(node.path);
                 if (!confirm('⚠️ 确定要删除文件夹「' + folderPath + '」及其所有内容吗？此操作不可撤销！')) return;
+
                 var token = getVal(tokenInput);
                 var owner = getVal(ownerInput);
                 var repo = getVal(repoInput);
@@ -2576,17 +2635,20 @@
                     showResult('error', '删除失败', '⚠️ ' + errMsg, true);
                 } finally {
                     showLoading(false);
-                    hideContextMenu();
                 }
             }
 
+            // ---- 获取文件内容 ----
             async function menuGetContent(node) {
                 if (!node) return;
                 await handleNodeClick(node);
-                hideContextMenu();
             }
 
-            // ===== Token 验证 & 仓库操作 =====
+            // ============================================================
+            //  原有功能（Token、仓库、提交等）
+            // ============================================================
+
+            // ---- Token 验证 & 仓库操作 ----
             async function verifyToken(showStatus) {
                 if (showStatus === undefined) showStatus = true;
                 var token = getVal(tokenInput);
@@ -2760,18 +2822,34 @@
                 }
             }
 
-            // ===== 提交文件 =====
+            // ---- 【关键修复】提交文件 - 拦截文件夹路径 ----
             async function submitFile(e) {
                 e.preventDefault();
+
+                var rawPath = getVal(pathInput);
+                var path = normalizePath(rawPath);
+
+                // ⚠️ 核心修复：如果路径以 "/" 结尾，说明是文件夹，拒绝提交
+                if (path.endsWith('/')) {
+                    showResult('error', '❌ 无效路径',
+                        '⚠️ 当前目标路径是一个<strong>文件夹</strong>（以 <code>/</code> 结尾），无法直接提交内容。<br>' +
+                        '请指定具体的<strong>文件名</strong>，例如：<br>' +
+                        '<code style="display:inline-block;margin-top:6px;background:var(--gray-200);padding:4px 10px;border-radius:4px;">' +
+                        escapeHtml(path + '文件名.js') + '</code><br>' +
+                        '💡 提示：可右键点击该文件夹选择「新建文件」，或手动修改路径。',
+                        true
+                    );
+                    return;
+                }
+
                 var token = getVal(tokenInput);
                 var owner = getVal(ownerInput);
                 var repo = getVal(repoInput);
-                var path = getVal(pathInput);
-                path = normalizePath(path);
                 var message = getVal(messageInput);
                 var contentRaw = contentInput.value;
                 var sha = getVal(shaInput) || undefined;
                 var branch = getVal(branchSelect) || repoDefaultBranch;
+
                 var fields = [
                     { val: token, name: 'Token' },
                     { val: owner, name: '仓库所有者' },
@@ -2790,16 +2868,23 @@
                     showResult('error', '分支未选择', '请从分支下拉框中选择一个分支。', true);
                     return;
                 }
+
+                // 再次确保去除末尾斜杠（安全兜底）
                 path = path.replace(/\/+$/, '');
+
                 if (!sha) {
                     try {
                         var checkUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(
                             path) + '?ref=' + encodeURIComponent(branch);
                         var checkData = await apiRequestJSON(checkUrl, { headers: apiHeaders() });
-                        sha = checkData.sha;
-                        shaInput.value = sha;
+                        // 注意：如果路径是目录，这里可能返回数组，sha 为 undefined，但前面已经拦截了以 / 结尾的路径，所以这里安全
+                        if (checkData && checkData.sha) {
+                            sha = checkData.sha;
+                            shaInput.value = sha;
+                        }
                     } catch (_) { /* 文件不存在，忽略 */ }
                 }
+
                 var contentBase64;
                 try {
                     contentBase64 = utf8ToBase64(contentRaw);
@@ -2807,6 +2892,7 @@
                     showResult('error', '编码失败', '⚠️ 文件内容编码失败：' + (encErr.message || '未知错误'), true);
                     return;
                 }
+
                 var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
                 var payload = {
                     message: message,
@@ -2814,6 +2900,7 @@
                     branch: branch,
                 };
                 if (sha) payload.sha = sha;
+
                 try {
                     setLoading(btnSubmit, true);
                     clearResult();
@@ -2864,7 +2951,7 @@
                 }
             }
 
-            // ===== 文件选择 =====
+            // ---- 文件选择 ----
             function handleFileSelect() {
                 var input = document.createElement('input');
                 input.type = 'file';
@@ -2900,7 +2987,7 @@
                 input.click();
             }
 
-            // ===== 密码获取 Token =====
+            // ---- 密码获取 Token ----
             function showPwdStatus(type, text) {
                 pwdStatus.className = 'pwd-status visible ' + type;
                 pwdStatusText.textContent = text;
@@ -3043,6 +3130,7 @@
                     tokenInput.focus();
                     hideContextMenu();
                     resetCircuitBreaker();
+                    contextTargetNode = null;
                 }, 10);
             });
 
@@ -3098,60 +3186,12 @@
                 }
             });
 
-            // ===== 右键菜单事件 =====
-            contextMenu.addEventListener('click', function (e) {
-                var item = e.target.closest('.menu-item');
-                if (!item) return;
-                var action = item.dataset.action;
-                var node = contextTargetNode;
-                if (!node) {
-                    var selectedRow = treeContent.querySelector('.tree-node-row.selected');
-                    if (selectedRow) {
-                        var path = selectedRow.dataset.path;
-                        var type = selectedRow.dataset.type;
-                        var found = repoTree.find(function (n) { return n.path === path; });
-                        if (found) node = found;
-                    }
-                }
-                hideContextMenu();
-                if (!node) {
-                    showResult('error', '操作失败', '未能获取目标节点，请重试。', true);
-                    return;
-                }
-                switch (action) {
-                    case 'newFile':
-                        menuNewFile(node);
-                        break;
-                    case 'newFolder':
-                        menuNewFolder(node);
-                        break;
-                    case 'deleteFile':
-                        menuDeleteFile(node);
-                        break;
-                    case 'deleteFolder':
-                        menuDeleteFolder(node);
-                        break;
-                    case 'getContent':
-                        menuGetContent(node);
-                        break;
-                    default:
-                        break;
-                }
-            });
-
             document.addEventListener('click', function (e) {
                 if (isContextMenuOpen && !contextMenu.contains(e.target)) {
                     hideContextMenu();
                 }
             });
-            document.addEventListener('scroll', function () {
-                if (isContextMenuOpen) hideContextMenu();
-            });
-            window.addEventListener('resize', function () {
-                if (isContextMenuOpen) hideContextMenu();
-            });
 
-            // 密码获取 Token 事件
             pwdToggleHeader.addEventListener('click', togglePwdBody);
             btnPwdGetToken.addEventListener('click', handlePwdGetToken);
             pwdInput.addEventListener('keydown', function (e) {
@@ -3176,17 +3216,13 @@
                 pwdInput.focus();
             });
 
-            // ===== 预连接（仅 preconnect，无额外请求） =====
             preconnectGitHub();
 
             if (getVal(tokenInput)) {
                 setTimeout(function () { verifyToken(true); }, 500);
             }
 
-            console.log('✅ GitHub 文件管理工具（防御增强版）已加载');
-            console.log('🛡️ 预连接仅使用 <link rel="preconnect">，不再发送 /zen 请求，避免 415 错误');
-            console.log('💡 当前熔断器状态: ' + circuitBreaker.state + ' (失败次数: ' + circuitBreaker.failures + ')');
-
+            console.log('✅ GitHub 文件管理工具（修复文件夹提交 + 优化提示）已加载');
         })();
     </script>
 
