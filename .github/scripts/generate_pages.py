@@ -11,7 +11,7 @@ from pathlib import Path
 # ========== 配置 ==========
 IGNORE_DIRS = {'.git', 'node_modules', 'dist', 'build', '__pycache__', '.vscode', 'venv', 'env'}
 IGNORE_FILES = {'404.html'}   # 不列入清单的文件
-OUTPUT_FILE = '../../pages.json'
+OUTPUT_FILE = 'pages.json'
 ROOT_DIR = '../../'                # 扫描根目录（相对于脚本所在位置）
 # ==========================
 
