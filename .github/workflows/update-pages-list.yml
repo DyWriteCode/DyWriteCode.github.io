@@ -25,7 +25,7 @@ jobs:
                   python-version: "3.11"
 
             - name: Run generate script
-              run: python ../scripts/generate_pages.py
+              run: python .github/scripts/generate_pages.py
 
             - name: Commit and push if changed
               run: |
