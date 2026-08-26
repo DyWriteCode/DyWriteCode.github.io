@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面未找到 - 智能推荐</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+
+        .suggestion {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .suggestion a {
+            display: block;
+            padding: 8px 0;
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .suggestion a:hover {
+            text-decoration: underline;
+        }
+
+        .error-path {
+            color: #d73a49;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>😅 页面迷路了</h1>
+    <p>您访问的路径：<span class="error-path" id="wrongPath"></span> 不存在。</p>
+    <div id="recommendBox" class="suggestion">
+        <strong>💡 您是不是想找：</strong>
+        <div id="recommendList"></div>
+    </div>
+
+    <script>
+        // --- 1. 核心算法：计算两个字符串的相似度 (Levenshtein 编辑距离) ---
+        function getSimilarity(s1, s2) {
+            if (s1.length === 0 && s2.length === 0) return 1;
+            const track = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
+            for (let i = 0; i <= s1.length; i++) track[0][i] = i;
+            for (let j = 0; j <= s2.length; j++) track[j][0] = j;
+            for (let j = 1; j <= s2.length; j++) {
+                for (let i = 1; i <= s1.length; i++) {
+                    const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
+                    track[j][i] = Math.min(
+                        track[j][i - 1] + 1,
+                        track[j - 1][i] + 1,
+                        track[j - 1][i - 1] + indicator
+                    );
+                }
+            }
+            const maxLen = Math.max(s1.length, s2.length);
+            // 返回 0~1 之间的相似度分数，越高越相似
+            return 1 - track[s2.length][s1.length] / maxLen;
+        }
+
+        // --- 2. 获取当前错误路径 & 提取关键词 ---
+        const wrongPath = window.location.pathname; // 例如 /tooools
+        document.getElementById('wrongPath').textContent = wrongPath;
+
+        // 去除首尾斜杠，提取文件名作为搜索关键词
+        const searchKey = wrongPath.replace(/^\/|\/$/g, '').split('/').pop() || '首页';
+
+        // --- 3. 加载 pages.json 并进行模糊匹配 ---
+        fetch('/pages.json') // 如果项目在子目录，请改为 /项目名/pages.json
+            .then(res => res.json())
+            .then(pages => {
+                // 计算每个页面与错误路径的相似度
+                const scored = pages.map(page => ({
+                    ...page,
+                    score: Math.max(
+                        getSimilarity(searchKey, page.url.replace(/^\/|\/$/g, '').split('/').pop() || '首页'),
+                        getSimilarity(searchKey, page.name)
+                    )
+                }));
+
+                // 按分数从高到低排序，取前 3 个最相似的
+                const topMatches = scored.sort((a, b) => b.score - a.score).slice(0, 3);
+
+                const listContainer = document.getElementById('recommendList');
+                // 如果最高分太低（小于0.2），可能完全不相关，显示默认提示
+                if (topMatches.length > 0 && topMatches[0].score > 0.15) {
+                    topMatches.forEach(item => {
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.textContent = `${item.name} (${item.url}) - 匹配度 ${Math.round(item.score * 100)}%`;
+                        listContainer.appendChild(link);
+                    });
+                } else {
+                    listContainer.innerHTML = '<p>未找到相似页面，请返回 <a href="/">首页</a> 查看导航。</p>';
+                }
+            })
+            .catch(() => {
+                // 如果 pages.json 加载失败（比如路径不对），显示兜底方案
+                document.getElementById('recommendList').innerHTML =
+                    '<p>无法加载站点地图，请返回 <a href="/">首页</a>。</p>';
+            });
+    </script>
+</body>
+
+</html>

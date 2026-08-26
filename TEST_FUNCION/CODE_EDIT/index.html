@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>多语言代码编辑器 (Judge0 执行器)</title>
+    <style>
+        /* ===== 全局重置，高度100%，无滚动条干扰 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1e1e1e;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* ===== Flex 容器，垂直排列 ===== */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            /* 兼容移动端动态视口 */
+            width: 100%;
+        }
+
+        /* ===== 编辑器容器：占据剩余所有空间 ===== */
+        #editor-container {
+            flex: 1;
+            min-height: 0;
+            /* 防止 flex 溢出 */
+            position: relative;
+            width: 100%;
+        }
+
+        /* ===== 让 LiveCodes 内部容器也填满 ===== */
+        #editor-container .lc-root,
+        #editor-container .lc-playground,
+        #editor-container .lc-editor {
+            height: 100% !important;
+            width: 100% !important;
+        }
+
+        /* ===== 底部工具栏：固定高度，不遮挡编辑器 ===== */
+        .mobile-toolbar {
+            flex-shrink: 0;
+            /* 不缩小 */
+            height: 52px;
+            background: rgba(30, 30, 30, 0.92);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 6px 8px;
+            border-top: 1px solid #444;
+            gap: 4px;
+            z-index: 1000;
+            /* 适配安全区 */
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+        }
+
+        .mobile-toolbar button,
+        .mobile-toolbar label {
+            background: #3a3a3a;
+            color: #eee;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            flex: 1 1 auto;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .mobile-toolbar button:active,
+        .mobile-toolbar label:active {
+            background: #5a5a5a;
+        }
+
+        .mobile-toolbar input[type="file"] {
+            display: none;
+        }
+
+        .btn-run {
+            background: #2563eb !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .btn-run:active {
+            background: #1d4ed8 !important;
+        }
+
+        /* ===== 输出面板：置于编辑器上方，不遮挡工具栏 ===== */
+        #output-panel {
+            position: fixed;
+            bottom: 60px;
+            /* 工具栏高度 + 间距 */
+            left: 12px;
+            right: 12px;
+            max-height: 40vh;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            border: 1px solid #444;
+            padding: 10px 14px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-y: auto;
+            display: none;
+            z-index: 999;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            transition: opacity 0.25s ease;
+        }
+
+        #output-panel.show {
+            display: block;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #aaa;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+
+        .output-header button {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+        }
+
+        .output-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+            max-height: 30vh;
+            overflow-y: auto;
+        }
+
+        .output-error {
+            color: #f87171;
+        }
+
+        .output-success {
+            color: #6ee7b7;
+        }
+
+        .output-warning {
+            color: #fbbf24;
+        }
+
+        /* ===== 加载动画 ===== */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 隐藏 LiveCodes 自带的状态栏（可选） ===== */
+        .lc-status-bar {
+            display: none !important;
+        }
+
+        /* ===== 小屏适配 ===== */
+        @media (max-width: 480px) {
+
+            .mobile-toolbar button,
+            .mobile-toolbar label {
+                font-size: 10px;
+                padding: 4px 6px;
+                gap: 2px;
+            }
+
+            #output-panel {
+                bottom: 56px;
+                left: 8px;
+                right: 8px;
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 整个应用采用 Flex 列 -->
+    <div id="app">
+        <div id="editor-container"></div>
+        <div class="mobile-toolbar">
+            <label for="local-file-input">📁 本地</label>
+            <input type="file" id="local-file-input"
+                accept=".js,.ts,.py,.html,.css,.scss,.json,.md,.go,.rb,.php,.java,.c,.cpp,.rs,.sh,.txt,.zip" multiple>
+
+            <button id="remote-import-btn">🔗 URL</button>
+            <button id="reset-btn">🔄 重置</button>
+            <button id="run-btn" class="btn-run">▶ 运行</button>
+        </div>
+    </div>
+
+    <!-- 输出面板（独立，fixed） -->
+    <div id="output-panel">
+        <div class="output-header">
+            <span>📋 执行输出</span>
+            <button id="close-output">✕</button>
+        </div>
+        <div class="output-content" id="output-content">等待执行...</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 1. 引入 Judge0 执行器 (UMD 格式，暴露全局 Judge0Executor)     -->
+    <!--    请确保 judge0-executor.js 与 index.html 在同一目录下        -->
+    <!-- ============================================================ -->
+    <script src="judge0-executor.js">
+    </script>
+
+    <script type="module">
+        // ============================================================
+        // 1. 用户配置区（可自由修改）
+        // ============================================================
+        // Judge0 API 地址（默认使用公共实例，可替换为自建实例）
+        const JUDGE0_API_BASE = 'https://ce.judge0.com';
+        // CPU 时间限制（秒）
+        const JUDGE0_CPU_TIME_LIMIT = 5;
+        // 内存限制（KB）
+        const JUDGE0_MEMORY_LIMIT = 256000;
+        // ============================================================
+
+        // 检测 Judge0Executor 是否加载成功
+        if (typeof window.Judge0Executor === 'undefined') {
+            document.getElementById('editor-container').innerHTML = `
+                    <div style="color:#f87171;padding:20px;text-align:center;">
+                        ⚠️ 未找到 Judge0Executor 模块。<br>
+                        请确保 <strong>judge0-executor.js</strong> 与 index.html 在同一目录下。
+                    </div>
+                `;
+            throw new Error('Judge0Executor 未加载，请检查 judge0-executor.js 是否存在');
+        }
+
+        // 解构出便捷引用
+        const { execute: executeCode, Language } = window.Judge0Executor;
+
+        import { createPlayground } from 'https://cdn.jsdelivr.net/npm/livecodes@0.14.1';
+
+        const initialFiles = {
+            "index.html": {
+                content: `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Demo</title></head>
+<body><h1>Hello, LiveCodes!</h1><button id="btn">Click</button></body>
+</html>`
+            },
+            "style.css": {
+                content: `body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+h1 { color: #2563eb; }`
+            },
+            "script.js": {
+                content: `document.getElementById('btn')?.addEventListener('click', () => alert('Hi!'))`
+            },
+            "main.py": {
+                content: `# Python (Judge0 执行)
+print("Hello from Python!")
+for i in range(3):
+    print(f"i = {i}")`
+            },
+            "app.ts": {
+                content: `// TypeScript
+const greet = (name: string) => console.log(\`Hello, \${name}\`);
+greet("TS");`
+            },
+            "main.c": {
+                content: `#include <stdio.h>
+int main() {
+    printf("Hello from C\\n");
+    return 0;
+}`
+            },
+            "main.cpp": {
+                content: `#include <iostream>
+int main() {
+    std::cout << "Hello from C++" << std::endl;
+    return 0;
+}`
+            },
+            "main.rb": {
+                content: `# Ruby
+puts "Hello from Ruby"
+3.times { |i| puts i }`
+            },
+            "main.go": {
+                content: `package main
+import "fmt"
+func main() {
+    fmt.Println("Hello from Go")
+}`
+            },
+            "main.rs": {
+                content: `fn main() {
+    println!("Hello from Rust");
+}`
+            },
+            "Main.java": {
+                content: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello from Java");
+    }
+}`
+            },
+            "main.php": {
+                content: `<?php
+echo "Hello from PHP\\n";
+?>`
+            }
+        };
+
+        const options = {
+            template: 'blank',
+            config: { files: initialFiles },
+            params: {
+                console: 'open',
+                layout: 'auto',
+                theme: 'dark',
+                toolbar: 'top',
+                defaultMode: 'editor',
+                allowNewFile: true,
+                allowFileOperations: true,
+            },
+            activeFile: 'main.py'
+        };
+
+        const container = document.getElementById('editor-container');
+        let playground;
+
+        try {
+            playground = await createPlayground(container, options);
+            console.log('✅ 编辑器加载成功');
+        } catch (err) {
+            container.innerHTML = `<div style="color:red;padding:20px;">加载失败，请检查网络或刷新重试。</div>`;
+            console.error(err);
+        }
+
+        // ----- DOM 引用 -----
+        const fileInput = document.getElementById('local-file-input');
+        const remoteBtn = document.getElementById('remote-import-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const runBtn = document.getElementById('run-btn');
+        const outputPanel = document.getElementById('output-panel');
+        const outputContent = document.getElementById('output-content');
+        const closeOutputBtn = document.getElementById('close-output');
+
+        // ----- 输出工具函数 -----
+        function showOutput(text, type = 'success') {
+            // type: 'success' | 'error' | 'warning'
+            outputContent.textContent = text;
+            outputContent.className = 'output-content';
+            if (type === 'error') outputContent.classList.add('output-error');
+            else if (type === 'warning') outputContent.classList.add('output-warning');
+            else outputContent.classList.add('output-success');
+            outputPanel.classList.add('show');
+        }
+
+        function hideOutput() {
+            outputPanel.classList.remove('show');
+        }
+
+        closeOutputBtn.addEventListener('click', hideOutput);
+
+        // 点击面板外部不关闭（保持用户控制）
+
+        // ----- 本地文件 -----
+        fileInput.addEventListener('change', async (e) => {
+            if (!playground) return alert('编辑器未初始化');
+            const files = e.target.files;
+            if (!files.length) return;
+            try {
+                await playground.importFiles(files);
+                alert(`导入 ${files.length} 个文件成功`);
+            } catch (err) {
+                alert('导入失败: ' + err.message);
+            }
+            fileInput.value = '';
+        });
+
+        // ----- 远程 URL -----
+        remoteBtn.addEventListener('click', async () => {
+            if (!playground) return alert('编辑器未初始化');
+            const url = prompt('请输入文件或项目 URL (支持 .js/.html/.py 或 GitHub 链接)');
+            if (!url) return;
+            try {
+                await playground.import(url);
+                alert('远程资源加载成功');
+            } catch (err) {
+                alert('加载失败: ' + err.message);
+            }
+        });
+
+        // ----- 重置 -----
+        resetBtn.addEventListener('click', async () => {
+            if (!playground) return alert('编辑器未初始化');
+            if (confirm('重置为初始示例文件？')) {
+                try {
+                    await playground.setFiles(initialFiles);
+                    alert('已重置');
+                } catch (err) {
+                    alert('重置失败: ' + err.message);
+                }
+            }
+        });
+
+        // ============================================================
+        // 核心：运行代码（使用 Judge0Executor）
+        // ============================================================
+        runBtn.addEventListener('click', async () => {
+            if (!playground) {
+                alert('编辑器尚未初始化');
+                return;
+            }
+
+            const activeFile = playground.getActiveFile();
+            if (!activeFile) {
+                alert('没有打开的文件');
+                return;
+            }
+
+            const code = activeFile.content;
+            // LiveCodes 中 language 属性为语言名称，如 'python', 'javascript', 'c' 等
+            const language = activeFile.language;
+
+            // 对于无法在 Judge0 中执行的语言，提前给出友好提示
+            const unsupported = ['html', 'css', 'json', 'markdown', 'xml', 'svg', 'yaml', 'toml'];
+            if (unsupported.includes(language)) {
+                showOutput(`⚠️ 语言 "${language}" 暂不支持在 Judge0 中执行。\n请选择 Python、JavaScript、C、C++、Java、Ruby 等可执行语言。`, 'warning');
+                return;
+            }
+
+            showOutput('⏳ 正在提交到 Judge0 执行... (请稍候)');
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<span class="spinner"></span> 执行中';
+
+            try {
+                // 调用 Judge0Executor.execute()
+                const result = await executeCode({
+                    source_code: code,
+                    language: language, // 直接传语言名称，Judge0Executor 内部会映射
+                    stdin: '', // 如需输入可扩展
+                    cpu_time_limit: JUDGE0_CPU_TIME_LIMIT,
+                    memory_limit: JUDGE0_MEMORY_LIMIT,
+                    apiBase: JUDGE0_API_BASE,
+                });
+
+                // 解析 Judge0 返回结果
+                const stdout = result.stdout || '';
+                const stderr = result.stderr || '';
+                const compileOutput = result.compile_output || '';
+                const status = result.status || {};
+                const statusId = status.id;
+                const statusDescription = status.description || '未知状态';
+
+                // 构建输出信息
+                let outputText = '';
+                let outputType = 'success';
+
+                // 编译输出（如有）
+                if (compileOutput) {
+                    outputText += `📦 编译信息:\n${compileOutput}\n\n`;
+                }
+
+                // 标准错误（优先显示）
+                if (stderr) {
+                    outputText += `❌ 错误 (stderr):\n${stderr}`;
+                    outputType = 'error';
+                }
+
+                // 标准输出
+                if (stdout) {
+                    if (outputText) outputText += '\n\n';
+                    outputText += `📤 输出 (stdout):\n${stdout}`;
+                }
+
+                // 如果没有任何输出，但状态不是 Accepted (3)，则显示状态信息
+                if (!stdout && !stderr && !compileOutput) {
+                    if (statusId === 3) {
+                        outputText = '✅ 执行成功，但没有任何输出。';
+                    } else {
+                        outputText = `⚠️ 执行状态: ${statusDescription} (ID: ${statusId})`;
+                        outputType = 'warning';
+                    }
+                } else if (statusId !== 3 && !stderr) {
+                    // 有输出但状态不是成功，且没有 stderr，可能是警告
+                    if (outputType !== 'error') {
+                        outputType = 'warning';
+                        outputText += `\n\n⚠️ 执行状态: ${statusDescription} (ID: ${statusId})`;
+                    }
+                }
+
+                // 如果输出为空，设置默认信息
+                if (!outputText.trim()) {
+                    outputText = '✅ 执行完成，没有输出。';
+                }
+
+                showOutput(outputText, outputType);
+
+            } catch (err) {
+                // 捕获执行过程中的错误（网络错误、语言不支持等）
+                let errMsg = err.message || String(err);
+                // 美化错误信息
+                if (errMsg.includes('未知语言名称')) {
+                    errMsg = `不支持的语言名称: "${language}"\n请使用 Judge0 支持的语言，如 python, javascript, c, cpp, java, ruby, go, rust, php, typescript 等。`;
+                }
+                showOutput(`❌ 执行失败:\n${errMsg}`, 'error');
+                console.error('Judge0 执行错误:', err);
+            } finally {
+                runBtn.disabled = false;
+                runBtn.innerHTML = '▶ 运行';
+            }
+        });
+
+        // 暴露 playground 到全局，方便调试
+        window.__playground = playground;
+
+        // 控制台输出提示
+        console.log('✅ 多语言编辑器已就绪，使用 Judge0 执行器 (v' + window.Judge0Executor.version + ')');
+        console.log(`   API 地址: ${JUDGE0_API_BASE}`);
+        console.log('   支持语言列表:', Object.keys(window.Judge0Executor.languageNameMap).join(', '));
+    </script>
+</body>
+
+</html>

@@ -5263,6 +5263,9 @@
                     statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
                     statusTip.classList.add('show');
                     setTimeout(() => statusTip.classList.remove('show'), 4000);
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage('birthday-done', '*');
+                    }
                 }
             }
 
@@ -5675,6 +5678,41 @@
             });
 
             console.log('✦ 星河入梦 · 花火 → 蛋糕许愿 · 星河祝福 ✦');
+        })();
+    </script>
+    <script>
+        (function () {
+            // 监听父窗口的启动消息
+            window.addEventListener('message', function (event) {
+                if (event.data === 'start-animation') {
+                    // 自动点击“开始”按钮
+                    var btn = document.getElementById('startBtn');
+                    if (btn) {
+                        // 模拟点击，触发原有启动流程
+                        btn.click();
+                    } else {
+                        // 如果按钮还未加载，等 DOM 就绪后再试
+                        var observer = new MutationObserver(function () {
+                            var btn2 = document.getElementById('startBtn');
+                            if (btn2) {
+                                btn2.click();
+                                observer.disconnect();
+                            }
+                        });
+                        observer.observe(document.body, { childList: true, subtree: true });
+                        // 3秒后自动断开，防止内存泄漏
+                        setTimeout(function () { observer.disconnect(); }, 3000);
+                    }
+                }
+            });
+
+            // 如果 URL 包含 autoplay=1 参数，自动启动（方便调试）
+            if (window.location.search.indexOf('autoplay=1') !== -1) {
+                setTimeout(function () {
+                    var btn = document.getElementById('startBtn');
+                    if (btn) btn.click();
+                }, 500);
+            }
         })();
     </script>
 </body>

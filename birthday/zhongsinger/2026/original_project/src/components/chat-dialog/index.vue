@@ -162,6 +162,13 @@
       @close="handleComponentClose">
     </MessageDetail>
 
+    <!-- 生日动画全屏 -->
+    <div v-if="showBirthday" class="birthday-overlay">
+      <iframe ref="birthdayIframe" src="/birthday-animation.html?autoplay=1" class="birthday-iframe"
+        allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
+      </iframe>
+    </div>
+
     <Teleport to="body">
       <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
         <div v-if="contextMsg && contextMsg.type === 'voice'" class="menu-item" @click="handleMenuVoiceConvert">
@@ -284,6 +291,8 @@ export default {
       isTouchMoved: false,
       isUserAtBottom: true,        // 用户是否在底部
       scrollThreshold: 20,          // 判定底部的阈值（像素）
+      showBirthday: false,
+      birthdayResolve: null,
     }
   },
   watch: {
@@ -499,12 +508,12 @@ export default {
         const hasHtml = /<[^>]+>/.test(message)
 
         if (messageType === 'birthday') {
-          // 显示全屏组件
-          this.showBirthday = true
-          // 保存 resolve，等待组件完成
-          this.birthdayResolve = resolve
-          // 不向消息列表添加内容
-          return
+          // 显示生日动画
+          this.showBirthday = true;
+          // 返回一个 Promise，在动画完成时 resolve
+          return new Promise((resolve) => {
+            this.birthdayResolve = resolve;
+          });
         }
 
         if (messageType === 'text') {
@@ -1388,6 +1397,25 @@ export default {
           this.closeMsgMenu()
         }
       }
+    },
+    onBirthdayLoaded() {
+      // iframe 加载完成可做额外处理（可选）
+    },
+    handleBirthdayMessage(event) {
+      if (event.data === 'birthday-done') {
+        this.closeBirthday();
+      }
+    },
+    closeBirthday() {
+      this.showBirthday = false;
+      if (this.birthdayResolve) {
+        this.birthdayResolve();
+        this.birthdayResolve = null;
+      }
+    },
+    // 用户点击背景可手动关闭（可选）
+    closeBirthdayManually() {
+      this.closeBirthday();
     }
   },
   mounted() {
@@ -1448,6 +1476,7 @@ export default {
         }
       }
     }
+    window.addEventListener('message', this.handleBirthdayMessage);
   },
   beforeUnmount() {
     if (this.typingInstance) {
@@ -1487,6 +1516,7 @@ export default {
     this.voiceBlobUrls = []
     this.clearQuote()
     this.closeMsgMenu()
+    window.removeEventListener('message', this.handleBirthdayMessage);
   },
   onBirthdayFinished() {
     this.showBirthday = false
@@ -2270,5 +2300,22 @@ function onImageLoad($img) {
 
 .custom-voice-menu .menu-icon {
   font-size: 18px;
+}
+
+.birthday-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99999;
+  background: #000;
+}
+
+.birthday-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
 }
 </style>
