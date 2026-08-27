@@ -9,7 +9,8 @@
     <LetterContent @close="$emit('close')"
                    :title="title"
                    :paragraphs="paragraphs"
-                   :speed="speed"></LetterContent>
+                   :speed="speed"
+                   :key="dataLoaded"></LetterContent>
   </div>
 
 </template>
@@ -33,7 +34,8 @@ export default {
       paragraphs: [],
       speed: 120,
       // cover opening opened
-      status: 'cover'
+      status: 'cover',
+      dataLoaded: false,
     }
   },
   mounted () {
@@ -50,6 +52,7 @@ export default {
       this.paragraphs = paragraphs;
       this.title = title;
       this.speed = speed;
+      this.dataLoaded = true 
     });
   }
 }

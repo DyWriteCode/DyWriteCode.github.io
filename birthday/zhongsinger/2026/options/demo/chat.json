@@ -299,7 +299,7 @@
     },
     {
         "msgs": [
-            "<letter src='./letters/letter_to_someone.json'/>"
+            "<letter src='options/demo/letters/letter_to_someone.json'/>"
         ],
         "author": "author"
     },
@@ -371,7 +371,7 @@
     },
     {
         "msgs": [
-            "<voice src='./voice_message/birthday.mp3' alt='生日祝福语音' />"
+            "<voice src='options/demo/voice_message/birthday.mp3' alt='生日祝福语音' />"
         ],
         "author": "author"
     },

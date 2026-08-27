@@ -68,7 +68,8 @@
                 }" @click="$emit('msg-click', msg)">
                 <span v-if="msg.type === 'text'" v-html="renderEmoji(msg.content)"></span>
                 <component v-else :is="msg.type" v-bind="msg.props" :transcripted="!!msg.transcripted"
-                  @convert="(alt) => handleVoiceConvert(alt, msg)" @cancel-convert="() => handleVoiceCancel(msg)" />
+                  @convert="(alt) => handleVoiceConvert(alt, msg)" @cancel-convert="() => handleVoiceCancel(msg)"
+                  @open="() => handleComponentOpen({ type: msg.type, props: msg.props })" />
               </div>
             </div>
           </template>
@@ -164,8 +165,9 @@
 
     <!-- 生日动画全屏 -->
     <div v-if="showBirthday" class="birthday-overlay">
-      <iframe ref="birthdayIframe" src="/birthday-animation.html?autoplay=1" class="birthday-iframe"
-        allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
+      <iframe ref="birthdayIframe"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/birthday/zhongsinger/2026/birthday-animation.html?autoplay=1"
+        class="birthday-iframe" allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
       </iframe>
     </div>
 

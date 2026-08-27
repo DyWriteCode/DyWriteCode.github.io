@@ -1,294 +1,292 @@
 <template>
-  <div class="letter-content animate__animated animate__fadeInUp">
-    <div class="letter-title" ref="letter-title">
-    </div>
-    <div class="letter-detail">
-      <div v-for="({ type, content, loading, ref }, i) in contents" :key="i" :ref="`letter-detail-item-${i}`">
-        <var-loading v-if="loading" color="#f44336" type="cube" />
-        <div v-show="!loading">
-          <p v-if="type === 'text'" :ref="ref"></p>
-          <div v-else style="text-align: center;">
-            <span :ref="ref" v-html="content"></span>
-          </div>
+  <div class="letter-content">
+    <div class="letter-title">{{ titleDisplay }}</div>
+
+    <div class="letter-detail" ref="detailContainer">
+      <!-- 背景横线由伪元素绘制，一次性加载 -->
+      <div v-for="item in contents" :key="item.id" class="paragraph-wrapper">
+        <!-- 图片段落 -->
+        <div v-if="item.type === 'img' && item.visible" style="text-align: center">
+          <span v-html="item.content"></span>
+        </div>
+
+        <!-- 文本段落 -->
+        <p v-else-if="item.type === 'text' && item.visible"
+          style="color: black; display: block; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
+          {{ item.displayText }}
+          <!-- 仅当前正在打字的段落显示光标 -->
+          <span v-if="item.isTyping" class="cursor">|</span>
+        </p>
+
+        <!-- 隐藏占位（无实际显示） -->
+        <div v-if="item.type === 'text' && !item.visible" style="visibility: hidden; height: 0;">
+          {{ item.fullText }}
         </div>
       </div>
+
       <div class="finish-action" v-show="finish" @click="$emit('close')">
         <var-icon name="chevron-left" />
         <text>回到聊天页</text>
       </div>
     </div>
+
     <div class="letter-action">
       <var-icon name="window-close" style="font-size: 25px;" @click="$emit('close')" />
     </div>
-    <var-back-top style="z-index: 2000;" :duration="300">
-    </var-back-top>
+    <var-back-top style="z-index: 2000;" :duration="300" />
   </div>
 </template>
 
 <script>
+let idCounter = 0;
+
 export default {
   props: {
     title: String,
     paragraphs: Array,
-    speed: Number
+    speed: Number,
   },
   data() {
     return {
       contents: [],
       finish: false,
-      _appendTimers: [],
+      _initialized: false,
+      titleDisplay: '',
+      _currentIndex: 0,
+      isUserAtBottom: true,
+      _typingLock: false, // 互斥锁，防止并发打字
+    };
+  },
+  watch: {
+    paragraphs: {
+      handler(newVal) {
+        if (newVal && newVal.length > 0 && !this._initialized) {
+          this.initContent();
+        }
+      },
+      immediate: true,
+    },
+  },
+  mounted() {
+    const container = this.$refs.detailContainer;
+    if (container) {
+      container.addEventListener('scroll', this.onScroll);
+      this.isUserAtBottom = this.checkIfAtBottom();
+    }
+  },
+  beforeUnmount() {
+    const container = this.$refs.detailContainer;
+    if (container) {
+      container.removeEventListener('scroll', this.onScroll);
     }
   },
   methods: {
-    /**
-     * 自实现打字机（只正向，不退格）
-     * @param {HTMLElement} ele - 目标元素
-     * @param {string} content - 要打出的纯文本
-     * @param {number} speed - 每字符延迟（毫秒）
-     * @param {Function} resolve - 完成回调
-     */
-    typeText(ele, content, speed, resolve) {
-      if (!ele) return resolve();
-      ele.textContent = ''; // 清空
-      let index = 0;
-      const timer = setInterval(() => {
-        if (index < content.length) {
-          ele.textContent += content[index];
-          index++;
-          // 自动滚动
-          this.autoScroll();
-        } else {
-          clearInterval(timer);
-          // 从定时器列表中移除
-          const idx = this._appendTimers.indexOf(timer);
-          if (idx !== -1) this._appendTimers.splice(idx, 1);
-          resolve();
-        }
-      }, speed);
-      this._appendTimers.push(timer);
+    checkIfAtBottom() {
+      const container = this.$refs.detailContainer;
+      if (!container) return true;
+      const { scrollTop, clientHeight, scrollHeight } = container;
+      return scrollHeight - scrollTop - clientHeight < 50;
     },
-
-    append(ele, content) {
-      return new Promise((resolve) => {
-        this.typeText(ele, content, this.speed, resolve);
-      });
+    onScroll() {
+      this.isUserAtBottom = this.checkIfAtBottom();
     },
-
-    initContent() {
-      let paragraphChain = Promise.resolve();
-      paragraphChain = paragraphChain.then(() => this.append(this.$refs['letter-title'], this.title));
-      this.paragraphs.forEach((paragraph, i) => {
-        paragraphChain = paragraphChain.then(() => {
-          return new Promise((resolve) => {
-            const isImg = /<img[^>]+>/.test(paragraph);
-            if (isImg) {
-              const imgContent = {
-                type: 'img',
-                loading: true,
-                content: paragraph,
-                ref: `paragraph-img-${i}`
-              }
-              this.contents.push(imgContent);
-
-              setTimeout(() => {
-                imgContent.loading = false;
-                this.$nextTick(() => {
-                  imgContent.dom = this.$refs[imgContent.ref][0];
-                  resolve();
-                  this.alignImageHeight(imgContent.dom);
-                  this.autoScroll();
-                });
-              }, 1200);
-            } else {
-              const textContent = {
-                type: 'text',
-                content: paragraph,
-                ref: `paragraph-text-${i}`
-              }
-              this.contents.push(textContent);
-              this.$nextTick(() => {
-                textContent.dom = this.$refs[textContent.ref][0];
-                this.append(textContent.dom, paragraph)
-                  .then(() => {
-                    this.autoScroll();
-                    resolve();
-                  });
-              })
-            }
-          })
-        });
-      });
-      paragraphChain.then(() => this.finish = true);
-    },
-
-    autoScroll() {
-      this.$nextTick(() => {
-        this.computeDistance().then(distance => {
-          const duration = 250;
-          const startTime = Date.now();
-          console.log('auto scroll', distance)
-          const curScrollTop = document.body.scrollTop + document.documentElement.scrollTop;
-          requestAnimationFrame(function step() {
-            const p = Math.min(1, (Date.now() - startTime) / duration);
-            document.body.scrollTop = curScrollTop + distance * p;
-            document.documentElement.scrollTop = curScrollTop + distance * p;
-            p < 1 && requestAnimationFrame(step);
-          });
-        })
-      });
-    },
-
-    computeDistance() {
-      return new Promise((resolve) => {
-        const lastContentIndex = this.contents.length - 1;
-        if (lastContentIndex === this.paragraphs.length - 1) {
-          // 最后一行不滚动
-          resolve(0);
-          return;
-        }
-        const content = this.contents[lastContentIndex];
-        if (content.type === 'img') {
-          const imgDom = content.dom.children[0];
-          this.onImageLoad(imgDom)
-            .then(() => {
-              setTimeout(() => {
-                resolve(content.dom.offsetHeight);
-              }, 100);
-            });
-        } else {
-          resolve(content.dom.offsetHeight);
-        }
-      })
-    },
-
-    onImageLoad(dom) {
-      const $img = $(dom);
-      return new Promise(resolve => {
-        $img.one('load', resolve)
-          .each((index, target) => {
-            // trigger load when the image is cached
-            target.complete && $(target).trigger('load');
-          });
-      });
-    },
-
-    alignImageHeight(container) {
-      const img = container.querySelector('img');
-      if (!img) return;
-      const fix = () => {
-        // 等待图片完全渲染
-        requestAnimationFrame(() => {
-          const height = container.getBoundingClientRect().height;
-          const remainder = height % 32;
-          if (remainder !== 0) {
-            const pad = document.createElement('div');
-            pad.style.height = (32 - remainder) + 'px';
-            pad.style.display = 'block';
-            pad.style.background = 'transparent';
-            container.appendChild(pad);
-          }
-        });
-      };
-      if (img.complete) {
-        fix();
-      } else {
-        img.onload = fix;
+    scrollToBottom() {
+      if (!this.isUserAtBottom) return;
+      const container = this.$refs.detailContainer;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
-    }
-  },
+    },
+    async initContent() {
+      if (this._initialized) return;
+      if (!this.paragraphs || this.paragraphs.length === 0) return;
 
-  mounted() {
-    this.initContent();
-  },
+      this._initialized = true;
+      this.contents = [];
 
-  beforeUnmount() {
-    // 清除所有未完成的定时器
-    this._appendTimers.forEach(timer => clearInterval(timer));
-    this._appendTimers = [];
-  }
-}
+      this.paragraphs.forEach((p) => {
+        const isImg = /<img[^>]+>/.test(p);
+        this.contents.push({
+          id: idCounter++, // 唯一ID，用于v-for的key
+          type: isImg ? 'img' : 'text',
+          content: p,
+          fullText: isImg ? '' : p,
+          visible: false,
+          displayText: '',
+          isTyping: false,
+          done: false,
+        });
+      });
+
+      this.titleDisplay = this.title || '无标题';
+      await this.$nextTick();
+
+      // 预占位（使所有文本段落可见，但内容为空）
+      for (const item of this.contents) {
+        if (item.type === 'text') {
+          item.visible = true;
+          item.displayText = '';
+        }
+      }
+      await this.$nextTick();
+
+      this._currentIndex = 0;
+      this.processNext();
+    },
+
+    processNext() {
+      if (this._typingLock) return;
+
+      if (this._currentIndex >= this.contents.length) {
+        this.finish = true;
+        return;
+      }
+
+      const item = this.contents[this._currentIndex];
+
+      if (item.type === 'img') {
+        item.visible = true;
+        this._currentIndex++;
+        this.$nextTick(() => this.scrollToBottom());
+        this.processNext();
+      } else if (item.type === 'text') {
+        this.typeParagraph(item);
+      }
+    },
+
+    async typeParagraph(item) {
+      if (this._typingLock) return;
+      this._typingLock = true;
+
+      // 清除所有段落的打字状态（避免残留）
+      this.contents.forEach(p => p.isTyping = false);
+
+      const fullText = item.fullText;
+      const tokens = this.parseTextWithDelays(fullText);
+
+      item.displayText = '';
+      item.visible = true;
+      item.isTyping = true;
+      item.done = false;
+
+      try {
+        for (let i = 0; i < tokens.length; i++) {
+          const token = tokens[i];
+          if (token.type === 'char') {
+            item.displayText += token.char;
+            this.scrollToBottom();
+            await this.delay(this.speed || 80);
+          } else if (token.type === 'delay') {
+            await this.delay(token.ms);
+          }
+        }
+      } catch (err) {
+        console.warn('打字过程出错:', err);
+      } finally {
+        item.isTyping = false;
+        item.done = true;
+        this._currentIndex++;
+        this.$nextTick(() => this.scrollToBottom());
+        this._typingLock = false;
+        this.processNext();
+      }
+    },
+
+    parseTextWithDelays(text) {
+      const tokens = [];
+      let i = 0;
+      while (i < text.length) {
+        if (text[i] === '^') {
+          let numStr = '';
+          let j = i + 1;
+          while (j < text.length && /\d/.test(text[j])) {
+            numStr += text[j];
+            j++;
+          }
+          if (numStr) {
+            tokens.push({ type: 'delay', ms: parseInt(numStr, 10) });
+            i = j;
+            continue;
+          } else {
+            tokens.push({ type: 'char', char: text[i] });
+            i++;
+          }
+        } else {
+          tokens.push({ type: 'char', char: text[i] });
+          i++;
+        }
+      }
+      return tokens;
+    },
+
+    delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    },
+  },
+};
 </script>
 
-<style>
+<style scoped>
+.letter-content {
+  color: black !important;
+  background-color: #f9f9f9;
+  padding: 15px 32px 29px;
+  min-height: 100vh;
+  font-family: "Architects Daughter", cursive !important;
+  box-sizing: border-box;
+}
+
 .letter-title {
   font-size: 1.25rem;
   margin: 15px 0;
   text-align: center;
-}
-
-.letter-content {
-  width: 100%;
-  line-height: 30px;
-  margin: 0 auto;
-  color: black;
-  padding: 15px 32px 29px;
-  background-color: #f9f9f9;
-  box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.26);
-  -moz-border-radius-bottomleft: 20px 500px;
-  -moz-border-radius-bottomright: 500px 30px;
-  -moz-border-radius-topright: 5px 100px;
-  -webkit-border-bottom-left-radius: 20px 500px;
-  -webkit-border-bottom-right-radius: 64px 10px;
-  -webkit-border-top-right-radius: 5px 100px;
-  border-bottom-left-radius: 20px 500px;
-  border-bottom-right-radius: 64px 10px;
-  border-top-right-radius: 5px 100px;
-  -webkit-background-size: 100% 30px;
-  background-size: 100% 30px;
-  -moz-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, 0.2);
-  -webkit-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, 0.2);
-  text-shadow: 0 1px 0 #f6ef97;
-  position: relative;
-  font-family: "Architects Daughter", cursive !important;
+  color: black !important;
 }
 
 .letter-detail {
   position: relative;
+  min-height: 70vh;
+  background: transparent;
+  padding: 10px 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 伪元素绘制完整横线背景，一次性加载 */
+.letter-detail::before {
+  content: '';
+  position: absolute;
   top: 0;
   left: 0;
-  z-index: 2;
-  min-height: 1500vh;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
   background: repeating-linear-gradient(to bottom,
       #f9f9f9,
       #f9f9f9 31px,
       #d46466 2px,
       #f9f9f9);
   background-size: 100% 32px;
+  pointer-events: none;
 }
 
-.letter-detail p {
-  letter-spacing: 0.4rem;
-}
-
-.letter-ititle {
-  font-size: 1.25rem !important;
-}
-
-.letter-detail p {
+/* 所有内容层置于伪元素之上 */
+.letter-detail>* {
   position: relative;
+  z-index: 1;
+}
+
+.letter-detail p {
   line-height: 2rem !important;
   text-indent: 2em;
   font-size: 1rem !important;
-  margin-block-start: 0em;
-  margin-block-end: 0em;
-  margin-inline-start: 0px;
-  margin-inline-end: 0px;
-}
-
-.letter-detail span {
-  display: block;
-  margin-block-start: 2rem;
-  margin-block-end: 2rem;
-}
-
-@media only screen and (max-width: 600px) {
-  .letter-content:after {
-    left: 24px;
-  }
-
-  .letter-content::before {
-    right: 24px;
-  }
+  color: black !important;
+  display: block !important;
+  opacity: 1 !important;
+  margin: 0 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .letter-action {
@@ -302,5 +300,30 @@ export default {
   float: right;
   margin-top: 30px;
   color: red;
+  cursor: pointer;
+}
+
+/* 光标样式优化：内联且对齐基线，避免垂直偏移 */
+.cursor {
+  display: inline;
+  font-size: inherit;
+  font-weight: normal;
+  background: transparent;
+  color: black;
+  animation: blink 0.7s step-end infinite;
+  vertical-align: baseline;
+  margin-left: 1px;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 </style>

@@ -220,94 +220,97 @@
     color: #fff
 }
 
-.letter-title {
+.letter-content[data-v-675629aa] {
+    color: #000 !important;
+    background-color: #f9f9f9;
+    padding: 15px 32px 29px;
+    min-height: 100vh;
+    font-family: Architects Daughter, cursive !important;
+    box-sizing: border-box
+}
+
+.letter-title[data-v-675629aa] {
     font-size: 1.25rem;
     margin: 15px 0;
-    text-align: center
+    text-align: center;
+    color: #000 !important
 }
 
-.letter-content {
-    width: 100%;
-    line-height: 30px;
-    margin: 0 auto;
-    color: #000;
-    padding: 15px 32px 29px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 5px #00000042;
-    -moz-border-radius-bottomleft: 20px 500px;
-    -moz-border-radius-bottomright: 500px 30px;
-    -moz-border-radius-topright: 5px 100px;
-    -webkit-border-bottom-left-radius: 20px 500px;
-    -webkit-border-bottom-right-radius: 64px 10px;
-    -webkit-border-top-right-radius: 5px 100px;
-    border-bottom-left-radius: 20px 500px;
-    border-bottom-right-radius: 64px 10px;
-    border-top-right-radius: 5px 100px;
-    -webkit-background-size: 100% 30px;
-    background-size: 100% 30px;
-    -moz-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, .2);
-    -webkit-box-shadow: 0 2px 10px 1px rgba(0, 0, 0, .2);
-    text-shadow: 0 1px 0 #f6ef97;
+.letter-detail[data-v-675629aa] {
     position: relative;
-    font-family: Architects Daughter, cursive !important
+    min-height: 70vh;
+    background: transparent;
+    padding: 10px 0;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden
 }
 
-.letter-detail {
-    position: relative;
+.letter-detail[data-v-675629aa]:before {
+    content: "";
+    position: absolute;
     top: 0;
     left: 0;
-    z-index: 2;
-    min-height: 1500vh;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
     background: repeating-linear-gradient(to bottom, #f9f9f9, #f9f9f9 31px, #d46466 2px, #f9f9f9);
-    background-size: 100% 32px
+    background-size: 100% 32px;
+    pointer-events: none
 }
 
-.letter-detail p {
-    letter-spacing: .4rem
-}
-
-.letter-ititle {
-    font-size: 1.25rem !important
-}
-
-.letter-detail p {
+.letter-detail[data-v-675629aa]>* {
     position: relative;
+    z-index: 1
+}
+
+.letter-detail p[data-v-675629aa] {
     line-height: 2rem !important;
     text-indent: 2em;
     font-size: 1rem !important;
-    margin-block-start: 0em;
-    margin-block-end: 0em;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px
+    color: #000 !important;
+    display: block !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    white-space: pre-wrap;
+    word-break: break-word
 }
 
-.letter-detail span {
-    display: block;
-    margin-block-start: 2rem;
-    margin-block-end: 2rem
-}
-
-@media only screen and (max-width: 600px) {
-    .letter-content:after {
-        left: 24px
-    }
-
-    .letter-content:before {
-        right: 24px
-    }
-}
-
-.letter-action {
+.letter-action[data-v-675629aa] {
     position: absolute;
     top: 10px;
     right: 20px;
     color: red
 }
 
-.finish-action {
+.finish-action[data-v-675629aa] {
     float: right;
     margin-top: 30px;
-    color: red
+    color: red;
+    cursor: pointer
+}
+
+.cursor[data-v-675629aa] {
+    display: inline;
+    font-size: inherit;
+    font-weight: 400;
+    background: transparent;
+    color: #000;
+    animation: blink-675629aa .7s step-end infinite;
+    vertical-align: baseline;
+    margin-left: 1px
+}
+
+@keyframes blink-675629aa {
+
+    0%,
+    to {
+        opacity: 1
+    }
+
+    50% {
+        opacity: 0
+    }
 }
 
 .letter-cover-wapper {
@@ -1076,7 +1079,7 @@ img {
     src: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/lato400.65c76203.woff)
 }
 
-.scroll-to-bottom-btn[data-v-6e7b63b2] {
+.scroll-to-bottom-btn[data-v-59640136] {
     position: absolute;
     right: 20px;
     bottom: 75px;
@@ -1094,7 +1097,7 @@ img {
     transition: transform .2s, opacity .2s
 }
 
-.scroll-to-bottom-btn[data-v-6e7b63b2]:hover {
+.scroll-to-bottom-btn[data-v-59640136]:hover {
     transform: scale(1.1)
 }
 
@@ -3830,7 +3833,6 @@ img {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     overflow: hidden
 }
 

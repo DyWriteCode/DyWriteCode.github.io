@@ -1,9 +1,11 @@
 [
     {
         "msgs": [
-            "<birthday/>"
+            "<letter src='options/demo/letters/test.json'/>"
         ],
-        "msgInputSpeed": 80
+        "triggerNextAction": {
+            "type": "componentClose"
+        }
     },
     {
         "msgs": [
