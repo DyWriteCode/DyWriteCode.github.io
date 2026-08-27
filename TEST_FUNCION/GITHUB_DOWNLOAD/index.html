@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub 仓库下载器 · 私有化</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js">
+    </script>
+    <style>
+        /* ===== 全局样式 ===== */
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #1a4f7a;
+            --primary-light: #e8f0fe;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-900: #171923;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --transition: 0.25s ease;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font);
+            background: linear-gradient(145deg, #f0f4f8 0%, #dfe6ed 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            width: 100%;
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px 40px 40px;
+            margin: 20px 0;
+        }
+
+        @media (max-width:600px) {
+            .app-container {
+                padding: 16px 14px 24px;
+            }
+
+            body {
+                padding: 12px;
+            }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--gray-100);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.3px;
+        }
+
+        .header .sub {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-left: auto;
+            background: var(--gray-100);
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--gray-100);
+            padding-bottom: 20px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .step-num {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group label .required {
+            color: var(--danger);
+        }
+
+        .form-group input,
+        .form-group select {
+            font-family: var(--font);
+            font-size: 14px;
+            padding: 9px 13px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
+            transition: var(--transition);
+            outline: none;
+            width: 100%;
+            color: var(--gray-900);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.12);
+            background: #fff;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 2px;
+        }
+
+        .token-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .token-wrapper .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .btn {
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 9px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 14px rgba(43, 108, 176, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--gray-300);
+            color: var(--gray-700);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #2f855a;
+            box-shadow: 0 4px 14px rgba(56, 161, 105, 0.3);
+        }
+
+        .btn-sm {
+            font-size: 12px;
+            padding: 6px 14px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Token 状态 */
+        .token-status {
+            margin-top: 12px;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .token-status.visible {
+            display: flex;
+        }
+
+        .token-status.loading {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border: 1px solid rgba(43, 108, 176, 0.2);
+        }
+
+        .token-status.success {
+            background: #f0fff4;
+            color: #276749;
+            border: 1px solid rgba(56, 161, 105, 0.2);
+        }
+
+        .token-status.error {
+            background: #fff5f5;
+            color: #9b2c2c;
+            border: 1px solid rgba(229, 62, 62, 0.2);
+        }
+
+        .token-status .status-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(43, 108, 176, 0.2);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .token-status .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: var(--gray-200);
+        }
+
+        .token-status .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .token-status .token-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .token-status .token-user-info .username {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        /* 密码解密折叠 */
+        .pwd-token-section {
+            margin-top: 12px;
+            border: 1.5px dashed var(--gray-300);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            background: var(--gray-50);
+            transition: var(--transition);
+        }
+
+        .pwd-token-section:hover {
+            border-color: var(--primary);
+        }
+
+        .pwd-token-section .pwd-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .pwd-token-section .pwd-header .pwd-toggle {
+            font-size: 12px;
+            color: var(--gray-400);
+            transition: transform 0.25s;
+        }
+
+        .pwd-token-section .pwd-header .pwd-toggle.open {
+            transform: rotate(90deg);
+        }
+
+        .pwd-token-section .pwd-body {
+            margin-top: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pwd-token-section .pwd-body.open {
+            display: flex;
+        }
+
+        .pwd-token-section .pwd-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pwd-token-section .pwd-row .pwd-input-wrap {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+
+        .pwd-token-section .pwd-row .pwd-input-wrap input {
+            width: 100%;
+            padding: 8px 12px;
+            font-family: var(--font);
+            font-size: 14px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .pwd-token-section .pwd-row .pwd-input-wrap input:focus {
+            border-color: var(--primary);
+        }
+
+        .pwd-token-section .pwd-row .pwd-input-wrap .pwd-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--gray-400);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .pwd-token-section .pwd-row .pwd-input-wrap .pwd-eye:hover {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .pwd-token-section .pwd-status {
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pwd-token-section .pwd-status.visible {
+            display: flex;
+        }
+
+        .pwd-token-section .pwd-status.success {
+            background: #f0fff4;
+            color: #276749;
+            border: 1px solid rgba(56, 161, 105, 0.2);
+        }
+
+        .pwd-token-section .pwd-status.error {
+            background: #fff5f5;
+            color: #9b2c2c;
+            border: 1px solid rgba(229, 62, 62, 0.2);
+        }
+
+        .pwd-token-section .pwd-status.loading {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border: 1px solid rgba(43, 108, 176, 0.2);
+        }
+
+        .pwd-token-section .pwd-status .pwd-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(43, 108, 176, 0.2);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        /* 仓库搜索 */
+        .search-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .search-area .form-group {
+            flex: 1;
+            margin-bottom: 0;
+            min-width: 160px;
+        }
+
+        .search-area .btn {
+            height: 42px;
+        }
+
+        .repo-list {
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            display: none;
+        }
+
+        .repo-list.visible {
+            display: block;
+        }
+
+        .repo-list .repo-item {
+            padding: 8px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+        }
+
+        .repo-list .repo-item:hover {
+            background: var(--primary-light);
+        }
+
+        .repo-list .repo-item:last-child {
+            border-bottom: none;
+        }
+
+        .repo-list .repo-item .repo-name {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .repo-list .repo-item .repo-desc {
+            font-size: 12px;
+            color: var(--gray-500);
+            flex: 1;
+            margin-left: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .repo-list .repo-item .repo-owner {
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-left: 12px;
+        }
+
+        .repo-list .repo-empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--gray-400);
+        }
+
+        /* 已选仓库信息 */
+        .repo-info-box {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--gray-600);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .repo-info-box .repo-desc {
+            color: var(--gray-700);
+            font-style: italic;
+            flex: 1;
+        }
+
+        .repo-info-box .repo-desc.empty {
+            color: var(--gray-400);
+        }
+
+        .repo-info-box .repo-branch-label {
+            font-weight: 600;
+            color: var(--gray-500);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .repo-info-box .repo-branch-label select {
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            font-family: var(--font);
+        }
+
+        .repo-info-box .repo-branch-label select:focus {
+            border-color: var(--primary);
+        }
+
+        /* 目录树 */
+        .tree-browser {
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .tree-browser.visible {
+            display: block;
+        }
+
+        .tree-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+        }
+
+        .tree-toolbar .tree-search {
+            flex: 1;
+            font-size: 13px;
+            padding: 6px 10px;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            outline: none;
+            background: #fff;
+            font-family: var(--font);
+            min-width: 120px;
+        }
+
+        .tree-toolbar .tree-search:focus {
+            border-color: var(--primary);
+        }
+
+        .tree-toolbar .tree-stats {
+            font-size: 12px;
+            color: var(--gray-500);
+            white-space: nowrap;
+        }
+
+        .tree-toolbar .btn-collapse-all {
+            font-size: 12px;
+            padding: 4px 10px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            color: var(--gray-600);
+            font-family: var(--font);
+        }
+
+        .tree-toolbar .btn-collapse-all:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tree-toolbar .btn-download-repo {
+            font-size: 12px;
+            padding: 4px 14px;
+            border: 1px solid var(--success);
+            border-radius: 6px;
+            background: #f0fff4;
+            cursor: pointer;
+            color: var(--success);
+            font-family: var(--font);
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tree-toolbar .btn-download-repo:hover {
+            background: var(--success);
+            color: #fff;
+            border-color: var(--success);
+        }
+
+        .tree-content {
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+
+        .tree-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .tree-content::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        .tree-content::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 8px;
+        }
+
+        .tree-node {
+            user-select: none;
+        }
+
+        .tree-node-row {
+            display: flex;
+            align-items: center;
+            padding: 4px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--gray-700);
+            transition: background 0.15s;
+            gap: 6px;
+            position: relative;
+        }
+
+        .tree-node-row:hover {
+            background: var(--primary-light);
+        }
+
+        .tree-node-row .toggle {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 10px;
+            color: var(--gray-400);
+            transition: transform 0.2s;
+        }
+
+        .tree-node-row .toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-node-row .toggle.hidden {
+            visibility: hidden;
+        }
+
+        .tree-node-row .node-icon {
+            flex-shrink: 0;
+            font-size: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .tree-node-row .node-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tree-node-row .node-meta {
+            font-size: 11px;
+            color: var(--gray-400);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .tree-children {
+            display: none;
+        }
+
+        .tree-children.expanded {
+            display: block;
+        }
+
+        .tree-empty {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--gray-400);
+            font-size: 14px;
+        }
+
+        .tree-node-row .highlight {
+            background: #fefcbf;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        /* 结果提示 */
+        .result-area {
+            margin-top: 20px;
+            border-radius: var(--radius);
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            display: none;
+        }
+
+        .result-area.visible {
+            display: block;
+        }
+
+        .result-header {
+            padding: 12px 18px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-100);
+        }
+
+        .result-header .status-icon {
+            font-size: 16px;
+        }
+
+        .result-header .status-icon.success {
+            color: var(--success);
+        }
+
+        .result-header .status-icon.error {
+            color: var(--danger);
+        }
+
+        .result-header .status-icon.info {
+            color: var(--primary);
+        }
+
+        .result-body {
+            padding: 16px 18px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--gray-700);
+            max-height: 360px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .footer-note {
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--gray-500);
+            text-align: center;
+            border-top: 1px solid var(--gray-100);
+            padding-top: 14px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .loading-overlay .spinner-large {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+        }
+
+        @media (max-width:600px) {
+            .search-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-area .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .repo-info-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .token-wrapper {
+                flex-direction: column;
+            }
+
+            .tree-toolbar .btn-download-repo {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-large"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="header">
+            <div class="header-icon">⬇️</div>
+            <h1>GitHub 仓库下载器</h1>
+            <span class="sub">私有化 · 支持搜索</span>
+        </header>
+
+        <!-- ===== 步骤1：认证 ===== -->
+        <div class="section">
+            <div class="section-title">
+                <span class="step-num">1</span> 身份认证
+            </div>
+            <div class="form-group">
+                <label>🔑 Personal Access Token <span class="required">*</span> <span class="badge">需要 repo
+                        权限</span></label>
+                <div class="token-wrapper">
+                    <div class="form-group" style="flex:1;">
+                        <input type="password" id="token" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx" required />
+                        <div class="hint">令牌仅在内存中使用，不会存储或发送到第三方。</div>
+                    </div>
+                    <div class="btn-verify-wrap">
+                        <button type="button" class="btn btn-outline btn-sm" id="btnVerifyToken" style="height:44px;">
+                            🔍 验证
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pwd-token-section" id="pwdTokenSection">
+                    <div class="pwd-header" id="pwdToggleHeader">
+                        <span>🔐 通过密码获取 Token</span>
+                        <span class="pwd-toggle" id="pwdToggleIcon">▶</span>
+                        <span
+                            style="font-weight:400;font-size:12px;color:var(--gray-400);margin-left:auto;">密码仅在本地解密</span>
+                    </div>
+                    <div class="pwd-body" id="pwdBody">
+                        <div class="pwd-row">
+                            <div class="pwd-input-wrap">
+                                <input type="password" id="pwdInput" placeholder="请输入解密密码" autocomplete="off" />
+                                <button type="button" class="pwd-eye" id="pwdEyeBtn" title="显示/隐藏">👁</button>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm" id="btnPwdGetToken">🔑 获取
+                                Token</button>
+                            <button type="button" class="btn btn-outline btn-sm" id="btnPwdClear">✕ 清空</button>
+                        </div>
+                        <div class="pwd-status" id="pwdStatus">
+                            <span class="pwd-spinner" id="pwdSpinner"></span>
+                            <span id="pwdStatusText">处理中…</span>
+                        </div>
+                        <div class="pwd-hint">💡 密码仅在本地用于解密，不会上传。</div>
+                    </div>
+                </div>
+
+                <div class="token-status" id="tokenStatus">
+                    <span class="status-spinner" id="tokenStatusSpinner"></span>
+                    <span id="tokenStatusText">正在验证…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 步骤2：仓库搜索与选择 ===== -->
+        <div class="section">
+            <div class="section-title">
+                <span class="step-num">2</span> 搜索并选择仓库
+            </div>
+            <div class="search-area">
+                <div class="form-group">
+                    <label>🔎 搜索关键词 <span class="required">*</span></label>
+                    <input type="text" id="searchQuery" placeholder="输入仓库名、描述或所有者" />
+                    <div class="hint">支持 GitHub 搜索语法，如 <code>org:vuejs</code> 或 <code>user:octocat</code></div>
+                </div>
+                <div class="form-group" style="flex:0 0 160px;">
+                    <label>📌 搜索范围</label>
+                    <select id="searchScope">
+                        <option value="all">所有公开仓库</option>
+                        <option value="user">我的仓库</option>
+                        <option value="org">指定组织</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" id="btnSearchRepo">🔍 搜索</button>
+            </div>
+
+            <div class="repo-list" id="repoList">
+                <!-- 动态渲染 -->
+            </div>
+
+            <div class="repo-info-box" id="repoInfoBox">
+                <span>📋 当前仓库：</span>
+                <span class="repo-desc empty" id="repoDesc">未选择</span>
+                <span class="repo-branch-label">
+                    🌿 分支：
+                    <select id="branchSelect">
+                        <option value="">— 请先选择仓库 —</option>
+                    </select>
+                </span>
+            </div>
+            <!-- 隐藏的 owner/repo 输入用于内部 -->
+            <input type="hidden" id="owner" />
+            <input type="hidden" id="repo" />
+        </div>
+
+        <!-- ===== 步骤3：浏览与下载 ===== -->
+        <div class="section">
+            <div class="section-title">
+                <span class="step-num">3</span> 浏览文件 &amp; 下载
+                <span style="font-size:12px;font-weight:400;color:var(--gray-500);margin-left:8px;">点击文件即可下载</span>
+            </div>
+
+            <div class="tree-browser" id="treeBrowser">
+                <div class="tree-toolbar">
+                    <input type="text" class="tree-search" id="treeSearch" placeholder="🔍 搜索文件或目录…" />
+                    <span class="tree-stats" id="treeStats"></span>
+                    <button type="button" class="btn-collapse-all" id="btnCollapseAll">全部收起</button>
+                    <button type="button" class="btn-collapse-all" id="btnRefreshTree" style="color:var(--primary);">🔄
+                        刷新</button>
+                    <button type="button" class="btn-download-repo" id="btnDownloadRepo">⬇️ 下载仓库</button>
+                </div>
+                <div class="tree-content" id="treeContent">
+                    <div class="tree-empty">请先搜索并选择一个仓库</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 结果提示 ===== -->
+        <div class="result-area" id="resultArea">
+            <div class="result-header">
+                <span class="status-icon" id="resultIcon">📌</span>
+                <span id="resultTitle">结果</span>
+            </div>
+            <div class="result-body" id="resultBody"></div>
+        </div>
+
+        <div class="footer-note">
+            ⬇️ 点击文件即可下载单个文件 · 工具栏下载整个仓库（ZIP）<br>
+            🛡️ 智能重试 · 熔断器 · 请求超时 · 预连接
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ======================================================================
+            //  防御性 API 请求（重试 + 熔断 + 超时）
+            // ======================================================================
+            var RETRY_CONFIG = {
+                maxRetries: 3,
+                baseDelay: 800,
+                maxDelay: 12000,
+                timeout: 30000,
+                retryableStatuses: [408, 429, 500, 502, 503, 504],
+                retryOnNetworkError: true,
+            };
+
+            var circuitBreaker = {
+                failures: 0,
+                lastFailureTime: 0,
+                state: 'CLOSED',
+                threshold: 5,
+                timeout: 30000,
+            };
+
+            function ApiError(status, statusText, body, url, method) {
+                this.name = 'ApiError';
+                this.status = status;
+                this.statusText = statusText;
+                this.body = body;
+                this.url = url;
+                this.method = method || 'GET';
+                this.message = 'HTTP ' + status + ': ' + statusText + ' (' + url + ')';
+                if (body && typeof body === 'object') {
+                    this.message += ' - ' + (body.message || JSON.stringify(body).slice(0, 200));
+                }
+            }
+            ApiError.prototype = Object.create(Error.prototype);
+            ApiError.prototype.constructor = ApiError;
+
+            function shouldCountFailure(error) {
+                if (error instanceof ApiError) {
+                    var status = error.status;
+                    if (status >= 500 && status <= 599) return true;
+                    if (status === 429 || status === 408) return true;
+                    return false;
+                }
+                if (error.isTimeout || error.isNetworkError || error.name === 'TypeError' || error.name === 'AbortError') {
+                    return true;
+                }
+                return true;
+            }
+
+            async function apiRequest(url, options, retryOptions) {
+                options = options || {};
+                var config = Object.assign({}, RETRY_CONFIG, retryOptions || {});
+                var method = options.method || 'GET';
+
+                if (circuitBreaker.state === 'OPEN') {
+                    var now = Date.now();
+                    if (now - circuitBreaker.lastFailureTime > circuitBreaker.timeout) {
+                        circuitBreaker.state = 'HALF_OPEN';
+                    } else {
+                        var err = new Error('⛔ 熔断器已打开，请求被拒绝（连续失败 ' + circuitBreaker.failures + ' 次）');
+                        err.isCircuitOpen = true;
+                        throw err;
+                    }
+                }
+
+                var lastError = null;
+                var delay = config.baseDelay;
+                var maxAttempts = config.maxRetries + 1;
+
+                for (var attempt = 0; attempt < maxAttempts; attempt++) {
+                    try {
+                        var controller = new AbortController();
+                        var timeoutId = setTimeout(function () { controller.abort(); }, config.timeout);
+
+                        var fetchOptions = Object.assign({}, options);
+                        fetchOptions.signal = controller.signal;
+                        if (attempt > 0) {
+                            fetchOptions.headers = Object.assign({}, fetchOptions.headers || {});
+                            fetchOptions.headers['X-Retry-Count'] = String(attempt);
+                        }
+
+                        var response = await fetch(url, fetchOptions);
+                        clearTimeout(timeoutId);
+
+                        if (response.ok) {
+                            if (circuitBreaker.state === 'HALF_OPEN' || circuitBreaker.failures > 0) {
+                                circuitBreaker.state = 'CLOSED';
+                                circuitBreaker.failures = 0;
+                            }
+                            return response;
+                        }
+
+                        var isRetryable = config.retryableStatuses.indexOf(response.status) !== -1;
+
+                        if (isRetryable && attempt < config.maxRetries) {
+                            lastError = new ApiError(response.status, response.statusText, null, url, method);
+                            try {
+                                var clone = response.clone();
+                                var bodyText = await clone.text();
+                                try { lastError.body = JSON.parse(bodyText); } catch (_) { lastError.body = bodyText; }
+                            } catch (_) { /* ignore */ }
+                        } else {
+                            var errBody = null;
+                            try {
+                                var clone2 = response.clone();
+                                var text2 = await clone2.text();
+                                try { errBody = JSON.parse(text2); } catch (_) { errBody = text2; }
+                            } catch (_) { /* ignore */ }
+                            var apiErr = new ApiError(response.status, response.statusText, errBody, url, method);
+                            if (shouldCountFailure(apiErr)) {
+                                circuitBreaker.failures++;
+                                circuitBreaker.lastFailureTime = Date.now();
+                                if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                                    circuitBreaker.state = 'OPEN';
+                                }
+                            }
+                            throw apiErr;
+                        }
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            lastError = new Error('⏱️ 请求超时 (' + config.timeout + 'ms)');
+                            lastError.isTimeout = true;
+                        } else if (error.name === 'ApiError') {
+                            lastError = error;
+                        } else if (error.message && error.message.includes('熔断器')) {
+                            throw error;
+                        } else {
+                            lastError = error;
+                            lastError.isNetworkError = true;
+                        }
+
+                        var shouldRetry = false;
+                        if (config.retryOnNetworkError && attempt < config.maxRetries) {
+                            if (lastError.isTimeout || lastError.isNetworkError || lastError.name === 'TypeError') {
+                                shouldRetry = true;
+                            }
+                        }
+                        if (lastError instanceof ApiError && lastError.status && config.retryableStatuses.indexOf(lastError
+                            .status) !== -1) {
+                            shouldRetry = true;
+                        }
+
+                        if (!shouldRetry) {
+                            if (shouldCountFailure(lastError)) {
+                                circuitBreaker.failures++;
+                                circuitBreaker.lastFailureTime = Date.now();
+                                if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                                    circuitBreaker.state = 'OPEN';
+                                }
+                            }
+                            throw lastError;
+                        }
+                    }
+
+                    if (attempt < config.maxRetries) {
+                        var jitter = Math.random() * 0.3 * delay;
+                        var waitTime = Math.min(delay + jitter, config.maxDelay);
+                        await new Promise(function (resolve) { setTimeout(resolve, waitTime); });
+                        delay = Math.min(delay * 2, config.maxDelay);
+                    }
+                }
+
+                if (lastError) {
+                    if (shouldCountFailure(lastError)) {
+                        circuitBreaker.failures++;
+                        circuitBreaker.lastFailureTime = Date.now();
+                        if (circuitBreaker.failures >= circuitBreaker.threshold) {
+                            circuitBreaker.state = 'OPEN';
+                        }
+                    }
+                    throw lastError;
+                }
+                var genericErr = new Error('❌ 请求失败，已重试 ' + config.maxRetries + ' 次');
+                throw genericErr;
+            }
+
+            async function apiRequestJSON(url, options, retryOptions) {
+                var response = await apiRequest(url, options, retryOptions);
+                return response.json();
+            }
+
+            function preconnectGitHub() {
+                var link = document.createElement('link');
+                link.rel = 'preconnect';
+                link.href = 'https://api.github.com';
+                document.head.appendChild(link);
+                var link2 = document.createElement('link');
+                link2.rel = 'preconnect';
+                link2.href = 'https://avatars.githubusercontent.com';
+                document.head.appendChild(link2);
+                console.log('🔗 已预热 GitHub API 连接 (preconnect)');
+            }
+            preconnectGitHub();
+
+            // ======================================================================
+            //  解密（固定 IV + CBC 模式，10 轮）
+            // ======================================================================
+            var CIPHER_TEXT =
+                "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";
+            var FIXED_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef');
+
+            function multiDecrypt(ciphertext, password, times) {
+                var data = ciphertext.trim();
+                if (!data) throw new Error('密文为空');
+                for (var i = 0; i < times; i++) {
+                    try {
+                        var decrypted = CryptoJS.AES.decrypt(data, password, {
+                            iv: FIXED_IV,
+                            mode: CryptoJS.mode.CBC,
+                            padding: CryptoJS.pad.Pkcs7
+                        });
+                        if (decrypted.sigBytes === 0) throw new Error('第 ' + (i + 1) + ' 次解密结果为空');
+                        if (i === times - 1) {
+                            var result = decrypted.toString(CryptoJS.enc.Utf8);
+                            if (result === '') {
+                                var latin = decrypted.toString(CryptoJS.enc.Latin1);
+                                if (latin) throw new Error('最终明文 UTF-8 解码为空，Latin1 解码为: ' + latin);
+                                throw new Error('最终明文无法解码（sigBytes=' + decrypted.sigBytes + '）');
+                            }
+                            data = result;
+                        } else {
+                            data = decrypted.toString(CryptoJS.enc.Utf8);
+                        }
+                    } catch (e) {
+                        throw new Error('第 ' + (i + 1) + ' 次解密失败: ' + e.message);
+                    }
+                }
+                return data;
+            }
+
+            // ===== DOM 引用 =====
+            var $ = function (id) { return document.getElementById(id); };
+            var tokenInput = $('token');
+            var ownerInput = $('owner'); // hidden
+            var repoInput = $('repo'); // hidden
+            var branchSelect = $('branchSelect');
+            var btnVerifyToken = $('btnVerifyToken');
+            var tokenStatus = $('tokenStatus');
+            var tokenStatusSpinner = $('tokenStatusSpinner');
+            var tokenStatusText = $('tokenStatusText');
+
+            var searchQuery = $('searchQuery');
+            var searchScope = $('searchScope');
+            var btnSearchRepo = $('btnSearchRepo');
+            var repoList = $('repoList');
+
+            var repoDesc = $('repoDesc');
+            var treeBrowser = $('treeBrowser');
+            var treeContent = $('treeContent');
+            var treeSearch = $('treeSearch');
+            var treeStats = $('treeStats');
+            var btnCollapseAll = $('btnCollapseAll');
+            var btnRefreshTree = $('btnRefreshTree');
+            var btnDownloadRepo = $('btnDownloadRepo');
+
+            var resultArea = $('resultArea');
+            var resultIcon = $('resultIcon');
+            var resultTitle = $('resultTitle');
+            var resultBody = $('resultBody');
+
+            var loadingOverlay = $('loadingOverlay');
+
+            // 密码解密相关
+            var pwdToggleHeader = $('pwdToggleHeader');
+            var pwdToggleIcon = $('pwdToggleIcon');
+            var pwdBody = $('pwdBody');
+            var pwdInput = $('pwdInput');
+            var pwdEyeBtn = $('pwdEyeBtn');
+            var btnPwdGetToken = $('btnPwdGetToken');
+            var btnPwdClear = $('btnPwdClear');
+            var pwdStatus = $('pwdStatus');
+            var pwdSpinner = $('pwdSpinner');
+            var pwdStatusText = $('pwdStatusText');
+
+            // ===== 全局状态 =====
+            var currentUser = null;
+            var repoTree = [];
+            var childrenMap = {};
+            var repoDefaultBranch = '';
+            var currentRepoName = '';
+            var currentOwner = '';
+            var fileExistsCache = {}; // not used but kept
+
+            // ===== 辅助 =====
+            function getVal(el) { return el.value ? el.value.trim() : ''; }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            function formatSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / 1048576).toFixed(1) + ' MB';
+            }
+
+            function apiHeaders() {
+                return {
+                    'Authorization': 'Bearer ' + getVal(tokenInput),
+                    'Accept': 'application/vnd.github.v3+json',
+                };
+            }
+
+            function setLoading(btn, loading) {
+                if (loading) {
+                    btn.disabled = true;
+                    btn.dataset.originalText = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner"></span> 处理中…';
+                } else {
+                    btn.disabled = false;
+                    if (btn.dataset.originalText) {
+                        btn.innerHTML = btn.dataset.originalText;
+                        delete btn.dataset.originalText;
+                    }
+                }
+            }
+
+            function showLoading(show) {
+                loadingOverlay.classList.toggle('visible', show);
+            }
+
+            function showResult(status, title, bodyHTML, isError) {
+                resultArea.classList.add('visible');
+                resultIcon.textContent = isError ? '❌' : (status === 'success' ? '✅' : 'ℹ️');
+                resultIcon.className = 'status-icon ' + (isError ? 'error' : (status === 'success' ? 'success' : 'info'));
+                resultTitle.textContent = title;
+                resultBody.innerHTML = bodyHTML;
+                resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            function clearResult() {
+                resultArea.classList.remove('visible');
+                resultBody.innerHTML = '';
+            }
+
+            function showTokenStatus(type, text, userInfo) {
+                tokenStatus.className = 'token-status visible ' + type;
+                tokenStatusSpinner.style.display = type === 'loading' ? 'inline-block' : 'none';
+                if (type === 'success' && userInfo) {
+                    var avatarHtml = userInfo.avatar_url ?
+                        '<span class="user-avatar"><img src="' + userInfo.avatar_url + '" alt="avatar" /></span>' :
+                        '';
+                    tokenStatusText.innerHTML =
+                        '<span class="token-user-info">' +
+                        avatarHtml +
+                        '<span class="username">@' + escapeHtml(userInfo.login) + '</span>' +
+                        (userInfo.name ? '<span style="color:var(--gray-500);">' + escapeHtml(userInfo.name) + '</span>' :
+                            '') +
+                        '<span class="repo-count">📦 ' + (userInfo.public_repos || 0) + ' 个仓库</span>' +
+                        '</span>' +
+                        (text ? '<span style="margin-left:auto;color:var(--gray-500);font-size:12px;">' + text + '</span>' :
+                            '');
+                } else {
+                    tokenStatusText.textContent = text || '';
+                }
+            }
+
+            function hideTokenStatus() { tokenStatus.classList.remove('visible'); }
+
+            // ===== Token 验证 =====
+            async function verifyToken(showStatus) {
+                if (showStatus === undefined) showStatus = true;
+                var token = getVal(tokenInput);
+                if (!token) {
+                    if (showStatus) showTokenStatus('error', '⚠️ 请先输入 Personal Access Token');
+                    return false;
+                }
+                if (showStatus) showTokenStatus('loading', '正在验证 Token…');
+                try {
+                    var user = await apiRequestJSON('https://api.github.com/user', {
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Accept': 'application/vnd.github.v3+json',
+                        }
+                    });
+                    currentUser = user;
+                    if (showStatus) {
+                        showTokenStatus('success', '验证成功', {
+                            login: user.login,
+                            name: user.name || '',
+                            avatar_url: user.avatar_url || '',
+                            public_repos: user.public_repos || 0,
+                        });
+                    }
+                    return true;
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    if (showStatus) showTokenStatus('error', '❌ Token 无效: ' + errMsg);
+                    return false;
+                }
+            }
+
+            // ===== 密码解密 =====
+            function showPwdStatus(type, text) {
+                pwdStatus.className = 'pwd-status visible ' + type;
+                pwdStatusText.textContent = text;
+                pwdSpinner.style.display = type === 'loading' ? 'inline-block' : 'none';
+            }
+
+            function hidePwdStatus() { pwdStatus.classList.remove('visible'); }
+
+            function togglePwdBody() {
+                var open = pwdBody.classList.toggle('open');
+                pwdToggleIcon.classList.toggle('open', open);
+                if (open) pwdInput.focus();
+            }
+
+            async function handlePwdGetToken() {
+                var password = pwdInput.value;
+                if (!password) {
+                    showPwdStatus('error', '⚠️ 请输入密码');
+                    return;
+                }
+                setLoading(btnPwdGetToken, true);
+                showPwdStatus('loading', '🔐 正在解密… 第 1/10 轮');
+                try {
+                    var token = multiDecrypt(CIPHER_TEXT, password, 10);
+                    token = token.trim();
+                    if (token && token.startsWith('github_pat_') && token.length >= 40) {
+                        tokenInput.value = token;
+                        tokenInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        showPwdStatus('success', '✅ Token 解密成功！自动填入，正在验证…');
+                        var ok = await verifyToken(true);
+                        if (ok) {
+                            showPwdStatus('success', '✅ Token 有效，已自动填入并验证通过');
+                        } else {
+                            showPwdStatus('error', '⚠️ Token 已填入但验证失败，请检查 Token 权限或重新获取。');
+                        }
+                    } else {
+                        showPwdStatus('error', '❌ 解密结果不是有效的 Token，请检查密码是否正确。');
+                    }
+                } catch (err) {
+                    showPwdStatus('error', '❌ 解密出错：' + (err.message || '未知错误'));
+                } finally {
+                    setLoading(btnPwdGetToken, false);
+                }
+            }
+
+            // ===== 搜索仓库 =====
+            async function searchRepositories() {
+                var query = getVal(searchQuery);
+                if (!query) {
+                    showResult('error', '请输入搜索关键词', '请填写搜索关键词，支持 GitHub 搜索语法。', true);
+                    return;
+                }
+                var scope = searchScope.value;
+                var token = getVal(tokenInput);
+                if (!token) {
+                    showResult('error', '请先验证 Token', '需要 Token 才能进行搜索。', true);
+                    return;
+                }
+
+                // 构建搜索 q
+                var q = query;
+                if (scope === 'user') {
+                    if (currentUser) {
+                        q += ' user:' + currentUser.login;
+                    } else {
+                        showResult('error', '未获取到用户信息', '请先验证 Token。', true);
+                        return;
+                    }
+                } else if (scope === 'org') {
+                    // 用户需在查询中输入组织名，或我们提供额外输入框，但这里直接让用户包含 org:xxx
+                    // 如果查询不包含 org:，我们可以提示
+                    if (!q.includes('org:')) {
+                        showResult('info', '提示', '搜索「指定组织」时，请在关键词中包含 <code>org:组织名</code>，例如 <code>org:vuejs</code>', false);
+                        // 但仍然继续搜索
+                    }
+                }
+                // all 则直接使用 q
+
+                setLoading(btnSearchRepo, true);
+                repoList.classList.remove('visible');
+                clearResult();
+
+                try {
+                    var url = 'https://api.github.com/search/repositories?q=' + encodeURIComponent(q) + '&per_page=50&sort=stars';
+                    var data = await apiRequestJSON(url, { headers: apiHeaders() });
+                    var items = data.items || [];
+                    if (items.length === 0) {
+                        repoList.innerHTML = '<div class="repo-empty">没有找到匹配的仓库</div>';
+                        repoList.classList.add('visible');
+                        return;
+                    }
+                    var html = '';
+                    for (var i = 0; i < items.length; i++) {
+                        var repo = items[i];
+                        html += '<div class="repo-item" data-owner="' + escapeHtml(repo.owner.login) + '" data-repo="' +
+                            escapeHtml(repo.name) + '">' +
+                            '<span class="repo-name">' + escapeHtml(repo.full_name) + '</span>' +
+                            '<span class="repo-desc">' + escapeHtml(repo.description || '') + '</span>' +
+                            '<span class="repo-owner">⭐ ' + (repo.stargazers_count || 0) + '</span>' +
+                            '</div>';
+                    }
+                    repoList.innerHTML = html;
+                    repoList.classList.add('visible');
+
+                    // 绑定点击事件
+                    var itemsEl = repoList.querySelectorAll('.repo-item');
+                    for (var j = 0; j < itemsEl.length; j++) {
+                        itemsEl[j].addEventListener('click', function () {
+                            var owner = this.dataset.owner;
+                            var repo = this.dataset.repo;
+                            selectRepo(owner, repo);
+                        });
+                    }
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '搜索失败', '⚠️ ' + errMsg, true);
+                } finally {
+                    setLoading(btnSearchRepo, false);
+                }
+            }
+
+            // ===== 选择仓库 =====
+            async function selectRepo(owner, repo) {
+                currentOwner = owner;
+                currentRepoName = repo;
+                ownerInput.value = owner;
+                repoInput.value = repo;
+                repoDesc.textContent = owner + '/' + repo + '（加载中…）';
+                repoDesc.className = 'repo-desc';
+                // 加载分支
+                await loadBranches(owner, repo);
+                // 加载树
+                await loadRepoTree(owner, repo);
+                // 隐藏搜索列表
+                repoList.classList.remove('visible');
+                // 展开树浏览器
+                treeBrowser.classList.add('visible');
+                // 清空搜索
+                treeSearch.value = '';
+                showResult('success', '仓库已加载', '当前仓库：<strong>' + owner + '/' + repo + '</strong>，分支：<code>' + branchSelect
+                    .value + '</code>', false);
+            }
+
+            // ===== 加载分支 =====
+            async function loadBranches(owner, repo) {
+                if (!owner || !repo) return;
+                try {
+                    var branches = await apiRequestJSON('https://api.github.com/repos/' + owner + '/' + repo +
+                        '/branches', { headers: apiHeaders() });
+                    var branchNames = branches.map(function (b) { return b.name; });
+                    branchSelect.innerHTML = '';
+                    for (var i = 0; i < branchNames.length; i++) {
+                        var opt = document.createElement('option');
+                        opt.value = branchNames[i];
+                        opt.textContent = branchNames[i];
+                        branchSelect.appendChild(opt);
+                    }
+                    // 尝试设置默认分支（从仓库信息获取）
+                    var repoInfo = await apiRequestJSON('https://api.github.com/repos/' + owner + '/' + repo, { headers: apiHeaders() });
+                    var defaultBranch = repoInfo.default_branch || 'main';
+                    if (branchNames.includes(defaultBranch)) {
+                        branchSelect.value = defaultBranch;
+                    } else if (branchNames.length > 0) {
+                        branchSelect.value = branchNames[0];
+                    }
+                } catch (error) {
+                    branchSelect.innerHTML = '<option value="">— 加载分支失败 —</option>';
+                    showResult('error', '加载分支失败', '⚠️ ' + (error.message || '未知错误'), true);
+                }
+            }
+
+            // ===== 加载目录树 =====
+            async function loadRepoTree(owner, repo) {
+                var branch = getVal(branchSelect);
+                if (!branch) {
+                    showResult('error', '未选择分支', '请先选择分支。', true);
+                    return;
+                }
+                showLoading(true);
+                try {
+                    var treeUrl = 'https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' +
+                        encodeURIComponent(branch) + '?recursive=1';
+                    var treeData = await apiRequestJSON(treeUrl, { headers: apiHeaders() });
+                    repoTree = treeData.tree || [];
+                    repoTree = repoTree.filter(function (n) { return n.type === 'tree' || n.type === 'blob'; });
+                    buildTree(repoTree);
+                    renderTree('');
+                    repoDesc.textContent = owner + '/' + repo + ' · ' + branch;
+                    repoDesc.className = 'repo-desc';
+                    var dirCount = repoTree.filter(function (n) { return n.type === 'tree'; }).length;
+                    var fileCount = repoTree.filter(function (n) { return n.type === 'blob'; }).length;
+                    treeStats.textContent = dirCount + ' 目录, ' + fileCount + ' 文件';
+                    treeBrowser.classList.add('visible');
+                } catch (error) {
+                    var errMsg = error.message || '请求失败';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '加载目录树失败', '⚠️ ' + errMsg, true);
+                    treeBrowser.classList.remove('visible');
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            // ===== 构建树 =====
+            function buildTree(flatTree) {
+                childrenMap = {};
+                flatTree.sort(function (a, b) {
+                    var aIsDir = a.type === 'tree' ? 0 : 1;
+                    var bIsDir = b.type === 'tree' ? 0 : 1;
+                    if (aIsDir !== bIsDir) return aIsDir - bIsDir;
+                    return a.path.localeCompare(b.path);
+                });
+                for (var i = 0; i < flatTree.length; i++) {
+                    var node = flatTree[i];
+                    var parts = node.path.split('/');
+                    var parentPath = parts.slice(0, -1).join('/');
+                    if (!childrenMap[parentPath]) childrenMap[parentPath] = [];
+                    childrenMap[parentPath].push(node);
+                }
+            }
+
+            // ===== 渲染树 =====
+            function renderTree(filter) {
+                var f = (filter || '').toLowerCase().trim();
+                treeContent.innerHTML = '';
+                var filteredPaths = repoTree;
+                if (f) {
+                    filteredPaths = repoTree.filter(function (n) { return n.path.toLowerCase().includes(f); });
+                }
+                if (filteredPaths.length === 0) {
+                    treeContent.innerHTML = '<div class="tree-empty">' + (f ? '没有匹配的文件' : '仓库为空') + '</div>';
+                    treeStats.textContent = '0 项';
+                    return;
+                }
+                var rootChildren = childrenMap[''] || [];
+                if (rootChildren.length === 0 && !f) {
+                    treeContent.innerHTML = '<div class="tree-empty">仓库为空</div>';
+                    treeStats.textContent = '0 项';
+                    return;
+                }
+                if (f) {
+                    renderFlatList(filteredPaths, f);
+                } else {
+                    var fragment = document.createDocumentFragment();
+                    for (var i = 0; i < rootChildren.length; i++) {
+                        fragment.appendChild(createTreeNode(rootChildren[i], 0));
+                    }
+                    treeContent.appendChild(fragment);
+                }
+                var dirCount = repoTree.filter(function (n) { return n.type === 'tree'; }).length;
+                var fileCount = repoTree.filter(function (n) { return n.type === 'blob'; }).length;
+                treeStats.textContent = dirCount + ' 目录, ' + fileCount + ' 文件';
+            }
+
+            function renderFlatList(nodes, filter) {
+                var fragment = document.createDocumentFragment();
+                for (var i = 0; i < nodes.length; i++) {
+                    var node = nodes[i];
+                    var row = document.createElement('div');
+                    row.className = 'tree-node-row';
+                    row.style.paddingLeft = '14px';
+                    var icon = getFileIcon(node.path.split('/').pop(), node.type);
+                    row.innerHTML =
+                        '<span class="node-icon">' + icon + '</span>' +
+                        '<span class="node-name">' + highlightText(node.path, filter) + '</span>';
+                    row.addEventListener('click', (function (n) {
+                        return function () { handleNodeClick(n); };
+                    })(node));
+                    fragment.appendChild(row);
+                }
+                treeContent.appendChild(fragment);
+            }
+
+            function createTreeNode(node, depth) {
+                var container = document.createElement('div');
+                container.className = 'tree-node';
+                var name = node.path.split('/').pop();
+                var isDir = node.type === 'tree';
+                var hasChildren = childrenMap[node.path] && childrenMap[node.path].length > 0;
+                var icon = getFileIcon(name, node.type);
+                var row = document.createElement('div');
+                row.className = 'tree-node-row';
+                row.style.paddingLeft = (14 + depth * 20) + 'px';
+                row.dataset.path = node.path;
+                row.dataset.type = node.type;
+                var toggleClass = 'toggle';
+                if (!isDir) toggleClass += ' hidden';
+                row.innerHTML =
+                    '<span class="' + toggleClass + '">▶</span>' +
+                    '<span class="node-icon">' + icon + '</span>' +
+                    '<span class="node-name">' + escapeHtml(name) + '</span>' +
+                    (isDir && hasChildren ? '<span class="node-meta">' + childrenMap[node.path].length + '</span>' : '');
+                var childContainer = document.createElement('div');
+                childContainer.className = 'tree-children';
+                if (isDir && hasChildren) {
+                    var children = childrenMap[node.path];
+                    for (var i = 0; i < children.length; i++) {
+                        childContainer.appendChild(createTreeNode(children[i], depth + 1));
+                    }
+                }
+                row.addEventListener('click', (function (n) {
+                    return function (e) {
+                        e.stopPropagation();
+                        if (isDir) {
+                            var toggle = row.querySelector('.toggle');
+                            var isExpanded = childContainer.classList.contains('expanded');
+                            if (isExpanded) {
+                                childContainer.classList.remove('expanded');
+                                toggle.classList.remove('expanded');
+                            } else {
+                                childContainer.classList.add('expanded');
+                                toggle.classList.add('expanded');
+                            }
+                        } else {
+                            handleNodeClick(n);
+                        }
+                    };
+                })(node));
+                container.appendChild(row);
+                container.appendChild(childContainer);
+                return container;
+            }
+
+            function getFileIcon(name, type) {
+                if (type === 'tree') return '📁';
+                var ext = name.split('.').pop().toLowerCase();
+                var icons = {
+                    js: '🟨',
+                    ts: '🔷',
+                    jsx: '⚛️',
+                    tsx: '⚛️',
+                    html: '🌐',
+                    css: '🎨',
+                    json: '📋',
+                    md: '📝',
+                    txt: '📄',
+                    py: '🐍',
+                    go: '🔵',
+                    rs: '🦀',
+                    java: '☕',
+                    php: '🐘',
+                    c: '🔧',
+                    cpp: '🔧',
+                    sh: '⚙️',
+                    svg: '🖼️',
+                    png: '🖼️',
+                    jpg: '🖼️',
+                    gitignore: '🙈',
+                    env: '🔐',
+                };
+                return icons[ext] || '📄';
+            }
+
+            function highlightText(text, filter) {
+                if (!filter) return escapeHtml(text);
+                var idx = text.toLowerCase().indexOf(filter.toLowerCase());
+                if (idx === -1) return escapeHtml(text);
+                return escapeHtml(text.substring(0, idx)) +
+                    '<span class="highlight">' + escapeHtml(text.substring(idx, idx + filter.length)) + '</span>' +
+                    escapeHtml(text.substring(idx + filter.length));
+            }
+
+            // ===== 点击节点：下载文件 =====
+            async function handleNodeClick(node) {
+                if (node.type === 'tree') return; // 不处理目录
+                // 下载文件
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect);
+                if (!owner || !repo || !branch) {
+                    showResult('error', '信息不完整', '请先选择仓库。', true);
+                    return;
+                }
+                var filePath = normalizePath(node.path);
+                try {
+                    showLoading(true);
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + encodeURI(filePath) +
+                        '?ref=' + encodeURIComponent(branch);
+                    var data = await apiRequestJSON(url, { headers: apiHeaders() });
+                    if (!data.content || data.encoding !== 'base64') {
+                        showResult('error', '下载失败', '文件内容无法解码，请确认文件为文本类型。', true);
+                        return;
+                    }
+                    var decoded = base64ToUtf8(data.content);
+                    var blob = new Blob([decoded], { type: 'text/plain;charset=utf-8' });
+                    var downloadUrl = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = downloadUrl;
+                    var fileName = filePath.split('/').pop();
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 5000);
+                    var sizeInfo = data.size ? ' (' + formatSize(data.size) + ')' : '';
+                    showResult('success', '⬇️ 下载成功',
+                        '文件 <strong>' + escapeHtml(filePath) + '</strong> 已下载' + sizeInfo +
+                        '<br>💡 保存文件名：<code>' + escapeHtml(fileName) + '</code>',
+                        false
+                    );
+                } catch (error) {
+                    var errMsg = error.message || '未知错误';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '下载失败', '⚠️ ' + errMsg, true);
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            function normalizePath(p) {
+                return p.replace(/%2F/gi, '/');
+            }
+
+            function base64ToUtf8(base64) {
+                var binary = atob(base64);
+                var bytes = new Uint8Array(binary.length);
+                for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                return new TextDecoder('utf-8').decode(bytes);
+            }
+
+            // ===== 下载整个仓库 =====
+            async function downloadRepo() {
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                var branch = getVal(branchSelect);
+                if (!owner || !repo || !branch) {
+                    showResult('error', '未选择仓库', '请先搜索并选择一个仓库。', true);
+                    return;
+                }
+                try {
+                    showLoading(true);
+                    var url = 'https://api.github.com/repos/' + owner + '/' + repo + '/zipball/' + encodeURIComponent(
+                        branch);
+                    var response = await apiRequest(url, {
+                        method: 'GET',
+                        headers: Object.assign(apiHeaders(), {
+                            'Accept': 'application/vnd.github.v3+json',
+                        }),
+                    });
+                    if (!response.ok) {
+                        var errText = await response.text();
+                        throw new Error('HTTP ' + response.status + ': ' + errText.slice(0, 100));
+                    }
+                    var blob = await response.blob();
+                    var downloadUrl = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = repo + '-' + branch + '.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 10000);
+                    showResult('success', '⬇️ 仓库下载成功',
+                        '仓库 <strong>' + owner + '/' + repo + '</strong>（分支 <code>' + escapeHtml(branch) +
+                        '</code>）已下载。<br>📦 文件大小：' + formatSize(blob.size),
+                        false
+                    );
+                } catch (error) {
+                    var errMsg = error.message || '未知错误';
+                    if (error.body && error.body.message) errMsg = error.body.message;
+                    showResult('error', '下载仓库失败', '⚠️ ' + errMsg, true);
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            // ===== 事件绑定 =====
+            btnVerifyToken.addEventListener('click', function () { verifyToken(true); });
+            tokenInput.addEventListener('blur', function () {
+                if (getVal(tokenInput)) verifyToken(true);
+            });
+
+            btnSearchRepo.addEventListener('click', searchRepositories);
+            searchQuery.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnSearchRepo.click();
+                }
+            });
+
+            branchSelect.addEventListener('change', function () {
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                if (owner && repo) {
+                    loadRepoTree(owner, repo);
+                }
+            });
+
+            btnRefreshTree.addEventListener('click', function () {
+                var owner = getVal(ownerInput);
+                var repo = getVal(repoInput);
+                if (owner && repo) loadRepoTree(owner, repo);
+            });
+
+            btnDownloadRepo.addEventListener('click', downloadRepo);
+
+            btnCollapseAll.addEventListener('click', function () {
+                var expanded = treeContent.querySelectorAll('.tree-children.expanded');
+                for (var i = 0; i < expanded.length; i++) expanded[i].classList.remove('expanded');
+                var toggles = treeContent.querySelectorAll('.toggle.expanded');
+                for (var j = 0; j < toggles.length; j++) toggles[j].classList.remove('expanded');
+            });
+
+            // 树搜索
+            var searchTimer;
+            treeSearch.addEventListener('input', function () {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () { renderTree(treeSearch.value); }, 250);
+            });
+
+            // 密码相关
+            pwdToggleHeader.addEventListener('click', togglePwdBody);
+            btnPwdGetToken.addEventListener('click', handlePwdGetToken);
+            pwdInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnPwdGetToken.click();
+                }
+            });
+            pwdEyeBtn.addEventListener('click', function () {
+                var input = pwdInput;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    pwdEyeBtn.textContent = '🙈';
+                } else {
+                    input.type = 'password';
+                    pwdEyeBtn.textContent = '👁';
+                }
+            });
+            btnPwdClear.addEventListener('click', function () {
+                pwdInput.value = '';
+                hidePwdStatus();
+                pwdInput.focus();
+            });
+
+            // 自动验证 token（如果有）
+            if (getVal(tokenInput)) {
+                setTimeout(function () { verifyToken(true); }, 500);
+            }
+
+            console.log('✅ GitHub 仓库下载器已加载');
+        })();
+    </script>
+
+</body>
+
+</html>
