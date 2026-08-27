@@ -1,12 +1,6 @@
 [
     {
         "msgs": [
-            "<birthday/>"
-        ],
-        "msgInputSpeed": 60
-    },
-    {
-        "msgs": [
             "<span style='color:#888; font-size:0.85rem;'>⏳ 事先说明，GitHub 直连有点慢，图片和视频加载会稍等片刻～</span>"
         ],
         "msgInputSpeed": 60
