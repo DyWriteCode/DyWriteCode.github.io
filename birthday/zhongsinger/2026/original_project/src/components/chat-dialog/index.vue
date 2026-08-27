@@ -196,6 +196,80 @@ import './css/main.scss'
 import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis'
 import { Snackbar } from '@varlet/ui'
 
+// ==================== 纯前端朴素贝叶斯分类器 ====================
+class NaiveBayes {
+  constructor() {
+    this.classes = {};
+    this.classTotals = {};
+    this.vocabulary = new Set();
+    this.totalDocs = 0;
+    this.classDocCounts = {};
+    this.trained = false;
+  }
+
+  tokenize(text) {
+    return text.toLowerCase()
+      .replace(/[，。！？、；：""''（）\n\r\t，。！？\u3000]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 0);
+  }
+
+  addDocument(text, label) {
+    const tokens = this.tokenize(text);
+    if (!this.classes[label]) {
+      this.classes[label] = {};
+      this.classTotals[label] = 0;
+      this.classDocCounts[label] = 0;
+    }
+    this.classDocCounts[label] += 1;
+    this.totalDocs += 1;
+
+    tokens.forEach(word => {
+      this.vocabulary.add(word);
+      if (!this.classes[label][word]) {
+        this.classes[label][word] = 0;
+      }
+      this.classes[label][word] += 1;
+      this.classTotals[label] += 1;
+    });
+  }
+
+  train() {
+    this.trained = true;
+  }
+
+  classify(text) {
+    if (!this.trained) throw new Error('必须先训练');
+    const tokens = this.tokenize(text);
+    const scores = {};
+
+    for (const label in this.classes) {
+      const prior = Math.log(this.classDocCounts[label] / this.totalDocs);
+      let logProb = prior;
+      const vocabSize = this.vocabulary.size;
+      const totalWords = this.classTotals[label];
+
+      tokens.forEach(word => {
+        const count = this.classes[label][word] || 0;
+        const prob = (count + 1) / (totalWords + vocabSize);
+        logProb += Math.log(prob);
+      });
+
+      scores[label] = logProb;
+    }
+
+    let bestLabel = null;
+    let bestScore = -Infinity;
+    for (const label in scores) {
+      if (scores[label] > bestScore) {
+        bestScore = scores[label];
+        bestLabel = label;
+      }
+    }
+    return bestLabel;
+  }
+}
+
 const AUTHOR = {
   AUTHOR: 'author',
   ME: 'me'
@@ -295,6 +369,9 @@ export default {
       scrollThreshold: 20,          // 判定底部的阈值（像素）
       showBirthday: false,
       birthdayResolve: null,
+      intentClassifier: null,      // 训练好的分类器实例
+      fallbackCount: 0,            // 当前退路引导次数
+      fallbackMax: 2,              // 最大退路引导次数
     }
   },
   watch: {
@@ -323,6 +400,161 @@ export default {
     }
   },
   methods: {
+    initIntentClassifier() {
+      const classifier = new NaiveBayes();
+
+      // ---------- 基础关键词（从项目配置中提取） ----------
+      const acceptBase = [
+        '好', '好的', '可以', '行', '愿意', '想', '是', '嗯', '当然', '没问题',
+        '要', '来吧', '说说看', '你讲', '我听听', '1', '想我'
+      ];
+      const rejectBase = [
+        '不', '不想', '不愿意', '不要', '算了', '不用', '不了', '没兴趣',
+        '别', '别说了', '不知道', '2'
+      ];
+
+      // ---------- 生成样本数据 ----------
+      const trainingData = [];
+
+      // 1. 从 acceptBase 生成大量变体
+      const acceptParticles = ['啊', '呀', '呢', '吧', '嘛', '啦', '诶', '哎'];
+      const acceptPrefixes = ['那我', '我就', '我', '那就', '那', '嗯，', '好的，', '行，', '可以，'];
+      const acceptSuffixes = ['吧', '呗', '啦', '呀', '呢', '了'];
+
+      acceptBase.forEach(word => {
+        trainingData.push({ text: word, label: 'accept' });
+        acceptParticles.forEach(p => trainingData.push({ text: word + p, label: 'accept' }));
+        acceptPrefixes.forEach(pre => trainingData.push({ text: pre + word, label: 'accept' }));
+        acceptSuffixes.forEach(suf => trainingData.push({ text: word + suf, label: 'accept' }));
+        acceptPrefixes.forEach(pre => {
+          acceptSuffixes.forEach(suf => {
+            trainingData.push({ text: pre + word + suf, label: 'accept' });
+          });
+        });
+        if (['愿意', '想', '要', '可以'].includes(word)) {
+          trainingData.push({ text: `我${word}听`, label: 'accept' });
+          trainingData.push({ text: `我${word}你说`, label: 'accept' });
+          trainingData.push({ text: `我${word}你说的`, label: 'accept' });
+        }
+        if (word === '好' || word === '好的' || word === '行' || word === '可以') {
+          trainingData.push({ text: `那就${word}吧`, label: 'accept' });
+          trainingData.push({ text: `那就${word}了`, label: 'accept' });
+          trainingData.push({ text: `这样${word}`, label: 'accept' });
+        }
+        if (word === '是') {
+          trainingData.push({ text: '是的', label: 'accept' });
+          trainingData.push({ text: '对', label: 'accept' });
+          trainingData.push({ text: '对啊', label: 'accept' });
+          trainingData.push({ text: '没错', label: 'accept' });
+        }
+        if (word === '想我') {
+          trainingData.push({ text: '想你呢', label: 'accept' });
+          trainingData.push({ text: '当然想你', label: 'accept' });
+          trainingData.push({ text: '我确实想你', label: 'accept' });
+        }
+        if (word === '1') {
+          trainingData.push({ text: '1', label: 'accept' });
+          trainingData.push({ text: '选1', label: 'accept' });
+        }
+      });
+
+      const extraAccept = [
+        '行啊', '行嘞', '好的吧', '好哒', '好嘞', '好嘛', '可以呀', '可以的',
+        '愿意呀', '想呀', '想听呀', '嗯嗯', '嗯呢', '对呀', '是啊', '没问题啊',
+        '来吧来吧', '说说吧', '你讲吧', '我听着呢', '洗耳恭听', '请说', '说吧'
+      ];
+      extraAccept.forEach(text => trainingData.push({ text, label: 'accept' }));
+
+      // 2. 从 rejectBase 生成大量变体
+      const rejectPrefixes = ['我', '那我', '还是', '要不', '就', '那'];
+      const rejectParticles = ['了', '吧', '呀', '呢', '啊', '啦'];
+      rejectBase.forEach(word => {
+        trainingData.push({ text: word, label: 'reject' });
+        rejectParticles.forEach(p => trainingData.push({ text: word + p, label: 'reject' }));
+        rejectPrefixes.forEach(pre => trainingData.push({ text: pre + word, label: 'reject' }));
+        rejectPrefixes.forEach(pre => {
+          rejectParticles.forEach(p => {
+            trainingData.push({ text: pre + word + p, label: 'reject' });
+          });
+        });
+        if (['不想', '不愿意', '不要'].includes(word)) {
+          trainingData.push({ text: `我${word}听`, label: 'reject' });
+          trainingData.push({ text: `我${word}你说`, label: 'reject' });
+          trainingData.push({ text: `我真的${word}`, label: 'reject' });
+        }
+        if (word === '不知道') {
+          trainingData.push({ text: '我不知道', label: 'reject' });
+          trainingData.push({ text: '我哪知道', label: 'reject' });
+          trainingData.push({ text: '我怎么知道', label: 'reject' });
+          trainingData.push({ text: '不清楚', label: 'reject' });
+        }
+        if (word === '不') {
+          trainingData.push({ text: '不了', label: 'reject' });
+          trainingData.push({ text: '不哦', label: 'reject' });
+          trainingData.push({ text: '不吧', label: 'reject' });
+        }
+        if (word === '算了') {
+          trainingData.push({ text: '算了吧', label: 'reject' });
+          trainingData.push({ text: '算了算了', label: 'reject' });
+          trainingData.push({ text: '还是算了', label: 'reject' });
+        }
+        if (word === '没兴趣') {
+          trainingData.push({ text: '没兴趣啊', label: 'reject' });
+          trainingData.push({ text: '我没兴趣', label: 'reject' });
+        }
+        if (word === '别') {
+          trainingData.push({ text: '别啊', label: 'reject' });
+          trainingData.push({ text: '别吧', label: 'reject' });
+          trainingData.push({ text: '别这样', label: 'reject' });
+        }
+        if (word === '2') {
+          trainingData.push({ text: '2', label: 'reject' });
+          trainingData.push({ text: '选2', label: 'reject' });
+        }
+      });
+
+      const extraReject = [
+        '我不想听', '我不想听你说', '别说了', '别说这些', '算了吧', '还是算了吧',
+        '不用了', '不需要', '没兴趣', '不想知道', '不感兴趣', '不要这样',
+        '我不愿意', '我不愿意听', '不想听这些', '算了别说了', '别继续了'
+      ];
+      extraReject.forEach(text => trainingData.push({ text, label: 'reject' }));
+
+      // 3. 开放性/无关回答 (unknown)
+      const unknownBase = [
+        '今天天气真好', '天气不错', '外面下雨了', '好冷啊', '好热啊',
+        '你在干嘛', '你在做什么', '忙什么呢', '吃饭了吗', '吃了没',
+        '哈哈', '呵呵', '嘿嘿', '嘻嘻', '嗯嗯', '哦', '哦哦', '噢',
+        '然后呢', '接着说', '你说什么', '我没听清', '再说一遍', '什么',
+        '最近挺开心的', '最近有点忙', '今天好累', '好无聊', '无聊死了',
+        '真的吗', '是吗', '不会吧', '有意思', '原来如此', '好吧', '嗯呐',
+        '行吧行吧', '可以可以', '挺好的', '还行', '随便', '都行', '无所谓',
+        '你猜', '我也不知道', '你猜我在想什么', '我有点困', '早点休息', '晚安',
+        '嗯好', '知道了', '谢谢', '不客气', '好的呢', '嗯嗯好的', '好了',
+        '那好吧', '那行吧', '就这样吧', '那这样', '嗯嗯', 'ok', 'OK', '好哒',
+        '你还在吗', '在不在', '在干嘛呀', '想你啦', '哈哈哈', '笑死',
+        '我下班了', '刚到家', '今天好累啊', '累死了', '困了', '想睡觉',
+        '吃什么好呢', '不知道吃什么', '你想吃什么', '随便吧', '听你的',
+        '你在哪', '来玩啊', '一起吗', '好呀好呀', '好啊好啊'
+      ];
+      unknownBase.forEach(text => trainingData.push({ text, label: 'unknown' }));
+
+      // 4. 复杂混合句（标为 unknown，避免误判）
+      const complexMixed = [
+        '不是不想听，是有点累', '不是不想，是没时间', '也不是不可以', '好吧，那我考虑一下',
+        '虽然不太愿意，但也可以', '那就这样吧', '行吧行吧，随便你', '你说了算'
+      ];
+      complexMixed.forEach(text => trainingData.push({ text, label: 'unknown' }));
+
+      // ---------- 训练 ----------
+      trainingData.forEach(({ text, label }) => {
+        classifier.addDocument(text, label);
+      });
+      classifier.train();
+
+      this.intentClassifier = classifier;
+      console.log(`[Intent] 分类器训练完成，样本总数：${trainingData.length}`);
+    },
     checkIfAtBottom() {
       const container = document.getElementById('mobile-body-content')
       if (!container) return true
@@ -473,16 +705,29 @@ export default {
             this.$nextTick(() => { this.scrollToBottom(false) })
           }
 
+          // if (triggerNextAction) {
+          //   const trigger = () => delay(500).then(() => resolve())
+          //   this.nextActionTrigger = {
+          //     inputSpeed: msgInputSpeed,
+          //     triggerNextAction,
+          //     trigger
+          //   }
+          //   this.status = triggerNextAction.type
+          // } else {
+          //   resolve()
+          // }
           if (triggerNextAction) {
-            const trigger = () => delay(500).then(() => resolve())
+            // 重置退路计数（每次新交互重新计数）
+            this.fallbackCount = 0;
+            const trigger = () => delay(500).then(() => resolve());
             this.nextActionTrigger = {
               inputSpeed: msgInputSpeed,
               triggerNextAction,
               trigger
-            }
-            this.status = triggerNextAction.type
+            };
+            this.status = triggerNextAction.type;
           } else {
-            resolve()
+            resolve();
           }
         })
       })
@@ -770,56 +1015,42 @@ export default {
       return instance
     },
     sendUserMsg() {
-      const message = this.inputMessage
-      this.inputMessage = ''
-      const quoteId = this.quoteMsg ? this.quoteMsg.id : null
-      this.pushMsg(message, AUTHOR.ME, 'text', null, quoteId)
-      this.clearQuote()
+      const message = this.inputMessage.trim();
+      if (!message) return;
+      this.inputMessage = '';
 
-      if (!this.nextActionTrigger) return
+      // 1. 发送用户消息（文本）
+      const quoteId = this.quoteMsg ? this.quoteMsg.id : null;
+      this.pushMsg(message, AUTHOR.ME, 'text', null, quoteId);
+      this.clearQuote();
 
-      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
-      const { type, options } = triggerNextAction
-      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options
+      // 2. 如果没有等待的 trigger，直接返回
+      if (!this.nextActionTrigger) return;
 
-      if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
-        if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
-          const currentTry = tryCnt
-          const totalRejects = rejectHitTexts.length
+      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger;
+      const { type, options } = triggerNextAction;
+      if (type !== TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) return;
 
-          // 如果已经用完了所有拒绝消息，直接继续
-          if (currentTry >= totalRejects) {
-            this.handleTriggerNextAction()
-            return
-          }
+      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options;
 
-          const rejectText = rejectHitTexts[currentTry]
-          let rejectSysMsgChain = Promise.resolve()
-          if (Array.isArray(rejectText)) {
-            rejectText.forEach(text => {
-              rejectSysMsgChain = rejectSysMsgChain
-                .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }))
-            })
-          } else {
-            rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
-          }
+      // 3. 意图分类
+      const intent = this.classifyIntent(message);
 
-          // 更新尝试次数（发送完成后将使用新值判断）
-          this.nextActionTrigger.tryCnt = currentTry + 1
-
-          rejectSysMsgChain.then(() => {
-            // 发送完成后判断是否已用完所有拒绝消息
-            if (this.nextActionTrigger.tryCnt >= totalRejects) {
-              this.handleTriggerNextAction()
-            } else {
-              this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
-            }
-          })
-        } else {
-          this.handleTriggerNextAction()
-        }
+      // 4. 根据意图处理
+      if (intent === 'accept') {
+        this.handleTriggerNextAction();
+        return;
       }
+
+      if (intent === 'reject') {
+        this.handleReject(resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt);
+        return;
+      }
+
+      // 5. unknown → 退路策略
+      this.handleUnknown(message, resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt);
     },
+
     handleComponentOpen({ type, props }) {
       this.currentOpenComponent = { type, props }
     },
@@ -855,11 +1086,66 @@ export default {
         })
       }, 1000)
     },
-    rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
-      const trimmed = message.trim()
-      if (rejectKeyTexts.some(key => trimmed.includes(key))) return true
-      if (resolveKeyTexts.some(key => trimmed.includes(key))) return false
-      return true
+    // rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
+    //   const trimmed = message.trim()
+    //   if (rejectKeyTexts.some(key => trimmed.includes(key))) return true
+    //   if (resolveKeyTexts.some(key => trimmed.includes(key))) return false
+    //   return true
+    // },
+    classifyIntent(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return 'unknown';
+
+      // 第一层：快速硬编码关键词（安全兜底）
+      const globalAccept = ['好', '可以', '愿意', '想听', '是', '行', '嗯', '当然', '没问题', '要', '来吧', '说说看'];
+      const globalReject = ['不', '不想', '不愿意', '不要', '算了', '不用', '别', '不知道'];
+      if (globalReject.some(k => trimmed.includes(k))) return 'reject';
+      if (globalAccept.some(k => trimmed.includes(k))) return 'accept';
+
+      // 第二层：使用训练好的贝叶斯分类器
+      if (this.intentClassifier) {
+        return this.intentClassifier.classify(text);
+      }
+      return 'unknown';
+    },
+    handleReject(resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt) {
+      const totalRejects = rejectHitTexts.length;
+      if (tryCnt >= totalRejects) {
+        this.handleTriggerNextAction();
+        return;
+      }
+      const rejectText = rejectHitTexts[tryCnt];
+      let rejectSysMsgChain = Promise.resolve();
+      if (Array.isArray(rejectText)) {
+        rejectText.forEach(text => {
+          rejectSysMsgChain = rejectSysMsgChain
+            .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }));
+        });
+      } else {
+        rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed });
+      }
+      this.nextActionTrigger.tryCnt = tryCnt + 1;
+      rejectSysMsgChain.then(() => {
+        if (this.nextActionTrigger.tryCnt >= totalRejects) {
+          this.handleTriggerNextAction();
+        } else {
+          this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+        }
+      });
+    },
+    handleUnknown(message, resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt) {
+      if (this.fallbackCount < this.fallbackMax) {
+        this.fallbackCount++;
+        const guideMsg = `我没太明白你的意思，你能告诉我“好”或“不好”吗？`;
+        this.sendSysMsg({ msgs: [guideMsg], msgInputSpeed: inputSpeed })
+          .then(() => {
+            this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+          });
+      } else {
+        this.fallbackCount = 0;
+        this.handleTriggerNextAction();
+        this.sendSysMsg({ msgs: ['好吧，那我们继续吧～'], msgInputSpeed: inputSpeed });
+      }
     },
     pushMsg(message, author, type = 'text', externalId = null, quoteId = null) {
       this.msgIdCounter++
@@ -1489,6 +1775,7 @@ export default {
       }
     }
     window.addEventListener('message', this.handleBirthdayMessage);
+    this.initIntentClassifier();
   },
   beforeUnmount() {
     if (this.typingInstance) {

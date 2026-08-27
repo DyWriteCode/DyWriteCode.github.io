@@ -1079,7 +1079,7 @@ img {
     src: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/lato400.65c76203.woff)
 }
 
-.scroll-to-bottom-btn[data-v-59640136] {
+.scroll-to-bottom-btn[data-v-09ad4342] {
     position: absolute;
     right: 20px;
     bottom: 75px;
@@ -1097,7 +1097,7 @@ img {
     transition: transform .2s, opacity .2s
 }
 
-.scroll-to-bottom-btn[data-v-59640136]:hover {
+.scroll-to-bottom-btn[data-v-09ad4342]:hover {
     transform: scale(1.1)
 }
 
