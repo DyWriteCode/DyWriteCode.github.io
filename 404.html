@@ -101,13 +101,13 @@
                         listContainer.appendChild(link);
                     });
                 } else {
-                    listContainer.innerHTML = '<p>未找到相似页面，请返回 <a href="/?v=20260826135549">首页</a> 查看导航。</p>';
+                    listContainer.innerHTML = '<p>未找到相似页面，请返回 <a href="/?v=20260827014518">首页</a> 查看导航。</p>';
                 }
             })
             .catch(() => {
                 // 如果 pages.json 加载失败（比如路径不对），显示兜底方案
                 document.getElementById('recommendList').innerHTML =
-                    '<p>无法加载站点地图，请返回 <a href="/?v=20260826135549">首页</a>。</p>';
+                    '<p>无法加载站点地图，请返回 <a href="/?v=20260827014518">首页</a>。</p>';
             });
     </script>
 </body>
