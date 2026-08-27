@@ -394,29 +394,43 @@
     },
     {
         "msgs": [
-            "新的一岁，希望 <span style='color:#FF6B6B; font-weight:bold;'>好事多一点</span>，<span style='color:#4A90D9; font-weight:bold;'>烦恼少一点</span> <span style='color:#FFB347;'>✨</span> <span style='color:#FF6B6B;'>🌈</span>"
+            "<span style='color:#b5654b; font-size:22px; font-weight:bold;'>🎂 9月7日，生日快乐 🎂</span> <span style='color:#FFB347;'>✧*。٩(ˊωˋ*)و✧*。</span>"
         ],
-        "msgInputSpeed": 60,
+        "msgInputSpeed": 50,
         "author": "author"
     },
     {
         "msgs": [
-            "然后…",
-            "按自己的节奏慢慢走～<span style='color:#FFB347;'>🌱</span>",
-            "然后按自己的节奏慢慢走，每一步都会有好风景等着你的 <span style='color:#FFB347;'>🌻✨</span> <span style='color:#4ECDC4;'>٩(◕‿◕｡)۶</span>"
+            "你还记得我们做的那套心理测试吗？"
         ],
-        "msgInputSpeed": 60,
-        "author": "author",
-        "pat": {
-            "target": "me",
-            "text": "拍了拍你的头说“要天天开心哦～”"
-        }
+        "msgInputSpeed": 50,
+        "author": "author"
     },
     {
         "msgs": [
-            "<span style='color:#b5654b; font-size:22px; font-weight:bold;'>🎂 9月7日，生日快乐 🎂</span> <span style='color:#FFB347;'>✧*。٩(ˊωˋ*)و✧*。</span>"
+            "你说其他选项都有差值，但除了浪漫都差不多……"
         ],
-        "msgInputSpeed": 50,
+        "msgInputSpeed": 45,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "那这份礼物，应该刚刚好。✨"
+        ],
+        "msgInputSpeed": 40,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "<birthday/>"
+        ],
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "好啦，收尾啦～ 🐱"
+        ],
+        "msgInputSpeed": 30,
         "author": "author"
     },
     {
