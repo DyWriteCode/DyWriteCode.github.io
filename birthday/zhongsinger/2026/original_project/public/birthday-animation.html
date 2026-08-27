@@ -5263,8 +5263,13 @@
                     statusTip.textContent = '✦ 祝福化光 · 生日快乐 ✦';
                     statusTip.classList.add('show');
                     setTimeout(() => statusTip.classList.remove('show'), 4000);
-                    if (window.parent && window.parent !== window) {
-                        window.parent.postMessage('birthday-done', '*');
+                    if (!window._birthdaySent) {
+                        window._birthdaySent = true;
+                        setTimeout(function () {
+                            if (window.parent && window.parent !== window) {
+                                window.parent.postMessage('birthday-done', '*');
+                            }
+                        }, 3000); // 等待 3 秒，让用户看到完整的“生日快乐”字样
                     }
                 }
             }

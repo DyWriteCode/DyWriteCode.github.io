@@ -1076,7 +1076,7 @@ img {
     src: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@latest/birthday/zhongsinger/2026/assets/lato400.65c76203.woff)
 }
 
-.scroll-to-bottom-btn[data-v-e548673e] {
+.scroll-to-bottom-btn[data-v-6e7b63b2] {
     position: absolute;
     right: 20px;
     bottom: 75px;
@@ -1094,7 +1094,7 @@ img {
     transition: transform .2s, opacity .2s
 }
 
-.scroll-to-bottom-btn[data-v-e548673e]:hover {
+.scroll-to-bottom-btn[data-v-6e7b63b2]:hover {
     transform: scale(1.1)
 }
 
@@ -1822,6 +1822,23 @@ img {
 
 .custom-voice-menu .menu-icon {
     font-size: 18px
+}
+
+.birthday-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    background: #000
+}
+
+.birthday-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block
 }
 
 .var--box,
@@ -3813,7 +3830,6 @@ img {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     overflow: hidden
 }
 

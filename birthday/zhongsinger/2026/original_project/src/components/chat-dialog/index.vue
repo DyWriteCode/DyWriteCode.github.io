@@ -510,10 +510,10 @@ export default {
         if (messageType === 'birthday') {
           // 显示生日动画
           this.showBirthday = true;
-          // 返回一个 Promise，在动画完成时 resolve
-          return new Promise((resolve) => {
-            this.birthdayResolve = resolve;
-          });
+          // 注意：此处必须保存 resolve，并返回一个 Promise
+          this.birthdayResolve = resolve;
+          // 不要调用 resolve，等待 closeBirthday 触发
+          return;
         }
 
         if (messageType === 'text') {
@@ -1399,18 +1399,28 @@ export default {
       }
     },
     onBirthdayLoaded() {
-      // iframe 加载完成可做额外处理（可选）
+      // 给 iframe 一点加载时间，再发送启动消息
+      setTimeout(() => {
+        const iframe = this.$refs.birthdayIframe;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('start-animation', '*');
+          console.log('已发送 start-animation 消息');
+        }
+      }, 500);
     },
     handleBirthdayMessage(event) {
+      console.log('收到消息:', event.data);
       if (event.data === 'birthday-done') {
         this.closeBirthday();
       }
     },
     closeBirthday() {
+      console.log('关闭生日动画');
       this.showBirthday = false;
       if (this.birthdayResolve) {
         this.birthdayResolve();
         this.birthdayResolve = null;
+        console.log('已 resolve birthday Promise，继续聊天');
       }
     },
     // 用户点击背景可手动关闭（可选）
