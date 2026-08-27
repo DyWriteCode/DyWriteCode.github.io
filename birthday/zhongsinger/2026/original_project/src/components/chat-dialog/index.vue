@@ -165,11 +165,11 @@
 
     <!-- 生日动画全屏 -->
     <div v-if="showBirthday" class="birthday-overlay">
-      <iframe ref="birthdayIframe"
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/birthday/zhongsinger/2026/birthday-animation.html?autoplay=1"
-        class="birthday-iframe" allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
+      <iframe ref="birthdayIframe" :srcdoc="htmlContent" class="birthday-iframe"
+        allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
       </iframe>
     </div>
+
 
     <Teleport to="body">
       <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
@@ -368,6 +368,7 @@ export default {
       isUserAtBottom: true,        // 用户是否在底部
       scrollThreshold: 20,          // 判定底部的阈值（像素）
       showBirthday: false,
+      htmlContent: '',
       birthdayResolve: null,
       intentClassifier: null,      // 训练好的分类器实例
       fallbackCount: 0,            // 当前退路引导次数
@@ -400,6 +401,35 @@ export default {
     }
   },
   methods: {
+
+    // 加载远程 HTML
+    async loadBirthdayHTML() {
+      // 可以更换为您的 CDN 地址
+      const url = 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/birthday/zhongsinger/2026/birthday-animation.html';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const html = await res.text();
+        this.htmlContent = html;
+        this.showBirthday = true;
+        // 等待 DOM 更新，确保 iframe 已创建
+        this.$nextTick(() => {
+          // 添加 load 事件监听（srcdoc 加载完成时会触发）
+          const iframe = this.$refs.birthdayIframe;
+          if (iframe) {
+            iframe.addEventListener('load', this.onBirthdayLoaded);
+            // 但若 iframe 已经加载完成，手动调用一次（安全处理）
+            if (iframe.contentWindow && iframe.contentWindow.document.readyState === 'complete') {
+              this.onBirthdayLoaded();
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('加载生日动画失败，跳过', error);
+        // 加载失败则直接关闭，继续聊天
+        this.closeBirthday();
+      }
+    },
     initIntentClassifier() {
       const classifier = new NaiveBayes();
 
@@ -755,12 +785,12 @@ export default {
         const hasHtml = /<[^>]+>/.test(message)
 
         if (messageType === 'birthday') {
-          // 显示生日动画
-          this.showBirthday = true;
-          // 注意：此处必须保存 resolve，并返回一个 Promise
-          this.birthdayResolve = resolve;
-          // 不要调用 resolve，等待 closeBirthday 触发
-          return;
+          // 启动加载动画 HTML（异步）
+          this.loadBirthdayHTML();
+          // 返回一个 Promise，等待 closeBirthday 调用 resolve
+          return new Promise((resolve) => {
+            this.birthdayResolve = resolve;
+          });
         }
 
         if (messageType === 'text') {
@@ -1687,29 +1717,29 @@ export default {
       }
     },
     onBirthdayLoaded() {
-      // 给 iframe 一点加载时间，再发送启动消息
-      setTimeout(() => {
-        const iframe = this.$refs.birthdayIframe;
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage('start-animation', '*');
-          console.log('已发送 start-animation 消息');
-        }
-      }, 500);
+      // 防止重复发送
+      if (this._started) return;
+      this._started = true;
+      const iframe = this.$refs.birthdayIframe;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage('start-animation', '*');
+        console.log('📤 发送 start-animation');
+      }
     },
     handleBirthdayMessage(event) {
-      console.log('收到消息:', event.data);
       if (event.data === 'birthday-done') {
+        console.log('📥 收到 birthday-done');
         this.closeBirthday();
       }
     },
     closeBirthday() {
-      console.log('关闭生日动画');
       this.showBirthday = false;
+      this.htmlContent = '';
       if (this.birthdayResolve) {
         this.birthdayResolve();
         this.birthdayResolve = null;
-        console.log('已 resolve birthday Promise，继续聊天');
       }
+      this._started = false;
     },
     // 用户点击背景可手动关闭（可选）
     closeBirthdayManually() {

@@ -1,6 +1,12 @@
 [
     {
         "msgs": [
+            "<birthday/>"
+        ],
+        "msgInputSpeed": 80
+    },
+    {
+        "msgs": [
             "<letter src='options/demo/letters/test.json'/>"
         ],
         "triggerNextAction": {
