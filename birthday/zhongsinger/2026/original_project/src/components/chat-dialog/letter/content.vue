@@ -3,30 +3,26 @@
     <div class="letter-title">{{ titleDisplay }}</div>
 
     <div class="letter-detail" ref="detailContainer">
-      <!-- 背景横线由伪元素绘制，一次性加载 -->
-      <div v-for="item in contents" :key="item.id" class="paragraph-wrapper">
-        <!-- 图片段落 -->
-        <div v-if="item.type === 'img' && item.visible" style="text-align: center">
-          <span v-html="item.content"></span>
+      <div class="letter-detail-inner">
+        <div v-for="item in contents" :key="item.id" class="paragraph-wrapper">
+          <div v-if="item.type === 'img' && item.visible" style="text-align: center">
+            <span v-html="item.content"></span>
+          </div>
+
+          <div v-else-if="item.type === 'text' && item.visible"
+            style="color: black; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
+            <div v-if="item.isHtml" v-html="item.displayText" style="display: inline;"></div>
+            <p v-else style="margin:0; color:black; white-space: pre-wrap; word-break: break-word;">
+              {{ item.displayText }}
+              <span v-if="item.isTyping" class="cursor">|</span>
+            </p>
+          </div>
         </div>
 
-        <!-- 文本段落 -->
-        <p v-else-if="item.type === 'text' && item.visible"
-          style="color: black; display: block; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
-          {{ item.displayText }}
-          <!-- 仅当前正在打字的段落显示光标 -->
-          <span v-if="item.isTyping" class="cursor">|</span>
-        </p>
-
-        <!-- 隐藏占位（无实际显示） -->
-        <div v-if="item.type === 'text' && !item.visible" style="visibility: hidden; height: 0;">
-          {{ item.fullText }}
+        <div class="finish-action" v-show="finish" @click="$emit('close')">
+          <var-icon name="chevron-left" />
+          <text>回到聊天页</text>
         </div>
-      </div>
-
-      <div class="finish-action" v-show="finish" @click="$emit('close')">
-        <var-icon name="chevron-left" />
-        <text>回到聊天页</text>
       </div>
     </div>
 
@@ -53,15 +49,20 @@ export default {
       _initialized: false,
       titleDisplay: '',
       _currentIndex: 0,
-      isUserAtBottom: true,
-      _typingLock: false, // 互斥锁，防止并发打字
+      isUserAtBottom: false,
+      _typingLock: false,
+      _resizeObserver: null,
+      _lastWidth: 0,
+      _lastHeight: 0,
+      _stableCheckTimer: null,
+      _initPending: false,
     };
   },
   watch: {
     paragraphs: {
       handler(newVal) {
-        if (newVal && newVal.length > 0 && !this._initialized) {
-          this.initContent();
+        if (newVal && newVal.length > 0 && !this._initialized && !this._initPending) {
+          this.waitForStableLayout();
         }
       },
       immediate: true,
@@ -71,7 +72,16 @@ export default {
     const container = this.$refs.detailContainer;
     if (container) {
       container.addEventListener('scroll', this.onScroll);
-      this.isUserAtBottom = this.checkIfAtBottom();
+      this.isUserAtBottom = false;
+
+      this._resizeObserver = new ResizeObserver(() => {
+        this.checkStability();
+      });
+      this._resizeObserver.observe(container);
+    }
+
+    if (this.paragraphs && this.paragraphs.length > 0 && !this._initialized && !this._initPending) {
+      this.waitForStableLayout();
     }
   },
   beforeUnmount() {
@@ -79,8 +89,53 @@ export default {
     if (container) {
       container.removeEventListener('scroll', this.onScroll);
     }
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+    clearTimeout(this._stableCheckTimer);
   },
   methods: {
+    waitForStableLayout() {
+      if (this._initPending) return;
+      this._initPending = true;
+      this._lastWidth = 0;
+      this._lastHeight = 0;
+      this.$nextTick(() => {
+        this.checkStability();
+      });
+    },
+
+    checkStability() {
+      const container = this.$refs.detailContainer;
+      if (!container) return;
+      const { clientWidth, scrollHeight } = container;
+      const currentWidth = clientWidth;
+      const currentHeight = scrollHeight;
+
+      if (currentWidth !== this._lastWidth || currentHeight !== this._lastHeight) {
+        this._lastWidth = currentWidth;
+        this._lastHeight = currentHeight;
+        clearTimeout(this._stableCheckTimer);
+        this._stableCheckTimer = setTimeout(() => {
+          const newWidth = container.clientWidth;
+          const newHeight = container.scrollHeight;
+          if (newWidth === this._lastWidth && newHeight === this._lastHeight) {
+            this._stableCheckTimer = null;
+            this.initContent();
+          } else {
+            this._lastWidth = newWidth;
+            this._lastHeight = newHeight;
+            this.checkStability();
+          }
+        }, 50);
+      } else {
+        clearTimeout(this._stableCheckTimer);
+        this._stableCheckTimer = null;
+        this.initContent();
+      }
+    },
+
     checkIfAtBottom() {
       const container = this.$refs.detailContainer;
       if (!container) return true;
@@ -97,20 +152,24 @@ export default {
         container.scrollTop = container.scrollHeight;
       }
     },
+
     async initContent() {
       if (this._initialized) return;
       if (!this.paragraphs || this.paragraphs.length === 0) return;
 
       this._initialized = true;
+      this._initPending = false;
       this.contents = [];
 
       this.paragraphs.forEach((p) => {
         const isImg = /<img[^>]+>/.test(p);
+        const isHtml = !isImg && /<\/?[a-z][\s\S]*>/i.test(p);
         this.contents.push({
-          id: idCounter++, // 唯一ID，用于v-for的key
+          id: idCounter++,
           type: isImg ? 'img' : 'text',
           content: p,
           fullText: isImg ? '' : p,
+          isHtml: isHtml,
           visible: false,
           displayText: '',
           isTyping: false,
@@ -121,14 +180,9 @@ export default {
       this.titleDisplay = this.title || '无标题';
       await this.$nextTick();
 
-      // 预占位（使所有文本段落可见，但内容为空）
-      for (const item of this.contents) {
-        if (item.type === 'text') {
-          item.visible = true;
-          item.displayText = '';
-        }
-      }
-      await this.$nextTick();
+      const container = this.$refs.detailContainer;
+      if (container) container.scrollTop = 0;
+      this.isUserAtBottom = false;
 
       this._currentIndex = 0;
       this.processNext();
@@ -150,32 +204,83 @@ export default {
         this.$nextTick(() => this.scrollToBottom());
         this.processNext();
       } else if (item.type === 'text') {
+        item.visible = true;
         this.typeParagraph(item);
       }
+    },
+
+    parseHtmlTokens(text) {
+      const tokens = [];
+      let i = 0;
+      while (i < text.length) {
+        if (text[i] === '^') {
+          let numStr = '';
+          let j = i + 1;
+          while (j < text.length && /\d/.test(text[j])) {
+            numStr += text[j];
+            j++;
+          }
+          if (numStr) {
+            tokens.push({ type: 'delay', ms: parseInt(numStr, 10) });
+            i = j;
+            continue;
+          } else {
+            tokens.push({ type: 'text', value: text[i] });
+            i++;
+            continue;
+          }
+        }
+
+        if (text[i] === '<') {
+          let tag = '';
+          let j = i;
+          while (j < text.length && text[j] !== '>') {
+            tag += text[j];
+            j++;
+          }
+          if (j < text.length && text[j] === '>') {
+            tag += '>';
+            tokens.push({ type: 'tag', value: tag });
+            i = j + 1;
+            continue;
+          } else {
+            tokens.push({ type: 'text', value: text[i] });
+            i++;
+          }
+        } else {
+          tokens.push({ type: 'text', value: text[i] });
+          i++;
+        }
+      }
+      return tokens;
     },
 
     async typeParagraph(item) {
       if (this._typingLock) return;
       this._typingLock = true;
 
-      // 清除所有段落的打字状态（避免残留）
-      this.contents.forEach(p => p.isTyping = false);
+      this.contents.forEach(p => (p.isTyping = false));
 
       const fullText = item.fullText;
-      const tokens = this.parseTextWithDelays(fullText);
+      const tokens = this.parseHtmlTokens(fullText);
 
       item.displayText = '';
-      item.visible = true;
       item.isTyping = true;
       item.done = false;
 
+      const speed = this.speed || 80;
+
       try {
-        for (let i = 0; i < tokens.length; i++) {
-          const token = tokens[i];
-          if (token.type === 'char') {
-            item.displayText += token.char;
+        for (let idx = 0; idx < tokens.length; idx++) {
+          const token = tokens[idx];
+          if (token.type === 'text') {
+            item.displayText += token.value;
             this.scrollToBottom();
-            await this.delay(this.speed || 80);
+            await this.delay(speed);
+          } else if (token.type === 'tag') {
+            item.displayText += token.value;
+            this.scrollToBottom();
+            await this.delay(15);
           } else if (token.type === 'delay') {
             await this.delay(token.ms);
           }
@@ -192,33 +297,6 @@ export default {
       }
     },
 
-    parseTextWithDelays(text) {
-      const tokens = [];
-      let i = 0;
-      while (i < text.length) {
-        if (text[i] === '^') {
-          let numStr = '';
-          let j = i + 1;
-          while (j < text.length && /\d/.test(text[j])) {
-            numStr += text[j];
-            j++;
-          }
-          if (numStr) {
-            tokens.push({ type: 'delay', ms: parseInt(numStr, 10) });
-            i = j;
-            continue;
-          } else {
-            tokens.push({ type: 'char', char: text[i] });
-            i++;
-          }
-        } else {
-          tokens.push({ type: 'char', char: text[i] });
-          i++;
-        }
-      }
-      return tokens;
-    },
-
     delay(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
@@ -226,58 +304,69 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
+/* ========== 移除 Google Fonts 外部依赖，改用本地字体 ========== */
+@font-face {
+  font-family: 'Lato';
+  src: url('../css/font/lato400.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('../css/font/lato400.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
 .letter-content {
+  font-family: '楷体', 'KaiTi', 'STKaiti', '华文楷体', 'Georgia', 'Times New Roman', serif !important;
+  /* 其他原有样式保持不动，不要改变 padding, min-height 等 */
   color: black !important;
   background-color: #f9f9f9;
   padding: 15px 32px 29px;
   min-height: 100vh;
-  font-family: "Architects Daughter", cursive !important;
   box-sizing: border-box;
 }
 
+/* 不要给子元素强制 font-family: inherit，它们会自然继承 */
+/* 保留原有的 .letter-title 样式（包含居中） */
 .letter-title {
   font-size: 1.25rem;
   margin: 15px 0;
   text-align: center;
+  /* 居中保留 */
   color: black !important;
 }
 
 .letter-detail {
   position: relative;
+  height: 70vh;
   min-height: 70vh;
-  background: transparent;
-  padding: 10px 0;
-  max-height: 70vh;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+  box-sizing: border-box;
 }
 
-/* 伪元素绘制完整横线背景，一次性加载 */
-.letter-detail::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
+.letter-detail-inner {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  padding: 10px 0;
   background: repeating-linear-gradient(to bottom,
       #f9f9f9,
       #f9f9f9 31px,
       #d46466 2px,
       #f9f9f9);
   background-size: 100% 32px;
-  pointer-events: none;
+  background-repeat: repeat-y;
 }
 
-/* 所有内容层置于伪元素之上 */
-.letter-detail>* {
-  position: relative;
-  z-index: 1;
-}
-
-.letter-detail p {
+.letter-detail-inner p {
   line-height: 2rem !important;
   text-indent: 2em;
   font-size: 1rem !important;
@@ -287,6 +376,30 @@ export default {
   margin: 0 !important;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.letter-detail {
+  scrollbar-width: thin;
+  scrollbar-color: #d46466 #f9f9f9;
+}
+
+.letter-detail::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.letter-detail::-webkit-scrollbar-track {
+  background: #f9f9f9;
+  border-radius: 3px;
+}
+
+.letter-detail::-webkit-scrollbar-thumb {
+  background: #d46466;
+  border-radius: 3px;
+}
+
+.letter-detail::-webkit-scrollbar-thumb:hover {
+  background: #b84a4c;
 }
 
 .letter-action {
@@ -303,7 +416,6 @@ export default {
   cursor: pointer;
 }
 
-/* 光标样式优化：内联且对齐基线，避免垂直偏移 */
 .cursor {
   display: inline;
   font-size: inherit;

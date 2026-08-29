@@ -95,6 +95,7 @@ FILE: package.json
     "@varlet/ui": "^1.24.1",
     "animate.css": "^4.1.1",
     "gsap": "^3.15.0",
+    "natural": "^8.1.1",
     "vue": "^3.2.25",
     "wechat-emojis": "^1.0.2"
   },
@@ -5856,16 +5857,14 @@ FILE: public/birthday-animation.html
     </script>
     <script>
         (function () {
-            // 监听父窗口的启动消息
+            // 监听父窗口的启动指令
             window.addEventListener('message', function (event) {
                 if (event.data === 'start-animation') {
-                    // 自动点击“开始”按钮
                     var btn = document.getElementById('startBtn');
                     if (btn) {
-                        // 模拟点击，触发原有启动流程
                         btn.click();
                     } else {
-                        // 如果按钮还未加载，等 DOM 就绪后再试
+                        // 如果按钮尚未加载，使用 MutationObserver 等待
                         var observer = new MutationObserver(function () {
                             var btn2 = document.getElementById('startBtn');
                             if (btn2) {
@@ -5874,13 +5873,12 @@ FILE: public/birthday-animation.html
                             }
                         });
                         observer.observe(document.body, { childList: true, subtree: true });
-                        // 3秒后自动断开，防止内存泄漏
                         setTimeout(function () { observer.disconnect(); }, 3000);
                     }
                 }
             });
 
-            // 如果 URL 包含 autoplay=1 参数，自动启动（方便调试）
+            // 可选：如果 URL 含 autoplay=1，自动启动（用于独立调试）
             if (window.location.search.indexOf('autoplay=1') !== -1) {
                 setTimeout(function () {
                     var btn = document.getElementById('startBtn');
@@ -6211,441 +6209,7 @@ FILE: public/options/demo/avatars.json
 ================================================
 FILE: public/options/demo/chat.json
 ================================================
-[
-    {
-        "msgs": [
-            "<letter src='options/demo/letters/test.json'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "本条消息用户输入包括[1]才能进入下一步，多次将强行跳过"
-        ],
-        "msgInputSpeed": 8,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "1"
-                ],
-                "rejectKeyTexts": [
-                    "2"
-                ],
-                "rejectHitTexts": [
-                    "输入好，听不懂吗？？？",
-                    "触发强行跳过"
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "标签字体"
-        ],
-        "id": "greeting",
-        "msgInputSpeed": 1,
-        "recall": 100
-    },
-    {
-        "msgs": [
-            "标签字体1"
-        ],
-        "id": "test",
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体2"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体3"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体4"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体5"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体6"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体7"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体8"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体9"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体10"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体12"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体13"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体14"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体15"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "msgs": [
-            "标签字体16"
-        ],
-        "msgInputSpeed": 1
-    },
-    {
-        "id": "second",
-        "msgs": [
-            "这是第二条消息，引用上面的那一条"
-        ],
-        "msgInputSpeed": 80,
-        "author": "K&I",
-        "quote": "greeting"
-    },
-    {
-        "id": "second",
-        "msgs": [
-            "这是第二条消息，引用上面的那一条"
-        ],
-        "msgInputSpeed": 80,
-        "author": "K&I",
-        "quote": "test"
-    },
-    {
-        "msgs": [
-            "标签字体abcd"
-        ],
-        "id": "greeting",
-        "msgInputSpeed": 10000000
-    },
-    {
-        "msgs": [
-            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容' cancel='true' delay=4000/>"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<span style=\"color: red;\">红色的span标签字体</span>"
-        ],
-        "msgInputSpeed": 100
-    },
-    {
-        "msgs": [
-            "<voice src='options/demo/voice_message/test.mp3' alt='这是一段语音转文字内容'  delay=4000/>"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<span style=\"color: red;\">红色的span标签字体</span>"
-        ],
-        "msgInputSpeed": 100
-    },
-    {
-        "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
-        ],
-        "msgInputSpeed": 80,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "好"
-                ],
-                "rejectKeyTexts": [],
-                "rejectHitTexts": [
-                    "输入好，听不懂吗？？？",
-                    "触发强行跳过"
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "这条消息会在1秒后自动撤回"
-        ],
-        "msgInputSpeed": 80,
-        "recall": 1000
-    },
-    {
-        "msgs": [
-            "普通消息，有输入动画"
-        ],
-        "msgInputSpeed": 80,
-        "author": "three",
-        "tip": "test"
-    },
-    {
-        "msgs": [
-            "普通消息支持回退，比如下面这条"
-        ],
-        "msgInputSpeed": 80,
-        "author": "four",
-        "pat": {
-            "target": "me",
-            "text": "拍了拍我的小脑袋"
-        }
-    },
-    {
-        "msgs": [
-            "普通消息会回退",
-            "普通消息回退后的结果，也能调整动画速度"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "普通消息输入快速"
-        ],
-        "msgInputSpeed": 40
-    },
-    {
-        "msgs": [
-            "支持切换输入角色"
-        ],
-        "msgInputSpeed": 80,
-        "author": "me"
-    },
-    {
-        "msgs": [
-            "消息支持html元素，比如下面这个带颜色的文本"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<span style=\"color: red;\">红色的span标签字体</span>"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "消息支持触发用户输入交互，本条消息用户输入包括[好]才能进入下一步，多次将强行跳过"
-        ],
-        "msgInputSpeed": 80,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "好"
-                ],
-                "rejectKeyTexts": [],
-                "rejectHitTexts": [
-                    "输入好，听不懂吗？？？",
-                    "触发强行跳过"
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "消息支持输入图片"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<img src='options/demo/imgs/test.png'/>"
-        ]
-    },
-    {
-        "msgs": [
-            "消息支持输入VLog"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "看看我为你做的VLog"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<vlog src='options/demo/vlogs/test.mp4'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "消息支持输入信件"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "看看我想对你说的话"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<letter src='options/demo/letters/test.json'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "接下来是一些通用测试"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "有些心里话，你想听吗？"
-        ],
-        "msgInputSpeed": 40,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "好的",
-                    "可以",
-                    "同意",
-                    "愿意",
-                    "想",
-                    "想听",
-                    "是"
-                ],
-                "rejectKeyTexts": [
-                    "不想"
-                ],
-                "rejectHitTexts": [
-                    "不听？信不信我分分钟出 bug 给你看？",
-                    "好吧，既然你实在不想听，那我就讲给你听吧～"
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "心里话都在这封信里"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<letter src='options/demo/letters/test.json'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "你猜我在想什么？"
-        ],
-        "msgInputSpeed": 80,
-        "triggerNextAction": {
-            "type": "userInput",
-            "options": {
-                "resolveKeyTexts": [
-                    "想我"
-                ],
-                "rejectKeyTexts": [
-                    "不知道"
-                ],
-                "rejectHitTexts": [
-                    "你猜错了～",
-                    [
-                        "给你提示一下～",
-                        "是个人~"
-                    ],
-                    "这都猜不中？？？",
-                    [
-                        "好吧，看图吧。",
-                        "<img src='options/demo/imgs/test.png'>"
-                    ]
-                ]
-            }
-        }
-    },
-    {
-        "msgs": [
-            "我是在想打游戏",
-            "我是在想你呢"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "看看这个视频"
-        ],
-        "msgInputSpeed": 80
-    },
-    {
-        "msgs": [
-            "<vlog src='options/demo/vlogs/test.mp4'/>"
-        ],
-        "triggerNextAction": {
-            "type": "componentClose"
-        }
-    },
-    {
-        "msgs": [
-            "测试结束，广告位招租"
-        ],
-        "msgInputSpeed": 80
-    }
-]
+[Binary file]
 
 
 ================================================
@@ -6683,8 +6247,9 @@ FILE: public/options/demo/letters/test.json
     "title": "给xxx的一封信",
     "speed": 30,
     "paragraphs": [
+        "<span style='color:#b5654b;font-size:17px;font-weight:bold;'>9月7日，生日快乐。</span>",
         "<img src='options/demo/imgs/test.png'/>",
-        "几场梅雨^1000，几卷荷风^1000，江南已是烟水迷离。^2000小院里湿润的青苔在雨中纯净生长。^2000这个季节^1000，许多人都在打听关于莲荷的消息^1000，以及茉莉在黄昏浮动的神秘幽香。^2000不知多少人会记得有个女子^1000，曾经走过人间四月天^1000，又与莲开的夏季有过相濡以沫的约定。",
+        "几场梅雨，几卷荷风，江南已是烟水迷离。小院里湿润的青苔在雨中纯净生长。^这个季节，许多人都在打听关于莲荷的消息，以及茉莉在黄昏浮动的神秘幽香。^2000不知多少人会记得有个女子，曾经走过人间四月天，又与莲开的夏季有过相濡以沫的约定。",
         "<img src='options/demo/imgs/test.png'/>",
         "一个人，一本书，一杯茶，一帘梦。有时候，寂寞是这样叫人心动，也只有此刻，世事才会如此波澜不惊。凉风吹起书页，这烟雨让尘封在书卷里的词章和故事弥漫着潮湿的气息。独倚幽窗，看转角处的青石小巷，一柄久违的油纸伞，遮住了低过屋檐的光阴。",
         "<img src='options/demo/imgs/test.png'/>",
@@ -6959,11 +6524,11 @@ FILE: src/components/chat-dialog/index.vue
 
     <!-- 生日动画全屏 -->
     <div v-if="showBirthday" class="birthday-overlay">
-      <iframe ref="birthdayIframe"
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/birthday/zhongsinger/2026/birthday-animation.html?autoplay=1"
-        class="birthday-iframe" allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
+      <iframe ref="birthdayIframe" :srcdoc="htmlContent" class="birthday-iframe"
+        allow="autoplay; microphone; fullscreen" @load="onBirthdayLoaded">
       </iframe>
     </div>
+
 
     <Teleport to="body">
       <div v-if="showMsgMenu" class="custom-voice-menu" :style="msgMenuStyle" ref="msgMenuRef">
@@ -6989,6 +6554,80 @@ import MessageDetail from './MessageDetail.vue'
 import './css/main.scss'
 import { getAllEmojis, getEmojiPath as originalGetEmojiPath, hasEmoji } from 'wechat-emojis'
 import { Snackbar } from '@varlet/ui'
+
+// ==================== 纯前端朴素贝叶斯分类器 ====================
+class NaiveBayes {
+  constructor() {
+    this.classes = {};
+    this.classTotals = {};
+    this.vocabulary = new Set();
+    this.totalDocs = 0;
+    this.classDocCounts = {};
+    this.trained = false;
+  }
+
+  tokenize(text) {
+    return text.toLowerCase()
+      .replace(/[，。！？、；：""''（）\n\r\t，。！？\u3000]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 0);
+  }
+
+  addDocument(text, label) {
+    const tokens = this.tokenize(text);
+    if (!this.classes[label]) {
+      this.classes[label] = {};
+      this.classTotals[label] = 0;
+      this.classDocCounts[label] = 0;
+    }
+    this.classDocCounts[label] += 1;
+    this.totalDocs += 1;
+
+    tokens.forEach(word => {
+      this.vocabulary.add(word);
+      if (!this.classes[label][word]) {
+        this.classes[label][word] = 0;
+      }
+      this.classes[label][word] += 1;
+      this.classTotals[label] += 1;
+    });
+  }
+
+  train() {
+    this.trained = true;
+  }
+
+  classify(text) {
+    if (!this.trained) throw new Error('必须先训练');
+    const tokens = this.tokenize(text);
+    const scores = {};
+
+    for (const label in this.classes) {
+      const prior = Math.log(this.classDocCounts[label] / this.totalDocs);
+      let logProb = prior;
+      const vocabSize = this.vocabulary.size;
+      const totalWords = this.classTotals[label];
+
+      tokens.forEach(word => {
+        const count = this.classes[label][word] || 0;
+        const prob = (count + 1) / (totalWords + vocabSize);
+        logProb += Math.log(prob);
+      });
+
+      scores[label] = logProb;
+    }
+
+    let bestLabel = null;
+    let bestScore = -Infinity;
+    for (const label in scores) {
+      if (scores[label] > bestScore) {
+        bestScore = scores[label];
+        bestLabel = label;
+      }
+    }
+    return bestLabel;
+  }
+}
 
 const AUTHOR = {
   AUTHOR: 'author',
@@ -7088,7 +6727,11 @@ export default {
       isUserAtBottom: true,        // 用户是否在底部
       scrollThreshold: 20,          // 判定底部的阈值（像素）
       showBirthday: false,
+      htmlContent: '',
       birthdayResolve: null,
+      intentClassifier: null,      // 训练好的分类器实例
+      fallbackCount: 0,            // 当前退路引导次数
+      fallbackMax: 2,              // 最大退路引导次数
     }
   },
   watch: {
@@ -7117,6 +6760,190 @@ export default {
     }
   },
   methods: {
+
+    // 加载远程 HTML
+    async loadBirthdayHTML() {
+      // 可以更换为您的 CDN 地址
+      const url = 'https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io/birthday/zhongsinger/2026/birthday-animation.html';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const html = await res.text();
+        this.htmlContent = html;
+        this.showBirthday = true;
+        // 等待 DOM 更新，确保 iframe 已创建
+        this.$nextTick(() => {
+          // 添加 load 事件监听（srcdoc 加载完成时会触发）
+          const iframe = this.$refs.birthdayIframe;
+          if (iframe) {
+            iframe.addEventListener('load', this.onBirthdayLoaded);
+            // 但若 iframe 已经加载完成，手动调用一次（安全处理）
+            if (iframe.contentWindow && iframe.contentWindow.document.readyState === 'complete') {
+              this.onBirthdayLoaded();
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('加载生日动画失败，跳过', error);
+        // 加载失败则直接关闭，继续聊天
+        this.closeBirthday();
+      }
+    },
+    initIntentClassifier() {
+      const classifier = new NaiveBayes();
+
+      // ---------- 基础关键词（从项目配置中提取） ----------
+      const acceptBase = [
+        '好', '好的', '可以', '行', '愿意', '想', '是', '嗯', '当然', '没问题',
+        '要', '来吧', '说说看', '你讲', '我听听', '1', '想我'
+      ];
+      const rejectBase = [
+        '不', '不想', '不愿意', '不要', '算了', '不用', '不了', '没兴趣',
+        '别', '别说了', '不知道', '2'
+      ];
+
+      // ---------- 生成样本数据 ----------
+      const trainingData = [];
+
+      // 1. 从 acceptBase 生成大量变体
+      const acceptParticles = ['啊', '呀', '呢', '吧', '嘛', '啦', '诶', '哎'];
+      const acceptPrefixes = ['那我', '我就', '我', '那就', '那', '嗯，', '好的，', '行，', '可以，'];
+      const acceptSuffixes = ['吧', '呗', '啦', '呀', '呢', '了'];
+
+      acceptBase.forEach(word => {
+        trainingData.push({ text: word, label: 'accept' });
+        acceptParticles.forEach(p => trainingData.push({ text: word + p, label: 'accept' }));
+        acceptPrefixes.forEach(pre => trainingData.push({ text: pre + word, label: 'accept' }));
+        acceptSuffixes.forEach(suf => trainingData.push({ text: word + suf, label: 'accept' }));
+        acceptPrefixes.forEach(pre => {
+          acceptSuffixes.forEach(suf => {
+            trainingData.push({ text: pre + word + suf, label: 'accept' });
+          });
+        });
+        if (['愿意', '想', '要', '可以'].includes(word)) {
+          trainingData.push({ text: `我${word}听`, label: 'accept' });
+          trainingData.push({ text: `我${word}你说`, label: 'accept' });
+          trainingData.push({ text: `我${word}你说的`, label: 'accept' });
+        }
+        if (word === '好' || word === '好的' || word === '行' || word === '可以') {
+          trainingData.push({ text: `那就${word}吧`, label: 'accept' });
+          trainingData.push({ text: `那就${word}了`, label: 'accept' });
+          trainingData.push({ text: `这样${word}`, label: 'accept' });
+        }
+        if (word === '是') {
+          trainingData.push({ text: '是的', label: 'accept' });
+          trainingData.push({ text: '对', label: 'accept' });
+          trainingData.push({ text: '对啊', label: 'accept' });
+          trainingData.push({ text: '没错', label: 'accept' });
+        }
+        if (word === '想我') {
+          trainingData.push({ text: '想你呢', label: 'accept' });
+          trainingData.push({ text: '当然想你', label: 'accept' });
+          trainingData.push({ text: '我确实想你', label: 'accept' });
+        }
+        if (word === '1') {
+          trainingData.push({ text: '1', label: 'accept' });
+          trainingData.push({ text: '选1', label: 'accept' });
+        }
+      });
+
+      const extraAccept = [
+        '行啊', '行嘞', '好的吧', '好哒', '好嘞', '好嘛', '可以呀', '可以的',
+        '愿意呀', '想呀', '想听呀', '嗯嗯', '嗯呢', '对呀', '是啊', '没问题啊',
+        '来吧来吧', '说说吧', '你讲吧', '我听着呢', '洗耳恭听', '请说', '说吧'
+      ];
+      extraAccept.forEach(text => trainingData.push({ text, label: 'accept' }));
+
+      // 2. 从 rejectBase 生成大量变体
+      const rejectPrefixes = ['我', '那我', '还是', '要不', '就', '那'];
+      const rejectParticles = ['了', '吧', '呀', '呢', '啊', '啦'];
+      rejectBase.forEach(word => {
+        trainingData.push({ text: word, label: 'reject' });
+        rejectParticles.forEach(p => trainingData.push({ text: word + p, label: 'reject' }));
+        rejectPrefixes.forEach(pre => trainingData.push({ text: pre + word, label: 'reject' }));
+        rejectPrefixes.forEach(pre => {
+          rejectParticles.forEach(p => {
+            trainingData.push({ text: pre + word + p, label: 'reject' });
+          });
+        });
+        if (['不想', '不愿意', '不要'].includes(word)) {
+          trainingData.push({ text: `我${word}听`, label: 'reject' });
+          trainingData.push({ text: `我${word}你说`, label: 'reject' });
+          trainingData.push({ text: `我真的${word}`, label: 'reject' });
+        }
+        if (word === '不知道') {
+          trainingData.push({ text: '我不知道', label: 'reject' });
+          trainingData.push({ text: '我哪知道', label: 'reject' });
+          trainingData.push({ text: '我怎么知道', label: 'reject' });
+          trainingData.push({ text: '不清楚', label: 'reject' });
+        }
+        if (word === '不') {
+          trainingData.push({ text: '不了', label: 'reject' });
+          trainingData.push({ text: '不哦', label: 'reject' });
+          trainingData.push({ text: '不吧', label: 'reject' });
+        }
+        if (word === '算了') {
+          trainingData.push({ text: '算了吧', label: 'reject' });
+          trainingData.push({ text: '算了算了', label: 'reject' });
+          trainingData.push({ text: '还是算了', label: 'reject' });
+        }
+        if (word === '没兴趣') {
+          trainingData.push({ text: '没兴趣啊', label: 'reject' });
+          trainingData.push({ text: '我没兴趣', label: 'reject' });
+        }
+        if (word === '别') {
+          trainingData.push({ text: '别啊', label: 'reject' });
+          trainingData.push({ text: '别吧', label: 'reject' });
+          trainingData.push({ text: '别这样', label: 'reject' });
+        }
+        if (word === '2') {
+          trainingData.push({ text: '2', label: 'reject' });
+          trainingData.push({ text: '选2', label: 'reject' });
+        }
+      });
+
+      const extraReject = [
+        '我不想听', '我不想听你说', '别说了', '别说这些', '算了吧', '还是算了吧',
+        '不用了', '不需要', '没兴趣', '不想知道', '不感兴趣', '不要这样',
+        '我不愿意', '我不愿意听', '不想听这些', '算了别说了', '别继续了'
+      ];
+      extraReject.forEach(text => trainingData.push({ text, label: 'reject' }));
+
+      // 3. 开放性/无关回答 (unknown)
+      const unknownBase = [
+        '今天天气真好', '天气不错', '外面下雨了', '好冷啊', '好热啊',
+        '你在干嘛', '你在做什么', '忙什么呢', '吃饭了吗', '吃了没',
+        '哈哈', '呵呵', '嘿嘿', '嘻嘻', '嗯嗯', '哦', '哦哦', '噢',
+        '然后呢', '接着说', '你说什么', '我没听清', '再说一遍', '什么',
+        '最近挺开心的', '最近有点忙', '今天好累', '好无聊', '无聊死了',
+        '真的吗', '是吗', '不会吧', '有意思', '原来如此', '好吧', '嗯呐',
+        '行吧行吧', '可以可以', '挺好的', '还行', '随便', '都行', '无所谓',
+        '你猜', '我也不知道', '你猜我在想什么', '我有点困', '早点休息', '晚安',
+        '嗯好', '知道了', '谢谢', '不客气', '好的呢', '嗯嗯好的', '好了',
+        '那好吧', '那行吧', '就这样吧', '那这样', '嗯嗯', 'ok', 'OK', '好哒',
+        '你还在吗', '在不在', '在干嘛呀', '想你啦', '哈哈哈', '笑死',
+        '我下班了', '刚到家', '今天好累啊', '累死了', '困了', '想睡觉',
+        '吃什么好呢', '不知道吃什么', '你想吃什么', '随便吧', '听你的',
+        '你在哪', '来玩啊', '一起吗', '好呀好呀', '好啊好啊'
+      ];
+      unknownBase.forEach(text => trainingData.push({ text, label: 'unknown' }));
+
+      // 4. 复杂混合句（标为 unknown，避免误判）
+      const complexMixed = [
+        '不是不想听，是有点累', '不是不想，是没时间', '也不是不可以', '好吧，那我考虑一下',
+        '虽然不太愿意，但也可以', '那就这样吧', '行吧行吧，随便你', '你说了算'
+      ];
+      complexMixed.forEach(text => trainingData.push({ text, label: 'unknown' }));
+
+      // ---------- 训练 ----------
+      trainingData.forEach(({ text, label }) => {
+        classifier.addDocument(text, label);
+      });
+      classifier.train();
+
+      this.intentClassifier = classifier;
+      console.log(`[Intent] 分类器训练完成，样本总数：${trainingData.length}`);
+    },
     checkIfAtBottom() {
       const container = document.getElementById('mobile-body-content')
       if (!container) return true
@@ -7267,16 +7094,29 @@ export default {
             this.$nextTick(() => { this.scrollToBottom(false) })
           }
 
+          // if (triggerNextAction) {
+          //   const trigger = () => delay(500).then(() => resolve())
+          //   this.nextActionTrigger = {
+          //     inputSpeed: msgInputSpeed,
+          //     triggerNextAction,
+          //     trigger
+          //   }
+          //   this.status = triggerNextAction.type
+          // } else {
+          //   resolve()
+          // }
           if (triggerNextAction) {
-            const trigger = () => delay(500).then(() => resolve())
+            // 重置退路计数（每次新交互重新计数）
+            this.fallbackCount = 0;
+            const trigger = () => delay(500).then(() => resolve());
             this.nextActionTrigger = {
               inputSpeed: msgInputSpeed,
               triggerNextAction,
               trigger
-            }
-            this.status = triggerNextAction.type
+            };
+            this.status = triggerNextAction.type;
           } else {
-            resolve()
+            resolve();
           }
         })
       })
@@ -7304,12 +7144,12 @@ export default {
         const hasHtml = /<[^>]+>/.test(message)
 
         if (messageType === 'birthday') {
-          // 显示生日动画
-          this.showBirthday = true;
-          // 注意：此处必须保存 resolve，并返回一个 Promise
-          this.birthdayResolve = resolve;
-          // 不要调用 resolve，等待 closeBirthday 触发
-          return;
+          // 启动加载动画 HTML（异步）
+          this.loadBirthdayHTML();
+          // 返回一个 Promise，等待 closeBirthday 调用 resolve
+          return new Promise((resolve) => {
+            this.birthdayResolve = resolve;
+          });
         }
 
         if (messageType === 'text') {
@@ -7564,56 +7404,42 @@ export default {
       return instance
     },
     sendUserMsg() {
-      const message = this.inputMessage
-      this.inputMessage = ''
-      const quoteId = this.quoteMsg ? this.quoteMsg.id : null
-      this.pushMsg(message, AUTHOR.ME, 'text', null, quoteId)
-      this.clearQuote()
+      const message = this.inputMessage.trim();
+      if (!message) return;
+      this.inputMessage = '';
 
-      if (!this.nextActionTrigger) return
+      // 1. 发送用户消息（文本）
+      const quoteId = this.quoteMsg ? this.quoteMsg.id : null;
+      this.pushMsg(message, AUTHOR.ME, 'text', null, quoteId);
+      this.clearQuote();
 
-      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger
-      const { type, options } = triggerNextAction
-      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options
+      // 2. 如果没有等待的 trigger，直接返回
+      if (!this.nextActionTrigger) return;
 
-      if (type === TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) {
-        if (this.rejectNextMsg(message, resolveKeyTexts, rejectKeyTexts)) {
-          const currentTry = tryCnt
-          const totalRejects = rejectHitTexts.length
+      const { triggerNextAction, inputSpeed, tryCnt = 0 } = this.nextActionTrigger;
+      const { type, options } = triggerNextAction;
+      if (type !== TRIGGER_NEXT_ACTION_TYPE.USER_INPUT) return;
 
-          // 如果已经用完了所有拒绝消息，直接继续
-          if (currentTry >= totalRejects) {
-            this.handleTriggerNextAction()
-            return
-          }
+      const { resolveKeyTexts, rejectKeyTexts, rejectHitTexts } = options;
 
-          const rejectText = rejectHitTexts[currentTry]
-          let rejectSysMsgChain = Promise.resolve()
-          if (Array.isArray(rejectText)) {
-            rejectText.forEach(text => {
-              rejectSysMsgChain = rejectSysMsgChain
-                .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }))
-            })
-          } else {
-            rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed })
-          }
+      // 3. 意图分类
+      const intent = this.classifyIntent(message);
 
-          // 更新尝试次数（发送完成后将使用新值判断）
-          this.nextActionTrigger.tryCnt = currentTry + 1
-
-          rejectSysMsgChain.then(() => {
-            // 发送完成后判断是否已用完所有拒绝消息
-            if (this.nextActionTrigger.tryCnt >= totalRejects) {
-              this.handleTriggerNextAction()
-            } else {
-              this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT
-            }
-          })
-        } else {
-          this.handleTriggerNextAction()
-        }
+      // 4. 根据意图处理
+      if (intent === 'accept') {
+        this.handleTriggerNextAction();
+        return;
       }
+
+      if (intent === 'reject') {
+        this.handleReject(resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt);
+        return;
+      }
+
+      // 5. unknown → 退路策略
+      this.handleUnknown(message, resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt);
     },
+
     handleComponentOpen({ type, props }) {
       this.currentOpenComponent = { type, props }
     },
@@ -7649,11 +7475,66 @@ export default {
         })
       }, 1000)
     },
-    rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
-      const trimmed = message.trim()
-      if (rejectKeyTexts.some(key => trimmed.includes(key))) return true
-      if (resolveKeyTexts.some(key => trimmed.includes(key))) return false
-      return true
+    // rejectNextMsg(message, resolveKeyTexts = [], rejectKeyTexts = []) {
+    //   const trimmed = message.trim()
+    //   if (rejectKeyTexts.some(key => trimmed.includes(key))) return true
+    //   if (resolveKeyTexts.some(key => trimmed.includes(key))) return false
+    //   return true
+    // },
+    classifyIntent(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return 'unknown';
+
+      // 第一层：快速硬编码关键词（安全兜底）
+      const globalAccept = ['好', '可以', '愿意', '想听', '是', '行', '嗯', '当然', '没问题', '要', '来吧', '说说看'];
+      const globalReject = ['不', '不想', '不愿意', '不要', '算了', '不用', '别', '不知道'];
+      if (globalReject.some(k => trimmed.includes(k))) return 'reject';
+      if (globalAccept.some(k => trimmed.includes(k))) return 'accept';
+
+      // 第二层：使用训练好的贝叶斯分类器
+      if (this.intentClassifier) {
+        return this.intentClassifier.classify(text);
+      }
+      return 'unknown';
+    },
+    handleReject(resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt) {
+      const totalRejects = rejectHitTexts.length;
+      if (tryCnt >= totalRejects) {
+        this.handleTriggerNextAction();
+        return;
+      }
+      const rejectText = rejectHitTexts[tryCnt];
+      let rejectSysMsgChain = Promise.resolve();
+      if (Array.isArray(rejectText)) {
+        rejectText.forEach(text => {
+          rejectSysMsgChain = rejectSysMsgChain
+            .then(() => this.sendSysMsg({ msgs: [text], msgInputSpeed: inputSpeed }));
+        });
+      } else {
+        rejectSysMsgChain = this.sendSysMsg({ msgs: [rejectText], msgInputSpeed: inputSpeed });
+      }
+      this.nextActionTrigger.tryCnt = tryCnt + 1;
+      rejectSysMsgChain.then(() => {
+        if (this.nextActionTrigger.tryCnt >= totalRejects) {
+          this.handleTriggerNextAction();
+        } else {
+          this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+        }
+      });
+    },
+    handleUnknown(message, resolveKeyTexts, rejectKeyTexts, rejectHitTexts, inputSpeed, tryCnt) {
+      if (this.fallbackCount < this.fallbackMax) {
+        this.fallbackCount++;
+        const guideMsg = `我没太明白你的意思，你能告诉我“好”或“不好”吗？`;
+        this.sendSysMsg({ msgs: [guideMsg], msgInputSpeed: inputSpeed })
+          .then(() => {
+            this.status = TRIGGER_NEXT_ACTION_TYPE.USER_INPUT;
+          });
+      } else {
+        this.fallbackCount = 0;
+        this.handleTriggerNextAction();
+        this.sendSysMsg({ msgs: ['好吧，那我们继续吧～'], msgInputSpeed: inputSpeed });
+      }
     },
     pushMsg(message, author, type = 'text', externalId = null, quoteId = null) {
       this.msgIdCounter++
@@ -8195,29 +8076,29 @@ export default {
       }
     },
     onBirthdayLoaded() {
-      // 给 iframe 一点加载时间，再发送启动消息
-      setTimeout(() => {
-        const iframe = this.$refs.birthdayIframe;
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage('start-animation', '*');
-          console.log('已发送 start-animation 消息');
-        }
-      }, 500);
+      // 防止重复发送
+      if (this._started) return;
+      this._started = true;
+      const iframe = this.$refs.birthdayIframe;
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage('start-animation', '*');
+        console.log('📤 发送 start-animation');
+      }
     },
     handleBirthdayMessage(event) {
-      console.log('收到消息:', event.data);
       if (event.data === 'birthday-done') {
+        console.log('📥 收到 birthday-done');
         this.closeBirthday();
       }
     },
     closeBirthday() {
-      console.log('关闭生日动画');
       this.showBirthday = false;
+      this.htmlContent = '';
       if (this.birthdayResolve) {
         this.birthdayResolve();
         this.birthdayResolve = null;
-        console.log('已 resolve birthday Promise，继续聊天');
       }
+      this._started = false;
     },
     // 用户点击背景可手动关闭（可选）
     closeBirthdayManually() {
@@ -8283,6 +8164,7 @@ export default {
       }
     }
     window.addEventListener('message', this.handleBirthdayMessage);
+    this.initIntentClassifier();
   },
   beforeUnmount() {
     if (this.typingInstance) {
@@ -10045,29 +9927,26 @@ FILE: src/components/chat-dialog/letter/content.vue
     <div class="letter-title">{{ titleDisplay }}</div>
 
     <div class="letter-detail" ref="detailContainer">
-      <div v-for="(item, index) in contents" :key="index" class="paragraph-wrapper">
-        <!-- 图片段落 -->
-        <div v-if="item.type === 'img' && item.visible" style="text-align: center">
-          <span v-html="item.content"></span>
+      <div class="letter-detail-inner">
+        <div v-for="item in contents" :key="item.id" class="paragraph-wrapper">
+          <div v-if="item.type === 'img' && item.visible" style="text-align: center">
+            <span v-html="item.content"></span>
+          </div>
+
+          <div v-else-if="item.type === 'text' && item.visible"
+            style="color: black; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
+            <div v-if="item.isHtml" v-html="item.displayText" style="display: inline;"></div>
+            <p v-else style="margin:0; color:black; white-space: pre-wrap; word-break: break-word;">
+              {{ item.displayText }}
+              <span v-if="item.isTyping" class="cursor">|</span>
+            </p>
+          </div>
         </div>
 
-        <!-- 文本段落 -->
-        <p v-else-if="item.type === 'text' && item.visible"
-          style="color: black; display: block; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
-          {{ item.displayText }}
-          <!-- 仅当前正在打字的段落显示光标 -->
-          <span v-if="item.isTyping" class="cursor">|</span>
-        </p>
-
-        <!-- 隐藏占位 -->
-        <div v-if="item.type === 'text' && !item.visible" style="visibility: hidden; height: 0;">
-          {{ item.fullText }}
+        <div class="finish-action" v-show="finish" @click="$emit('close')">
+          <var-icon name="chevron-left" />
+          <text>回到聊天页</text>
         </div>
-      </div>
-
-      <div class="finish-action" v-show="finish" @click="$emit('close')">
-        <var-icon name="chevron-left" />
-        <text>回到聊天页</text>
       </div>
     </div>
 
@@ -10079,6 +9958,8 @@ FILE: src/components/chat-dialog/letter/content.vue
 </template>
 
 <script>
+let idCounter = 0;
+
 export default {
   props: {
     title: String,
@@ -10092,15 +9973,20 @@ export default {
       _initialized: false,
       titleDisplay: '',
       _currentIndex: 0,
-      isUserAtBottom: true,
-      _typingPromise: null,
+      isUserAtBottom: false,
+      _typingLock: false,
+      _resizeObserver: null,
+      _lastWidth: 0,
+      _lastHeight: 0,
+      _stableCheckTimer: null,
+      _initPending: false,
     };
   },
   watch: {
     paragraphs: {
       handler(newVal) {
-        if (newVal && newVal.length > 0 && !this._initialized) {
-          this.initContent();
+        if (newVal && newVal.length > 0 && !this._initialized && !this._initPending) {
+          this.waitForStableLayout();
         }
       },
       immediate: true,
@@ -10110,7 +9996,16 @@ export default {
     const container = this.$refs.detailContainer;
     if (container) {
       container.addEventListener('scroll', this.onScroll);
-      this.isUserAtBottom = this.checkIfAtBottom();
+      this.isUserAtBottom = false;
+
+      this._resizeObserver = new ResizeObserver(() => {
+        this.checkStability();
+      });
+      this._resizeObserver.observe(container);
+    }
+
+    if (this.paragraphs && this.paragraphs.length > 0 && !this._initialized && !this._initPending) {
+      this.waitForStableLayout();
     }
   },
   beforeUnmount() {
@@ -10118,11 +10013,53 @@ export default {
     if (container) {
       container.removeEventListener('scroll', this.onScroll);
     }
-    if (this._typingPromise) {
-      this._typingPromise = null;
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
     }
+    clearTimeout(this._stableCheckTimer);
   },
   methods: {
+    waitForStableLayout() {
+      if (this._initPending) return;
+      this._initPending = true;
+      this._lastWidth = 0;
+      this._lastHeight = 0;
+      this.$nextTick(() => {
+        this.checkStability();
+      });
+    },
+
+    checkStability() {
+      const container = this.$refs.detailContainer;
+      if (!container) return;
+      const { clientWidth, scrollHeight } = container;
+      const currentWidth = clientWidth;
+      const currentHeight = scrollHeight;
+
+      if (currentWidth !== this._lastWidth || currentHeight !== this._lastHeight) {
+        this._lastWidth = currentWidth;
+        this._lastHeight = currentHeight;
+        clearTimeout(this._stableCheckTimer);
+        this._stableCheckTimer = setTimeout(() => {
+          const newWidth = container.clientWidth;
+          const newHeight = container.scrollHeight;
+          if (newWidth === this._lastWidth && newHeight === this._lastHeight) {
+            this._stableCheckTimer = null;
+            this.initContent();
+          } else {
+            this._lastWidth = newWidth;
+            this._lastHeight = newHeight;
+            this.checkStability();
+          }
+        }, 50);
+      } else {
+        clearTimeout(this._stableCheckTimer);
+        this._stableCheckTimer = null;
+        this.initContent();
+      }
+    },
+
     checkIfAtBottom() {
       const container = this.$refs.detailContainer;
       if (!container) return true;
@@ -10139,22 +10076,27 @@ export default {
         container.scrollTop = container.scrollHeight;
       }
     },
+
     async initContent() {
       if (this._initialized) return;
       if (!this.paragraphs || this.paragraphs.length === 0) return;
 
       this._initialized = true;
+      this._initPending = false;
       this.contents = [];
 
       this.paragraphs.forEach((p) => {
         const isImg = /<img[^>]+>/.test(p);
+        const isHtml = !isImg && /<\/?[a-z][\s\S]*>/i.test(p);
         this.contents.push({
+          id: idCounter++,
           type: isImg ? 'img' : 'text',
           content: p,
           fullText: isImg ? '' : p,
+          isHtml: isHtml,
           visible: false,
           displayText: '',
-          isTyping: false,  // 新增标志
+          isTyping: false,
           done: false,
         });
       });
@@ -10162,20 +10104,17 @@ export default {
       this.titleDisplay = this.title || '无标题';
       await this.$nextTick();
 
-      // 预占位
-      for (const item of this.contents) {
-        if (item.type === 'text') {
-          item.visible = true;
-          item.displayText = '';
-        }
-      }
-      await this.$nextTick();
+      const container = this.$refs.detailContainer;
+      if (container) container.scrollTop = 0;
+      this.isUserAtBottom = false;
 
       this._currentIndex = 0;
       this.processNext();
     },
 
     processNext() {
+      if (this._typingLock) return;
+
       if (this._currentIndex >= this.contents.length) {
         this.finish = true;
         return;
@@ -10189,38 +10128,12 @@ export default {
         this.$nextTick(() => this.scrollToBottom());
         this.processNext();
       } else if (item.type === 'text') {
+        item.visible = true;
         this.typeParagraph(item);
       }
     },
 
-    async typeParagraph(item) {
-      const fullText = item.fullText;
-      const tokens = this.parseTextWithDelays(fullText);
-
-      item.displayText = '';
-      item.visible = true;
-      item.isTyping = true;   // 开始打字，显示光标
-      item.done = false;
-
-      for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        if (token.type === 'char') {
-          item.displayText += token.char;
-          this.scrollToBottom();
-          await this.delay(this.speed || 80);
-        } else if (token.type === 'delay') {
-          await this.delay(token.ms);
-        }
-      }
-
-      item.isTyping = false;  // 打字结束，隐藏光标
-      item.done = true;
-      this._currentIndex++;
-      this.$nextTick(() => this.scrollToBottom());
-      this.processNext();
-    },
-
-    parseTextWithDelays(text) {
+    parseHtmlTokens(text) {
       const tokens = [];
       let i = 0;
       while (i < text.length) {
@@ -10236,15 +10149,76 @@ export default {
             i = j;
             continue;
           } else {
-            tokens.push({ type: 'char', char: text[i] });
+            tokens.push({ type: 'text', value: text[i] });
+            i++;
+            continue;
+          }
+        }
+
+        if (text[i] === '<') {
+          let tag = '';
+          let j = i;
+          while (j < text.length && text[j] !== '>') {
+            tag += text[j];
+            j++;
+          }
+          if (j < text.length && text[j] === '>') {
+            tag += '>';
+            tokens.push({ type: 'tag', value: tag });
+            i = j + 1;
+            continue;
+          } else {
+            tokens.push({ type: 'text', value: text[i] });
             i++;
           }
         } else {
-          tokens.push({ type: 'char', char: text[i] });
+          tokens.push({ type: 'text', value: text[i] });
           i++;
         }
       }
       return tokens;
+    },
+
+    async typeParagraph(item) {
+      if (this._typingLock) return;
+      this._typingLock = true;
+
+      this.contents.forEach(p => (p.isTyping = false));
+
+      const fullText = item.fullText;
+      const tokens = this.parseHtmlTokens(fullText);
+
+      item.displayText = '';
+      item.isTyping = true;
+      item.done = false;
+
+      const speed = this.speed || 80;
+
+      try {
+        for (let idx = 0; idx < tokens.length; idx++) {
+          const token = tokens[idx];
+          if (token.type === 'text') {
+            item.displayText += token.value;
+            this.scrollToBottom();
+            await this.delay(speed);
+          } else if (token.type === 'tag') {
+            item.displayText += token.value;
+            this.scrollToBottom();
+            await this.delay(15);
+          } else if (token.type === 'delay') {
+            await this.delay(token.ms);
+          }
+        }
+      } catch (err) {
+        console.warn('打字过程出错:', err);
+      } finally {
+        item.isTyping = false;
+        item.done = true;
+        this._currentIndex++;
+        this.$nextTick(() => this.scrollToBottom());
+        this._typingLock = false;
+        this.processNext();
+      }
     },
 
     delay(ms) {
@@ -10255,12 +10229,16 @@ export default {
 </script>
 
 <style scoped>
+/* 导入 Google Fonts Lato，确保移动端加载 */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+
+/* 应用 Lato 字体 */
 .letter-content {
+  font-family: 'Lato', 'Georgia', cursive !important;
   color: black !important;
   background-color: #f9f9f9;
   padding: 15px 32px 29px;
   min-height: 100vh;
-  font-family: "Architects Daughter", cursive !important;
   box-sizing: border-box;
 }
 
@@ -10271,21 +10249,42 @@ export default {
   color: black !important;
 }
 
+/* 滚动容器：强制滚动条始终显示，避免宽度变化 */
 .letter-detail {
+  position: relative;
+  height: 70vh;
+  /* 固定高度 */
+  min-height: 70vh;
+  /* 确保至少占70vh */
+  overflow-y: scroll;
+  /* 强制滚动条，宽度恒定 */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  /* 备选 */
+  padding-right: 6px;
+  /* 为滚动条预留空间 */
+  box-sizing: border-box;
+}
+
+/* 内层内容容器：横线背景 */
+.letter-detail-inner {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  /* 至少填满父容器高度 */
+  padding: 10px 0;
   background: repeating-linear-gradient(to bottom,
       #f9f9f9,
       #f9f9f9 31px,
       #d46466 2px,
       #f9f9f9);
   background-size: 100% 32px;
-  padding: 10px 0;
-  max-height: 70vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* 防止横向滚动条 */
+  background-repeat: repeat-y;
+  /* 背景随内容延伸，完整覆盖 */
 }
 
-.letter-detail p {
+.letter-detail-inner p {
   line-height: 2rem !important;
   text-indent: 2em;
   font-size: 1rem !important;
@@ -10297,6 +10296,32 @@ export default {
   word-break: break-word;
 }
 
+/* 自定义滚动条 - 更细、红色调 */
+.letter-detail {
+  scrollbar-width: thin;
+  scrollbar-color: #d46466 #f9f9f9;
+}
+
+.letter-detail::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.letter-detail::-webkit-scrollbar-track {
+  background: #f9f9f9;
+  border-radius: 3px;
+}
+
+.letter-detail::-webkit-scrollbar-thumb {
+  background: #d46466;
+  border-radius: 3px;
+}
+
+.letter-detail::-webkit-scrollbar-thumb:hover {
+  background: #b84a4c;
+}
+
+/* 右上角关闭按钮 */
 .letter-action {
   position: absolute;
   top: 10px;
@@ -10304,6 +10329,7 @@ export default {
   color: red;
 }
 
+/* 底部完成按钮 */
 .finish-action {
   float: right;
   margin-top: 30px;
@@ -10311,15 +10337,16 @@ export default {
   cursor: pointer;
 }
 
-/* 光标样式 */
+/* 光标动画 */
 .cursor {
-  display: inline-block;
-  width: 2px;
-  height: 1.2em;
-  background-color: black;
+  display: inline;
+  font-size: inherit;
+  font-weight: normal;
+  background: transparent;
+  color: black;
   animation: blink 0.7s step-end infinite;
-  vertical-align: text-bottom;
-  margin-left: 2px;
+  vertical-align: baseline;
+  margin-left: 1px;
 }
 
 @keyframes blink {

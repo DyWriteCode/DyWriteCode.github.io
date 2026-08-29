@@ -220,51 +220,59 @@
     color: #fff
 }
 
-.letter-content[data-v-675629aa] {
+@font-face {
+    font-family: Lato;
+    src: url(/assets/lato400.65c76203.woff) format("woff");
+    font-weight: 400;
+    font-style: normal
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/lato400.65c76203.woff) format("woff");
+    font-weight: 700;
+    font-style: normal
+}
+
+.letter-content {
+    font-family: \6977\4f53, KaiTi, STKaiti, \534e\6587\6977\4f53, Georgia, Times New Roman, serif !important;
     color: #000 !important;
     background-color: #f9f9f9;
     padding: 15px 32px 29px;
     min-height: 100vh;
-    font-family: Architects Daughter, cursive !important;
     box-sizing: border-box
 }
 
-.letter-title[data-v-675629aa] {
+.letter-title {
     font-size: 1.25rem;
     margin: 15px 0;
     text-align: center;
     color: #000 !important
 }
 
-.letter-detail[data-v-675629aa] {
+.letter-detail {
     position: relative;
+    height: 70vh;
     min-height: 70vh;
-    background: transparent;
-    padding: 10px 0;
-    max-height: 70vh;
-    overflow-y: auto;
-    overflow-x: hidden
+    overflow-y: scroll;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    padding-right: 6px;
+    box-sizing: border-box
 }
 
-.letter-detail[data-v-675629aa]:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 0;
+.letter-detail-inner {
+    position: relative;
+    z-index: 1;
+    min-height: 100%;
+    padding: 10px 0;
     background: repeating-linear-gradient(to bottom, #f9f9f9, #f9f9f9 31px, #d46466 2px, #f9f9f9);
     background-size: 100% 32px;
-    pointer-events: none
+    background-repeat: repeat-y
 }
 
-.letter-detail[data-v-675629aa]>* {
-    position: relative;
-    z-index: 1
-}
-
-.letter-detail p[data-v-675629aa] {
+.letter-detail-inner p {
     line-height: 2rem !important;
     text-indent: 2em;
     font-size: 1rem !important;
@@ -276,32 +284,56 @@
     word-break: break-word
 }
 
-.letter-action[data-v-675629aa] {
+.letter-detail {
+    scrollbar-width: thin;
+    scrollbar-color: #d46466 #f9f9f9
+}
+
+.letter-detail::-webkit-scrollbar {
+    width: 6px;
+    height: 6px
+}
+
+.letter-detail::-webkit-scrollbar-track {
+    background: #f9f9f9;
+    border-radius: 3px
+}
+
+.letter-detail::-webkit-scrollbar-thumb {
+    background: #d46466;
+    border-radius: 3px
+}
+
+.letter-detail::-webkit-scrollbar-thumb:hover {
+    background: #b84a4c
+}
+
+.letter-action {
     position: absolute;
     top: 10px;
     right: 20px;
     color: red
 }
 
-.finish-action[data-v-675629aa] {
+.finish-action {
     float: right;
     margin-top: 30px;
     color: red;
     cursor: pointer
 }
 
-.cursor[data-v-675629aa] {
+.cursor {
     display: inline;
     font-size: inherit;
     font-weight: 400;
     background: transparent;
     color: #000;
-    animation: blink-675629aa .7s step-end infinite;
+    animation: blink .7s step-end infinite;
     vertical-align: baseline;
     margin-left: 1px
 }
 
-@keyframes blink-675629aa {
+@keyframes blink {
 
     0%,
     to {
@@ -3833,7 +3865,6 @@ img {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     overflow: hidden
 }
 
