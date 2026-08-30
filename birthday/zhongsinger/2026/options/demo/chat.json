@@ -7,6 +7,12 @@
     },
     {
         "msgs": [
+            "<span style='color:#888; font-size:0.85rem;'>同时，需要你稍微点击几下屏幕背景音乐才能播放～</span>"
+        ],
+        "msgInputSpeed": 60
+    },
+    {
+        "msgs": [
             "嘿，好久没聊啦",
             "嘿，好久没聊啦 <span style='color:#FFB347;'>✨</span>",
             "<span style='color:#FFB347;'>✨</span> 嘿，好久没聊啦～ 你在 <span style='color:#4A90D9; font-weight:bold;'>一中</span> 过得还好吗？<span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span>"
