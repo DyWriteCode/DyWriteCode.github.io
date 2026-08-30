@@ -64,19 +64,17 @@
                 }
             }
             const maxLen = Math.max(s1.length, s2.length);
-            // 返回 0~1 之间的相似度分数，越高越相似
             return 1 - track[s2.length][s1.length] / maxLen;
         }
 
         // --- 2. 获取当前错误路径 & 提取关键词 ---
-        const wrongPath = window.location.pathname; // 例如 /tooools
+        const wrongPath = window.location.pathname;
         document.getElementById('wrongPath').textContent = wrongPath;
 
-        // 去除首尾斜杠，提取文件名作为搜索关键词
         const searchKey = wrongPath.replace(/^\/|\/$/g, '').split('/').pop() || '首页';
 
         // --- 3. 加载 pages.json 并进行模糊匹配 ---
-        fetch('/pages.json') // 如果项目在子目录，请改为 /项目名/pages.json
+        fetch('/pages.json')
             .then(res => res.json())
             .then(pages => {
                 // 计算每个页面与错误路径的相似度
@@ -92,11 +90,26 @@
                 const topMatches = scored.sort((a, b) => b.score - a.score).slice(0, 3);
 
                 const listContainer = document.getElementById('recommendList');
-                // 如果最高分太低（小于0.2），可能完全不相关，显示默认提示
+
+                // ★★★ 关键修正：清洗 URL 中的多余前缀 ★★★
+                function cleanUrl(url) {
+                    // 移除可能存在的重复仓库名前缀
+                    const prefix = '/DyWriteCode.github.io/DyWriteCode.github.io/';
+                    if (url.startsWith(prefix)) {
+                        return url.slice(prefix.length - 1); // 保留开头的 '/'
+                    }
+                    // 如果路径以 '/DyWriteCode.github.io/' 开头，也去掉一层（视部署情况）
+                    const singlePrefix = '/DyWriteCode.github.io/';
+                    if (url.startsWith(singlePrefix)) {
+                        return url.slice(singlePrefix.length - 1);
+                    }
+                    return url;
+                }
+
                 if (topMatches.length > 0 && topMatches[0].score > 0.15) {
                     topMatches.forEach(item => {
                         const link = document.createElement('a');
-                        link.href = item.url;
+                        link.href = cleanUrl(item.url);   // 使用清洗后的路径
                         link.textContent = `${item.name} (${item.url}) - 匹配度 ${Math.round(item.score * 100)}%`;
                         listContainer.appendChild(link);
                     });
