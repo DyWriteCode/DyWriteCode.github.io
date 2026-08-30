@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitHub 远程文件管理</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260830085546">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260830090445">
     </script>
     <style>
         /* ===== 样式保持与原版一致 ===== */
@@ -1292,13 +1292,13 @@
     </div>
 
     <div id="contextMenu">
-        <button class="menu-item" data-action="newFile?v=20260830085546"><span class="menu-icon">📄</span> 新建文件</button>
-        <button class="menu-item" data-action="newFolder?v=20260830085546"><span class="menu-icon">📁</span> 新建文件夹</button>
+        <button class="menu-item" data-action="newFile?v=20260830090445"><span class="menu-icon">📄</span> 新建文件</button>
+        <button class="menu-item" data-action="newFolder?v=20260830090445"><span class="menu-icon">📁</span> 新建文件夹</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="getContent?v=20260830085546"><span class="menu-icon">📖</span> 获取内容</button>
+        <button class="menu-item" data-action="getContent?v=20260830090445"><span class="menu-icon">📖</span> 获取内容</button>
         <div class="menu-divider"></div>
-        <button class="menu-item danger" data-action="deleteFile?v=20260830085546"><span class="menu-icon">🗑️</span> 删除文件</button>
-        <button class="menu-item danger" data-action="deleteFolder?v=20260830085546"><span class="menu-icon">🗑️</span> 删除文件夹</button>
+        <button class="menu-item danger" data-action="deleteFile?v=20260830090445"><span class="menu-icon">🗑️</span> 删除文件</button>
+        <button class="menu-item danger" data-action="deleteFolder?v=20260830090445"><span class="menu-icon">🗑️</span> 删除文件夹</button>
     </div>
 
     <div class="app-container" id="app">
@@ -1706,11 +1706,11 @@
             function preconnectGitHub() {
                 var link = document.createElement('link');
                 link.rel = 'preconnect';
-                link.href='https://api.github.com?v=20260830085546';
+                link.href='https://api.github.com?v=20260830090445';
                 document.head.appendChild(link);
                 var link2 = document.createElement('link');
                 link2.rel = 'preconnect';
-                link2.href='https://avatars.githubusercontent.com?v=20260830085546';
+                link2.href='https://avatars.githubusercontent.com?v=20260830090445';
                 document.head.appendChild(link2);
                 console.log('🔗 已预热 GitHub API 连接 (preconnect)');
             }
