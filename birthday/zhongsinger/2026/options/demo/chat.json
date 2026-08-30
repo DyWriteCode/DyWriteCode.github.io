@@ -9,14 +9,14 @@
         "msgs": [
             "嘿，好久没聊啦",
             "嘿，好久没聊啦 <span style='color:#FFB347;'>✨</span>",
-            "<span style='color:#FFB347;'>✨</span> 嘿，好久没聊啦～ 你在 <span style='color:#4A90D9; font-weight:bold;'>YY中</span> 过得还好吗？<span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span>"
+            "<span style='color:#FFB347;'>✨</span> 嘿，好久没聊啦～ 你在 <span style='color:#4A90D9; font-weight:bold;'>一中</span> 过得还好吗？<span style='color:#FF6B6B;'>(｡•̀ᴗ-)✧</span>"
         ],
         "msgInputSpeed": 55,
         "author": "author"
     },
     {
         "msgs": [
-            "我在 <span style='color:#4A90D9; font-weight:bold;'>XX中</span> <span style='color:#FFB347;'>🏫</span>"
+            "我在 <span style='color:#4A90D9; font-weight:bold;'>肇中</span> <span style='color:#FFB347;'>🏫</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author",
@@ -126,7 +126,7 @@
     },
     {
         "msgs": [
-            "你们学校物理讲到哪里了？<span style='color:#FFB347;'>🤔</span>"
+            "你们一中物理讲到哪里了？<span style='color:#FFB347;'>🤔</span>"
         ],
         "msgInputSpeed": 40,
         "author": "author"
@@ -417,6 +417,23 @@
         "msgInputSpeed": 40,
         "author": "author"
     },
+    // 👉 新增引导语（两条）
+    {
+        "msgs": [
+            "这个礼物里藏着一片小星空🌌",
+            "会有流星划过，还有一个小小的蛋糕🎂"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    {
+        "msgs": [
+            "你可以在流星出现时悄悄许愿，也可以对着蛋糕许下心愿✨"
+        ],
+        "msgInputSpeed": 50,
+        "author": "author"
+    },
+    // 👆 新增结束
     {
         "msgs": [
             "<birthday/>"
