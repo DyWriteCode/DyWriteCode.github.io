@@ -417,7 +417,6 @@
         "msgInputSpeed": 40,
         "author": "author"
     },
-    // 👉 新增引导语（两条）
     {
         "msgs": [
             "这个礼物里藏着一片小星空🌌",
@@ -433,7 +432,6 @@
         "msgInputSpeed": 50,
         "author": "author"
     },
-    // 👆 新增结束
     {
         "msgs": [
             "<birthday/>"
