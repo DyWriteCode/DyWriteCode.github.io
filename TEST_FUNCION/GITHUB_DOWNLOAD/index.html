@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitHub 仓库下载器 · 私有化</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260830090445">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20260830150845">
     </script>
     <style>
         /* ===== 全局样式 ===== */
@@ -1246,11 +1246,11 @@
             function preconnectGitHub() {
                 var link = document.createElement('link');
                 link.rel = 'preconnect';
-                link.href='https://api.github.com?v=20260830090445';
+                link.href='https://api.github.com?v=20260830150845';
                 document.head.appendChild(link);
                 var link2 = document.createElement('link');
                 link2.rel = 'preconnect';
-                link2.href='https://avatars.githubusercontent.com?v=20260830090445';
+                link2.href='https://avatars.githubusercontent.com?v=20260830150845';
                 document.head.appendChild(link2);
                 console.log('🔗 已预热 GitHub API 连接 (preconnect)');
             }
