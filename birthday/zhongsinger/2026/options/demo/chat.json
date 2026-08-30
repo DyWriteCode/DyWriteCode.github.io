@@ -27,14 +27,14 @@
     },
     {
         "msgs": [
-            "高中节奏比初中快好多 <span style='color:#FFB347;'>🚀</span> <span style='color:#888;'>😵‍💫</span>"
+            "高二节奏比高一快好多 <span style='color:#FFB347;'>🚀</span> <span style='color:#888;'>😵‍💫</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
     },
     {
         "msgs": [
-            "每天晚自习下课抬头都是星星 <span style='color:#FFB347;'>✨</span> <span style='color:#A8D8EA;'>🌙</span>"
+            "晚自习下课抬头时不时有星星 <span style='color:#FFB347;'>✨</span> <span style='color:#A8D8EA;'>🌙</span>"
         ],
         "msgInputSpeed": 50,
         "author": "author"
@@ -80,8 +80,8 @@
     {
         "msgs": [
             "你呢？",
-            "新学校有没有…",
-            "<span style='color:#4ECDC4;'>🌸</span> 新学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？<span style='color:#A8D8EA;'>☁️</span>"
+            "学校有没有…",
+            "<span style='color:#4ECDC4;'>🌸</span> 学校有没有什么让你觉得 <span style='color:#FF6B6B; font-weight:bold;'>开心的小事</span>？<span style='color:#A8D8EA;'>☁️</span>"
         ],
         "msgInputSpeed": 45,
         "author": "author",
@@ -186,7 +186,7 @@
     },
     {
         "msgs": [
-            "这种时候就会想一些有的没的…比如你最近在干嘛，心情怎么样 <span style='color:#A8D8EA;'>☁️</span>"
+            "这种时候就会想一些有的没的…比如游戏更新没有，小说有没有什么新的情节，我那几个好朋友最近在干嘛，心情怎么样 <span style='color:#A8D8EA;'>☁️</span>"
         ],
         "msgInputSpeed": 60,
         "author": "author"

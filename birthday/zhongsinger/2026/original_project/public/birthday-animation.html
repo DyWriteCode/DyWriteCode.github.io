@@ -5686,6 +5686,59 @@
         })();
     </script>
     <script>
+        // --- 背景音乐控制（用于响应父窗口暂停/恢复指令）---
+        (function () {
+            const BG_KEYS = ['birthday', 'city', 'space']; // 需要控制的背景音 key
+            let isPaused = false;
+            let pausedKeys = [];
+
+            window.backgroundAudioControl = {
+                pause() {
+                    if (isPaused) return;
+                    isPaused = true;
+                    pausedKeys = [];
+                    if (soundEngine) {
+                        for (const [id, entry] of soundEngine.activeSources) {
+                            if (BG_KEYS.includes(entry.key)) {
+                                soundEngine.stopSound(id);
+                                pausedKeys.push(entry.key);
+                            }
+                        }
+                    }
+                    console.log('[BgCtrl] 背景音乐已暂停，key:', pausedKeys);
+                },
+                resume() {
+                    if (!isPaused) return;
+                    isPaused = false;
+                    if (soundEngine && soundSystem) {
+                        pausedKeys.forEach(key => {
+                            const cfg = soundSystem.config.sounds[key];
+                            if (cfg) {
+                                // 重新播放，参数：start, end, volume, pan, loop, ignoreEndTime
+                                soundEngine.playSound(key, cfg.start, cfg.end, cfg.volume, 0, true, true);
+                            }
+                        });
+                    }
+                    pausedKeys = [];
+                    console.log('[BgCtrl] 背景音乐已恢复');
+                },
+                isPaused: () => isPaused
+            };
+
+            // 监听父窗口的控制消息
+            window.addEventListener('message', function (event) {
+                const data = event.data;
+                if (data && data.type === 'bg-control') {
+                    if (data.command === 'pause') {
+                        window.backgroundAudioControl.pause();
+                    } else if (data.command === 'resume') {
+                        window.backgroundAudioControl.resume();
+                    }
+                }
+            });
+        })();
+    </script>
+    <script>
         (function () {
             // 监听父窗口的启动指令
             window.addEventListener('message', function (event) {

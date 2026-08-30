@@ -11,7 +11,9 @@
 
           <div v-else-if="item.type === 'text' && item.visible"
             style="color: black; white-space: pre-wrap; word-break: break-word; min-height: 2rem;">
-            <div v-if="item.isHtml" v-html="item.displayText" style="display: inline;"></div>
+            <!-- ★ HTML 段落：使用块级 div，应用缩进 -->
+            <div v-if="item.isHtml" class="html-content" v-html="item.displayText"></div>
+            <!-- 纯文本段落 -->
             <p v-else style="margin:0; color:black; white-space: pre-wrap; word-break: break-word;">
               {{ item.displayText }}
               <span v-if="item.isTyping" class="cursor">|</span>
@@ -274,7 +276,11 @@ export default {
         for (let idx = 0; idx < tokens.length; idx++) {
           const token = tokens[idx];
           if (token.type === 'text') {
-            item.displayText += token.value;
+            let textToAdd = token.value;
+            if (item.isHtml) {
+              textToAdd = textToAdd.replace(/\n/g, '<br>');
+            }
+            item.displayText += textToAdd;
             this.scrollToBottom();
             await this.delay(speed);
           } else if (token.type === 'tag') {
@@ -305,7 +311,7 @@ export default {
 </script>
 
 <style>
-/* ========== 移除 Google Fonts 外部依赖，改用本地字体 ========== */
+/* ========== 字体本地化 ========== */
 @font-face {
   font-family: 'Lato';
   src: url('../css/font/lato400.woff') format('woff');
@@ -322,7 +328,7 @@ export default {
 
 .letter-content {
   font-family: '楷体', 'KaiTi', 'STKaiti', '华文楷体', 'Georgia', 'Times New Roman', serif !important;
-  /* 其他原有样式保持不动，不要改变 padding, min-height 等 */
+  font-size: 16px;
   color: black !important;
   background-color: #f9f9f9;
   padding: 15px 32px 29px;
@@ -330,13 +336,15 @@ export default {
   box-sizing: border-box;
 }
 
-/* 不要给子元素强制 font-family: inherit，它们会自然继承 */
-/* 保留原有的 .letter-title 样式（包含居中） */
+/* 所有子元素默认继承字号，允许内联样式覆盖 */
+.letter-content * {
+  font-size: inherit;
+}
+
 .letter-title {
   font-size: 1.25rem;
   margin: 15px 0;
   text-align: center;
-  /* 居中保留 */
   color: black !important;
 }
 
@@ -366,16 +374,25 @@ export default {
   background-repeat: repeat-y;
 }
 
+/* 纯文本段落 */
 .letter-detail-inner p {
   line-height: 2rem !important;
   text-indent: 2em;
-  font-size: 1rem !important;
   color: black !important;
   display: block !important;
   opacity: 1 !important;
   margin: 0 !important;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* ★ HTML 段落容器：块级，首行缩进，保持与纯文本一致 */
+.html-content {
+  display: block;
+  text-indent: 2em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 2rem;
 }
 
 .letter-detail {

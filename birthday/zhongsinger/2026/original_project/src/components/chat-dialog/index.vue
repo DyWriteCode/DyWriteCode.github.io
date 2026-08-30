@@ -69,7 +69,8 @@
                 <span v-if="msg.type === 'text'" v-html="renderEmoji(msg.content)"></span>
                 <component v-else :is="msg.type" v-bind="msg.props" :transcripted="!!msg.transcripted"
                   @convert="(alt) => handleVoiceConvert(alt, msg)" @cancel-convert="() => handleVoiceCancel(msg)"
-                  @open="() => handleComponentOpen({ type: msg.type, props: msg.props })" />
+                  @open="() => handleComponentOpen({ type: msg.type, props: msg.props })" @play="handleVoicePlay"
+                  @pause="handleVoicePause" />
               </div>
             </div>
           </template>
@@ -373,6 +374,7 @@ export default {
       intentClassifier: null,      // 训练好的分类器实例
       fallbackCount: 0,            // 当前退路引导次数
       fallbackMax: 2,              // 最大退路引导次数
+      birthdayWindow: null,   // 保存 iframe 的 contentWindow
     }
   },
   watch: {
@@ -401,6 +403,35 @@ export default {
     }
   },
   methods: {
+
+    // 向生日动画 iframe 发送背景音乐控制指令
+    sendBgControl(command) {
+      if (this.birthdayWindow) {
+        this.birthdayWindow.postMessage({ type: 'bg-control', command }, '*');
+      }
+    },
+
+    handleVoicePlay() {
+      // 语音开始播放 → 暂停背景音乐
+      this.sendBgControl('pause');
+    },
+
+    handleVoicePause() {
+      // 语音暂停或结束 → 恢复背景音乐
+      this.sendBgControl('resume');
+    },
+
+    // 注意：关闭生日动画时，也要清除引用，避免发送消息到已卸载的窗口
+    closeBirthday() {
+      this.showBirthday = false;
+      this.htmlContent = '';
+      this.birthdayWindow = null;   // 清除引用
+      if (this.birthdayResolve) {
+        this.birthdayResolve();
+        this.birthdayResolve = null;
+      }
+      this._started = false;
+    },
 
     // 加载远程 HTML
     async loadBirthdayHTML() {
@@ -1722,6 +1753,7 @@ export default {
       this._started = true;
       const iframe = this.$refs.birthdayIframe;
       if (iframe && iframe.contentWindow) {
+        this.birthdayWindow = iframe.contentWindow;
         iframe.contentWindow.postMessage('start-animation', '*');
         console.log('📤 发送 start-animation');
       }
@@ -1846,6 +1878,7 @@ export default {
     this.clearQuote()
     this.closeMsgMenu()
     window.removeEventListener('message', this.handleBirthdayMessage);
+    this.birthdayWindow = null;
   },
   onBirthdayFinished() {
     this.showBirthday = false

@@ -1,7 +1,7 @@
 [
     {
         "msgs": [
-            "<letter src='options/demo/letters/test.json'/>"
+            "<letter src='options/demo/letters/test2.json'/>"
         ],
         "triggerNextAction": {
             "type": "componentClose"

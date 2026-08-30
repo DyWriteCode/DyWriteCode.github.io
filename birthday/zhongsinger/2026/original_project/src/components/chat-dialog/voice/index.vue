@@ -34,8 +34,8 @@ export default defineComponent({
       default: false
     }
   },
-  emits: ['convert', 'cancel-convert'],
-  setup(props) {
+  emits: ['convert', 'cancel-convert', 'play', 'pause'],   // 新增 play/pause
+  setup(props, { emit }) {
     const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
     const audio = ref(null)
@@ -47,7 +47,6 @@ export default defineComponent({
 
     const displayDuration = computed(() => {
       let dur = audioDuration.value
-      // 如果 audioDuration 无效（包括 Infinity），则使用 props.duration
       if (!isFinite(dur) || dur <= 0) {
         dur = Number(props.duration) || 0
       }
@@ -66,7 +65,6 @@ export default defineComponent({
     }
 
     const startPolling = () => {
-      // 如果 props.duration 已经有效，就不需要轮询了
       const propDur = Number(props.duration)
       if (propDur > 0) {
         audioDuration.value = propDur
@@ -85,7 +83,6 @@ export default defineComponent({
         if (retryCount >= MAX_RETRIES) {
           clearInterval(pollTimer)
           pollTimer = null
-          // 如果最终仍无法获取，且没有传入 duration，则置0
           if (!Number(props.duration)) {
             audioDuration.value = 0
           }
@@ -107,11 +104,19 @@ export default defineComponent({
 
     const onError = () => {
       isPlaying.value = false
+      emit('pause')           // 播放异常也视为暂停
       tryGetDuration()
+    }
+
+    // 播放结束
+    const onEnded = () => {
+      isPlaying.value = false
+      emit('pause')
     }
 
     const resetToInitial = () => {
       isPlaying.value = false
+      emit('pause')
       const audioEl = audio.value
       if (audioEl) {
         audioEl.currentTime = 0
@@ -129,11 +134,14 @@ export default defineComponent({
         }
         audioEl.play().catch(() => {
           isPlaying.value = false
+          emit('pause')
         })
         isPlaying.value = true
+        emit('play')          // 开始播放
       } else {
         audioEl.pause()
         isPlaying.value = false
+        emit('pause')         // 手动暂停
       }
     }
 
@@ -142,7 +150,6 @@ export default defineComponent({
       if (!audioEl) return
       audioDuration.value = 0
       audioEl.load()
-      // 如果传入 duration，直接使用，不轮询
       if (Number(props.duration) > 0) {
         audioDuration.value = Number(props.duration)
         return
@@ -160,6 +167,10 @@ export default defineComponent({
         window.__audioManager.register(id, resetToInitial)
       }
       loadAudio()
+      const audioEl = audio.value
+      if (audioEl) {
+        audioEl.addEventListener('ended', onEnded)
+      }
     })
 
     onBeforeUnmount(() => {
@@ -169,6 +180,7 @@ export default defineComponent({
       }
       const audioEl = audio.value
       if (audioEl) {
+        audioEl.removeEventListener('ended', onEnded)
         audioEl.pause()
         audioEl.src = ''
       }
@@ -243,7 +255,6 @@ export default defineComponent({
   0% {
     transform: scaleY(0.4);
   }
-
   100% {
     transform: scaleY(1);
   }

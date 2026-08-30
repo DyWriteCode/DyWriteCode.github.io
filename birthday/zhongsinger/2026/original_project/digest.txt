@@ -5856,6 +5856,59 @@ FILE: public/birthday-animation.html
         })();
     </script>
     <script>
+        // --- 背景音乐控制（用于响应父窗口暂停/恢复指令）---
+        (function () {
+            const BG_KEYS = ['birthday', 'city', 'space']; // 需要控制的背景音 key
+            let isPaused = false;
+            let pausedKeys = [];
+
+            window.backgroundAudioControl = {
+                pause() {
+                    if (isPaused) return;
+                    isPaused = true;
+                    pausedKeys = [];
+                    if (soundEngine) {
+                        for (const [id, entry] of soundEngine.activeSources) {
+                            if (BG_KEYS.includes(entry.key)) {
+                                soundEngine.stopSound(id);
+                                pausedKeys.push(entry.key);
+                            }
+                        }
+                    }
+                    console.log('[BgCtrl] 背景音乐已暂停，key:', pausedKeys);
+                },
+                resume() {
+                    if (!isPaused) return;
+                    isPaused = false;
+                    if (soundEngine && soundSystem) {
+                        pausedKeys.forEach(key => {
+                            const cfg = soundSystem.config.sounds[key];
+                            if (cfg) {
+                                // 重新播放，参数：start, end, volume, pan, loop, ignoreEndTime
+                                soundEngine.playSound(key, cfg.start, cfg.end, cfg.volume, 0, true, true);
+                            }
+                        });
+                    }
+                    pausedKeys = [];
+                    console.log('[BgCtrl] 背景音乐已恢复');
+                },
+                isPaused: () => isPaused
+            };
+
+            // 监听父窗口的控制消息
+            window.addEventListener('message', function (event) {
+                const data = event.data;
+                if (data && data.type === 'bg-control') {
+                    if (data.command === 'pause') {
+                        window.backgroundAudioControl.pause();
+                    } else if (data.command === 'resume') {
+                        window.backgroundAudioControl.resume();
+                    }
+                }
+            });
+        })();
+    </script>
+    <script>
         (function () {
             // 监听父窗口的启动指令
             window.addEventListener('message', function (event) {
@@ -6428,7 +6481,8 @@ FILE: src/components/chat-dialog/index.vue
                 <span v-if="msg.type === 'text'" v-html="renderEmoji(msg.content)"></span>
                 <component v-else :is="msg.type" v-bind="msg.props" :transcripted="!!msg.transcripted"
                   @convert="(alt) => handleVoiceConvert(alt, msg)" @cancel-convert="() => handleVoiceCancel(msg)"
-                  @open="() => handleComponentOpen({ type: msg.type, props: msg.props })" />
+                  @open="() => handleComponentOpen({ type: msg.type, props: msg.props })" @play="handleVoicePlay"
+                  @pause="handleVoicePause" />
               </div>
             </div>
           </template>
@@ -6732,6 +6786,7 @@ export default {
       intentClassifier: null,      // 训练好的分类器实例
       fallbackCount: 0,            // 当前退路引导次数
       fallbackMax: 2,              // 最大退路引导次数
+      birthdayWindow: null,   // 保存 iframe 的 contentWindow
     }
   },
   watch: {
@@ -6760,6 +6815,35 @@ export default {
     }
   },
   methods: {
+
+    // 向生日动画 iframe 发送背景音乐控制指令
+    sendBgControl(command) {
+      if (this.birthdayWindow) {
+        this.birthdayWindow.postMessage({ type: 'bg-control', command }, '*');
+      }
+    },
+
+    handleVoicePlay() {
+      // 语音开始播放 → 暂停背景音乐
+      this.sendBgControl('pause');
+    },
+
+    handleVoicePause() {
+      // 语音暂停或结束 → 恢复背景音乐
+      this.sendBgControl('resume');
+    },
+
+    // 注意：关闭生日动画时，也要清除引用，避免发送消息到已卸载的窗口
+    closeBirthday() {
+      this.showBirthday = false;
+      this.htmlContent = '';
+      this.birthdayWindow = null;   // 清除引用
+      if (this.birthdayResolve) {
+        this.birthdayResolve();
+        this.birthdayResolve = null;
+      }
+      this._started = false;
+    },
 
     // 加载远程 HTML
     async loadBirthdayHTML() {
@@ -8081,6 +8165,7 @@ export default {
       this._started = true;
       const iframe = this.$refs.birthdayIframe;
       if (iframe && iframe.contentWindow) {
+        this.birthdayWindow = iframe.contentWindow;
         iframe.contentWindow.postMessage('start-animation', '*');
         console.log('📤 发送 start-animation');
       }
@@ -8205,6 +8290,7 @@ export default {
     this.clearQuote()
     this.closeMsgMenu()
     window.removeEventListener('message', this.handleBirthdayMessage);
+    this.birthdayWindow = null;
   },
   onBirthdayFinished() {
     this.showBirthday = false
@@ -10228,13 +10314,25 @@ export default {
 };
 </script>
 
-<style scoped>
-/* 导入 Google Fonts Lato，确保移动端加载 */
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+<style>
+/* ========== 移除 Google Fonts 外部依赖，改用本地字体 ========== */
+@font-face {
+  font-family: 'Lato';
+  src: url('../css/font/lato400.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
 
-/* 应用 Lato 字体 */
+@font-face {
+  font-family: 'Lato';
+  src: url('../css/font/lato400.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
 .letter-content {
-  font-family: 'Lato', 'Georgia', cursive !important;
+  font-family: '楷体', 'KaiTi', 'STKaiti', '华文楷体', 'Georgia', 'Times New Roman', serif !important;
+  /* 其他原有样式保持不动，不要改变 padding, min-height 等 */
   color: black !important;
   background-color: #f9f9f9;
   padding: 15px 32px 29px;
@@ -10242,37 +10340,32 @@ export default {
   box-sizing: border-box;
 }
 
+/* 不要给子元素强制 font-family: inherit，它们会自然继承 */
+/* 保留原有的 .letter-title 样式（包含居中） */
 .letter-title {
   font-size: 1.25rem;
   margin: 15px 0;
   text-align: center;
+  /* 居中保留 */
   color: black !important;
 }
 
-/* 滚动容器：强制滚动条始终显示，避免宽度变化 */
 .letter-detail {
   position: relative;
   height: 70vh;
-  /* 固定高度 */
   min-height: 70vh;
-  /* 确保至少占70vh */
   overflow-y: scroll;
-  /* 强制滚动条，宽度恒定 */
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
-  /* 备选 */
   padding-right: 6px;
-  /* 为滚动条预留空间 */
   box-sizing: border-box;
 }
 
-/* 内层内容容器：横线背景 */
 .letter-detail-inner {
   position: relative;
   z-index: 1;
   min-height: 100%;
-  /* 至少填满父容器高度 */
   padding: 10px 0;
   background: repeating-linear-gradient(to bottom,
       #f9f9f9,
@@ -10281,7 +10374,6 @@ export default {
       #f9f9f9);
   background-size: 100% 32px;
   background-repeat: repeat-y;
-  /* 背景随内容延伸，完整覆盖 */
 }
 
 .letter-detail-inner p {
@@ -10296,7 +10388,6 @@ export default {
   word-break: break-word;
 }
 
-/* 自定义滚动条 - 更细、红色调 */
 .letter-detail {
   scrollbar-width: thin;
   scrollbar-color: #d46466 #f9f9f9;
@@ -10321,7 +10412,6 @@ export default {
   background: #b84a4c;
 }
 
-/* 右上角关闭按钮 */
 .letter-action {
   position: absolute;
   top: 10px;
@@ -10329,7 +10419,6 @@ export default {
   color: red;
 }
 
-/* 底部完成按钮 */
 .finish-action {
   float: right;
   margin-top: 30px;
@@ -10337,7 +10426,6 @@ export default {
   cursor: pointer;
 }
 
-/* 光标动画 */
 .cursor {
   display: inline;
   font-size: inherit;
@@ -10718,8 +10806,8 @@ export default defineComponent({
       default: false
     }
   },
-  emits: ['convert', 'cancel-convert'],
-  setup(props) {
+  emits: ['convert', 'cancel-convert', 'play', 'pause'],   // 新增 play/pause
+  setup(props, { emit }) {
     const id = `voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const voiceRef = ref(null)
     const audio = ref(null)
@@ -10731,7 +10819,6 @@ export default defineComponent({
 
     const displayDuration = computed(() => {
       let dur = audioDuration.value
-      // 如果 audioDuration 无效（包括 Infinity），则使用 props.duration
       if (!isFinite(dur) || dur <= 0) {
         dur = Number(props.duration) || 0
       }
@@ -10750,7 +10837,6 @@ export default defineComponent({
     }
 
     const startPolling = () => {
-      // 如果 props.duration 已经有效，就不需要轮询了
       const propDur = Number(props.duration)
       if (propDur > 0) {
         audioDuration.value = propDur
@@ -10769,7 +10855,6 @@ export default defineComponent({
         if (retryCount >= MAX_RETRIES) {
           clearInterval(pollTimer)
           pollTimer = null
-          // 如果最终仍无法获取，且没有传入 duration，则置0
           if (!Number(props.duration)) {
             audioDuration.value = 0
           }
@@ -10791,11 +10876,19 @@ export default defineComponent({
 
     const onError = () => {
       isPlaying.value = false
+      emit('pause')           // 播放异常也视为暂停
       tryGetDuration()
+    }
+
+    // 播放结束
+    const onEnded = () => {
+      isPlaying.value = false
+      emit('pause')
     }
 
     const resetToInitial = () => {
       isPlaying.value = false
+      emit('pause')
       const audioEl = audio.value
       if (audioEl) {
         audioEl.currentTime = 0
@@ -10813,11 +10906,14 @@ export default defineComponent({
         }
         audioEl.play().catch(() => {
           isPlaying.value = false
+          emit('pause')
         })
         isPlaying.value = true
+        emit('play')          // 开始播放
       } else {
         audioEl.pause()
         isPlaying.value = false
+        emit('pause')         // 手动暂停
       }
     }
 
@@ -10826,7 +10922,6 @@ export default defineComponent({
       if (!audioEl) return
       audioDuration.value = 0
       audioEl.load()
-      // 如果传入 duration，直接使用，不轮询
       if (Number(props.duration) > 0) {
         audioDuration.value = Number(props.duration)
         return
@@ -10844,6 +10939,10 @@ export default defineComponent({
         window.__audioManager.register(id, resetToInitial)
       }
       loadAudio()
+      const audioEl = audio.value
+      if (audioEl) {
+        audioEl.addEventListener('ended', onEnded)
+      }
     })
 
     onBeforeUnmount(() => {
@@ -10853,6 +10952,7 @@ export default defineComponent({
       }
       const audioEl = audio.value
       if (audioEl) {
+        audioEl.removeEventListener('ended', onEnded)
         audioEl.pause()
         audioEl.src = ''
       }
@@ -10927,7 +11027,6 @@ export default defineComponent({
   0% {
     transform: scaleY(0.4);
   }
-
   100% {
     transform: scaleY(1);
   }
