@@ -1,0 +1,1660 @@
+Directory structure:
+└── PC_Monitor_Service/
+    ├── install.bat
+    ├── requirements.txt
+    ├── uninstall.bat
+    └── src/
+        ├── __init__.py
+        ├── api.py
+        ├── config.py
+        ├── main.py
+        ├── metrics.py
+        └── templates/
+            └── dashboard.html
+
+================================================
+FILE: install.bat
+================================================
+@echo off
+echo 正在安装幽灵卡顿监控服务（开机自启）...
+cd /d "%~dp0"
+if not exist venv\Scripts\python.exe (
+    echo 错误: 请先运行 python -m venv venv 创建虚拟环境
+    pause
+    exit /b
+)
+echo 停止并卸载旧服务...
+"%cd%\venv\Scripts\python.exe" src/main.py stop >nul 2>&1
+"%cd%\venv\Scripts\python.exe" src/main.py remove >nul 2>&1
+echo 安装新服务...
+"%cd%\venv\Scripts\python.exe" src/main.py install
+echo 启动服务...
+"%cd%\venv\Scripts\python.exe" src/main.py start
+echo 检查服务状态...
+sc query GhostLagMonitor | find "RUNNING" >nul
+if %errorlevel%==0 (
+    echo 服务已成功运行！
+) else (
+    echo 服务未能启动，请查看事件日志或手动启动。
+)
+echo 访问地址: http://本机IP:8000/?token=Dy20090918
+pause
+
+
+================================================
+FILE: requirements.txt
+================================================
+fastapi==0.104.1
+uvicorn==0.24.0
+psutil==5.9.6
+pywin32==311
+wmi==1.5.1
+jinja2==3.1.2
+
+
+================================================
+FILE: uninstall.bat
+================================================
+@echo off
+echo 正在停止并卸载服务...
+cd /d "%~dp0"
+"%cd%\venv\Scripts\python.exe" src/main.py stop
+"%cd%\venv\Scripts\python.exe" src/main.py remove
+pause
+
+
+================================================
+FILE: src/__init__.py
+================================================
+# 空文件，标识为包
+
+
+================================================
+FILE: src/api.py
+================================================
+from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+import os
+from typing import Optional
+
+from .metrics import (
+    get_system_metrics,
+    get_process_list,
+    kill_process,
+    suspend_process,
+    resume_process,
+    start_process,
+    set_process_priority,
+    set_process_affinity,
+    get_services_list,
+    service_control,
+    system_power,
+    execute_command,
+    get_temperatures,
+    get_network_connections,
+    get_recent_errors,
+    get_startup_items
+)
+from .config import API_TOKEN, HOST, PORT
+
+app = FastAPI(title="PC Ghost Lag Monitor Pro")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+
+def verify_token(token: Optional[str] = None):
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing token")
+    if token != API_TOKEN:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+# ---------- 首页（仅传递 token，前端使用相对路径） ----------
+@app.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    # 获取项目根目录
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template = templates.get_template("dashboard.html")
+    html = template.render({
+        "request": request,
+        "token": API_TOKEN,
+        "cwd": project_root   # 传递工作目录给前端
+    })
+    return HTMLResponse(content=html)
+
+# ---------- 概览 ----------
+@app.get("/metrics")
+async def metrics(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_system_metrics())
+
+# ---------- 进程列表 ----------
+@app.get("/processes")
+async def processes(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_process_list())
+
+# ---------- 进程操作 ----------
+@app.post("/process/kill")
+async def process_kill(pid: int, token: Optional[str] = Query(None)):
+    verify_token(token)
+    return {"success": kill_process(pid), "pid": pid}
+
+@app.post("/process/suspend")
+async def process_suspend(pid: int, token: Optional[str] = Query(None)):
+    verify_token(token)
+    return {"success": suspend_process(pid), "pid": pid}
+
+@app.post("/process/resume")
+async def process_resume(pid: int, token: Optional[str] = Query(None)):
+    verify_token(token)
+    return {"success": resume_process(pid), "pid": pid}
+
+@app.post("/process/start")
+async def process_start_cmd(command: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    return {"success": start_process(command), "command": command}
+
+@app.post("/process/priority")
+async def process_priority(pid: int, priority: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    success = set_process_priority(pid, priority)
+    return {"success": success, "pid": pid, "priority": priority}
+
+@app.post("/process/affinity")
+async def process_affinity(pid: int, cores: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    try:
+        core_list = [int(x.strip()) for x in cores.split(',') if x.strip()]
+        if not core_list:
+            return {"success": False, "error": "无效核心列表"}
+        success = set_process_affinity(pid, core_list)
+        return {"success": success, "pid": pid, "cores": core_list}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# ---------- 服务管理 ----------
+@app.get("/services")
+async def services_list(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_services_list())
+
+@app.post("/service/control")
+async def service_control_op(name: str, action: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    if action not in ['start', 'stop', 'restart']:
+        return {"success": False, "error": "无效操作"}
+    success = service_control(name, action)
+    return {"success": success, "service": name, "action": action}
+
+# ---------- 系统电源 ----------
+@app.post("/system/power")
+async def power_control(action: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    if action not in ['shutdown', 'reboot', 'sleep', 'hibernate']:
+        return {"success": False, "error": "无效电源操作"}
+    success = system_power(action)
+    return {"success": success, "action": action}
+
+# ---------- 远程命令 ----------
+@app.post("/system/command")
+async def run_command(cmd: str, token: Optional[str] = Query(None)):
+    verify_token(token)
+    result = execute_command(cmd)
+    return result
+
+# ---------- 温度 ----------
+@app.get("/temperatures")
+async def temperatures(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_temperatures())
+
+# ---------- 网络连接 ----------
+@app.get("/connections")
+async def connections(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_network_connections())
+
+# ---------- 事件日志 ----------
+@app.get("/events")
+async def events(log_type: str = "System", token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_recent_errors(log_type, 20))
+
+# ---------- 开机自启 ----------
+@app.get("/startup")
+async def startup_items(token: Optional[str] = Query(None)):
+    verify_token(token)
+    return JSONResponse(content=get_startup_items())
+
+# ---------- 健康检查 ----------
+@app.get("/health")
+async def health():
+    return {"status": "alive"}
+
+
+================================================
+FILE: src/config.py
+================================================
+# 监听地址和端口
+HOST = "0.0.0.0"
+PORT = 8000
+
+# 安全令牌（务必修改！）
+API_TOKEN = "Dy20090918"
+
+
+================================================
+FILE: src/main.py
+================================================
+import sys
+import os
+import subprocess
+import time
+import win32serviceutil
+import win32service
+import win32event
+import servicemanager
+
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(base_dir)
+
+from src.config import HOST, PORT, API_TOKEN
+
+class MonitorService(win32serviceutil.ServiceFramework):
+    _svc_name_ = "GhostLagMonitor"
+    _svc_display_name_ = "Ghost Lag Monitor Service"
+    _svc_description_ = "开机自启，提供网页监控和系统操作（SYSTEM权限）"
+    _svc_start_ = win32service.SERVICE_AUTO_START   # 关键：设置为自动启动
+
+    def __init__(self, args):
+        win32serviceutil.ServiceFramework.__init__(self, args)
+        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
+        self.process = None
+
+    def SvcStop(self):
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        win32event.SetEvent(self.hWaitStop)
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+            time.sleep(1)
+            if self.process.poll() is None:
+                self.process.kill()
+
+    def SvcDoRun(self):
+        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
+                              servicemanager.PYS_SERVICE_STARTED,
+                              (self._svc_name_, 'Starting...'))
+        python_exe = sys.executable
+        cmd = [
+            python_exe, "-m", "uvicorn",
+            "src.api:app",
+            "--host", HOST,
+            "--port", str(PORT),
+            "--workers", "1"
+        ]
+        self.process = subprocess.Popen(
+            cmd,
+            cwd=base_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+            self.process.wait()
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        import uvicorn
+        print(f"调试模式启动，访问 http://{os.getenv('COMPUTERNAME')}:{PORT}/?token={API_TOKEN}")
+        uvicorn.run("src.api:app", host=HOST, port=PORT)
+    else:
+        win32serviceutil.HandleCommandLine(MonitorService)
+
+
+================================================
+FILE: src/metrics.py
+================================================
+import psutil
+import wmi
+import subprocess
+import time
+import os
+import win32evtlog
+import win32evtlogutil
+import win32con
+import win32api
+from datetime import datetime
+from typing import List, Dict, Any   # 增加 Any
+import winreg
+
+c = wmi.WMI()
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ================= 1. 系统基础指标（含上下文切换/中断） =================
+def get_system_metrics() -> Dict[str, Any]:
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    mem = psutil.virtual_memory()
+    disk_usage = psutil.disk_usage('C:')
+    net_io = psutil.net_io_counters()
+    cores = psutil.cpu_count(logical=True)
+
+    avg_disk_sec_read = 0.0
+    avg_disk_sec_write = 0.0
+    processor_queue_length = 0
+    dpc_percent = 0.0
+    try:
+        for proc in c.Win32_PerfFormattedData_PerfOS_Processor(Name='_Total'):
+            processor_queue_length = proc.ProcessorQueueLength
+            dpc_percent = proc.PercentDPCTime
+            break
+        for disk in c.Win32_PerfFormattedData_PerfDisk_PhysicalDisk(Name='_Total'):
+            avg_disk_sec_read = disk.AvgDiskSecPerRead / 100000.0
+            avg_disk_sec_write = disk.AvgDiskSecPerWrite / 100000.0
+            break
+    except:
+        pass
+
+    stats1 = psutil.cpu_stats()
+    time.sleep(0.5)
+    stats2 = psutil.cpu_stats()
+    ctx_switches_per_sec = (stats2.ctx_switches - stats1.ctx_switches) / 0.5
+    interrupts_per_sec = (stats2.interrupts - stats1.interrupts) / 0.5
+
+    return {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "cpu": {
+            "percent": cpu_percent,
+            "cores": cores,
+            "queue_length": processor_queue_length,
+            "dpc_percent": round(dpc_percent, 2),
+            "ctx_switches_sec": round(ctx_switches_per_sec, 0),
+            "interrupts_sec": round(interrupts_per_sec, 0)
+        },
+        "memory": {
+            "total_gb": round(mem.total / (1024**3), 2),
+            "available_gb": round(mem.available / (1024**3), 2),
+            "percent": mem.percent
+        },
+        "disk": {
+            "c_usage_percent": disk_usage.percent,
+            "avg_read_sec": round(avg_disk_sec_read, 4),
+            "avg_write_sec": round(avg_disk_sec_write, 4)
+        },
+        "network": {
+            "sent_mb": round(net_io.bytes_sent / (1024**2), 2),
+            "recv_mb": round(net_io.bytes_recv / (1024**2), 2)
+        },
+        "process_count": len(psutil.pids())
+    }
+
+# ================= 2. 进程管理 =================
+def get_process_list() -> List[Dict[str, Any]]:
+    processes = []
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_info', 
+                                     'status', 'create_time', 'cmdline']):
+        try:
+            pinfo = proc.info
+            mem_mb = pinfo['memory_info'].rss / (1024**2) if pinfo['memory_info'] else 0
+            create_time = datetime.fromtimestamp(pinfo['create_time']).strftime('%Y-%m-%d %H:%M:%S') if pinfo['create_time'] else ''
+            cmdline = ' '.join(pinfo['cmdline']) if pinfo['cmdline'] else ''
+            if len(cmdline) > 200:
+                cmdline = cmdline[:200] + '...'
+            processes.append({
+                "pid": pinfo['pid'],
+                "name": pinfo['name'] or 'Unknown',
+                "cpu_percent": round(pinfo['cpu_percent'] or 0, 1),
+                "memory_mb": round(mem_mb, 1),
+                "status": pinfo['status'] or 'unknown',
+                "create_time": create_time,
+                "cmdline": cmdline
+            })
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
+    return processes
+
+def kill_process(pid: int) -> bool:
+    try:
+        p = psutil.Process(pid)
+        p.kill()
+        return True
+    except:
+        return False
+
+def suspend_process(pid: int) -> bool:
+    try:
+        p = psutil.Process(pid)
+        p.suspend()
+        return True
+    except:
+        return False
+
+def resume_process(pid: int) -> bool:
+    try:
+        p = psutil.Process(pid)
+        p.resume()
+        return True
+    except:
+        return False
+
+def start_process(command: str) -> bool:
+    try:
+        psutil.Popen(command, shell=True)
+        return True
+    except:
+        return False
+
+def set_process_priority(pid: int, priority: str) -> bool:
+    try:
+        p = psutil.Process(pid)
+        priority_map = {
+            'realtime': psutil.REALTIME_PRIORITY_CLASS,
+            'high': psutil.HIGH_PRIORITY_CLASS,
+            'above_normal': psutil.ABOVE_NORMAL_PRIORITY_CLASS,
+            'normal': psutil.NORMAL_PRIORITY_CLASS,
+            'below_normal': psutil.BELOW_NORMAL_PRIORITY_CLASS,
+            'idle': psutil.IDLE_PRIORITY_CLASS
+        }
+        if priority not in priority_map:
+            return False
+        p.nice(priority_map[priority])
+        return True
+    except:
+        return False
+
+def set_process_affinity(pid: int, cpu_mask: List[int]) -> bool:
+    try:
+        p = psutil.Process(pid)
+        p.cpu_affinity(cpu_mask)
+        return True
+    except:
+        return False
+
+# ================= 3. Windows 服务管理 =================
+def get_services_list() -> List[Dict[str, Any]]:
+    services = []
+    try:
+        for s in c.Win32_Service():
+            services.append({
+                "name": s.Name,
+                "display_name": s.DisplayName,
+                "status": s.State,
+                "start_mode": s.StartMode,
+                "process_id": s.ProcessId if s.ProcessId else 0
+            })
+        services.sort(key=lambda x: 0 if x['status'] == 'Stopped' else 1)
+        return services
+    except:
+        return []
+
+def service_control(name: str, action: str) -> bool:
+    try:
+        import win32service
+        scm = win32service.OpenSCManager(None, None, win32service.SC_MANAGER_ALL_ACCESS)
+        h = win32service.OpenService(scm, name, win32service.SERVICE_ALL_ACCESS)
+        if action == 'start':
+            win32service.StartService(h, None)
+        elif action == 'stop':
+            win32service.ControlService(h, win32service.SERVICE_CONTROL_STOP)
+        elif action == 'restart':
+            win32service.ControlService(h, win32service.SERVICE_CONTROL_STOP)
+            time.sleep(0.5)
+            win32service.StartService(h, None)
+        else:
+            return False
+        win32service.CloseServiceHandle(h)
+        win32service.CloseServiceHandle(scm)
+        return True
+    except:
+        return False
+
+# ================= 4. 系统电源控制 =================
+def system_power(action: str) -> bool:
+    try:
+        if action == 'shutdown':
+            os.system("shutdown /s /t 5")
+        elif action == 'reboot':
+            os.system("shutdown /r /t 5")
+        elif action == 'sleep':
+            os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
+        elif action == 'hibernate':
+            os.system("shutdown /h")
+        else:
+            return False
+        return True
+    except:
+        return False
+
+# ================= 5. 远程命令执行（修正返回类型为 Dict[str, Any]） =================
+def execute_command(command: str) -> Dict[str, Any]:
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            encoding='gbk',
+            cwd=PROJECT_ROOT   # 设置工作目录为项目根目录
+        )
+        return {
+            "stdout": result.stdout.strip(),
+            "stderr": result.stderr.strip(),
+            "returncode": result.returncode
+        }
+    except subprocess.TimeoutExpired:
+        return {"stdout": "", "stderr": "命令执行超时（60秒）", "returncode": -1}
+    except Exception as e:
+        return {"stdout": "", "stderr": str(e), "returncode": -1}
+# ================= 6. 硬件温度 =================
+def get_temperatures() -> Dict[str, float]:
+    temps = {}
+    try:
+        wmi_obj = wmi.WMI(namespace="root\\wmi")
+        for tz in wmi_obj.MSAcpi_ThermalZoneTemperature():
+            temp_c = (tz.CurrentTemperature / 10.0) - 273.15
+            name = tz.InstanceName.split('.')[-1] if tz.InstanceName else 'CPU'
+            if 0 < temp_c < 100:
+                temps[name] = round(temp_c, 1)
+    except:
+        pass
+    if not temps:
+        try:
+            for probe in c.Win32_TemperatureProbe():
+                if probe.CurrentReading:
+                    temps['主板'] = round(probe.CurrentReading, 1)
+        except:
+            pass
+    return temps
+
+# ================= 7. 网络连接 =================
+def get_network_connections() -> List[Dict[str, Any]]:
+    connections = []
+    try:
+        for conn in psutil.net_connections(kind='inet'):
+            try:
+                p = psutil.Process(conn.pid) if conn.pid else None
+                pname = p.name() if p else 'System'
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pname = 'Unknown'
+            laddr = f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else '*:*'
+            raddr = f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else '*:*'
+            connections.append({
+                "pid": conn.pid or 0,
+                "process": pname,
+                "family": "IPv4" if conn.family == 2 else "IPv6",
+                "type": "TCP" if conn.type == 1 else "UDP",
+                "local": laddr,
+                "remote": raddr,
+                "status": conn.status if conn.status else 'ESTABLISHED'
+            })
+        connections.sort(key=lambda x: x['process'])
+        return connections
+    except:
+        return []
+
+# ================= 8. 系统事件日志（修正时间转换） =================
+def get_recent_errors(log_type: str = "System", count: int = 20) -> List[Dict[str, Any]]:
+    logs = []
+    try:
+        hand = win32evtlog.OpenEventLog(None, log_type)
+        flags = win32evtlog.EVENTLOG_BACKWARDS_READ | win32evtlog.EVENTLOG_SEQUENTIAL_READ
+        events = win32evtlog.ReadEventLog(hand, flags, 0)
+        read_count = 0
+        for event in events:
+            if read_count >= count:
+                break
+            if event.EventType in [1, 2]:
+                # 修正时间转换
+                timestamp = event.TimeGenerated.timestamp()   # pywintypes.Time -> float
+                time_str = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                logs.append({
+                    "time": time_str,
+                    "level": "Error" if event.EventType == 1 else "Warning",
+                    "source": event.SourceName,
+                    "event_id": event.EventID,
+                    "message": win32evtlogutil.SafeFormatMessage(event, log_type)[:150]
+                })
+                read_count += 1
+        win32evtlog.CloseEventLog(hand)
+        return logs
+    except Exception as e:
+        return [{"time": "", "level": "Error", "source": "WMI", "event_id": 0, "message": f"读取日志失败: {e}"}]
+
+# ================= 9. 开机自启项 =================
+def get_startup_items() -> List[Dict[str, str]]:
+    items = []
+    reg_paths = [
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+        r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run",
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",
+    ]
+    try:
+        for path in reg_paths:
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+                i = 0
+                while True:
+                    try:
+                        name, value, _ = winreg.EnumValue(key, i)
+                        items.append({"name": name, "path": value, "location": "HKLM\\" + path})
+                        i += 1
+                    except OSError:
+                        break
+                winreg.CloseKey(key)
+            except FileNotFoundError:
+                pass
+    except:
+        pass
+
+    try:
+        path = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, path)
+        i = 0
+        while True:
+            try:
+                name, value, _ = winreg.EnumValue(key, i)
+                items.append({"name": name, "path": value, "location": "HKCU\\Run"})
+                i += 1
+            except OSError:
+                break
+        winreg.CloseKey(key)
+    except:
+        pass
+
+    startup_folder = os.path.join(os.environ.get('PROGRAMDATA', ''), 
+                                  'Microsoft\\Windows\\Start Menu\\Programs\\StartUp')
+    if os.path.exists(startup_folder):
+        for f in os.listdir(startup_folder):
+            full_path = os.path.join(startup_folder, f)
+            if os.path.isfile(full_path):
+                items.append({"name": f, "path": full_path, "location": "Startup Folder"})
+    return items
+
+
+================================================
+FILE: src/templates/dashboard.html
+================================================
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>PC 幽灵监控 Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+        }
+
+        .badge {
+            background: #2d2d2d;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+            border-bottom: 1px solid #30363d;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 14px;
+            color: #8b949e;
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: #f0f6fc;
+            border-bottom: 2px solid #f78166;
+        }
+
+        .card {
+            background: #161b22;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #30363d;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-item {
+            background: #0d1117;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #30363d;
+        }
+
+        .metric-item .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .metric-item .label {
+            font-size: 0.7rem;
+            color: #8b949e;
+        }
+
+        .danger-bg {
+            background: #2d1b1b;
+            border-left-color: #f85149;
+        }
+
+        .warning-bg {
+            background: #2d2416;
+            border-left-color: #d29922;
+        }
+
+        .good-bg {
+            background: #0f2b1f;
+            border-left-color: #3fb950;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-danger {
+            background: #da3633;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #d29922;
+            color: #000;
+        }
+
+        .btn-success {
+            background: #2ea043;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+
+        .btn-sm {
+            padding: 2px 8px;
+            font-size: 0.6rem;
+        }
+
+        .power-btn {
+            background: #da3633;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        th,
+        td {
+            padding: 6px 4px;
+            text-align: left;
+            border-bottom: 1px solid #21262d;
+        }
+
+        th {
+            background: #0d1117;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            color: #8b949e;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: #f0f6fc;
+        }
+
+        .scroll-table {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .cmd-output {
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: none;
+            z-index: 999;
+            font-size: 0.8rem;
+            border: 1px solid #444;
+            max-width: 90%;
+        }
+
+        .error-box {
+            color: #f85149;
+            background: #2d1b1b;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            border: 1px solid #da3633;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #30363d;
+            border-top-color: #f78166;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .collapse-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: #8b949e;
+        }
+
+        .collapse-toggle:hover {
+            color: #f0f6fc;
+        }
+
+        .collapse-content {
+            margin-top: 8px;
+        }
+
+        .startup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            background: #0d1117;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            border-left: 3px solid #2ea043;
+        }
+
+        .startup-item .path {
+            color: #8b949e;
+            font-size: 0.7rem;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .startup-item .location {
+            color: #f78166;
+            font-size: 0.6rem;
+            background: #2d1b1b;
+            padding: 0 6px;
+            border-radius: 3px;
+        }
+
+        .cwd-display {
+            background: #0d1117;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-bottom: 8px;
+            border: 1px solid #30363d;
+        }
+
+        @media (max-width: 600px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .tabs .tab-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+
+            .startup-item .path {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🖥️ PC 监控 <span class="badge">Hardcore</span></h1>
+        <div>
+            <button class="btn btn-secondary" onclick="refreshAll()" id="refreshBtn">🔄 刷新</button>
+        </div>
+    </div>
+
+    <div class="tabs" id="tabNav">
+        <button class="tab-btn active" data-tab="tab1">📊 概览</button>
+        <button class="tab-btn" data-tab="tab2">⚙️ 进程</button>
+        <button class="tab-btn" data-tab="tab3">🔧 服务</button>
+        <button class="tab-btn" data-tab="tab4">🌐 网络/日志</button>
+        <button class="tab-btn" data-tab="tab5">💻 命令</button>
+    </div>
+
+    <!-- TAB 1: 概览 -->
+    <div id="tab1" class="tab-content">
+        <div class="card">
+            <div class="card-header">📈 CPU</div>
+            <div class="grid-2">
+                <div class="metric-item" id="cpu-percent-item"><span class="label">使用率</span><br><span class="value"
+                        id="cpu-percent">-</span>%</div>
+                <div class="metric-item" id="cpu-queue-item"><span class="label">队列长度</span><br><span class="value"
+                        id="cpu-queue">-</span></div>
+                <div class="metric-item"><span class="label">DPC%</span><br><span class="value"
+                        id="dpc-percent">-</span>%</div>
+                <div class="metric-item"><span class="label">上下文切换/秒</span><br><span class="value"
+                        id="ctx-switch">-</span></div>
+                <div class="metric-item"><span class="label">中断/秒</span><br><span class="value" id="interrupts">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">🧠 内存</div>
+            <div class="grid-2">
+                <div class="metric-item"><span class="label">可用</span><br><span class="value"
+                        id="mem-available">-</span> GB</div>
+                <div class="metric-item"><span class="label">总内存</span><br><span class="value" id="mem-total">-</span>
+                    GB</div>
+                <div class="metric-item"><span class="label">使用率</span><br><span class="value"
+                        id="mem-percent">-</span>%</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">💾 磁盘 (C:)</div>
+            <div class="grid-3">
+                <div class="metric-item"><span class="label">使用率</span><br><span class="value" id="disk-usage">-</span>%
+                </div>
+                <div class="metric-item"><span class="label">读延迟(秒)</span><br><span class="value"
+                        id="disk-read">-</span></div>
+                <div class="metric-item"><span class="label">写延迟(秒)</span><br><span class="value"
+                        id="disk-write">-</span></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">🌐 网络</div>
+            <div class="grid-2">
+                <div class="metric-item"><span class="label">已发送</span><br><span class="value" id="net-sent">-</span> MB
+                </div>
+                <div class="metric-item"><span class="label">已接收</span><br><span class="value" id="net-recv">-</span> MB
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">⚡ 电源控制</div>
+            <div class="flex-row">
+                <button class="power-btn" onclick="powerAction('reboot')">重启</button>
+                <button class="power-btn" onclick="powerAction('shutdown')" style="background:#da3633;">关机</button>
+                <button class="btn btn-secondary" onclick="powerAction('sleep')">睡眠</button>
+                <button class="btn btn-secondary" onclick="powerAction('hibernate')">休眠</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header collapse-toggle" onclick="toggleCollapse('temp-collapse')">🌡️ 温度 <span
+                    id="temp-arrow">▼</span></div>
+            <div id="temp-collapse" class="collapse-content">
+                <div id="temp-display" style="font-size:0.9rem;">加载中...</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header collapse-toggle" onclick="toggleCollapse('startup-collapse')">🔍 开机自启项 <span
+                    id="startup-arrow">▼</span></div>
+            <div id="startup-collapse" class="collapse-content">
+                <div id="startup-display">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: 进程 -->
+    <div id="tab2" class="tab-content hidden">
+        <div class="card">
+            <div class="flex-row" style="justify-content:space-between;">
+                <input class="search-box" id="procSearch" placeholder="🔍 按名称/PID搜索..." oninput="filterTable()">
+                <span style="font-size:0.8rem;" id="proc-count-badge">0</span>
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortProcesses('pid')">PID ↕</th>
+                            <th onclick="sortProcesses('name')">名称 ↕</th>
+                            <th onclick="sortProcesses('cpu_percent')">CPU% ↕</th>
+                            <th onclick="sortProcesses('memory_mb')">内存MB ↕</th>
+                            <th>状态</th>
+                            <th>命令行</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="process-tbody">
+                        <tr>
+                            <td colspan="7">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="flex-row">
+                    <input id="start-cmd" placeholder="启动命令 (如 notepad.exe)" style="flex:1;" list="cmd-history">
+                    <datalist id="cmd-history"></datalist>
+                    <button class="btn btn-success" onclick="startProc()">启动</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: 服务 -->
+    <div id="tab3" class="tab-content hidden">
+        <div class="card">
+            <div class="flex-row" style="justify-content:space-between;">
+                <input class="search-box" id="svcSearch" placeholder="🔍 搜索服务..." oninput="filterServices()">
+                <button class="btn btn-secondary" onclick="loadServices()">刷新</button>
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>显示名</th>
+                            <th>状态</th>
+                            <th>启动类型</th>
+                            <th>PID</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="service-tbody">
+                        <tr>
+                            <td colspan="5">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: 网络连接 + 事件日志 -->
+    <div id="tab4" class="tab-content hidden">
+        <div class="card">
+            <div class="card-header">🌐 网络连接 (TCP/UDP)</div>
+            <div class="scroll-table" style="max-height:250px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>进程</th>
+                            <th>本地</th>
+                            <th>远程</th>
+                            <th>协议</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conn-tbody">
+                        <tr>
+                            <td colspan="5">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">⚠️ 系统事件日志 (最近错误/警告)</div>
+            <div id="events-display" style="font-size:0.75rem; max-height:250px; overflow-y:auto;">加载中...</div>
+        </div>
+    </div>
+
+    <!-- TAB 5: 命令终端 -->
+    <div id="tab5" class="tab-content hidden">
+        <div class="card">
+            <div class="card-header">💻 命令终端</div>
+            <div class="cwd-display">📁 当前目录: <span id="cwd-display">{{ cwd }}</span></div>
+            <div class="flex-row">
+                <textarea id="cmdInput" placeholder="输入CMD命令 (Shift+Enter换行，Enter执行)"
+                    style="flex:1; background:#0d1117; border:1px solid #30363d; color:#fff; padding:8px; border-radius:4px; font-family:monospace; resize:vertical; min-height:60px;"
+                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); runCommand();}"></textarea>
+            </div>
+            <div class="flex-row" style="margin-top:6px;">
+                <button class="btn btn-success" onclick="runCommand()">执行</button>
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('cmdOutput').innerText=''">清空</button>
+            </div>
+            <div class="cmd-output" id="cmdOutput">等待输入命令...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const TOKEN = '{{ token }}';
+        const BASE_URL = '';
+        const CWD = '{{ cwd }}';
+        let allProcesses = [];
+        let allServices = [];
+        let processSortKey = 'cpu_percent';
+        let processSortAsc = false;
+
+        // ----- 工具函数 -----
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            t.style.background = isError ? '#da3633' : '#2ea043';
+            t.style.color = '#fff';
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        function showError(containerId, errorMsg) {
+            const el = document.getElementById(containerId);
+            if (el) el.innerHTML = `<div class="error-box">❌ ${errorMsg}</div>`;
+        }
+
+        function toggleCollapse(id) {
+            const content = document.getElementById(id);
+            const arrow = document.getElementById(id.replace('collapse', 'arrow'));
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                if (arrow) arrow.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                if (arrow) arrow.textContent = '▶';
+            }
+        }
+
+        // ----- Tab切换 -----
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const tabId = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+                if (tabId === 'tab3') loadServices();
+                if (tabId === 'tab4') { loadConnections(); loadEvents(); }
+                if (tabId === 'tab1') { loadTemperatures(); loadStartup(); }
+            });
+        });
+
+        // ----- 刷新按钮 -----
+        function refreshAll() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '⏳ 刷新中...';
+            btn.disabled = true;
+            Promise.all([
+                refreshOverview(),
+                loadProcesses(),
+                (() => { if (!document.getElementById('tab3').classList.contains('hidden')) return loadServices(); return Promise.resolve(); })(),
+                (() => { if (!document.getElementById('tab4').classList.contains('hidden')) { loadConnections(); loadEvents(); } return Promise.resolve(); })(),
+                (() => { if (!document.getElementById('tab1').classList.contains('hidden')) { loadTemperatures(); loadStartup(); } return Promise.resolve(); })()
+            ]).finally(() => {
+                btn.innerHTML = '🔄 刷新';
+                btn.disabled = false;
+                showToast('已刷新');
+            });
+        }
+
+        // ----- 概览 -----
+        async function refreshOverview() {
+            try {
+                const resp = await fetch(`${BASE_URL}/metrics?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                document.getElementById('cpu-percent').textContent = data.cpu.percent;
+                document.getElementById('cpu-queue').textContent = data.cpu.queue_length;
+                document.getElementById('mem-available').textContent = data.memory.available_gb;
+                document.getElementById('mem-total').textContent = data.memory.total_gb;
+                document.getElementById('mem-percent').textContent = data.memory.percent;
+                document.getElementById('disk-usage').textContent = data.disk.c_usage_percent;
+                document.getElementById('disk-read').textContent = data.disk.avg_read_sec;
+                document.getElementById('disk-write').textContent = data.disk.avg_write_sec;
+                document.getElementById('dpc-percent').textContent = data.cpu.dpc_percent;
+                document.getElementById('ctx-switch').textContent = data.cpu.ctx_switches_sec;
+                document.getElementById('interrupts').textContent = data.cpu.interrupts_sec;
+                document.getElementById('net-sent').textContent = data.network.sent_mb;
+                document.getElementById('net-recv').textContent = data.network.recv_mb;
+
+                const q = data.cpu.queue_length, c = data.cpu.cores;
+                const queueItem = document.getElementById('cpu-queue-item');
+                queueItem.className = 'metric-item' + (q > c ? ' danger-bg' : '');
+                const dpcItem = document.getElementById('dpc-percent').parentElement.parentElement;
+                dpcItem.className = 'metric-item' + (data.cpu.dpc_percent > 5 ? ' danger-bg' : data.cpu.dpc_percent > 2 ? ' warning-bg' : '');
+                const readItem = document.getElementById('disk-read').parentElement.parentElement;
+                readItem.className = 'metric-item' + (data.disk.avg_read_sec > 0.03 ? ' danger-bg' : data.disk.avg_read_sec > 0.02 ? ' warning-bg' : '');
+                const ctxItem = document.getElementById('ctx-switch').parentElement.parentElement;
+                ctxItem.className = 'metric-item' + (data.cpu.ctx_switches_sec > 50000 ? ' danger-bg' : '');
+            } catch (e) {
+                showToast('概览加载失败: ' + e.message, true);
+                ['cpu-percent', 'cpu-queue', 'mem-available', 'mem-total', 'mem-percent', 'disk-usage', 'disk-read', 'disk-write', 'dpc-percent', 'ctx-switch', 'interrupts', 'net-sent', 'net-recv'].forEach(id => {
+                    document.getElementById(id).textContent = '❌';
+                });
+            }
+        }
+
+        // ----- 温度 -----
+        async function loadTemperatures() {
+            try {
+                const resp = await fetch(`${BASE_URL}/temperatures?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const temps = await resp.json();
+                let html = '';
+                for (const [key, val] of Object.entries(temps)) {
+                    html += `<span style="margin-right:10px;">${key}: ${val}°C</span>`;
+                }
+                document.getElementById('temp-display').innerHTML = html || '无温度数据';
+            } catch (e) {
+                showError('temp-display', '温度加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 开机自启（卡片式列表） -----
+        async function loadStartup() {
+            try {
+                const resp = await fetch(`${BASE_URL}/startup?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const items = await resp.json();
+                const container = document.getElementById('startup-display');
+                if (!items.length) { container.innerHTML = '无自启项'; return; }
+                let html = '';
+                for (const item of items) {
+                    html += `<div class="startup-item">
+                    <div>
+                        <strong>${item.name}</strong>
+                        <div class="path" title="${item.path}">${item.path.length > 60 ? item.path.substring(0, 60) + '...' : item.path}</div>
+                    </div>
+                    <span class="location">${item.location}</span>
+                </div>`;
+                }
+                container.innerHTML = html;
+            } catch (e) {
+                showError('startup-display', '自启项加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 进程列表 -----
+        async function loadProcesses() {
+            const tbody = document.getElementById('process-tbody');
+            tbody.innerHTML = '<tr><td colspan="7"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/processes?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                allProcesses = await resp.json();
+                document.getElementById('proc-count-badge').textContent = allProcesses.length;
+                renderProcesses();
+                const hist = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
+                const datalist = document.getElementById('cmd-history');
+                datalist.innerHTML = hist.map(c => `<option value="${c}">`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="error-box">进程加载失败: ${e.message}</td></tr>`;
+                showToast('进程加载失败', true);
+            }
+        }
+
+        function renderProcesses() {
+            const list = [...allProcesses];
+            if (processSortKey) {
+                list.sort((a, b) => {
+                    let va = a[processSortKey] ?? 0, vb = b[processSortKey] ?? 0;
+                    if (typeof va === 'string') va = va.toLowerCase();
+                    if (typeof vb === 'string') vb = vb.toLowerCase();
+                    if (va < vb) return processSortAsc ? -1 : 1;
+                    if (va > vb) return processSortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+            const tbody = document.getElementById('process-tbody');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="7">无进程</td></tr>'; return; }
+            let html = '';
+            for (const p of list.slice(0, 150)) {
+                const statusClass = p.status === 'running' ? 'good' : 'warning';
+                const cmdline = p.cmdline || '';
+                const cmdDisplay = cmdline.length > 30 ? cmdline.substring(0, 30) + '...' : cmdline;
+                html += `<tr>
+                <td>${p.pid}</td>
+                <td title="${p.name}">${p.name}</td>
+                <td>${p.cpu_percent}</td>
+                <td>${p.memory_mb}</td>
+                <td class="${statusClass}">${p.status}</td>
+                <td title="${cmdline}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cmdDisplay}</td>
+                <td>
+                    <div class="flex-row" style="gap:2px; flex-wrap:wrap;">
+                        <button class="btn btn-danger btn-sm" onclick="killProc(${p.pid})">🗑️ 杀</button>
+                        <button class="btn btn-warning btn-sm" onclick="suspendProc(${p.pid})">⏸️ 挂</button>
+                        <button class="btn btn-success btn-sm" onclick="resumeProc(${p.pid})">▶️ 恢</button>
+                        <select onchange="setPriority(${p.pid}, this.value)" style="width:70px; font-size:0.6rem;">
+                            <option value="">优先级</option>
+                            <option value="realtime">实时</option>
+                            <option value="high">高</option>
+                            <option value="above_normal">高于标准</option>
+                            <option value="normal" selected>标准</option>
+                            <option value="below_normal">低于标准</option>
+                            <option value="idle">空闲</option>
+                        </select>
+                        <input placeholder="核心(如0,1)" style="width:60px; font-size:0.6rem;" id="aff_${p.pid}">
+                        <button class="btn btn-secondary btn-sm" onclick="setAffinity(${p.pid})">绑定</button>
+                    </div>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function sortProcesses(key) {
+            if (processSortKey === key) processSortAsc = !processSortAsc;
+            else { processSortKey = key; processSortAsc = false; }
+            renderProcesses();
+        }
+
+        function filterTable() {
+            const q = document.getElementById('procSearch').value.toLowerCase();
+            if (!q) { renderProcesses(); return; }
+            const filtered = allProcesses.filter(p => p.name.toLowerCase().includes(q) || String(p.pid).includes(q));
+            const tbody = document.getElementById('process-tbody');
+            if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7">无匹配进程</td></tr>'; return; }
+            let html = '';
+            for (const p of filtered.slice(0, 150)) {
+                const cmdline = p.cmdline || '';
+                const cmdDisplay = cmdline.length > 30 ? cmdline.substring(0, 30) + '...' : cmdline;
+                html += `<tr>
+                <td>${p.pid}</td>
+                <td title="${p.name}">${p.name}</td>
+                <td>${p.cpu_percent}</td>
+                <td>${p.memory_mb}</td>
+                <td class="${p.status === 'running' ? 'good' : 'warning'}">${p.status}</td>
+                <td title="${cmdline}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cmdDisplay}</td>
+                <td>
+                    <div class="flex-row" style="gap:2px; flex-wrap:wrap;">
+                        <button class="btn btn-danger btn-sm" onclick="killProc(${p.pid})">🗑️ 杀</button>
+                        <button class="btn btn-warning btn-sm" onclick="suspendProc(${p.pid})">⏸️ 挂</button>
+                        <button class="btn btn-success btn-sm" onclick="resumeProc(${p.pid})">▶️ 恢</button>
+                        <select onchange="setPriority(${p.pid}, this.value)" style="width:70px; font-size:0.6rem;">
+                            <option value="">优先级</option>
+                            <option value="realtime">实时</option>
+                            <option value="high">高</option>
+                            <option value="above_normal">高于标准</option>
+                            <option value="normal" selected>标准</option>
+                            <option value="below_normal">低于标准</option>
+                            <option value="idle">空闲</option>
+                        </select>
+                        <input placeholder="核心(如0,1)" style="width:60px; font-size:0.6rem;" id="aff_${p.pid}">
+                        <button class="btn btn-secondary btn-sm" onclick="setAffinity(${p.pid})">绑定</button>
+                    </div>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        // ----- 进程操作 -----
+        async function killProc(pid) { if (!confirm(`终止 ${pid}?`)) return; try { const r = await fetch(`${BASE_URL}/process/kill?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已终止 ${pid}`); loadProcesses(); } catch (e) { showToast('终止失败: ' + e.message, true); } }
+        async function suspendProc(pid) { if (!confirm(`挂起 ${pid}?`)) return; try { const r = await fetch(`${BASE_URL}/process/suspend?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已挂起 ${pid}`); loadProcesses(); } catch (e) { showToast('挂起失败: ' + e.message, true); } }
+        async function resumeProc(pid) { try { const r = await fetch(`${BASE_URL}/process/resume?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已恢复 ${pid}`); loadProcesses(); } catch (e) { showToast('恢复失败: ' + e.message, true); } }
+        async function setPriority(pid, val) { if (!val) return; try { const r = await fetch(`${BASE_URL}/process/priority?pid=${pid}&priority=${val}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已设置 ${pid} 优先级`); } catch (e) { showToast('设置失败: ' + e.message, true); } }
+        async function setAffinity(pid) {
+            const val = document.getElementById(`aff_${pid}`).value;
+            if (!val) return showToast('请输入核心编号，如 0,1', true);
+            try { const r = await fetch(`${BASE_URL}/process/affinity?pid=${pid}&cores=${val}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已绑定 ${pid} 到核心 ${val}`); } catch (e) { showToast('绑定失败: ' + e.message, true); }
+        }
+        async function startProc() {
+            const cmd = document.getElementById('start-cmd').value.trim();
+            if (!cmd) return showToast('输入命令', true);
+            try {
+                const r = await fetch(`${BASE_URL}/process/start?command=${encodeURIComponent(cmd)}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`启动成功`); loadProcesses();
+                let hist = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
+                hist = hist.filter(c => c !== cmd);
+                hist.unshift(cmd);
+                if (hist.length > 5) hist = hist.slice(0, 5);
+                localStorage.setItem('cmdHistory', JSON.stringify(hist));
+                const datalist = document.getElementById('cmd-history');
+                datalist.innerHTML = hist.map(c => `<option value="${c}">`).join('');
+            } catch (e) { showToast('启动失败: ' + e.message, true); }
+        }
+
+        // ----- 服务列表 -----
+        async function loadServices() {
+            const tbody = document.getElementById('service-tbody');
+            tbody.innerHTML = '<tr><td colspan="5"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/services?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                allServices = await resp.json();
+                renderServices(allServices);
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="error-box">服务加载失败: ${e.message}</td></tr>`;
+                showToast('服务加载失败', true);
+            }
+        }
+
+        function renderServices(list) {
+            const tbody = document.getElementById('service-tbody');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="5">无服务</td></tr>'; return; }
+            let html = '';
+            for (const s of list) {
+                const isRunning = s.status === 'Running';
+                html += `<tr>
+                <td title="${s.name}">${s.display_name}</td>
+                <td>${isRunning ? '🟢 运行中' : '🔴 已停止'}</td>
+                <td>${s.start_mode}</td>
+                <td>${s.process_id || '-'}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="svcControl('${s.name}','start')" ${isRunning ? 'disabled' : ''}>▶️ 启动</button>
+                    <button class="btn btn-danger btn-sm" onclick="svcControl('${s.name}','stop')" ${!isRunning ? 'disabled' : ''}>⏹ 停止</button>
+                    <button class="btn btn-warning btn-sm" onclick="svcControl('${s.name}','restart')">🔄 重启</button>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function filterServices() {
+            const q = document.getElementById('svcSearch').value.toLowerCase();
+            if (!q) return renderServices(allServices);
+            const filtered = allServices.filter(s => s.display_name.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+            renderServices(filtered);
+        }
+
+        async function svcControl(name, action) {
+            if (!confirm(`确定${action}服务 ${name}?`)) return;
+            try {
+                const resp = await fetch(`${BASE_URL}/service/control?name=${name}&action=${action}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(await resp.text());
+                const data = await resp.json();
+                if (data.success) showToast(`${action} 服务 ${name} 成功`);
+                else showToast(`操作失败`, true);
+                loadServices();
+            } catch (e) { showToast('操作异常: ' + e.message, true); }
+        }
+
+        // ----- 网络连接 -----
+        async function loadConnections() {
+            const tbody = document.getElementById('conn-tbody');
+            tbody.innerHTML = '<tr><td colspan="5"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/connections?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const conns = await resp.json();
+                if (!conns.length) { tbody.innerHTML = '<tr><td colspan="5">无连接</td></tr>'; return; }
+                let html = '';
+                for (const c of conns.slice(0, 100)) {
+                    const statusClass = c.status === 'ESTABLISHED' ? 'good' : '';
+                    html += `<tr><td>${c.process} (${c.pid})</td><td>${c.local}</td><td>${c.remote}</td><td>${c.type}</td><td class="${statusClass}">${c.status}</td></tr>`;
+                }
+                tbody.innerHTML = html;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="error-box">网络连接加载失败: ${e.message}</td></tr>`;
+                showToast('网络连接加载失败', true);
+            }
+        }
+
+        // ----- 事件日志 -----
+        async function loadEvents() {
+            const container = 'events-display';
+            try {
+                const resp = await fetch(`${BASE_URL}/events?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const events = await resp.json();
+                if (!events.length) { document.getElementById(container).innerHTML = '无事件'; return; }
+                let html = '';
+                for (const e of events) {
+                    const bg = e.level === 'Error' ? '#2d1b1b' : '#2d2416';
+                    const color = e.level === 'Error' ? '#f85149' : '#d29922';
+                    html += `<div style="border-bottom:1px solid #21262d;padding:6px 0; background:${bg}; border-radius:4px; margin-bottom:4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:${color}; font-weight:bold;">[${e.level}]</span>
+                        <span style="color:#8b949e; font-size:0.7rem;">${e.time}</span>
+                        <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${e.message.replace(/'/g, "\\'")}')">📋 复制</button>
+                    </div>
+                    <div style="font-size:0.75rem; color:#e6edf3;">${e.source} (${e.event_id}): ${e.message}</div>
+                </div>`;
+                }
+                document.getElementById(container).innerHTML = html;
+            } catch (e) {
+                showError(container, '事件日志加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 电源 -----
+        async function powerAction(action) {
+            const map = { reboot: '重启', shutdown: '关机', sleep: '睡眠', hibernate: '休眠' };
+            if (!confirm(`⚠️ 确定要执行 "${map[action]}" 操作吗？`)) return;
+            try {
+                const resp = await fetch(`${BASE_URL}/system/power?action=${action}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(await resp.text());
+                showToast(`正在执行 ${map[action]}`);
+            } catch (e) { showToast('操作失败: ' + e.message, true); }
+        }
+
+        // ----- 命令 -----
+        async function runCommand() {
+            const cmd = document.getElementById('cmdInput').value.trim();
+            if (!cmd) return showToast('请输入命令', true);
+            const out = document.getElementById('cmdOutput');
+            out.innerText = '⏳ 执行中...';
+            try {
+                const resp = await fetch(`${BASE_URL}/system/command?cmd=${encodeURIComponent(cmd)}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                let result = `> ${cmd}\n`;
+                if (data.stdout) result += `[输出]\n${data.stdout}\n`;
+                if (data.stderr) result += `[错误]\n${data.stderr}\n`;
+                if (data.returncode !== undefined) result += `[返回码] ${data.returncode}`;
+                out.innerText = result;
+                out.scrollTop = out.scrollHeight;
+            } catch (e) { out.innerText = `❌ 错误: ${e.message}`; }
+        }
+
+        // ----- 初始化 -----
+        refreshAll();
+        setInterval(() => {
+            refreshOverview();
+            if (!document.getElementById('tab2').classList.contains('hidden')) loadProcesses();
+        }, 8000);
+    </script>
+</body>
+
+</html>
+

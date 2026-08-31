@@ -1,0 +1,2809 @@
+Directory structure:
+└── Notes/
+    ├── index.html
+    ├── 2026.8.13/
+    │   ├── index.html
+    │   └── theory.html
+    ├── 2026.8.18/
+    │   └── index.html
+    └── 2026.8.31/
+        └── index.html
+
+================================================
+FILE: index.html
+================================================
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Notes</title>
+    <meta content="no-referrer" name="referrer" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="dns-prefetch" />
+    <link as="font" crossorigin="anonymous"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/birthday/zhongsinger/2026/assets/lato400.65c76203.woff?v=20260830150845"
+        rel="preload" type="font/woff2" />
+    <link href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/style.css?v=20260830150845" rel="stylesheet" />
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/home.ico?v=20260830150845"
+        rel="icon" type="image/png" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/check-update.js?v=20260830150845"
+        type="module">
+        </script>
+    <style>
+        /* 修复整体布局：页头页尾居中 */
+        .hero-section {
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0 0 0;
+        }
+
+        .hero-section>* {
+            width: 100%;
+        }
+
+        /* 顶部与底部文字样式 */
+        .page-header {
+            text-align: center;
+            color: #888;
+            font-size: 18px;
+            padding: 24px 20px 12px 20px;
+            letter-spacing: 2px;
+        }
+
+        .page-footer {
+            text-align: center;
+            color: #999;
+            font-size: 16px;
+            padding: 30px 20px 24px 20px;
+            line-height: 2.2;
+            font-family: 'Georgia', 'SimSun', serif;
+        }
+
+        /* 底部 "三+三" 强化样式 */
+        .page-footer strong {
+            font-weight: 700;
+            font-size: 1.4em;
+            color: #8a5a3a;
+            text-shadow: 0 0 8px rgba(181, 101, 75, 0.2);
+            border-bottom: 2px solid #dccfc8;
+            padding-bottom: 2px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .page-footer strong:hover {
+            color: #b5654b;
+            text-shadow: 0 0 16px rgba(181, 101, 75, 0.4);
+            border-bottom-color: #b5654b;
+        }
+
+        /* 顶部链接样式美化 */
+        .page-header a {
+            color: #b5654b;
+            text-decoration: none;
+            border-bottom: 1px dashed #dccfc8;
+            transition: color 0.3s, border-color 0.3s;
+            padding-bottom: 1px;
+        }
+
+        .page-header a:hover {
+            color: #8a5a3a;
+            border-bottom-color: #b5654b;
+            border-bottom-style: solid;
+        }
+
+        /* === 卡片网格居中改造（flex 自适应） === */
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            /* 卡片间距 */
+            max-width: 800px;
+            /* 限制最大宽度，防止过度拉伸 */
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        .card {
+            flex: 0 0 280px;
+            /* 固定宽度，可根据需要调整 */
+            list-style: none;
+            position: relative;
+            max-width: 100%;
+        }
+
+        /* 保持卡片比例不变（原有 before 伪元素保留） */
+        .card:before {
+            content: '';
+            display: block;
+            padding-bottom: 150%;
+            width: 100%;
+        }
+
+        .card__background {
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--spacing-l);
+            bottom: 0;
+            filter: brightness(0.75) saturate(1.2) contrast(0.85);
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transform-origin: center;
+            transform: scale(1) translateZ(0);
+            transition: filter 200ms linear, transform 200ms linear;
+        }
+
+        .card:hover .card__background {
+            transform: scale(1.05) translateZ(0);
+            filter: brightness(0.5) saturate(1) contrast(1.2) blur(4px);
+        }
+
+        .card__content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: var(--spacing-l);
+        }
+
+        .card__category {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-s);
+            text-transform: uppercase;
+        }
+
+        .card__qrcode {
+            width: 180px;
+            height: 180px;
+            margin-top: 20px;
+            display: none;
+            object-fit: cover;
+        }
+
+        .card:hover .card__qrcode {
+            display: inline-block;
+        }
+
+        .card__heading {
+            color: var(--text-lighter);
+            font-size: 1.9rem;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
+            line-height: 1.4;
+            word-spacing: 100vw;
+            text-align: center;
+        }
+
+        /* 响应式：小屏幕下卡片宽度自适应 */
+        @media (max-width: 540px) {
+            .card {
+                flex: 0 0 100%;
+                max-width: 320px;
+            }
+
+            .page-header {
+                font-size: 15px;
+                padding: 16px 12px 8px 12px;
+            }
+
+            .page-footer {
+                font-size: 14px;
+                padding: 20px 12px 16px 12px;
+                line-height: 2;
+            }
+
+            .page-footer strong {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script src="preview_assets/click.js?v=20260830150845" type="text/javascript"></script>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/index.js?v=20260830150845">
+        </script>
+    <section class="hero-section background_color">
+        <div class="card-grid">
+            <a class="card" href="2026.8.13/index.html?v=20260830150845">
+                <div class="card__background"
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.13.1.jpg)">
+                </div>
+                <div class="card__content">
+                    <p class="card__category">2026.8.13-Note</p>
+                    <h3 class="card__heading">2026.8.13-Note</h3>
+                    <img class="card__qrcode"
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.13.1.jpg?v=20260830150845" />
+                </div>
+            </a>
+            <a class="card" href="2026.8.13/theory.html?v=20260830150845">
+                <div class="card__background"
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.13.2.jpg)">
+                </div>
+                <div class="card__content">
+                    <p class="card__category">2026.8.13-Note-Theory</p>
+                    <h3 class="card__heading">2026.8.13-Note-Theory</h3>
+                    <img class="card__qrcode"
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.13.2.jpg?v=20260830150845" />
+                </div>
+            </a>
+            <a class="card" href="2026.8.18/index.html?v=20260830150845">
+                <div class="card__background"
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.18.1.jpg)">
+                </div>
+                <div class="card__content">
+                    <p class="card__category">2026.8.18-Note</p>
+                    <h3 class="card__heading">2026.8.18-Note</h3>
+                    <img class="card__qrcode"
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.18.1.jpg?v=20260830150845" />
+                </div>
+            </a>
+            <a class="card" href="2026.8.31/index.html?v=20260830150845">
+                <div class="card__background"
+                    style="background-image: url(https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.31.1.jpg)">
+                </div>
+                <div class="card__content">
+                    <p class="card__category">2026.8.31-Note</p>
+                    <h3 class="card__heading">黄粱一梦皆成灰</h3>
+                    <img class="card__qrcode"
+                        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/Notes/assets/2026.8.31.1.jpg?v=20260830150845" />
+                </div>
+            </a>
+        </div>
+    </section>
+</body>
+
+</html>
+
+
+================================================
+FILE: 2026.8.13/index.html
+================================================
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI短剧“发刀子”完整推导</title>
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="dns-prefetch" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="dns-prefetch" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260830150845"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260830150845"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
+        </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260830150845"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});">
+        </script>
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/home.ico?v=20260830150845"
+        rel="icon" type="image/png" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/check-update.js?v=20260830150845"
+        type="module">
+        </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f7f9fc;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0b1a2f;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2.8rem 3rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.4rem;
+            border-left: 6px solid #3b82f6;
+            padding-left: 1.2rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        h4 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-top: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .math-block {
+            background: #f1f5f9;
+            padding: 1.6rem 2rem;
+            border-radius: 20px;
+            margin: 1.4rem 0 1.8rem 0;
+            overflow-x: auto;
+            border: 1px solid #e6edf5;
+            text-align: center;
+        }
+
+        .formula-source {
+            font-size: 0.95rem;
+            color: #1e40af;
+            background: #e6f0ff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 0.8rem;
+        }
+
+        .derivation-step {
+            background: #ffffff;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            margin: 1.2rem 0 1.8rem 0;
+            border: 1px dashed #94a3b8;
+            text-align: left;
+        }
+
+        .derivation-step .math-block {
+            background: #f8fafc;
+            border: none;
+            padding: 0.8rem 0;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        .derivation-note {
+            font-size: 0.95rem;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            margin: 0.6rem 0 0.2rem 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        th {
+            background: #1e293b;
+            color: white;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e9edf2;
+            vertical-align: top;
+        }
+
+        .note-box {
+            background: #fefce8;
+            border-left: 6px solid #f59e0b;
+            padding: 1.2rem 1.8rem;
+            border-radius: 14px;
+            margin: 1.8rem 0;
+        }
+
+        .hr-light {
+            margin: 2.8rem 0;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+        }
+
+        .footer-meta {
+            margin-top: 3.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 2rem;
+        }
+
+        .theory-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.1rem 0.7rem;
+            border-radius: 20px;
+            margin-right: 0.4rem;
+        }
+
+        .improve-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #11db4d;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.1rem 0.7rem;
+            border-radius: 20px;
+            margin-right: 0.4rem;
+        }
+
+        @media (max-width:700px) {
+            .container {
+                padding: 1.8rem 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>· AI短剧“发刀子”受欢迎程度 <br><span style="font-size:1.5rem;font-weight:400;color:#2d3a4f;">完整推导</span>
+        </h1>
+        <p style="font-size:1.1rem;margin-bottom:2rem;">
+            本推导从零开始，引入 <strong>十二个核心变量</strong>
+            <span class="improve-tag">原著总字数</span>
+            <span class="improve-tag">文本“刀子”的原始情感冲击力</span>
+            <span class="improve-tag">AI 视觉化放大系数</span>
+            <span class="improve-tag">时代共情系数</span>
+            <span class="improve-tag">刀子时机系数</span>
+            <span class="improve-tag">作者文笔系数</span>
+            <span class="improve-tag">小说知名度</span>
+            <span class="improve-tag">小说完结程度</span>
+            <span class="improve-tag">外部红利</span>
+            <span class="improve-tag">时间</span>
+            <span class="improve-tag">小说题材</span>
+            <span class="improve-tag">性别视角</span>
+            <span class="improve-tag">风格基调系数</span>
+            ，引用部分已知数据模型并做了适应性调整。
+        </p>
+
+        <!-- ========== 第一部分：变量定义 ========== -->
+        <h2>第一部分 · 变量定义与理论映射</h2>
+        <p>定义目标函数 <strong>\(H\)</strong> 为 AI 短剧综合受欢迎指数（数值越高，完播率、互动率、播放量综合表现越优）。</p>
+        <h3>1.1 核心自变量</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>符号</th>
+                    <th>含义</th>
+                    <th>理论映射 / 影响</th>
+                    <th>取值性质</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>\(L\)</td>
+                    <td>AI短剧改编后的总正片时长（分钟）</td>
+                    <td>信息加工容量理论（认知负荷）；由改编节奏决定，与原著字数非简单正相关</td>
+                    <td>\(L > 0\)，单位为“分钟”</td>
+                </tr>
+                <tr>
+                    <td>\(P\)</td>
+                    <td>文本“刀子”的总情感冲击力（全书累计）</td>
+                    <td>情节唤醒潜力</td>
+                    <td>\(P > 0\)，为全书所有刀子事件冲击力之和</td>
+                </tr>
+                <tr>
+                    <td>\(\delta\)</td>
+                    <td>AI 视觉化放大系数</td>
+                    <td>媒介丰富度理论（多模态增强）</td>
+                    <td>\(\delta > 1\)，典型示意范围 5~10（需实证标定）</td>
+                </tr>
+                <tr>
+                    <td>\(\xi\)</td>
+                    <td>时代共情系数</td>
+                    <td>心理距离理论（受题材 \(G\)、视角 \(S\)、风格 \(\psi\) 调节）</td>
+                    <td>\(\xi > 0\)（现代背景通常 > 1，古代背景可能 < 1 但可通过风格提升）</td>
+                </tr>
+                <tr>
+                    <td>\(\tau\)</td>
+                    <td>刀子时机系数（节奏适应性）</td>
+                    <td>峰终定律（受题材 \(G\)、视角 \(S\)、风格 \(\psi\) 调节，但不直接惩罚篇幅偏差）</td>
+                    <td>\(0 < \tau \le 1\)</td>
+                </tr>
+                <tr>
+                    <td>\(w\)</td>
+                    <td>作者文笔系数（独立外生变量）</td>
+                    <td>审美距离概念，反映描写功底</td>
+                    <td>\(w > 0\)（优秀 \(> 1\)，干瘪 \(< 1\)）</td>
+                </tr>
+                <tr>
+                    <td>\(K\)</td>
+                    <td>小说知名度</td>
+                    <td>品牌认知度模型</td>
+                    <td>\(0 \le K \le 1\)，<strong>动态变量</strong></td>
+                </tr>
+                <tr>
+                    <td>\(F\)</td>
+                    <td>小说完结程度</td>
+                    <td>认知闭合需求（已完结提供完整性，降低认知负荷，便于回顾传播）</td>
+                    <td>\(0 \le F \le 1\)（1 为已完结）</td>
+                </tr>
+                <tr>
+                    <td>\(\epsilon\)</td>
+                    <td>外部红利</td>
+                    <td>社会热点、平台补贴等外生冲击</td>
+                    <td>\(\epsilon > -1\)（\(\epsilon = -1\) 表示热度归零）</td>
+                </tr>
+                <tr>
+                    <td>\(t\)</td>
+                    <td>时间</td>
+                    <td>动态演化维度</td>
+                    <td>\(t \ge 0\)</td>
+                </tr>
+                <tr>
+                    <td>\(\mathbf{G}\)</td>
+                    <td><strong>小说题材</strong></td>
+                    <td>影响 \(\xi, \tau, \delta\) 的基准值</td>
+                    <td>\(G \in \mathcal{G} = \{\text{甜宠/恋爱}, \text{病娇/偏执}, \text{爽文/逆袭}, \text{穿越/重生}, \text{养成},
+                        \text{年上/下}...\}\)</td>
+                </tr>
+                <tr>
+                    <td>\(\mathbf{S}\)</td>
+                    <td><strong>性别视角</strong></td>
+                    <td>影响 \(\xi, \tau\)（女频更重共情与时机，男频更重逻辑与爽感）</td>
+                    <td>\(S \in \{\text{男频}, \text{女频}, \text{群像}\}\)</td>
+                </tr>
+                <tr>
+                    <td>\(\boldsymbol{\psi}\)</td>
+                    <td><strong>风格基调系数</strong></td>
+                    <td>反映作品是浪漫主义（理想真情）还是现实主义（骨感现实）</td>
+                    <td>\(0 < \psi \le 1\)（1 为极致浪漫，趋近 0 为极致写实）</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>1.2 固定参数</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>符号</th>
+                    <th>含义</th>
+                    <th>理论来源</th>
+                    <th>典型范围</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>\(\alpha\)</td>
+                    <td>情感积累效率常数</td>
+                    <td>阅读沉浸理论（Csikszentmihalyi）</td>
+                    <td>\(2 \sim 5\)</td>
+                </tr>
+                <tr>
+                    <td>\(\beta\)</td>
+                    <td>伤害敏感系数（基础）</td>
+                    <td>损失厌恶理论（Kahneman &amp; Tversky）</td>
+                    <td>\(1 \sim 4\)</td>
+                </tr>
+                <tr>
+                    <td>\(\lambda\)</td>
+                    <td>损失超比例指数（>1）</td>
+                    <td>损失厌恶的凸性</td>
+                    <td>\(1.5 \sim 3\)</td>
+                </tr>
+                <tr>
+                    <td>\(\eta_0\)</td>
+                    <td>基准弃剧系数</td>
+                    <td>注意力衰减模型</td>
+                    <td>\(0.3 \sim 0.8\)</td>
+                </tr>
+                <tr>
+                    <td>\(\kappa\)</td>
+                    <td>社交裂变强度</td>
+                    <td>情绪唤醒理论（Duffy）——采用单调饱和映射</td>
+                    <td>\(0.5 \sim 1.5\)</td>
+                </tr>
+                <tr>
+                    <td>\(\lambda_1\)</td>
+                    <td>共鸣超然折扣强度</td>
+                    <td>元认知防御机制</td>
+                    <td>\(0.2 \sim 0.5\)</td>
+                </tr>
+                <tr>
+                    <td>\(\lambda_2\)</td>
+                    <td>震惊超然折扣强度</td>
+                    <td>预期违背理论（Burgoon）</td>
+                    <td>\(0.8 \sim 2.0\)（\(> \lambda_1\)）</td>
+                </tr>
+                <tr>
+                    <td>\(\nu\)</td>
+                    <td>时长惩罚系数</td>
+                    <td>认知负荷理论（Sweller）</td>
+                    <td>\(0.01 \sim 0.05\)</td>
+                </tr>
+                <tr>
+                    <td>\(L_0\)</td>
+                    <td>平台最优甜区字数（单季最佳时长）</td>
+                    <td>注意力峰值模型</td>
+                    <td>通常 \(3 \sim 8\) 万字</td>
+                </tr>
+                <tr>
+                    <td>\(\rho\)</td>
+                    <td>热度反哺知名度速率</td>
+                    <td>社会传染模型（Rogers）</td>
+                    <td>\(0.1 \sim 0.5\)</td>
+                </tr>
+                <tr>
+                    <td>\(\mu\)</td>
+                    <td>IP 品牌资产转化系数</td>
+                    <td>品牌资产与搜索长尾效应（Brand Equity & Search Long-tail）</td>
+                    <td>\(0.5 \sim 2.0\)</td>
+                </tr>
+                <tr>
+                    <td>\(\gamma_{CR}\)</td>
+                    <td>完播率S型陡峭度</td>
+                    <td>冲击-耐受博弈</td>
+                    <td>\(1 \sim 5\)</td>
+                </tr>
+                <tr>
+                    <td>\(\gamma_{\Theta}\)</td>
+                    <td>阈值平滑陡峭度</td>
+                    <td>软降权过渡</td>
+                    <td>\(0.5 \sim 3\)</td>
+                </tr>
+            </tbody>
+        </table>
+        <hr class="hr-light">
+
+        <!-- ========== 第二部分：系数依赖映射 ========== -->
+        <h2>第二部分 · 系数依赖映射（确定性计算图）</h2>
+        <p>本模型采用确定性复合函数来刻画变量间的依赖关系（借鉴有向无环图思想，但非概率图模型）。以下公式定义了 \(\xi, \tau, \delta\) 如何受 \(G, S, \psi\) 影响（\(w\)
+            作为独立输入，不自动派生）。</p>
+
+        <h3>2.1 共情系数 \(\xi\) 的计算</h3>
+        <p>受 \(G, S, \psi\) 调节，采用乘性形式确保 \(\psi \to 0\) 时共情趋于0：</p>
+        <div class="math-block">
+            <div class="formula-source">📖 确定性映射：\(\xi = f_\xi(G, S, \psi)\)</div>
+            $$\xi(G, S, \psi) = \xi_0(G) \cdot \bigl(1 + \alpha_{\xi,S} \cdot \mathbf{1}_{S=\text{女频}}\bigr) \cdot
+            \psi^{\alpha_{\xi,\psi}}$$
+            <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">其中 \(\xi_0(G)\) 为题材基准共情，\(\mathbf{1}\)
+                为指示函数，\(\alpha_{\xi,S}, \alpha_{\xi,\psi}\) 为经验系数（\(\alpha_{\xi,\psi} > 0\)）。</p>
+        </div>
+        <div class="derivation-note">
+            <strong>推导说明：</strong>共情系数由题材基准值出发，经过性别视角和风格基调的逐级调节。女频（\(S=\text{女频}\)）通常情感描写更细腻，代入感更强，因此叠加一个正向增量
+            \(\alpha_{\xi,S}\)；浪漫主义风格（\(\psi\) 高）通过理想化的情感投射进一步拉近心理距离，采用幂函数形式 \(\psi^{\alpha}\) 可保证当 \(\psi \to
+            0\)（极致写实）时共情趋近于0，符合审美距离直觉。
+        </div>
+
+        <h3>2.2 时机系数 \(\tau\) 的计算</h3>
+        <p>受 \(G, S, \psi\) 调节，但不直接包含篇幅惩罚（篇幅惩罚由独立的 \(T(L)\) 承担）：</p>
+        <div class="math-block">
+            <div class="formula-source">📖 确定性映射：\(\tau = f_\tau(G, S, \psi)\)</div>
+            $$\tau(G, S, \psi) = \tau_0(G) \cdot \bigl(1 + \alpha_{\tau,S} \cdot \mathbf{1}_{S=\text{女频}}\bigr) \cdot
+            \psi^{\alpha_{\tau,\psi}}$$
+        </div>
+        <div class="derivation-note">
+            <strong>推导说明：</strong>时机系数从题材基准出发，经过性别和风格的调节。女频倾向于将情感爆发点前置（系数增大）；浪漫主义风格（高
+            \(\psi\)）通常使刀子前移，同样采用幂函数确保合理性。篇幅对时机的具体影响已通过独立的时长惩罚 \(T(L)\) 和完播率中的 \(L\) 项体现，此处不再重复。
+        </div>
+
+        <h3>2.3 视觉放大系数 \(\delta\) 的计算</h3>
+        <p>主要取决于题材 \(G\)：</p>
+        <div class="math-block">
+            <div class="formula-source">📖 确定性映射：\(\delta = f_\delta(G)\)</div>
+            $$\delta(G) = \delta_0(G) \cdot (1 + \alpha_{\delta,G})$$
+        </div>
+        <div class="derivation-note">
+            <strong>推导说明：</strong>视觉放大系数直接关联题材的“可视化潜力”。例如末世/末日题材天然包含大量灾难场景（爆炸、废墟、怪物），AI
+            视觉特效的放大效应最强；而种田/致富等生活化题材视觉冲击相对有限。因此 \(\delta_0(G)\) 根据题材预先设定，\(\alpha_{\delta,G}\) 为额外调节系数。
+        </div>
+        <p><strong>说明：</strong>以上所有系数基准值（\(\xi_0, \tau_0, \delta_0\)）以及调节参数（\(\alpha\)）均需通过实际数据标定，本文仅提供理论框架。</p>
+        <hr class="hr-light">
+
+        <!-- ========== 题材、视角、风格影响映射 ========== -->
+        <h2>第三部分 · 题材 \(G\)、视角 \(S\)、风格 \(\psi\) 影响映射</h2>
+        <p>明确这三个调节变量如何影响模型中的关键系数（\(\xi, \tau, \delta\)）。</p>
+
+        <h3>3.1 题材影响（方向性说明）</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>题材 \(G\)</th>
+                    <th>\(\xi_0(G)\) 基准</th>
+                    <th>\(\tau_0(G)\) 基准</th>
+                    <th>\(\delta_0(G)\) 基准</th>
+                    <th>综合影响</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>甜宠/恋爱</td>
+                    <td>高（>1）</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>利于共情，算法易爆发</td>
+                </tr>
+                <tr>
+                    <td>病娇/偏执</td>
+                    <td>中高</td>
+                    <td>高（时机极关键）</td>
+                    <td>中高</td>
+                    <td>对时机要求极高</td>
+                </tr>
+                <tr>
+                    <td>爽文/逆袭</td>
+                    <td>高（>1）</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>爆发快，共情好</td>
+                </tr>
+                <tr>
+                    <td>穿越/重生</td>
+                    <td>中高</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>共情较好，时机灵活</td>
+                </tr>
+                <tr>
+                    <td>养成系</td>
+                    <td>高</td>
+                    <td>中高</td>
+                    <td>中低</td>
+                    <td>情感细腻，依赖共情积累</td>
+                </tr>
+                <tr>
+                    <td>年上/年下</td>
+                    <td>高（>1）</td>
+                    <td>高</td>
+                    <td>中</td>
+                    <td>反差人设，时机关键</td>
+                </tr>
+                <tr>
+                    <td>末世/末日</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>高（特效）</td>
+                    <td>视觉冲击强，共情一般</td>
+                </tr>
+                <tr>
+                    <td>种田/致富</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>中低</td>
+                    <td>生活化，剧情推进</td>
+                </tr>
+                <tr>
+                    <td>脑洞/系统</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>高</td>
+                    <td>设定取胜，视觉放大显著</td>
+                </tr>
+                <tr>
+                    <td>复仇/宅斗</td>
+                    <td>中</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>对文笔和时机依赖较强</td>
+                </tr>
+                <tr>
+                    <td>古风玄幻</td>
+                    <td>较低（<1，可通过浪漫主义风格提升）< /td>
+                    <td>中</td>
+                    <td>高</td>
+                    <td>需依赖风格和视觉补偿</td>
+                </tr>
+                <tr>
+                    <td>现代都市</td>
+                    <td>高（>1）</td>
+                    <td>中高</td>
+                    <td>中</td>
+                    <td>经典，共情优势明显</td>
+                </tr>
+                <tr>
+                    <td>科幻</td>
+                    <td>高（现代感）</td>
+                    <td>中</td>
+                    <td>高</td>
+                    <td>类似现代，视觉放大更强</td>
+                </tr>
+                <tr>
+                    <td>悬疑</td>
+                    <td>中</td>
+                    <td>高（时机关键）</td>
+                    <td>中低</td>
+                    <td>依赖时机和文笔，不宜过长</td>
+                </tr>
+                <tr>
+                    <td>历史</td>
+                    <td>较低（心理距离远）</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>需极强文笔和较长篇幅补偿</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.2 性别视角影响</h3>
+        <ul>
+            <li><strong>男频</strong>：偏好逻辑、升级、逆袭，共情偏向“力量感”和“成就感”。\(\xi\) 中等偏高，\(\tau\) 对爽点时机敏感，\(w\) 要求相对低。</li>
+            <li><strong>女频</strong>：偏好情感细腻、关系拉扯，共情偏向“情感共鸣”和“代入感”。\(\xi\) 高，\(\tau\) 对情感爆发点敏感，\(w\) 要求高。</li>
+            <li><strong>群像</strong>：视角分散，共情分布均匀，\(\xi\) 中等，\(\tau\) 取中值。</li>
+        </ul>
+
+        <h3>3.3 风格基调影响</h3>
+        <p><span class="theory-tag">理论依据</span> 浪漫主义（高 \(\psi\)）满足观众对“现实中得不到的真情”的渴望，能快速拉近距离（\(\xi\) 显著提升）；现实主义（低
+            \(\psi\)）共情较慢，但刀子更真实持久。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>风格 \(\psi\)</th>
+                    <th>对 \(\xi\) 的影响</th>
+                    <th>对 \(w\) 的要求</th>
+                    <th>对 \(\tau\) 的影响</th>
+                    <th>综合影响</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>浪漫主义</strong>（\(\psi \to 1\)）</td>
+                    <td>显著提升（\(\psi^{\alpha}\) 放大）</td>
+                    <td>极高（营造梦幻氛围）</td>
+                    <td>时机前移</td>
+                    <td>共情强，刀子需更精妙</td>
+                </tr>
+                <tr>
+                    <td><strong>现实主义</strong>（\(\psi \to 0\)）</td>
+                    <td>相对较低（\(\psi^{\alpha}\) 趋近0）</td>
+                    <td>高（写实白描）</td>
+                    <td>时机后移（需充分铺垫）</td>
+                    <td>共情一般，但刀子后劲足</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>在后续公式中，所有系数均为 \((G, S, \psi)\) 的函数（\(\xi = \xi(G,S,\psi)\)，\(\tau = \tau(G,S,\psi)\)，\(\delta =
+            \delta(G)\)），\(w\) 为独立外生变量。</p>
+        <hr class="hr-light">
+
+        <!-- ========== 正式推导开始 ========== -->
+        <h2>第四部分 · 第一步推导：拆分的超然折扣系数</h2>
+        <p><span class="theory-tag">理论依据</span>
+            <strong>元认知防御机制</strong>与<strong>预期违背理论</strong>指出，当读者已知结局时会产生心理屏蔽，但该屏蔽对“共情积累”（共鸣）和“意外冲击”（震惊）的削弱强度不同。共鸣防御较弱（\(\lambda_1\)小），震惊防御较强（\(\lambda_2\)大）。
+        </p>
+        <div class="derivation-step">
+            <h4>步骤 4.1：共鸣通道（温和折扣）</h4>
+            <p>已知剧情对情感代入的削弱呈指数衰减，系数 \(\lambda_1\) 较小：</p>
+            <div class="math-block">$$\sigma_1 = e^{-\lambda_1 K F}, \quad 0 < \lambda_1 < 1$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>心理防御机制通常表现为“暴露越多，敏感度越低”的指数衰减过程。知名度 \(K\) 与完结度 \(F\) 的乘积代表“读者对剧情走向的确定程度”——当
+                        \(KF=0\)（无人知晓或未完结）时 \(\sigma_1=1\)（无防御）；当 \(KF=1\)（国民级完结作品）时防御最强，共鸣衰减至
+                        \(e^{-\lambda_1}\)。指数形式保证了非负性和衰减的平滑性。
+                    </div>
+            </div>
+            <div class="derivation-step">
+                <h4>步骤 4.2：震惊通道（猛烈折扣）</h4>
+                <p>已知结局会显著降低意外冲击，故采用更大的衰减系数 \(\lambda_2\)：</p>
+                <div class="math-block">$$\sigma_2 = e^{-\lambda_2 K F}, \quad \lambda_2 > \lambda_1$$</div>
+                <div class="derivation-note">
+                    <strong>推导来源：</strong>预期违背理论指出，意外冲击依赖于“预期被打破的强度”。当结局已知时，预期被完全锚定，冲击力急剧消退。因此 \(\lambda_2 >
+                    \lambda_1\)，即同样程度的已知度对震惊的削弱远强于对共鸣的削弱。当 \(KF=1\) 时，\(\sigma_2 = e^{-\lambda_2} \ll
+                    \sigma_1\)，符合“剧透对反转的毁灭性打击”这一直觉。
+                </div>
+            </div>
+            <p><strong>边界验证：</strong></p>
+            <ul>
+                <li>若 \(K = 0\) 或 \(F = 0\)（无人知晓或未完结），\(\sigma_1 = \sigma_2 = 1\)（无防御）。</li>
+                <li>若 \(K = 1, F = 1\)（国民级完结作品），\(\sigma_1 = e^{-\lambda_1} > e^{-\lambda_2} =
+                    \sigma_2\)，共鸣保留更多，震惊消失更快。</li>
+            </ul>
+            <hr class="hr-light">
+
+            <h2>第五部分 · 第二步推导：情感净动能 \(Q\) 的边际积分累加</h2>
+            <p><span class="theory-tag">理论依据</span>
+                情感积累项基于<strong>阅读沉浸增量模型</strong>与<strong>边际效用递减</strong>（韦伯-费希纳定律的对数拓展），伤害惩罚项基于<strong>损失厌恶</strong>与<strong>参照点依赖</strong>，并采用超比例形式体现损失放大效应。
+            </p>
+            <div class="derivation-step">
+                <h4>步骤 5.1：建立情感积累 \(E\) 的微分方程</h4>
+                <p>假设情感积累的边际增量与当前共情强度成正比，且随观看进程呈倒数衰减，为避免 \(l=0\) 的奇点，采用 \(l+1\) 作为平滑项：</p>
+                <div class="math-block">$$\frac{dE}{dl} = \frac{\alpha \cdot \xi \cdot \tau \cdot \sigma_1}{l+1}$$</div>
+                <div class="derivation-note">
+                    <strong>推导来源：</strong>韦伯-费希纳定律的心理学拓展认为，人对持续情感刺激的响应随暴露时间呈对数衰减——即“边际情感增量”与当前进度 \(l\) 成反比，但为避免 \(l=0\)
+                    的奇点，采用 \(l+1\) 进行平滑，使短时长下情感积累依然为非负。
+                    \(\alpha\) 为情感积累效率常数，\(\xi\) 和 \(\tau\) 共同决定了单位进度内的情感产出。
+                </div>
+            </div>
+            <div class="derivation-step">
+                <h4>步骤 5.2：积分求解 \(E\)</h4>
+                <p>从 \(l=0\) 积分至 \(l=L\)：</p>
+                <div class="math-block">$$E = \int_{0}^{L} \frac{\alpha \xi \tau \sigma_1}{l+1} dl = \alpha \xi \tau
+                    \sigma_1 \ln(L+1)$$</div>
+                <div class="derivation-note">
+                    <strong>推导来源：</strong>对 \(\frac{1}{l+1}\) 的定积分得到 \(\ln(L+1)\)。这一结果具有两个重要含义：① 情感积累随篇幅增长但边际递减（对数增长）；②
+                    当 \(L \to 0^+\) 时 \(E \to 0\)（极短篇幅无法积累情感），当 \(L \to +\infty\) 时 \(E \to
+                    +\infty\)（超长篇可无限积累，但现实中受认知负荷限制）。
+                </div>
+            </div>
+            <div class="derivation-step">
+                <h4>步骤 5.3：定义伤害惩罚项 \(D\)（超比例损失厌恶）</h4>
+                <p>总痛苦与全书总冲击力 \(P\) 成超比例关系（损失厌恶的凸性），文笔 \(w\) 和共情 \(\xi\) 可缓冲：</p>
+                <div class="math-block">$$D = \beta \left(\frac{P}{w \xi}\right)^{\lambda} \cdot \sigma_2, \quad \lambda
+                    > 1$$</div>
+                <div class="derivation-note">
+                    <strong>推导来源：</strong>损失厌恶理论（Kahneman &amp; Tversky）的核心结论是“损失的痛苦大于获得的快乐”，且随着损失增大，边际痛苦递增（凸函数）。因此采用
+                    \(\lambda > 1\) 的幂函数来刻画这种超比例放大。分母中的 \(w \xi\) 代表“审美缓冲”——文笔越好、读者越能共情，则痛苦在一定程度上被稀释。\(\sigma_2\)
+                    的引入是因为已知结局会降低震惊带来的痛苦强度。
+                </div>
+            </div>
+            <div class="derivation-step">
+                <h4>步骤 5.4：合并得到净动能 \(Q\)</h4>
+                <p>净动能为积累的共鸣减去伤害惩罚：</p>
+                <div class="math-block">$$Q = E - D = \alpha \xi \tau \sigma_1 \ln(L+1) - \beta \left(\frac{P}{w
+                    \xi}\right)^{\lambda} \sigma_2$$</div>
+                <p>将 \(\sigma_1\) 和 \(\sigma_2\) 代入，得到最终形式：</p>
+                <div class="math-block">$$\boxed{Q = \alpha \xi \tau e^{-\lambda_1 K F} \ln(L+1) - \beta \left(\frac{P
+                    e^{-\lambda_2 K F}}{w \xi}\right)^{\lambda}}$$</div>
+                <div class="derivation-note">
+                    <strong>推导来源：</strong>净动能 \(Q\) 是整个模型的核心中间变量，代表了“情感共鸣”与“痛苦消耗”相抵后的剩余驱动力。当 \(Q>0\)
+                    时表示短剧整体上带给观众的情感收益为正，当 \(Q<0\) 时表示负面情感占据主导。超比例损失项保证了极端刀子带来的负面效应被放大，符合直觉。 </div>
+                </div>
+                <p><strong>极限分析：</strong> \(L \to 0^+ \Rightarrow Q \to -\beta (P/(w\xi))^\lambda
+                    \sigma_2\)（极短篇若存在强烈刀子，净动能为负）；\(L \to +\infty \Rightarrow Q \to +\infty\)（长篇审美升华，但需注意时长惩罚）。</p>
+                <hr class="hr-light">
+
+                <h2>第六部分 · 第三步推导：AI短剧完播率 \(CR\)（平台第一权重）</h2>
+                <p><span class="theory-tag">理论依据</span>
+                    <strong>注意力分配理论</strong>与<strong>冲击-耐受博弈</strong>：观众划走概率等于视觉冲击强度除以心理耐受度，但采用S型曲线平滑过渡，使得短时长内容天然具有较高的完播潜力。
+                </p>
+                <div class="derivation-step">
+                    <h4>步骤 6.1：视觉冲击强度换算</h4>
+                    <p>多模态信息增强情感刺激强度，放大倍数为 \(\delta\)：</p>
+                    <div class="math-block">$$P_v = \delta \cdot P$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>媒介丰富度理论认为，多模态内容（视觉+听觉+文字）的情感传递效率远高于纯文本。AI 短剧将文本“刀子”转化为视听语言后，其冲击力被放大
+                        \(\delta\) 倍。\(\delta\) 的取值取决于题材的可视化程度和制作水准。
+                    </div>
+                </div>
+                <div class="derivation-step">
+                    <h4>步骤 6.2：构造完播率（S型正相关）</h4>
+                    <p>完播率由耐受度与冲击力的比值通过S型函数映射，采用独立的陡峭参数 \(\gamma_{CR}\)：</p>
+                    <div class="math-block">$$CR = \frac{1}{1 + \exp\left(-\gamma_{CR} \left( \frac{\xi \tau w L}{\eta_0
+                        \delta P \sigma_2} - 1 \right) \right)}$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>当耐受度（\(\xi \tau w L\)）远大于冲击力（\(\eta_0 \delta P
+                        \sigma_2\)）时，完播率趋近于1；反之趋近于0。S型曲线避免了线性反比关系，使短时长内容在冲击力不过大的情况下仍可拥有较高完播率，更符合短剧实际（短内容天然高完播）。
+                    </div>
+                    <p>其中 \(\gamma_{CR}\) 控制过渡陡峭度（\(\gamma_{CR} \to \infty\) 时趋近阶跃函数）。</p>
+                </div>
+                <div class="derivation-step">
+                    <h4>步骤 6.3：完播率定义与保护</h4>
+                    <p>完播率直接取上述S型值，并确保非负：</p>
+                    <div class="math-block">$$CR = \max\left(0,\; \frac{1}{1 + \exp\left(-\gamma_{CR} \left( \frac{\xi
+                        \tau w L}{\eta_0 \delta P \sigma_2} - 1 \right) \right)}\right)$$</div>
+                    <p>代入 \(\sigma_2 = e^{-\lambda_2 K F}\) 得到显式表达式：</p>
+                    <div class="math-block">$$\boxed{CR = \max\left(0,\; \frac{1}{1 + \exp\left(-\gamma_{CR} \left(
+                        \frac{\xi \tau w L}{\eta_0 \delta P e^{-\lambda_2 K F}} - 1 \right) \right)}\right)}$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>完播率在平台推荐系统中是第一权重指标。S型结构使得短时长不再天然导致低完播，而是取决于冲击-耐受的平衡，更符合短剧实际。\(\max(0,
+                        \cdot)\) 保证完播率不为负。
+                    </div>
+                </div>
+                <p><strong>临界阈值：</strong>当 \(\frac{\xi \tau w L}{\eta_0 \delta P e^{-\lambda_2 K F}}\)
+                    远小于1时，完播率趋近于0；当比值远大于1时，完播率趋近于1。</p>
+                <hr class="hr-light">
+
+                <h2>第七部分 · 第四步推导：算法推荐热度 \(R_{alg}\)（含饱和互动项）</h2>
+                <p><span class="theory-tag">理论依据</span> 平台推荐得分遵循 <strong>完播率² × 互动率</strong>
+                    的启发式权重。互动率基于<strong>情绪唤醒理论</strong>，采用 S 型饱和函数（双曲正切），确保极端负面情绪也能保留最低限度互动。</p>
+                <div class="derivation-step">
+                    <h4>步骤 7.1：建立互动率映射 \(I\)</h4>
+                    <p>双曲正切函数将情绪唤醒度映射到 (0,1) 区间：</p>
+                    <div class="math-block">$$I = \frac{1 + \tanh(\kappa Q)}{2} = \frac{e^{\kappa Q}}{e^{\kappa
+                        Q} + e^{-\kappa Q}}$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>情绪唤醒理论（Duffy）指出，情绪唤醒度与行为反应之间存在单调饱和关系——唤醒度极低时几乎没有互动，唤醒度极高时互动也趋于饱和而非无限增长。双曲正切函数
+                        \(\tanh\) 天然满足这一“S型”饱和特征：当 \(Q \to +\infty\) 时 \(I \to 1\)（神作高互动），当 \(Q \to -\infty\) 时
+                        \(I \to 0^+\)（烂剧保留吐槽空间），当 \(Q=0\) 时 \(I=0.5\)（平淡中等互动）。\(\kappa\) 控制曲线陡峭度，反映社交裂变的放大强度。
+                    </div>
+                    <ul>
+                        <li>\(Q \to +\infty \Rightarrow I \to 1\)（神作高互动）</li>
+                        <li>\(Q = 0 \Rightarrow I = 0.5\)（平淡中等互动）</li>
+                        <li>\(Q \to -\infty \Rightarrow I \to 0^+\)（烂剧保留吐槽空间）</li>
+                    </ul>
+                </div>
+                <div class="derivation-step">
+                    <h4>步骤 7.2：计算算法热度 \(R_{alg}\)</h4>
+                    <p>平台算法加权公式，完播率权重最高（平方），互动率次之，且算法热度不直接与 \(Q\) 的正负挂钩，仅通过 \(I\) 承接唤醒度：</p>
+                    <div class="math-block">$$R_{alg} = CR^2 \times I$$</div>
+                    <div class="derivation-note">
+                        <strong>推导来源：</strong>行业通用的推荐启发式中，完播率通常被赋予高于互动率的边际权重——因为完播代表“用户真正看完了”，而互动（点赞、评论）可能受外部因素影响。因此采用
+                        \(CR^2\) 而非 \(CR\) 来放大完播率的影响力。移除 \(Q\) 作为直乘数，是因为平台并不关心内容是“快乐”还是“痛苦”，只关心用户是否留下；\(Q\) 的方向通过 \(I\)
+                        的饱和映射来调节互动强度，但不会使推荐热度变为负数。
+                    </div>
+                    <p>将 \(I\) 表达式代入：</p>
+                    <div class="math-block">$$\boxed{R_{alg} = CR^2 \cdot \frac{e^{\kappa Q}}{e^{\kappa Q} +
+                        e^{-\kappa Q}}}$$</div>
+                </div>
+                <p><strong>注意：</strong>由于 \(R_{alg}\) 不再直接包含 \(Q\) 作为乘数，即使 \(Q<0\)，\(R_{alg}\) 仍然非负（仅互动率 \(I\)
+                        趋近于0但不会为负），这符合平台推荐逻辑。</p>
+                        <hr class="hr-light">
+
+                        <h2>第八部分 · 第五步推导：IP自带硬核流量 \(R_{ip}\)（品牌资产与搜索长尾）</h2>
+                        <p><span class="theory-tag">理论依据</span> <strong>品牌资产与搜索长尾效应</strong>：知名完结 IP
+                            拥有独立于算法推荐的搜索流量与情怀播放。</p>
+                        <div class="derivation-step">
+                            <h4>步骤 8.1：IP 流量公式</h4>
+                            <p>品牌价值与知名度 \(K\) 和完结度 \(F\) 的乘积成正比，\(\mu\) 为综合转化系数：</p>
+                            <div class="math-block">$$R_{ip} = \mu K F$$</div>
+                            <div class="derivation-note">
+                                <strong>推导来源：</strong>品牌资产模型（Aaker）认为，品牌的知名度和认知度直接转化为消费者的搜索意愿和点击行为。\(K\)（知名度）与
+                                \(F\)（完结度）的乘积反映了“确定性的认知资产”——完结的知名 IP 既有搜索流量（用户主动寻找）又有情怀流量（粉丝基于品牌信任直接观看）。\(\mu\)
+                                综合了搜索入口权重和品牌延伸强度。
+                            </div>
+                        </div>
+                        <div class="derivation-step">
+                            <h4>步骤 8.2：外部红利影响</h4>
+                            <p>外生冲击因子 \(\epsilon\) 直接放大或缩小总基础热度：</p>
+                            <div class="math-block">$$R_{total} = (R_{alg} + R_{ip}) \cdot (1 + \epsilon)$$
+                            </div>
+                            <div class="derivation-note">
+                                <strong>推导来源：</strong>外部红利 \(\epsilon\) 代表平台补贴、社会热点、明星效应等不可控的外生变量。采用乘性结构
+                                \((1+\epsilon)\)
+                                是因为这些因素通常以“放大倍率”而非“绝对增量”的方式作用于热度——例如平台流量扶持可能让所有视频的曝光量翻倍。\(\epsilon > -1\)
+                                保证了热度不会为负（当 \(\epsilon = -1\) 时代表全网抵制，热度归零）。
+                            </div>
+                        </div>
+                        <hr class="hr-light">
+
+                        <h2>第九部分 · 第六步推导：时长折损税 \(T(L)\)（甜区偏差模型）</h2>
+                        <p><span class="theory-tag">理论依据</span>
+                            <strong>认知负荷理论</strong>与<strong>注意力峰值模型</strong>：过短或过长都会导致用户流失，存在一个最优甜区
+                            \(L_0\)。
+                        </p>
+                        <div class="derivation-step">
+                            <h4>步骤 9.1：时长惩罚函数</h4>
+                            <p>惩罚项与偏离最优时长的平方成正比：</p>
+                            <div class="math-block">$$T(L) = \nu (L - L_0)^2$$</div>
+                            <div class="derivation-note">
+                                <strong>推导来源：</strong>认知负荷理论（Sweller）认为，过短的内容信息量不足，观众感觉“还没进入状态就结束了”；过长的内容则造成认知过载，注意力难以维持。注意力峰值模型进一步指出，观看时长与用户满意度之间存在一个倒U型关系，偏离最优值越远，流失越严重。平方项
+                                \((L-L_0)^2\) 是非负且对称的惩罚函数，\(\nu\) 控制惩罚强度。过短（\(L \to 0\)）和过长（\(L \to
+                                \infty\)）惩罚都趋于无穷，符合直觉。
+                            </div>
+                            <ul>
+                                <li>\(L = L_0\) 惩罚为 0</li>
+                                <li>\(L \to 0\) 或 \(L \to \infty\) 惩罚急剧上升</li>
+                            </ul>
+                        </div>
+                        <div class="derivation-step">
+                            <h4>步骤 9.2：综合受欢迎指数 \(H\)</h4>
+                            <p>目标函数 = 总热度 - 时长惩罚：</p>
+                            <div class="math-block">$$H = R_{total} - T(L) = (R_{alg} + \mu K F)(1 + \epsilon) -
+                                \nu (L - L_0)^2$$</div>
+                            <div class="derivation-note">
+                                <strong>推导来源：</strong>综合受欢迎指数 \(H\) 是最终优化的目标。它同时考虑了算法推荐热度、IP 自带流量和时长甜区偏差。当
+                                \(H>0\) 时表示短剧综合表现正向；当 \(H<0\) 时表示整体表现不佳（可能被平台降权或用户弃剧）。 </div>
+                            </div>
+                            <hr class="hr-light">
+
+                            <h2>第十部分 · 第七步推导：知名度 \(K\) 的动态演化（带边界保护）</h2>
+                            <p><span class="theory-tag">理论依据</span>
+                                <strong>社会传染模型</strong>与<strong>网络效应</strong>：短剧热度为正时会反哺原著知名度，但增长受限于饱和空间（上限
+                                1），同时避免负值。
+                            </p>
+                            <div class="derivation-step">
+                                <h4>步骤 10.1：建立微分方程</h4>
+                                <p>知名度变化率与当前正向热度 \(H(t)\) 和剩余增长空间 \((1-K)\) 成正比：</p>
+                                <div class="math-block">$$\frac{dK}{dt} = \rho \cdot \max(0, H(t)) \cdot (1 -
+                                    K), \quad K(0) = K_0$$</div>
+                                <div class="derivation-note">
+                                    <strong>推导来源：</strong>社会传染模型（Rogers）认为，信息的传播速率与“已感染者”和“未感染者”的乘积成正比。此处将短剧热度
+                                    \(H(t)\) 视为“感染源强度”，\((1-K)\) 为“尚未被认知的潜在受众比例”。\(\max(0, H(t))\)
+                                    确保只有正热度才能正向驱动知名度增长（负热度时知名度不下降，因为知名度不会因为一部烂短剧而被“遗忘”）。\(\rho\)
+                                    为传播速率常数。逻辑斯蒂形式的微分方程保证了 \(K\) 自然趋近于 1 但永远不会超过 1。
+                                </div>
+                            </div>
+                            <p><strong>稳态分析：</strong> \(\frac{dK}{dt}=0 \Rightarrow H\le 0\) 或 \(K=1\)，确保 \(K\)
+                                始终在
+                                \([0,1]\)。实际系统可能存在多个平衡点，需根据具体参数进行数值稳定分析。</p>
+                            <hr class="hr-light">
+
+                            <h2>第十一部分 · 第八步推导：平滑阈值 \(L^*\)（S 型过渡）</h2>
+                            <p>为避免硬截断带来的不连续，采用平滑 S 型过渡，使算法热度从短篇到长篇连续变化。</p>
+                            <div class="derivation-step">
+                                <h4>步骤 11.1：定义临界阈值</h4>
+                                <p>令 \(L_1\) 为完播率趋近0.5时的临界时长（由S型完播率反解），\(L_2\) 为 \(Q=0\)
+                                    的近似解（即
+                                    \(\alpha \xi \tau \ln(L+1) = \beta (P/(w\xi))^\lambda\)）。取 \(L^* = \max(L_1, L_2)\)
+                                    作为平滑过渡中心。这些方程一般为超越方程，需借助数值方法求解。</p>
+                                <div class="derivation-note">
+                                    <strong>推导来源：</strong>原模型中完播率在 \(L < L_1\) 时可能趋近于0，情感净动能 \(Q\) 在 \(L < L_2\)
+                                        时可能为负，两者共同导致短篇热度被“硬截断”。取 \(L^*\) 作为平滑过渡的中心点，使热度在 \(L\) 接近 \(L^*\)
+                                        时平滑衰减。实际应用时可通过数值求解得到 \(L_1, L_2\)。 </div>
+                                </div>
+                                <div class="derivation-step">
+                                    <h4>步骤 11.2：S 型权重函数</h4>
+                                    <p>sigmoid 函数将阈值效应平滑化，使用独立参数 \(\gamma_{\Theta}\)：</p>
+                                    <div class="math-block">$$\Theta(L; L^*, \gamma_{\Theta}) = \frac{1}{1 +
+                                        e^{-\gamma_{\Theta}(L - L^*)}}$$</div>
+                                    <div class="derivation-note">
+                                        <strong>推导来源：</strong>sigmoid 函数 \(1/(1+e^{-\gamma x})\) 天然提供了一个从 0 到 1
+                                        的平滑过渡。当 \(L \ll L^*\) 时 \(\Theta \approx 0\)（短篇热度几乎被完全抑制），当 \(L \gg
+                                        L^*\) 时 \(\Theta \approx 1\)（长篇热度不受影响），在 \(L = L^*\) 附近 \(\Theta = 0.5\)
+                                        实现连续过渡。\(\gamma_{\Theta}\) 控制过渡的陡峭程度——越大越接近硬截断。
+                                    </div>
+                                    <p>其中 \(\gamma_{\Theta}\) 控制过渡陡峭度（\(\gamma_{\Theta} \to \infty\) 时趋近硬截断）。</p>
+                                </div>
+                                <div class="derivation-step">
+                                    <h4>步骤 11.3：修正算法热度</h4>
+                                    <p>将原 \(R_{alg}\) 乘以 S 型权重：</p>
+                                    <div class="math-block">$$R_{alg}^{smooth} = R_{alg} \cdot \Theta(L; L^*,
+                                        \gamma_{\Theta})$$</div>
+                                    <div class="derivation-note">
+                                        <strong>推导来源：</strong>乘以 S 型权重后，算法热度在阈值附近不再跳变，而是平滑地从 0
+                                        过渡到其理论值。这更符合实际平台的“软降权”逻辑——短篇内容仍然可能被少量分发，只是曝光权重被大幅压低而非直接归零。
+                                    </div>
+                                    <p>最终修正后的总热度：</p>
+                                    <div class="math-block">$$H = \bigl( R_{alg}^{smooth} + \mu K F
+                                        \bigr)(1+\epsilon) - \nu (L - L_0)^2$$</div>
+                                </div>
+                                <hr class="hr-light">
+
+                                <h2>第十二部分 · 第九步：完整最终公式（含平滑过渡）</h2>
+                                <p>将动态知名度隐式纳入，并显式标注所有受题材 \(G\)、视角 \(S\) 和风格 \(\psi\) 影响的系数，得到随时间演化的完整受欢迎指数：</p>
+                                <div class="math-block"
+                                    style="background:#eef2f6;border-color:#cbd5e1;font-size:0.9rem;">
+                                    <div class="formula-source"
+                                        style="background:transparent;color:#1e3a8a;font-weight:600;">📖 最终合并结果
+                                    </div>
+                                    $$\boxed{
+                                    \begin{aligned}
+                                    H(t; G, S, \psi) =\ & \Bigg[
+                                    \left( \max\left(0, \frac{1}{1 + \exp\left(-\gamma_{CR} \left( \frac{\xi \tau w
+                                    L}{\eta_0 \delta P e^{-\lambda_2 K(t)F}} - 1 \right) \right)}\right) \right)^2
+                                    \cdot
+                                    \frac{ e^{\kappa Q} }{ e^{\kappa Q} + e^{-\kappa Q} }
+                                    \cdot
+                                    \frac{1}{1 + e^{-\gamma_{\Theta} (L - L^*)}}
+                                    \\
+                                    &+ \mu K(t) F
+                                    \Bigg]
+                                    \cdot
+                                    (1 + \epsilon)
+                                    -
+                                    \nu (L - L_0)^2
+                                    \end{aligned}
+                                    }$$
+                                    <p style="margin-top:0.6rem;text-align:center;font-size:0.95rem;">其中 \(Q =
+                                        \alpha \xi
+                                        \tau e^{-\lambda_1 K F}
+                                        \ln(L+1) - \beta \left(\frac{P e^{-\lambda_2 K F}}{w
+                                        \xi}\right)^{\lambda}\)，\(L^* = \max(L_1,
+                                        L_2)\)，且
+                                        \(K(t)\) 由
+                                        \(\frac{dK}{dt} = \rho \max(0, H(t))(1-K)\) 驱动。</p>
+                                    <div class="derivation-note" style="text-align:left;">
+                                        <strong>完整推导总结：</strong>最终公式通过九步递推，将十二个核心变量与固定参数融合为一个综合得分
+                                        \(H\)。其核心逻辑链为：<br>
+                                        ① 题材 \(G\)、视角 \(S\)、风格 \(\psi\) 首先通过系数映射决定 \(\xi, \tau, \delta\)
+                                        的基准值；<br>
+                                        ② 知名度 \(K\) 与完结度 \(F\) 通过指数折扣 \((\sigma_1, \sigma_2)\) 影响情感积累与伤害惩罚；<br>
+                                        ③ 短剧时长 \(L\) 通过对数积累和平方惩罚同时影响情感净动能 \(Q\) 和时长折损税 \(T(L)\)；<br>
+                                        ④ 完播率 \(CR\) 由冲击-耐受博弈决定（S型曲线），并与互动率 \(I\) 共同计算算法热度 \(R_{alg}\)；<br>
+                                        ⑤ IP 自带流量 \(R_{ip}\) 与外部红利 \(\epsilon\) 叠加后减去时长惩罚，得到最终 \(H\)；<br>
+                                        ⑥ \(H\) 又通过社会传染模型反向驱动 \(K\) 的演化，形成完整的动态闭环。
+                                    </div>
+                                </div>
+                                <hr class="hr-light">
+
+                                <!-- ========== 敏感性分析与边际贡献排序 ========== -->
+                                <h2>第十三部分 · 敏感性分析与边际贡献排序</h2>
+                                <p>为帮助创作者找到最优优化方向，我们计算各变量对 \(H\) 的边际影响（偏导数）。以下以典型参数（长篇区间）为例进行排序。</p>
+                                <h3>13.1 主要变量偏导数示意（定性）</h3>
+                                <ul>
+                                    <li><strong>\(\xi\)</strong>（共情系数）：正向，且随 \(L\) 增大而增大（篇幅越长，共情价值越高）。</li>
+                                    <li><strong>\(\tau\)</strong>（时机系数）：类似 \(\xi\)，但受 \(\ln(L+1)\) 影响，最佳时机边际收益先升后降。</li>
+                                    <li><strong>\(L\)</strong>（时长）：\(\frac{\partial H}{\partial L}\) 有正有负，存在最优篇幅（导数零点）。
+                                    </li>
+                                    <li><strong>\(w\)</strong>（文笔）：负向影响伤害惩罚，边际收益递减。</li>
+                                    <li><strong>\(\delta\)</strong>（视觉放大）：正向但受完播率饱和效应影响（平滑后影响缓和）。</li>
+                                    <li><strong>\(K\)</strong>（知名度）：动态变量，直接影响 \(R_{ip}\) 和超然折扣，边际贡献随时间变化。</li>
+                                </ul>
+                                <h3>13.2 典型场景下的边际贡献排序（中长篇，女频，甜宠）</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>排序</th>
+                                            <th>变量</th>
+                                            <th>边际贡献（相对）</th>
+                                            <th>优化建议</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>\(\xi\)（共情）</td>
+                                            <td>极高</td>
+                                            <td>优先提升——选择更易共情的题材和视角，并结合浪漫主义风格</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>\(\tau\)（时机）</td>
+                                            <td>高</td>
+                                            <td>精细化调整刀子位置，利用峰终定律</td>
+                                        </tr>
+                                        <tr>
+                                            <td>3</td>
+                                            <td>\(L\)（时长）</td>
+                                            <td>中高（有最优值）</td>
+                                            <td>适度延长至阈值以上，避免过长</td>
+                                        </tr>
+                                        <tr>
+                                            <td>4</td>
+                                            <td>\(w\)（文笔）</td>
+                                            <td>中</td>
+                                            <td>提升文笔可降低伤害惩罚，但边际递减</td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>\(\delta\)（视觉）</td>
+                                            <td>中低（受平滑阈值影响）</td>
+                                            <td>适度投入视觉，过度可能导致耐受失效</td>
+                                        </tr>
+                                        <tr>
+                                            <td>6</td>
+                                            <td>\(K\)（知名度）</td>
+                                            <td>取决于初始值</td>
+                                            <td>前期靠IP，后期靠热度反哺</td>
+                                        </tr>
+                                        <tr>
+                                            <td>7</td>
+                                            <td>\(F\)（完结度）</td>
+                                            <td>中（影响IP流量和防御）</td>
+                                            <td>已完结作品更有优势</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p><strong>结论</strong>：在中长篇区间，提升共情系数 \(\xi\)（通过选择合适题材和风格）和优化时机 \(\tau\)
+                                    是最有效的杠杆，时长 \(L\) 需要找到甜区，文笔和视觉为辅。</p>
+                                <hr class="hr-light">
+
+                                <!-- ========== 第十四部分：成本-收益综合策略 ========== -->
+                                <h2>第十四部分 · 成本-收益综合策略与题材适配性分析</h2>
+                                <p>本部分将成本、收益与题材的大众审美适配度相结合，为创作者提供可操作的策略选择框架。</p>
+
+                                <h3>14.1 成本函数与 ROI 基础定义</h3>
+                                <div class="math-block">
+                                    <div class="formula-source">📖 成本函数与 ROI 定义</div>
+                                    $$\text{Cost}(L, \delta) = c_L \cdot L + c_\delta \cdot \delta + c_0$$
+                                    $$\text{ROI} = \frac{H \cdot \text{收益单价}}{\text{Cost}}$$
+                                </div>
+                                <div class="derivation-note">
+                                    <strong>推导说明：</strong>成本函数假设制作成本主要受总时长 \(L\)（内容量）和视觉放大系数
+                                    \(\delta\)（特效投入）的线性影响，\(c_0\) 为固定成本。ROI 定义为每单位成本带来的收益，其中“收益单价”取决于平台的广告分成、付费点播等变现模式。
+                                </div>
+
+                                <h3>14.2 大众审美适配度因子 \(A(G)\)</h3>
+                                <p>不同题材天然具有不同的大众接受基础。我们引入 <strong>大众审美适配度
+                                        \(A(G)\)</strong>，用以量化题材与当前主流观众情感偏好的契合程度。\(A(G)\)
+                                    的取值范围为 0~1，1 表示最受大众期待和欢迎。该因子独立于模型中的共情系数 \(\xi\)，反映的是题材本身的“市场热度”和“社交传播潜力”。</p>
+                                <div class="math-block">
+                                    <div class="formula-source">📖 大众审美适配度示意值（基于行业观察）</div>
+                                    $$A(G) = \begin{cases}
+                                    0.95 & \text{甜宠/恋爱、爽文/逆袭、现代都市} \\
+                                    0.85 & \text{穿越/重生、年上/年下、脑洞/系统} \\
+                                    0.75 & \text{病娇/偏执、养成系、科幻} \\
+                                    0.65 & \text{复仇/宅斗、末世/末日} \\
+                                    0.50 & \text{悬疑、古风玄幻、历史} \\
+                                    0.40 & \text{种田/致富} \\
+                                    \end{cases}
+                                    $$
+                                </div>
+                                <div class="derivation-note">
+                                    <strong>推导说明：</strong>这些数值基于近年短剧市场的热门题材分布和用户评论情感分析而设定，具有动态性——实际创作中应结合平台实时数据调整。高适配度意味着该题材更容易获得自然流量和社交裂变。
+                                </div>
+
+                                <h3>14.3 综合收益函数与策略矩阵</h3>
+                                <p>将题材适配度与模型预测的受欢迎指数 \(H\) 结合，得到 <strong>综合预期收益 \(Y\)</strong>：</p>
+                                <div class="math-block">
+                                    $$Y(G, L, \delta, \psi) = A(G) \cdot H(G, L, \delta, \psi) \cdot (1 + \epsilon)$$
+                                    $$\text{净ROI} = \frac{Y - \text{Cost}}{\text{Cost}}$$
+                                </div>
+                                <div class="derivation-note">
+                                    <strong>推导说明：</strong>\(Y\)
+                                    将题材的大众接受度作为放大因子，修正模型对热度的预测。高适配度的题材即使模型得分略低，也可能获得更好的市场表现；反之，低适配度题材需要极高的模型得分才能突围。
+                                </div>
+
+                                <h3>14.4 策略选择矩阵（预算与目标导向）</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>预算规模</th>
+                                            <th>策略目标</th>
+                                            <th>推荐题材（\(G\)）</th>
+                                            <th>建议时长 \(L\)</th>
+                                            <th>视觉投入 \(\delta\)</th>
+                                            <th>风格倾向 \(\psi\)</th>
+                                            <th>预期效果</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>零成本/免费AI</strong><br>（个人创作者，依赖每日免费额度）</td>
+                                            <td>试水、积累经验、粉丝增长</td>
+                                            <td>现代都市、甜宠、爽文（高适配度且对画质要求低）</td>
+                                            <td>5~15 分钟（利用免费额度碎片化制作）</td>
+                                            <td>极低（1.0~1.5，仅靠AI基础生成能力）</td>
+                                            <td>浪漫主义（0.8~1.0），强化情绪</td>
+                                            <td>零成本试错，可快速产出系列内容，依靠社交裂变和平台基础流量，ROI理论无穷大（成本趋零）</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>低预算</strong><br>（< 5万/季）</td>
+                                            <td>快速验证、试水</td>
+                                            <td>甜宠/恋爱、现代都市、爽文</td>
+                                            <td>10~20 分钟</td>
+                                            <td>低（1.5~2.5）</td>
+                                            <td>浪漫主义（0.7~0.9）</td>
+                                            <td>靠高适配度自然流量，ROI潜力高，风险低</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>中等预算</strong><br>（5~20万/季）</td>
+                                            <td>稳定产出、积累品牌</td>
+                                            <td>穿越/重生、年上/年下、养成系</td>
+                                            <td>20~40 分钟</td>
+                                            <td>中等（2.5~4.0）</td>
+                                            <td>浪漫主义（0.6~0.8）</td>
+                                            <td>平衡共情与成本，适配度良好，可持续</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>高预算</strong><br>（> 20万/季）</td>
+                                            <td>破圈、打造爆款</td>
+                                            <td>脑洞/系统、科幻、末世</td>
+                                            <td>30~60 分钟</td>
+                                            <td>高（4.0~7.0）</td>
+                                            <td>视题材而定（科幻可高\(\psi\)，末世可低\(\psi\)）</td>
+                                            <td>需强视觉和强剧情，风险高但爆发力强，适合有IP加持</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>任何预算</strong></td>
+                                            <td>长尾价值、口碑积累</td>
+                                            <td>悬疑、历史、宅斗</td>
+                                            <td>40~80 分钟</td>
+                                            <td>中等（2.0~4.0）</td>
+                                            <td>现实主义（0.2~0.5）</td>
+                                            <td>依赖文笔和时机，后劲足，适合系列化</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="derivation-note">
+                                    <strong>策略说明：</strong>低预算应优先选择 \(A(G)\)
+                                    高且制作门槛低的题材，利用大众审美红利；中等预算可尝试中等适配度的题材，通过适度视觉提升；高预算则瞄准高视觉潜力的题材，但需承担更高风险。无论何种策略，时长 \(L\)
+                                    应尽量接近平台甜区 \(L_0\)，以降低折损税。
+                                </div>
+
+                                <h3>14.5 实操建议</h3>
+                                <ul>
+                                    <li><strong>优先选择 \(A(G) \ge 0.8\) 的题材</strong>，如甜宠、都市、爽文，尤其当预算有限时。</li>
+                                    <li><strong>避免低适配度题材（如种田、历史）的短篇尝试</strong>，除非有极强的文笔或IP背书。</li>
+                                    <li><strong>视觉投入 \(\delta\)
+                                            应与预算和题材匹配</strong>：高适配度题材无需过度视觉；低适配度题材需靠视觉弥补共情不足，但要注意成本控制。</li>
+                                    <li><strong>时长甜区是硬约束</strong>：无论何种题材，总时长偏离 \(L_0\) 过远都会显著降低 \(H\)，应通过分季或分集方式灵活调整。
+                                    </li>
+                                    <li><strong>动态调整策略</strong>：利用 \(K(t)\) 的演化反馈，若首季热度 \(H\) 为正，可加大后续投入，形成正向循环。</li>
+                                    <li><strong>免费AI创作者的特别提醒</strong>：充分利用每日免费额度，优先制作短时长、高情绪密度的内容，同时多平台发布测试数据，找到最适合免费模型风格的题材方向。
+                                    </li>
+                                </ul>
+                                <hr class="hr-light">
+
+                                <!-- ========== 极限推演与最终商业判据 ========== -->
+                                <h2>第十五部分 · 极限推演与最终商业判据</h2>
+                                <p>以下分析中，系数取值随 \(G, S, \psi\) 变化，但定性结论依然稳健：</p>
+                                <h3>15.1 原创不知名短篇（\(K_0 \approx 0,\ L \ll L_0,\ L \ll L^*\)）</h3>
+                                <ul>
+                                    <li>\(\sigma_1 = \sigma_2 = 1\)</li>
+                                    <li>S 型完播率 \(CR\) 在短时长下仍可能保持较高值（取决于 \(\xi \tau w L\) 与 \(\eta_0 \delta P\) 的比值）</li>
+                                    <li>但 \(Q\) 因 \(\ln(L+1)\) 较小而偏低，互动率 \(I\) 接近0.5</li>
+                                    <li>S 型权重 \(\Theta \approx 0\)（因 \(L \ll L^*\)），所以 \(R_{alg}^{smooth} \approx 0\)
+                                    </li>
+                                    <li>\(R_{ip}\approx0\)，惩罚项 \(\nu (L - L_0)^2\) 较大，故 \(H(0; G, S, \psi)\) 可能为负</li>
+                                    <li>\(\frac{dK}{dt} = 0\)（因 \(\max(0,H)=0\)），知名度停滞。</li>
+                                </ul>
+                                <div class="note-box"><strong>⚠️
+                                        结论：</strong>原创短篇发刀在理论上可行（S型完播率不再硬判死刑），但受限于甜区偏离和情感积累不足，在纯算法冷启动下极难跑出，需要强外部红利或极致情绪密度来破局，<strong>不建议作为主力策略</strong>。
+                                </div>
+
+                                <h3>15.2 顶级 IP 完结短篇（\(K_0 = 1,\ F = 1,\ L \ll L_0\)）</h3>
+                                <ul>
+                                    <li>\(\sigma_1 = e^{-\lambda_1}\)，\(\sigma_2 = e^{-\lambda_2}\)</li>
+                                    <li>\(\Theta \approx 0\)，\(R_{alg}^{smooth} \approx 0\)，\(R_{ip}=\mu\)</li>
+                                    <li>\(H(G,S,\psi) = \mu (1+\epsilon) - \nu (L - L_0)^2\)，与题材/视角/风格无关（算法项为零）
+                                    </li>
+                                </ul>
+                                <div class="note-box"><strong>⚠️ 结论：</strong>仅靠情怀保本，<strong>无法破圈</strong>。</div>
+
+                                <h3>15.3 原创中长篇（\(K_0 \approx 0,\ L \approx L_0,\ L > L^*\)）</h3>
+                                <ul>
+                                    <li>初期 \(\sigma_1 \approx 1,\ \sigma_2 \approx 1\)</li>
+                                    <li>\(\Theta \approx 1\)，\(CR\) 趋近1，\(Q \approx \alpha \xi \tau \ln(L+1)\) 随 \(L\)
+                                        增加而增加</li>
+                                    <li>互动项 \(I \to 1\)，\(R_{alg} \to 1\)</li>
+                                    <li>惩罚项 \(\approx 0\)（因 \(L \approx L_0\)）</li>
+                                    <li>\(H \approx (1 + \mu K F)(1+\epsilon) > 0\)，且 \(\frac{dK}{dt} > 0\)</li>
+                                </ul>
+                                <div class="note-box"><strong>✅ 结论：</strong>中长篇（总时长落在甜区附近）是当前短剧平台的最优策略，兼顾完播率和情感积累，爆发力强。
+                                </div>
+
+                                <h3>15.4 超长篇（\(L \gg L_0\)）</h3>
+                                <ul>
+                                    <li>完播率 \(CR\) 随 \(L\) 增大而趋近于1，但惩罚项 \(\nu (L - L_0)^2\) 急速上升</li>
+                                    <li>当 \(L\) 超过甜区过远时，\(H\) 可能下降</li>
+                                </ul>
+                                <div class="note-box"><strong>⚠️
+                                        结论：</strong>超长篇短剧（如总时长超过60分钟）虽情感积累充分，但完播率下降，用户流失，并非越长越好。</div>
+                                <hr class="hr-light">
+
+                                <h2>第十六部分 · 风格基调 \(\psi\) 综合影响总结</h2>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>风格 \(\psi\)</th>
+                                            <th>对 \(\xi\) 的影响</th>
+                                            <th>对 \(\tau\) 的影响</th>
+                                            <th>对 \(w\) 的要求</th>
+                                            <th>最优适用题材</th>
+                                            <th>爆发模式</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>浪漫主义（高 \(\psi\)）</strong></td>
+                                            <td>显著提升（幂函数放大）</td>
+                                            <td>时机前移</td>
+                                            <td>极高</td>
+                                            <td>甜宠、年上/年下、养成系</td>
+                                            <td>前期爆发力强，快速吸引观众</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>现实主义（低 \(\psi\)）</strong></td>
+                                            <td>相对较低（幂函数趋近0）</td>
+                                            <td>时机后移</td>
+                                            <td>高（写实白描）</td>
+                                            <td>宅斗、历史、末世、种田</td>
+                                            <td>前期慢热，刀子后“后劲”持久</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <hr class="hr-light">
+
+                                <h2>最终文字结论</h2>
+                                <div
+                                    style="background:#f0f7ff;padding:1.8rem 2.2rem;border-radius:20px;border:1px solid #dbeafe;">
+                                    <ol style="font-size:1.05rem;line-height:2.2;margin-left:1.2rem;">
+                                        <li><strong>原创短篇发刀：</strong>在理论上可行（S型完播率不再硬判死刑），但受甜区偏离和情感积累不足限制，纯算法冷启动极难跑出，需强外部红利或极致情绪密度，不建议作为主力策略。
+                                        </li>
+                                        <li><strong>IP 短篇发刀：</strong>可依靠情怀存活，但无法破圈。</li>
+                                        <li><strong>中长篇发刀（时长落在甜区 \(L_0\) 附近）：</strong>是当前平台的最优策略，兼顾完播率和情感积累，爆发力强。</li>
+                                        <li><strong>超长篇发刀：</strong>虽情感积累充分，但完播率下降，用户流失，并非越长越好。</li>
+                                        <li><strong>最优策略：</strong>选择 \(\xi \tau\)
+                                            乘积高的组合（如女频+甜宠+浪漫主义），控制总时长在平台甜区附近，同时注意成本控制。</li>
+                                        <li><strong>成本-收益实战指引：</strong>低预算首选高适配度题材（甜宠/都市/爽文），中等预算可探索穿越/养成，高预算瞄准科幻/脑洞类，但需结合自身制作能力与市场数据动态调整。
+                                        </li>
+                                        <li><strong>免费AI创作者：</strong>利用每日免费额度高频试错，优先制作短时长、高情绪密度的现代题材，以最低成本积累数据和经验，待验证成功后再逐步增加投入。
+                                        </li>
+                                    </ol>
+                                    <p style="margin-top:1.2rem;font-weight:500;text-align:center;">✅ 完整推导</p>
+                                </div>
+                                <div class="footer-meta">📐 使用 KaTeX 渲染 | 模型采用确定性计算图（DAG 思想）</div>
+                            </div>
+</body>
+
+</html>
+
+
+================================================
+FILE: 2026.8.13/theory.html
+================================================
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="dns-prefetch" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="dns-prefetch" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260830150845"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260830150845"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
+        </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260830150845"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});">
+        </script>
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/home.ico?v=20260830150845"
+        rel="icon" type="image/png" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/check-update.js?v=20260830150845"
+        type="module">
+        </script>
+    <title>模型理论依据</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f6f9fc;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0b1a2f;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 2.5rem 2.8rem;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.04);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: #334155;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-top: 2.8rem;
+            margin-bottom: 1rem;
+            border-left: 6px solid #3b82f6;
+            padding-left: 1rem;
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin: 1.2rem 0;
+        }
+
+        .theory-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #e9edf2;
+            transition: 0.15s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .theory-card:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .theory-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #0b1a2f;
+            margin-bottom: 0.2rem;
+        }
+
+        .theory-card .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.1rem 0.6rem;
+            border-radius: 30px;
+            margin-right: 0.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .theory-card .desc {
+            font-size: 0.92rem;
+            color: #1e293b;
+            margin: 0.4rem 0 0.6rem 0;
+            flex: 1;
+        }
+
+        .theory-card .usage {
+            font-size: 0.85rem;
+            color: #475569;
+            background: #eef2f6;
+            padding: 0.2rem 0.7rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 0.2rem;
+            align-self: flex-start;
+        }
+
+        .theory-card .formula-ref {
+            font-size: 0.8rem;
+            color: #1e40af;
+            background: #e6f0ff;
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 0.3rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 700px) {
+            .theory-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.5rem 1.2rem;
+            }
+        }
+
+        .footer-meta {
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.5rem;
+        }
+
+        .hr-light {
+            margin: 2rem 0;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📖 AI短剧“发刀子”模型 · 数学知识与理论依据详解</h1>
+        <p class="subtitle">
+            本页详细解释 <strong>主模型推导文档（index.html）</strong> 中使用的所有数学工具、心理学理论、传播学原理和平台算法依据。
+            每个条目均包含核心原理说明及在模型中的具体应用位置。
+        </p>
+
+        <!-- ==================== 数学工具 ==================== -->
+        <h2>🔢 数学工具</h2>
+        <div class="theory-grid">
+
+            <div class="theory-card">
+                <h3>微元积分法</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>微积分的基本思想——“先微后积”。将一个连续变化的过程（如阅读积累）拆分成无穷多个瞬间（微元），建立每个瞬间的局部关系（微分方程），然后通过积分将这些局部贡献累积成整体总量。这是推导连续累加型变量的数学核心。
+                </div>
+                <div class="usage">用于情感积累项 \(E = \int_{1}^{L} \frac{\alpha \xi \tau \sigma_1}{l} dl\)
+                    的推导，将文字层面的累积感受量化为数学积分，最终得到 \(E = \alpha \xi \tau \sigma_1 \ln L\)。</div>
+                <div class="formula-ref">📍 对应公式：\(\frac{dE}{dl} = \frac{\alpha \xi \tau \sigma_1}{l}\) → \(E = \alpha
+                    \xi \tau \sigma_1 \ln L\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>朗伯 W 函数</h3>
+                <div class="desc"><strong>核心原理：</strong>这是一种超越函数，定义为 \( z = W(z)e^{W(z)} \)。它专门用于求解形如 \( y e^y = x \)
+                    的方程，此类方程在变量指数化增长且带有线性系数的场景中频繁出现。它没有初等表达式，是数学中处理复杂隐函数的标准工具。</div>
+                <div class="usage">用于精确求解文本不惹人厌的最小篇幅 \(L_1\)，避免了使用 \(\ln L \approx 1\) 的低精度近似。将不等式 \(A L \ln L > B\) 转化为
+                    \(y e^y > B/A\) 后精确求解。</div>
+                <div class="formula-ref">📍 对应公式：\(L_1 = \frac{\beta P \sigma_2}{w \xi \cdot \alpha \xi \tau \sigma_1
+                    \cdot W( \frac{\beta P \sigma_2}{\alpha w \xi^2 \tau \sigma_1} )}\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>双曲正切函数 \(\tanh\)</h3>
+                <div class="desc"><strong>核心原理：</strong>S 型饱和函数，输出值严格限制在 \(-1\) 和 \(1\) 之间，表达式为 \(\tanh(x) = \frac{e^x -
+                    e^{-x}}{e^x + e^{-x}}\)。它的导数平滑且渐近饱和，非常适合用来映射那些“过低或过高都会失效”的中间变量。</div>
+                <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情绪唤醒映射到 \((0,1)\)
+                    概率空间，保留极端负面情况下的最低互动（“黑红”现象）。</div>
+                <div class="formula-ref">📍 对应公式：\(I = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>一阶微分方程 / 逻辑斯蒂增长</h3>
+                <div class="desc"><strong>核心原理：</strong>逻辑斯蒂增长模型 \(\frac{dx}{dt} = r x (1 - x/K)\)
+                    是描述受限增长的标准模型。其特点是：初期近似指数增长，中期线性增长，后期因接近承载能力 \(K\) 而趋于饱和。在传播学中，它常被用来模拟热点事件的扩散趋势。</div>
+                <div class="usage">用于知名度 \(K\) 的动态演化 \(\frac{dK}{dt} = \rho
+                    H(t)(1-K)\)，精确刻画了IP热度受限于市场总量的增长逻辑，实现了“热度反哺知名度”的正反馈闭环。</div>
+                <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K)\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>S 型函数（sigmoid）</h3>
+                <div class="desc"><strong>核心原理：</strong>S 型函数（sigmoid）是一种单调递增的非线性函数，形式为 \(\Theta(x) = \frac{1}{1 +
+                    e^{-x}}\)，其输出范围在 \((0,1)\) 之间。它常用于将阈值效应平滑化，避免硬截断导致的不连续跳跃。</div>
+                <div class="usage">用于平滑阈值 \(L^*\) 的过渡，替代原硬截断 \(\max(L_1, L_2)\)。使算法热度 \(R_{alg}\)
+                    从短篇到长篇连续变化，避免在阈值处的不连续跳跃。</div>
+                <div class="formula-ref">📍 对应公式：\(\Theta(L; L^*, \gamma) = \frac{1}{1 + e^{-\gamma (L - L^*)}}\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>偏导数与敏感性分析</h3>
+                <div class="desc"><strong>核心原理：</strong>偏导数 \(\frac{\partial H}{\partial x_i}\) 衡量当其他变量固定时，变量 \(x_i\)
+                    微小变化对目标函数 \(H\) 的影响程度。通过计算各偏导数并排序，可识别对结果影响最大的“杠杆变量”。这是优化决策中的标准工具。</div>
+                <div class="usage">用于计算各变量对 \(H\) 的边际贡献排序。发现 \(\xi\)（共情）和 \(\tau\)（时机）在长篇区间边际贡献最高，指导创作者优先优化这两个方向。</div>
+                <div class="formula-ref">📍 对应公式：\(\frac{\partial H}{\partial \xi} \approx \alpha \tau e^{-\lambda_1 K
+                    F} \ln L \cdot (1 + \kappa Q) \cdot CR^2 \cdot I \cdot \Theta\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>有向依赖函数映射</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>借鉴有向无环图（DAG）思想，用确定性的复合函数来刻画变量间的依赖关系。与概率图模型（贝叶斯网络）不同，此处采用确定性函数映射（非概率图模型），将变量间的条件依赖关系固化为可计算的数学表达式。
+                </div>
+                <div class="usage">将变量间的条件依赖关系固化为数学函数，所有后续公式中的 \(\xi,\tau,\delta\) 均指代这些函数值。具体依赖关系为：\(G \rightarrow
+                    \xi,\tau,\delta\)；\(S \rightarrow \xi,\tau\)；\(\psi \rightarrow \xi,\tau\)；\(L \rightarrow
+                    \tau\)。\(w\) 作为独立外生变量，不自动派生。</div>
+                <div class="formula-ref">📍 对应公式：\(\xi(G, S, \psi) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot
+                    \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5))\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>归一化处理</h3>
+                <div class="desc"><strong>核心原理：</strong>归一化将不同量纲或尺度的数据映射到统一的区间（通常为 \([0,1]\)），以消除量纲影响。常用方法为 min-max
+                    归一化：\(\tilde{x} = \frac{x - x_{\min}}{x_{\max} - x_{\min}}\)。</div>
+                <div class="usage">将文笔系数 \(w\) 归一化为 \(\tilde{w}\)，用于交叉项计算（如 \(\alpha_{\xi,w} \cdot
+                    \tilde{w}\)），使得协变强度的度量不受文笔绝对数值范围的影响。</div>
+                <div class="formula-ref">📍 对应公式：\(\tilde{w} = \frac{w - w_{\min}}{w_{\max} - w_{\min}}\)</div>
+            </div>
+
+        </div>
+
+        <!-- ==================== 心理学 / 行为经济学 ==================== -->
+        <h2>🧠 心理学与行为经济学</h2>
+        <div class="theory-grid">
+
+            <div class="theory-card">
+                <h3>元认知防御机制</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>元认知即“对思考的思考”。当读者意识到自己正在被故事“操纵”时（尤其是已知剧情走向），会下意识地激活一种情感防火墙。他们不再毫无防备地投入情感，而是切换到一种审视、分析的状态，从而降低共情伤害。这种机制是读者对剧透的本能心理保护。
+                </div>
+                <div class="usage">用于定义超然折扣系数 \(\sigma_1 = e^{-\lambda_1 K F}\) 和 \(\sigma_2 = e^{-\lambda_2 K F}\)，其中
+                    \(\lambda_1\) 较小（共鸣防御弱），\(\lambda_2\) 较大（震惊防御强），区分已知剧情对“共鸣”与“震惊”的差异化削弱。</div>
+                <div class="formula-ref">📍 对应公式：\(\sigma_1 = e^{-\lambda_1 K F},\ \sigma_2 = e^{-\lambda_2 K F}\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>预期违背理论 (Burgoon)</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>该理论认为，人类对事件有稳定的心理预期。当事件与预期严重不符时（如主角突然死亡），会产生强烈的生理和心理唤起。但如果读者提前知道结局（剧透），预期被“修正”，这种违背感会大幅削弱，导致“刀子”失去冲击力。
+                </div>
+                <div class="usage">支撑 \(\sigma_2 = e^{-\lambda_2 K F}\) 的合理性，即已知剧情（高 \(K, F\)）会让“震惊”防御更强（\(\lambda_2\)
+                    较大），因为预期已被提前修正。</div>
+                <div class="formula-ref">📍 对应公式：\(\sigma_2 = e^{-\lambda_2 K F}\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>损失厌恶理论 (Kahneman &amp; Tversky)</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>前景理论的核心支柱。实验证明，人类对“失去”的敏感度是“获得”的2倍左右。失去一个心爱的角色（刀子）带来的痛苦，远大于获得同等快乐带来的幸福。这就是为什么刀子情节如此有力，也如此危险。
+                </div>
+                <div class="usage">用于构建伤害惩罚项 \(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\)，其中 \(\beta\)
+                    即为损失厌恶系数，量化了痛苦敏感度（典型范围为 \(1 \sim 4\)）。</div>
+                <div class="formula-ref">📍 对应公式：\(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>参照点依赖</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>人们对结果的判断不是基于绝对值，而是基于与“参照点”的偏差。在阅读中，参照点是角色的现状或美好预期。刀子的作用就是强行改变这个参照点，将主角从“幸福”拉向“悲剧”，这种偏差越大，读者受到的冲击越强。
+                </div>
+                <div class="usage">影响伤害惩罚项中 \(P\) 的感知强度。已知剧情会预先移动参照点（读者知道“后面要出事”），从而减轻后续的实际冲击，与 \(\sigma_2\) 的削弱作用协同。
+                </div>
+                <div class="formula-ref">📍 对应公式：作用于 \(D = \frac{\beta P}{w \xi L} \cdot \sigma_2\) 中的 \(P\) 感知调整</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>韦伯-费希纳定律（对数扩展）</h3>
+                <div class="desc"><strong>核心原理：</strong>心理物理学经典定律：物理刺激量与心理感受量呈对数关系（\(S = k \ln
+                    I\)）。应用到阅读中，随着读者阅读字数（\(L\)）的增加，每增加一千字带来的额外情感投入（边际效用）是递减的。因此，情感积累随篇幅呈对数增长，而非线性增长。</div>
+                <div class="usage">用于情感积累项 \(E = \alpha \xi \tau \sigma_1 \ln L\)，精确刻画了共情随篇幅增加而边际递减的规律。</div>
+                <div class="formula-ref">📍 对应公式：\(E = \alpha \xi \tau \sigma_1 \ln L\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>峰终定律 (Kahneman)</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>人类大脑对一段经历的评价，强烈偏向于“峰值时刻”（最好或最坏的部分）和“结束时刻”。中间的平淡部分几乎被忽略。这意味着，刀子如果出现在剧情峰值（如黄金分割点），将极大提升整部剧的印象分，使其成为观众心中的“神作”。
+                </div>
+                <div class="usage">用于刀子时机系数 \(\tau\)，强调最佳刀子位置（如全篇的黄金分割点）能最大化峰值体验。不同题材、视角和风格下，\(\tau\)
+                    的最优值不同（如病娇、悬疑对时机敏感）。</div>
+                <div class="formula-ref">📍 对应公式：\(\tau(G,S,\psi,L) = \tau_0(G) \cdot (1 + \alpha_{\tau,S} \cdot
+                    \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\tau,\psi} \cdot (\psi - 0.5)) \cdot (1 +
+                    \alpha_{\tau,L} \cdot (L - L_0))\)</div>
+            </div>
+
+            <div class="theory-card">
+                <h3>心理距离理论 (Trope &amp; Liberman)</h3>
+                <div class="desc">
+                    <strong>核心原理：</strong>心理距离（时间、空间、社会、假设性）越近，解释水平越低（具体），共情越强；距离越远，解释水平越高（抽象），共情越弱。现代都市题材（\(G\)）近在咫尺（\(\xi
+                    > 1\)），而古代或玄幻题材心理距离较远（\(\xi < 1\)），观众更倾向于“看戏”而非“代入”。</div>
+                        <div class="usage">用于时代共情系数 \(\xi\) 的取值依据，区分现代题材与古代/玄幻题材的共情效率。在函数映射中，\(\xi_0(G)\) 作为题材基准值，进一步受
+                            \(S\) 和 \(\psi\) 调节。</div>
+                        <div class="formula-ref">📍 对应公式：\(\xi(G, S, \psi) = \xi_0(G) \cdot (1 + \alpha_{\xi,S} \cdot
+                            \mathbf{1}_{S=\text{女频}}) \cdot (1 + \alpha_{\xi,\psi} \cdot (\psi - 0.5))\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>认知负荷理论 (Sweller)</h3>
+                    <div class="desc"><strong>核心原理：</strong>工作记忆的容量是有限的（通常认为最多同时处理4个组块）。如果AI短剧时长过长（\(L\)
+                        过大），信息量超载，会导致观众理解困难、精神疲劳，最终触发“滑动离开”行为。这种负荷是导致长视频完播率下降的核心原因。</div>
+                    <div class="usage">用于时长惩罚项 \(T(L) = \nu (L - L_0)^2\)，超出甜区的时长会急剧增加认知负荷，降低热度。过短则信息不足（也是负荷），形成双罚。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>注意力峰值模型</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>注意力随时间变化的曲线呈倒U型。观众在视频开始时集中注意力，随后逐渐达到峰值，如果内容无法在峰值前抓住他们，注意力就会不可逆转地衰退。因此，存在一个最优时长（甜区
+                        \(L_0\)），能最大化观众在峰值区的停留。
+                    </div>
+                    <div class="usage">结合认知负荷理论，用于确定最优甜区 \(L_0\)（通常 3~8 万字），偏离该值会产生显著的流量惩罚。这是 \(T(L) = \nu (L - L_0)^2\)
+                        的理论基础。</div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L_0\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>情绪唤醒理论 (Duffy)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>情绪唤醒度（生理激活水平）与行为反应之间存在单调饱和关系——唤醒度极低时几乎没有互动，唤醒度极高时互动也趋于饱和而非无限增长。采用 S 型饱和函数（双曲正切）来建模互动率，既能模拟情绪驱动下的互动增长，又能避免极端值导致的数值溢出。
+                    </div>
+                    <div class="usage">用于互动率函数 \(I = \frac{1+\tanh(\kappa Q)}{2}\)，将情感动能 \(Q\) 映射到互动概率，保留极端情况下的最低互动（\(Q
+                        \to -\infty\) 时 \(I \to 0^+\)）。</div>
+                    <div class="formula-ref">📍 对应公式：\(I = \frac{e^{\kappa Q}}{e^{\kappa Q} + e^{-\kappa Q}}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>认知闭合需求</h3>
+                    <div class="desc"><strong>核心原理：</strong>人类大脑倾向于寻求确定性和完整性。已完结的作品（\(F\) 较大）提供了完整的叙事闭合，降低了观众的认知负荷，使其能够进行整体性回顾、二次创作和深度讨论，从而形成长尾传播效应。</div>
+                    <div class="usage">用于完结程度 \(F\)，已完结作品更易引发读者回顾和讨论，提升IP自带流量 \(R_{ip} = \mu K F\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
+            </div>
+
+            <!-- ==================== 传播学 / 社会学 ==================== -->
+            <h2>📢 传播学与社会学</h2>
+            <div class="theory-grid">
+
+                <div class="theory-card">
+                    <h3>媒介丰富度理论 (Daft &amp; Lengel)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>不同媒介传递信息的能力不同。面谈（音视频）比书面文件（纯文字）更“丰富”，因为它包含非语言信号、语气和即时反馈。AI短剧结合了视觉、音频和文本，信息丰富度远高于纯文本，因此能更快、更强烈地唤起观众的情感共鸣。
+                    </div>
+                    <div class="usage">用于视觉放大系数 \(\delta\)，解释为什么AI视觉化（多模态）会呈倍数级放大“刀子”的冲击力。\(\delta > 1\)，通常取 5~10。</div>
+                    <div class="formula-ref">📍 对应公式：\(P_v = \delta \cdot P\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>社会传染模型 (Rogers)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>创新扩散理论的变种。热度和观点通过社会网络像传染病一样传播。一部AI短剧的受欢迎度（\(H\)）本身就是一种“病原体”，它能通过口碑、推荐和社交媒体感染新的观众。这种传播受限于潜在观众的总量（上限1），呈现出逻辑斯蒂增长的特征。
+                    </div>
+                    <div class="usage">用于知名度动态方程 \(\frac{dK}{dt} = \rho H(t)(1-K)\)，热度反哺知名度的增长过程，形成“爆款带动IP升温”的正反馈闭环。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho \cdot H(t) \cdot (1 - K)\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>网络效应</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>产品或服务的价值随着使用人数的增加而增加。在AI短剧场景中，一个剧集越火，平台算法越会推荐它，越多的观众看到它，它就越火。这是一个典型的正反馈飞轮。模型中的知名度
+                        \(K\) 动态演化捕捉了这个特性。
+                    </div>
+                    <div class="usage">支撑知名度动态中的逻辑斯蒂增长项，使模型能模拟“爆款反哺IP”的正反馈闭环，即 \(\frac{dK}{dt} = \rho H(t)(1-K)\)
+                        中的增长机制。</div>
+                    <div class="formula-ref">📍 对应公式：\(\frac{dK}{dt} = \rho H(t)(1-K)\) 中的正反馈项</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>品牌资产模型 (Aaker)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>品牌资产是由品牌知名度、品牌联想、感知质量和品牌忠诚度构成的。一个知名的IP（如《斗罗大陆》）本身就是一个强大的品牌。这种品牌资产是AI短剧的“初始资本”，即使用户没看过短剧，也会因为IP本身而点击观看。
+                    </div>
+                    <div class="usage">用于IP自带流量 \(R_{ip} = \mu K F\)，知名度和完结度直接转化为搜索流量和情怀播放，这部分流量不受算法完播率影响。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>品牌延伸理论 (Aaker &amp; Keller)</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>消费者会将对原始品牌（母品牌）的态度迁移到其延伸产品（子品牌）上。当一部知名小说（母品牌）被改编成AI短剧（子品牌）时，粉丝的好感度会直接“下载”到短剧上，降低短剧的冷启动成本。
+                    </div>
+                    <div class="usage">支撑 \(R_{ip}\) 的合理性，\(\mu\) 即为母品牌（IP）到子品牌（短剧）的迁移系数，范围通常为 \(0.5 \sim 2.0\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\) 中的 \(\mu\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>搜索红利</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>在各大视频和社交平台上，搜索依然是重要的流量入口。知名IP天然带有搜索热词，用户会主动通过搜索来查找相关短剧。这种流量不需要算法推荐，是硬通货，确保了短剧即使算法表现一般也能有保底播放量。
+                    </div>
+                    <div class="usage">独立于 \(R_{alg}\) 的保底流量来源，体现在 \(R_{ip} = \mu K F\)
+                        对平台搜索场景的覆盖，解释了为何知名IP短剧即使质量平庸也能有基础播放。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{ip} = \mu K F\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>信息加工容量理论</h3>
+                    <div class="desc"><strong>核心原理：</strong>人类的认知加工能力是有限的。短视频的精髓在于“短”，因为短意味着信息量少，加工成本低。如果AI短剧太长（\(L\)
+                        过大），观众的大脑需要处理过多的情节、人物和情感信息，导致认知超载，进而引发逃离行为。</div>
+                    <div class="usage">用于变量 \(L\) 对认知负荷的基础影响，是时长惩罚项 \(T(L) = \nu (L - L_0)^2\) 存在的底层逻辑之一。</div>
+                    <div class="formula-ref">📍 对应公式：\(T(L) = \nu (L - L_0)^2\) 中的 \(L\) 来源</div>
+                </div>
+
+            </div>
+
+            <!-- ==================== 平台算法相关 ==================== -->
+            <h2>📱 平台与算法</h2>
+            <div class="theory-grid">
+
+                <div class="theory-card">
+                    <h3>注意力分配理论</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>在信息过载的时代，用户的注意力是最稀缺的资源。平台的核心算法本质上是一个“注意力分配器”。完播率和互动率是衡量一个内容吸引注意力的关键指标。如果内容无法在短时间内抢占用户注意力，就会被算法抛弃。
+                    </div>
+                    <div class="usage">用于完播率 \(CR\) 模型的基础假设，将弃剧概率定义为“冲击”与“耐受”的博弈结果：\(\rho = \frac{\eta_0 \delta P
+                        \sigma_2}{\xi \tau w L}\)。</div>
+                    <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>冲击-耐受博弈</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>用户在观看视频时，大脑处于一个动态博弈状态：内容不断提供“冲击”（情感、视觉、信息），而用户的“耐受度”（注意力剩余、兴趣度）不断被消耗。当“冲击”超过“耐受”时（内容太无聊或太刺激），用户就会滑动离开。
+                    </div>
+                    <div class="usage">构造弃剧概率 \(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)，耐受度由共情 \(\xi\)、时机 \(\tau\)、文笔 \(w\)、已知防御 \(\sigma_2\) 及篇幅 \(L\) 共同决定，直观地描述了用户与内容之间的博弈关系。
+                    </div>
+                    <div class="formula-ref">📍 对应公式：\(\rho = \frac{\eta_0 \cdot \delta P \cdot \sigma_2}{\xi \tau w
+                        L}\)</div>
+                </div>
+
+                <div class="theory-card">
+                    <h3>完播率² × 互动率 范式</h3>
+                    <div class="desc">
+                        <strong>核心原理：</strong>这是借鉴行业通用的启发式权重——通过对抖音、快手等短视频平台算法的反向工程得到的经验公式。平台认为“留住人”（完播率）的权重远高于“让人动”（互动率）。因此，完播率被赋予平方权重，以放大其在推荐系统中的作用力。
+                    </div>
+                    <div class="usage">用于算法推荐热度 \(R_{alg} = Q \cdot CR^2 \cdot I\)，借鉴了平台对流量的分配逻辑。\(CR^2\)
+                        确保完播率提升带来的流量增益远大于互动率提升。</div>
+                    <div class="formula-ref">📍 对应公式：\(R_{alg} = Q \cdot CR^2 \cdot I\)</div>
+                </div>
+
+            </div>
+
+            <hr class="hr-light">
+
+            <p style="font-size:0.95rem; color:#475569; text-align:center;">
+                ✅ 以上理论共同构成完整模型的学科基础
+            </p>
+
+            <div class="footer-meta">
+                📚 详细解释 · 配合主模型推导文档使用
+            </div>
+
+        </div>
+</body>
+
+</html>
+
+
+================================================
+FILE: 2026.8.18/index.html
+================================================
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最大似然估计(MLE)与最大后验估计(MAP) </title>
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="dns-prefetch" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdelivr.net?v=20260830150845" rel="dns-prefetch" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20260830150845"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20260830150845"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous">
+        </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js?v=20260830150845"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '\\[', right: '\\]', display: true},{left: '$', right: '$', display: false},{left: '\\(', right: '\\)', display: false}]});">
+        </script>
+    <link
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/home.ico?v=20260830150845"
+        rel="icon" type="image/png" />
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/index.js?v=20260830150845">
+        </script>
+    <script crossorigin=""
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/check-update.js?v=20260830150845"
+        type="module">
+        </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f7f9fc;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 2rem 1.5rem;
+            color: #0b1a2f;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2.8rem 3rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.4rem;
+            border-left: 6px solid #3b82f6;
+            padding-left: 1.2rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        h4 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-top: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .math-block {
+            background: #f1f5f9;
+            padding: 1.6rem 2rem;
+            border-radius: 20px;
+            margin: 1.4rem 0 1.8rem 0;
+            overflow-x: auto;
+            border: 1px solid #e6edf5;
+            text-align: center;
+        }
+
+        .formula-source {
+            font-size: 0.95rem;
+            color: #1e40af;
+            background: #e6f0ff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 0.8rem;
+        }
+
+        .derivation-step {
+            background: #ffffff;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            margin: 1.2rem 0 1.8rem 0;
+            border: 1px dashed #94a3b8;
+            text-align: left;
+        }
+
+        .derivation-step .math-block {
+            background: #f8fafc;
+            border: none;
+            padding: 0.8rem 0;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        .derivation-note {
+            font-size: 0.95rem;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            margin: 0.6rem 0 0.2rem 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 0.95rem;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        th {
+            background: #1e293b;
+            color: white;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e9edf2;
+            vertical-align: top;
+        }
+
+        .note-box {
+            background: #fefce8;
+            border-left: 6px solid #f59e0b;
+            padding: 1.2rem 1.8rem;
+            border-radius: 14px;
+            margin: 1.8rem 0;
+        }
+
+        .hr-light {
+            margin: 2.8rem 0;
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, #d1d9e6, transparent);
+        }
+
+        .footer-meta {
+            margin-top: 3.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 2rem;
+        }
+
+        .theory-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.1rem 0.7rem;
+            border-radius: 20px;
+            margin-right: 0.4rem;
+        }
+
+        .compare-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .compare-item {
+            flex: 1 1 280px;
+            background: #f8fafc;
+            padding: 1.5rem 1.8rem;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .compare-item h4 {
+            margin-top: 0;
+            border-bottom: 2px solid #d1d9e6;
+            padding-bottom: 0.4rem;
+        }
+
+        .compare-item .math-block {
+            background: transparent;
+            padding: 0.6rem 0;
+            margin: 0.4rem 0;
+            border: none;
+            text-align: center;
+        }
+
+        .highlight-blue {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+        }
+
+        @media (max-width:700px) {
+            .container {
+                padding: 1.8rem 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- ====== 标题 ====== -->
+        <h1>
+            最大似然估计 (MLE) 与最大后验估计 (MAP)<br>
+            <span style="font-size:1.5rem;font-weight:400;color:#2d3a4f;">从零开始的完整数学推导</span>
+        </h1>
+        <p style="font-size:1.1rem;margin-bottom:2rem;">
+            本文从 <strong>一次抛硬币</strong> 出发，逐步推导出最大似然估计（MLE）和最大后验估计（MAP）的完整数学公式。
+            全程只用到 <strong>乘法原理、加法原理、组合数、对数、求导</strong> 等高中知识，每一行代数变形都配有详细说明。
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- 第一部分：从零开始 —— 组合数 C(10,8) 是怎么来的                -->
+        <!-- ============================================================ -->
+        <h2>第一部分 · 从零开始：组合数 \(C_{10}^{8}\) 的由来</h2>
+        <p>我们抛一枚硬币 10 次，记正面朝上的概率为 \(\theta\)。问：<strong>恰好出现 8 次正面</strong> 的概率是多少？</p>
+
+        <h3>1.1 某一种特定顺序的概率</h3>
+        <p>先规定一个 <strong>极其严格的顺序</strong>，比如「前 8 次正面，后 2 次反面」：</p>
+        <div class="math-block">
+            \[
+            P(\text{正正正正正正正正 反反}) = \underbrace{\theta \times \cdots \times \theta}_{8\text{个}} \times
+            \underbrace{(1-\theta) \times \cdots \times (1-\theta)}_{2\text{个}}
+            = \theta^{8} (1-\theta)^{2}
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【这一步在干什么？】</strong> 乘法原理：10 次独立抛掷同时发生的概率，等于每次概率的乘积。
+            8 个 \(\theta\) 相乘得 \(\theta^8\)，2 个 \((1-\theta)\) 相乘得 \((1-\theta)^2\)。
+        </div>
+
+        <h3>1.2 有多少种这样的顺序？—— 组合数</h3>
+        <p>题目只说「10 次里有 8 次正面」，<strong>并没有规定</strong> 这 8 次正面必须在前 8 次。这 8 次正面可以分布在 10 个位置中的任意 8 个位置上。</p>
+        <div class="math-block">
+            \[
+            \text{选法数} = C_{10}^{8} = \frac{10!}{8! \cdot (10-8)!} = \frac{10!}{8! \cdot 2!} = 45
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【为什么乘以组合数？】</strong> 这 45 种情况是 <strong>互斥</strong> 的（你不可能同时既是「1~8 次为正」又是「2~9 次为正」）。
+            根据 <strong>加法原理</strong>，总概率 = 45 个相同概率相加 = \(45 \times \theta^8(1-\theta)^2\)。
+        </div>
+
+        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+            <div class="formula-source">📖 原始概率公式（似然函数）</div>
+            \[
+            \boxed{L(\theta) = C_{10}^{8} \cdot \theta^{8} \cdot (1-\theta)^{2}}
+            \]
+            <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">其中 \(C_{10}^{8}=45\)
+                是组合常数，<strong>不影响求最大值的位置</strong>，后续推导中会合法地忽略它。</p>
+        </div>
+
+        <hr class="hr-light">
+
+        <!-- ============================================================ -->
+        <!-- 第二部分：最大似然估计 (MLE) 全程推导                          -->
+        <!-- ============================================================ -->
+        <h2>第二部分 · 最大似然估计 (MLE) 全程推导</h2>
+        <p><span class="theory-tag">核心理念</span> 找一个 \(\theta\)，使得 <strong>「观测到 10 次中 8 次正面」这一事件的概率最大</strong>。</p>
+
+        <h3>2.1 写出似然函数（丢掉常数）</h3>
+        <p>由于常数 \(C_{10}^{8}=45\) 在求导解方程时会被消掉（见下方证明），我们直接使用简化形式：</p>
+        <div class="math-block">
+            \[
+            L(\theta) = \theta^{8} (1-\theta)^{2}
+            \]
+        </div>
+        <div class="derivation-note">
+            <strong>【为什么可以丢掉 45？】</strong> 设 \(L(\theta)=45 \cdot f(\theta)\)，则 \(L'(\theta)=45 \cdot f'(\theta)\)。
+            令 \(L'(\theta)=0\)，两边同除以 45 得 \(f'(\theta)=0\)。最大值点完全相同，故常数可忽略。
+        </div>
+
+        <h3>2.2 取对数（化乘为加）</h3>
+        <p>对 \(L(\theta)\) 取自然对数，记 \(\ell(\theta)=\ln L(\theta)\)：</p>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \ell(\theta) = \ln\left[\theta^{8}(1-\theta)^{2}\right]
+                = \ln(\theta^{8}) + \ln((1-\theta)^{2})
+                = 8\ln\theta + 2\ln(1-\theta)
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【为什么要取对数？】</strong> ① 对数函数 \(\ln\) 是单调递增的，\(L(\theta)\) 的最大值点和 \(\ln L(\theta)\) 的最大值点完全一致。
+                ② 取对数后，<strong>乘法变加法，指数变系数</strong>，求导变得非常简单。
+            </div>
+        </div>
+
+        <h3>2.3 对 \(\theta\) 求导</h3>
+        <p>对 \(\ell(\theta)\) 关于 \(\theta\) 求导（注意链式法则）：</p>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \ell'(\theta) = \frac{d}{d\theta}\big[8\ln\theta\big] + \frac{d}{d\theta}\big[2\ln(1-\theta)\big]
+                = \frac{8}{\theta} - \frac{2}{1-\theta}
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【求导细节】</strong> ① \((8\ln\theta)' = 8 \cdot \frac{1}{\theta} = \frac{8}{\theta}\)。<br>
+                ② \((2\ln(1-\theta))' = 2 \cdot \frac{1}{1-\theta} \cdot (-1) = -\frac{2}{1-\theta}\)（链式法则）。
+            </div>
+        </div>
+
+        <h3>2.4 令导数为 0，解方程</h3>
+        <div class="derivation-step">
+            <div class="math-block">
+                \[
+                \frac{8}{\theta} - \frac{2}{1-\theta} = 0
+                \quad\Longrightarrow\quad
+                \frac{8}{\theta} = \frac{2}{1-\theta}
+                \]
+            </div>
+            <p>交叉相乘：</p>
+            <div class="math-block">
+                \[
+                8(1-\theta) = 2\theta
+                \quad\Longrightarrow\quad
+                8 - 8\theta = 2\theta
+                \quad\Longrightarrow\quad
+                8 = 10\theta
+                \quad\Longrightarrow\quad
+                \theta = \frac{8}{10} = 0.8
+                \]
+            </div>
+            <div class="derivation-note">
+                <strong>【解方程思路】</strong> 移项 → 交叉相乘 → 合并同类项 → 系数化为 1。
+            </div>
+        </div>
+
+        <h3>2.5 验证最大值（二阶导数）</h3>
+        <div class="math-block">
+            \[
+            \ell''(\theta) = -\frac{8}{\theta^2} - \frac{2}{(1-\theta)^2} < 0 \] </div>
+                <p>因为 \(\theta^2>0\) 且 \((1-\theta)^2>0\)，所以 \(\ell''(\theta)<0\) 恒成立，\(\theta=0.8\) 是 <strong>
+                        最大值点</strong>。</p>
+
+                <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                    <div class="formula-source">✅ MLE 最终结论</div>
+                    \[
+                    \boxed{\hat{\theta}_{MLE} = \frac{8}{10} = 0.8}
+                    \]
+                    <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">最大似然估计认为：这枚硬币正面朝上的概率是
+                        <strong>0.8</strong>（即 8/10）。
+                    </p>
+                </div>
+
+                <hr class="hr-light">
+
+                <!-- ============================================================ -->
+                <!-- 第三部分：最大后验估计 (MAP) 全程推导                          -->
+                <!-- ============================================================ -->
+                <h2>第三部分 · 最大后验估计 (MAP) 全程推导</h2>
+                <p><span class="theory-tag">核心理念</span> 在 MLE 的基础上，乘以一个 <strong>先验信念</strong> \(P(\theta)\)。
+                    假设我们事先认为「大多数硬币是公平的」，用 \(P(\theta)=\theta(1-\theta)\) 来表达这种信念（该函数在 \(\theta=0.5\) 时取最大值）。</p>
+
+                <h3>3.1 构造 MAP 目标函数（似然 × 先验）</h3>
+                <div class="derivation-step">
+                    <div class="math-block">
+                        \[
+                        \text{目标} = L(\theta) \times P(\theta)
+                        = \big[\theta^{8}(1-\theta)^{2}\big] \times \big[\theta(1-\theta)\big]
+                        \]
+                    </div>
+                    <p>合并同底数幂（指数相加）：</p>
+                    <div class="math-block">
+                        \[
+                        \text{目标} = \theta^{8+1} \cdot (1-\theta)^{2+1}
+                        = \theta^{9} (1-\theta)^{3}
+                        \]
+                    </div>
+                    <div class="derivation-note">
+                        <strong>【先验怎么变成指数的？】</strong> \(P(\theta)=\theta(1-\theta)\) 给 \(\theta\) 的指数加了 1，给
+                        \((1-\theta)\) 的指数加了 1。
+                        所以原来 8 变成 9，2 变成 3。
+                    </div>
+                </div>
+
+                <h3>3.2 取对数</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}(\theta) = \ln\left[\theta^{9}(1-\theta)^{3}\right]
+                    = 9\ln\theta + 3\ln(1-\theta)
+                    \]
+                </div>
+
+                <h3>3.3 对 \(\theta\) 求导</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}'(\theta) = \frac{9}{\theta} - \frac{3}{1-\theta}
+                    \]
+                </div>
+
+                <h3>3.4 令导数为 0，解方程</h3>
+                <div class="derivation-step">
+                    <div class="math-block">
+                        \[
+                        \frac{9}{\theta} - \frac{3}{1-\theta} = 0
+                        \quad\Longrightarrow\quad
+                        \frac{9}{\theta} = \frac{3}{1-\theta}
+                        \]
+                    </div>
+                    <p>交叉相乘：</p>
+                    <div class="math-block">
+                        \[
+                        9(1-\theta) = 3\theta
+                        \quad\Longrightarrow\quad
+                        9 - 9\theta = 3\theta
+                        \quad\Longrightarrow\quad
+                        9 = 12\theta
+                        \quad\Longrightarrow\quad
+                        \theta = \frac{9}{12} = 0.75
+                        \]
+                    </div>
+                </div>
+
+                <h3>3.5 验证最大值</h3>
+                <div class="math-block">
+                    \[
+                    \ell_{MAP}''(\theta) = -\frac{9}{\theta^2} - \frac{3}{(1-\theta)^2} < 0 \] </div>
+
+                        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                            <div class="formula-source">✅ MAP 最终结论</div>
+                            \[
+                            \boxed{\hat{\theta}_{MAP} = \frac{9}{12} = 0.75}
+                            \]
+                            <p style="font-size:0.9rem;color:#475569;margin-top:0.3rem;">
+                                最大后验估计认为：考虑了「硬币大多公平」的先验后，正面概率被拉向 0.5，估计值为 <strong>0.75</strong>。</p>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第四部分：MLE 与 MAP 的核心对比                               -->
+                        <!-- ============================================================ -->
+                        <h2>第四部分 · MLE 与 MAP 的核心对比</h2>
+
+                        <div class="compare-box">
+                            <div class="compare-item">
+                                <h4>📊 最大似然估计 (MLE)</h4>
+                                <div class="math-block">
+                                    \[
+                                    \hat{\theta}_{MLE} = \arg\max_{\theta} P(\text{数据}|\theta)
+                                    \]
+                                </div>
+                                <p><strong>只看数据</strong>，没有任何先验信念。</p>
+                                <p>本例结果：\(\hat{\theta}_{MLE} = \dfrac{8}{10} = 0.8\)</p>
+                            </div>
+                            <div class="compare-item">
+                                <h4>📊 最大后验估计 (MAP)</h4>
+                                <div class="math-block">
+                                    \[
+                                    \hat{\theta}_{MAP} = \arg\max_{\theta} P(\text{数据}|\theta) \cdot P(\theta)
+                                    \]
+                                </div>
+                                <p><strong>数据 + 先验</strong>，先验 \(P(\theta)=\theta(1-\theta)\)。</p>
+                                <p>本例结果：\(\hat{\theta}_{MAP} = \dfrac{9}{12} = 0.75\)</p>
+                            </div>
+                        </div>
+
+                        <h3>4.1 公式对比（并排看）</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>方法</th>
+                                    <th>目标函数（取对数前）</th>
+                                    <th>目标函数（取对数后）</th>
+                                    <th>解出的 \(\theta\)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>MLE</strong></td>
+                                    <td>\(\theta^{8}(1-\theta)^{2}\)</td>
+                                    <td>\(8\ln\theta + 2\ln(1-\theta)\)</td>
+                                    <td>\(\dfrac{8}{10}=0.8\)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MAP</strong></td>
+                                    <td>\(\theta^{9}(1-\theta)^{3}\)</td>
+                                    <td>\(9\ln\theta + 3\ln(1-\theta)\)</td>
+                                    <td>\(\dfrac{9}{12}=0.75\)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="derivation-note">
+                            <strong>【规律发现】</strong> MAP 仅仅是在 MLE 的指数上 <strong>各加了一个 1</strong>（来自先验
+                            \(\theta(1-\theta)\)），
+                            所以结果从 \(\frac{8}{10}\) 变成了 \(\frac{9}{12}\)。先验相当于 <strong>「虚拟数据」</strong>——提前看到了 1 次正面和 1
+                            次反面。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第五部分：通用公式（n 个独立观测值）                           -->
+                        <!-- ============================================================ -->
+                        <h2>第五部分 · 通用框架：\(n\) 个独立观测值</h2>
+                        <p>现在把问题推广到 <strong>任意 \(n\) 次独立试验</strong>，观测值为 \(x_1, x_2, \dots, x_n\)。</p>
+
+                        <h3>5.1 通用似然函数</h3>
+                        <div class="math-block">
+                            \[
+                            L(\theta) = \prod_{i=1}^{n} P(x_i \mid \theta)
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【含义】</strong> 连乘符号 \(\prod\) 表示把 \(n\) 个独立事件的概率乘在一起。
+                            因为每次试验独立，所以联合概率等于各自概率的乘积。
+                        </div>
+
+                        <h3>5.2 取对数（通用）</h3>
+                        <div class="math-block">
+                            \[
+                            \ell(\theta) = \ln L(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta)
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【含义】</strong> 连乘变成连加（\(\sum\)），这是对数的核心威力。
+                        </div>
+
+                        <h3>5.3 MLE 通用极值方程</h3>
+                        <div class="math-block">
+                            \[
+                            \boxed{\sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) = 0}
+                            \]
+                        </div>
+                        <p>解这个方程，得到的 \(\theta\) 就是最大似然估计值。</p>
+
+                        <h3>5.4 MAP 通用极值方程</h3>
+                        <div class="math-block">
+                            \[
+                            \boxed{\sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) + \frac{d}{d\theta} \ln
+                            P(\theta) = 0}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【对比】</strong> MAP 的方程比 MLE <strong>多了一项</strong> \(\frac{d}{d\theta}\ln P(\theta)\)，
+                            这就是「先验」对估计值的 <strong>拉扯效应</strong>。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第六部分：抛硬币代入通用公式验证                              -->
+                        <!-- ============================================================ -->
+                        <h2>第六部分 · 验证：把通用公式套回抛硬币</h2>
+                        <p>抛 \(n\) 次硬币，正面出现 \(k\) 次。单个数据点 \(x_i \in \{1,0\}\) 的概率为：</p>
+                        <div class="math-block">
+                            \[
+                            P(x_i \mid \theta) = \theta^{x_i} (1-\theta)^{1-x_i}
+                            \]
+                        </div>
+                        <p>（当 \(x_i=1\) 时为 \(\theta\)，当 \(x_i=0\) 时为 \(1-\theta\)，完美统一。）</p>
+
+                        <h3>6.1 代入 MLE 通用公式</h3>
+                        <div class="derivation-step">
+                            <p>取对数：\(\ln P(x_i \mid \theta) = x_i \ln\theta + (1-x_i)\ln(1-\theta)\)</p>
+                            <p>代入 \(\sum_{i=1}^{n} \frac{d}{d\theta}\ln P = 0\)：</p>
+                            <div class="math-block">
+                                \[
+                                \sum_{i=1}^{n} \left( \frac{x_i}{\theta} - \frac{1-x_i}{1-\theta} \right) = 0
+                                \]
+                            </div>
+                            <p>因为 \(\sum x_i = k\)，\(\sum (1-x_i) = n-k\)：</p>
+                            <div class="math-block">
+                                \[
+                                \frac{k}{\theta} - \frac{n-k}{1-\theta} = 0
+                                \quad\Longrightarrow\quad
+                                k(1-\theta) = (n-k)\theta
+                                \quad\Longrightarrow\quad
+                                \theta = \frac{k}{n}
+                                \]
+                            </div>
+                            <div class="derivation-note">
+                                <strong>✅ 完美吻合！</strong> MLE 的结果就是 <strong>频率</strong> \(k/n\)。
+                            </div>
+                        </div>
+
+                        <h3>6.2 代入 MAP 通用公式（先验 \(P(\theta)=\theta(1-\theta)\)）</h3>
+                        <div class="derivation-step">
+                            <p>先验对数：\(\ln P(\theta)=\ln\theta+\ln(1-\theta)\)，导数为 \(\frac{1}{\theta} -
+                                \frac{1}{1-\theta}\)</p>
+                            <p>代入 MAP 通式：</p>
+                            <div class="math-block">
+                                \[
+                                \left( \frac{k}{\theta} - \frac{n-k}{1-\theta} \right)
+                                + \left( \frac{1}{\theta} - \frac{1}{1-\theta} \right) = 0
+                                \]
+                            </div>
+                            <p>合并同类项：</p>
+                            <div class="math-block">
+                                \[
+                                \frac{k+1}{\theta} - \frac{n-k+1}{1-\theta} = 0
+                                \quad\Longrightarrow\quad
+                                (k+1)(1-\theta) = (n-k+1)\theta
+                                \quad\Longrightarrow\quad
+                                \theta = \frac{k+1}{n+2}
+                                \]
+                            </div>
+                            <div class="derivation-note">
+                                <strong>✅ 完美吻合！</strong> 对于 \(n=10, k=8\)，得 \(\frac{9}{12}=0.75\)。
+                                先验给分子加了 1，分母加了 2（1 正 1 反）。
+                            </div>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <!-- ============================================================ -->
+                        <!-- 第七部分：终极总结                                              -->
+                        <!-- ============================================================ -->
+                        <h2>第七部分 · 终极总结（贴在笔记本扉页）</h2>
+
+                        <div class="math-block" style="background:#eef2f6;border-color:#cbd5e1;">
+                            <div class="formula-source">📖 两大核心公式</div>
+                            <table style="box-shadow:none;margin:0.6rem 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="background:#1e293b;color:white;">方法</th>
+                                        <th style="background:#1e293b;color:white;">目标函数（取对数后）</th>
+                                        <th style="background:#1e293b;color:white;">极值方程（令导数为 0）</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>MLE</strong></td>
+                                        <td>\(\displaystyle \ell(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta)\)</td>
+                                        <td>\(\displaystyle \sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) =
+                                            0\)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>MAP</strong></td>
+                                        <td>\(\displaystyle \ell_{MAP}(\theta) = \sum_{i=1}^{n} \ln P(x_i \mid \theta) +
+                                            \ln P(\theta)\)</td>
+                                        <td>\(\displaystyle \sum_{i=1}^{n} \frac{d}{d\theta} \ln P(x_i \mid \theta) +
+                                            \frac{d}{d\theta} \ln P(\theta) = 0\)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="note-box">
+                            <strong>🎯 操作口诀：</strong><br>
+                            遇见数据多，先写似然乘积；<br>
+                            取对数变求和，求导令零解方程。<br>
+                            MLE 解数据，MAP 多加个先验导。
+                        </div>
+
+                        <div
+                            style="background:#f0f7ff;padding:1.5rem 2rem;border-radius:20px;border:1px solid #dbeafe;margin-top:1.5rem;">
+                            <h4 style="margin-top:0;">📌 什么场景用什么？</h4>
+                            <ul style="font-size:1.05rem;line-height:2.2;margin-left:1.2rem;">
+                                <li><strong>有大量可靠数据</strong> → 用 <strong>MLE</strong>（简单直接，数据会淹没先验）。</li>
+                                <li><strong>数据很少</strong> 或 <strong>先验非常强</strong>（如物理定律） → 用 <strong>MAP</strong>（更稳健）。
+                                </li>
+                                <li><strong>数据量极大时</strong>，MLE 和 MAP 结果 <strong>趋同</strong>（先验被稀释）。</li>
+                            </ul>
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <h2>第八部分 · 多个事件（A、B、C 三类结果）</h2>
+                        <p>当一次试验有 <strong>3 种互斥结果</strong>（如抽奖分红、黄、蓝），记为 A、B、C，对应概率 \(\theta_A, \theta_B, \theta_C\)，且
+                            \(\theta_A+\theta_B+\theta_C=1\)。</p>
+                        <p>重复 \(N\) 次，观察到 \(n_A, n_B, n_C\) 次，\(n_A+n_B+n_C=N\)。</p>
+
+                        <h3>8.1 MLE 结果</h3>
+                        <div class="math-block">
+                            \[
+                            \hat{\theta}_A^{MLE} = \frac{n_A}{N},\quad
+                            \hat{\theta}_B^{MLE} = \frac{n_B}{N},\quad
+                            \hat{\theta}_C^{MLE} = \frac{n_C}{N}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>推导思路：</strong> 似然函数为 \(\theta_A^{n_A}\theta_B^{n_B}\theta_C^{n_C}\)，
+                            在约束 \(\theta_A+\theta_B+\theta_C=1\) 下求偏导，得到频率比例。
+                        </div>
+
+                        <h3>8.2 MAP 结果（先验 \(\theta_A\theta_B\theta_C\)）</h3>
+                        <div class="math-block">
+                            \[
+                            \hat{\theta}_A^{MAP} = \frac{n_A+1}{N+3},\quad
+                            \hat{\theta}_B^{MAP} = \frac{n_B+1}{N+3},\quad
+                            \hat{\theta}_C^{MAP} = \frac{n_C+1}{N+3}
+                            \]
+                        </div>
+                        <div class="derivation-note">
+                            <strong>【规律】</strong> 每个类别的分子加 1，分母加 3（共 3 个类别）。
+                            这就是「虚拟数据」——提前看到 A、B、C 各一次。
+                        </div>
+
+                        <hr class="hr-light">
+
+                        <div class="footer-meta">
+                            📐 使用 KaTeX 渲染 &nbsp;|&nbsp; 从零推导 &nbsp;|&nbsp; 最大似然估计 · 最大后验估计
+                        </div>
+
+                </div>
+</body>
+
+</html>
+
+
+================================================
+FILE: 2026.8.31/index.html
+================================================
+[Empty file]
+

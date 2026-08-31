@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>PC 幽灵监控 Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+        }
+
+        .badge {
+            background: #2d2d2d;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+            border-bottom: 1px solid #30363d;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 14px;
+            color: #8b949e;
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: #f0f6fc;
+            border-bottom: 2px solid #f78166;
+        }
+
+        .card {
+            background: #161b22;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #30363d;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-item {
+            background: #0d1117;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #30363d;
+        }
+
+        .metric-item .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .metric-item .label {
+            font-size: 0.7rem;
+            color: #8b949e;
+        }
+
+        .danger-bg {
+            background: #2d1b1b;
+            border-left-color: #f85149;
+        }
+
+        .warning-bg {
+            background: #2d2416;
+            border-left-color: #d29922;
+        }
+
+        .good-bg {
+            background: #0f2b1f;
+            border-left-color: #3fb950;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-danger {
+            background: #da3633;
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: #d29922;
+            color: #000;
+        }
+
+        .btn-success {
+            background: #2ea043;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+
+        .btn-sm {
+            padding: 2px 8px;
+            font-size: 0.6rem;
+        }
+
+        .power-btn {
+            background: #da3633;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        th,
+        td {
+            padding: 6px 4px;
+            text-align: left;
+            border-bottom: 1px solid #21262d;
+        }
+
+        th {
+            background: #0d1117;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            color: #8b949e;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: #f0f6fc;
+        }
+
+        .scroll-table {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .cmd-output {
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: none;
+            z-index: 999;
+            font-size: 0.8rem;
+            border: 1px solid #444;
+            max-width: 90%;
+        }
+
+        .error-box {
+            color: #f85149;
+            background: #2d1b1b;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            border: 1px solid #da3633;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #30363d;
+            border-top-color: #f78166;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .collapse-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: #8b949e;
+        }
+
+        .collapse-toggle:hover {
+            color: #f0f6fc;
+        }
+
+        .collapse-content {
+            margin-top: 8px;
+        }
+
+        .startup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            background: #0d1117;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            border-left: 3px solid #2ea043;
+        }
+
+        .startup-item .path {
+            color: #8b949e;
+            font-size: 0.7rem;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .startup-item .location {
+            color: #f78166;
+            font-size: 0.6rem;
+            background: #2d1b1b;
+            padding: 0 6px;
+            border-radius: 3px;
+        }
+
+        .cwd-display {
+            background: #0d1117;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin-bottom: 8px;
+            border: 1px solid #30363d;
+        }
+
+        @media (max-width: 600px) {
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .tabs .tab-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+
+            .startup-item .path {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🖥️ PC 监控 <span class="badge">Hardcore</span></h1>
+        <div>
+            <button class="btn btn-secondary" onclick="refreshAll()" id="refreshBtn">🔄 刷新</button>
+        </div>
+    </div>
+
+    <div class="tabs" id="tabNav">
+        <button class="tab-btn active" data-tab="tab1">📊 概览</button>
+        <button class="tab-btn" data-tab="tab2">⚙️ 进程</button>
+        <button class="tab-btn" data-tab="tab3">🔧 服务</button>
+        <button class="tab-btn" data-tab="tab4">🌐 网络/日志</button>
+        <button class="tab-btn" data-tab="tab5">💻 命令</button>
+    </div>
+
+    <!-- TAB 1: 概览 -->
+    <div id="tab1" class="tab-content">
+        <div class="card">
+            <div class="card-header">📈 CPU</div>
+            <div class="grid-2">
+                <div class="metric-item" id="cpu-percent-item"><span class="label">使用率</span><br><span class="value"
+                        id="cpu-percent">-</span>%</div>
+                <div class="metric-item" id="cpu-queue-item"><span class="label">队列长度</span><br><span class="value"
+                        id="cpu-queue">-</span></div>
+                <div class="metric-item"><span class="label">DPC%</span><br><span class="value"
+                        id="dpc-percent">-</span>%</div>
+                <div class="metric-item"><span class="label">上下文切换/秒</span><br><span class="value"
+                        id="ctx-switch">-</span></div>
+                <div class="metric-item"><span class="label">中断/秒</span><br><span class="value" id="interrupts">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">🧠 内存</div>
+            <div class="grid-2">
+                <div class="metric-item"><span class="label">可用</span><br><span class="value"
+                        id="mem-available">-</span> GB</div>
+                <div class="metric-item"><span class="label">总内存</span><br><span class="value" id="mem-total">-</span>
+                    GB</div>
+                <div class="metric-item"><span class="label">使用率</span><br><span class="value"
+                        id="mem-percent">-</span>%</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">💾 磁盘 (C:)</div>
+            <div class="grid-3">
+                <div class="metric-item"><span class="label">使用率</span><br><span class="value" id="disk-usage">-</span>%
+                </div>
+                <div class="metric-item"><span class="label">读延迟(秒)</span><br><span class="value"
+                        id="disk-read">-</span></div>
+                <div class="metric-item"><span class="label">写延迟(秒)</span><br><span class="value"
+                        id="disk-write">-</span></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">🌐 网络</div>
+            <div class="grid-2">
+                <div class="metric-item"><span class="label">已发送</span><br><span class="value" id="net-sent">-</span> MB
+                </div>
+                <div class="metric-item"><span class="label">已接收</span><br><span class="value" id="net-recv">-</span> MB
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">⚡ 电源控制</div>
+            <div class="flex-row">
+                <button class="power-btn" onclick="powerAction('reboot')">重启</button>
+                <button class="power-btn" onclick="powerAction('shutdown')" style="background:#da3633;">关机</button>
+                <button class="btn btn-secondary" onclick="powerAction('sleep')">睡眠</button>
+                <button class="btn btn-secondary" onclick="powerAction('hibernate')">休眠</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header collapse-toggle" onclick="toggleCollapse('temp-collapse')">🌡️ 温度 <span
+                    id="temp-arrow">▼</span></div>
+            <div id="temp-collapse" class="collapse-content">
+                <div id="temp-display" style="font-size:0.9rem;">加载中...</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header collapse-toggle" onclick="toggleCollapse('startup-collapse')">🔍 开机自启项 <span
+                    id="startup-arrow">▼</span></div>
+            <div id="startup-collapse" class="collapse-content">
+                <div id="startup-display">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: 进程 -->
+    <div id="tab2" class="tab-content hidden">
+        <div class="card">
+            <div class="flex-row" style="justify-content:space-between;">
+                <input class="search-box" id="procSearch" placeholder="🔍 按名称/PID搜索..." oninput="filterTable()">
+                <span style="font-size:0.8rem;" id="proc-count-badge">0</span>
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortProcesses('pid')">PID ↕</th>
+                            <th onclick="sortProcesses('name')">名称 ↕</th>
+                            <th onclick="sortProcesses('cpu_percent')">CPU% ↕</th>
+                            <th onclick="sortProcesses('memory_mb')">内存MB ↕</th>
+                            <th>状态</th>
+                            <th>命令行</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="process-tbody">
+                        <tr>
+                            <td colspan="7">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:10px;">
+                <div class="flex-row">
+                    <input id="start-cmd" placeholder="启动命令 (如 notepad.exe)" style="flex:1;" list="cmd-history">
+                    <datalist id="cmd-history"></datalist>
+                    <button class="btn btn-success" onclick="startProc()">启动</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: 服务 -->
+    <div id="tab3" class="tab-content hidden">
+        <div class="card">
+            <div class="flex-row" style="justify-content:space-between;">
+                <input class="search-box" id="svcSearch" placeholder="🔍 搜索服务..." oninput="filterServices()">
+                <button class="btn btn-secondary" onclick="loadServices()">刷新</button>
+            </div>
+            <div class="scroll-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>显示名</th>
+                            <th>状态</th>
+                            <th>启动类型</th>
+                            <th>PID</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="service-tbody">
+                        <tr>
+                            <td colspan="5">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: 网络连接 + 事件日志 -->
+    <div id="tab4" class="tab-content hidden">
+        <div class="card">
+            <div class="card-header">🌐 网络连接 (TCP/UDP)</div>
+            <div class="scroll-table" style="max-height:250px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>进程</th>
+                            <th>本地</th>
+                            <th>远程</th>
+                            <th>协议</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conn-tbody">
+                        <tr>
+                            <td colspan="5">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">⚠️ 系统事件日志 (最近错误/警告)</div>
+            <div id="events-display" style="font-size:0.75rem; max-height:250px; overflow-y:auto;">加载中...</div>
+        </div>
+    </div>
+
+    <!-- TAB 5: 命令终端 -->
+    <div id="tab5" class="tab-content hidden">
+        <div class="card">
+            <div class="card-header">💻 命令终端</div>
+            <div class="cwd-display">📁 当前目录: <span id="cwd-display">{{ cwd }}</span></div>
+            <div class="flex-row">
+                <textarea id="cmdInput" placeholder="输入CMD命令 (Shift+Enter换行，Enter执行)"
+                    style="flex:1; background:#0d1117; border:1px solid #30363d; color:#fff; padding:8px; border-radius:4px; font-family:monospace; resize:vertical; min-height:60px;"
+                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); runCommand();}"></textarea>
+            </div>
+            <div class="flex-row" style="margin-top:6px;">
+                <button class="btn btn-success" onclick="runCommand()">执行</button>
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('cmdOutput').innerText=''">清空</button>
+            </div>
+            <div class="cmd-output" id="cmdOutput">等待输入命令...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const TOKEN = '{{ token }}';
+        const BASE_URL = '';
+        const CWD = '{{ cwd }}';
+        let allProcesses = [];
+        let allServices = [];
+        let processSortKey = 'cpu_percent';
+        let processSortAsc = false;
+
+        // ----- 工具函数 -----
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            t.style.background = isError ? '#da3633' : '#2ea043';
+            t.style.color = '#fff';
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        function showError(containerId, errorMsg) {
+            const el = document.getElementById(containerId);
+            if (el) el.innerHTML = `<div class="error-box">❌ ${errorMsg}</div>`;
+        }
+
+        function toggleCollapse(id) {
+            const content = document.getElementById(id);
+            const arrow = document.getElementById(id.replace('collapse', 'arrow'));
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                if (arrow) arrow.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                if (arrow) arrow.textContent = '▶';
+            }
+        }
+
+        // ----- Tab切换 -----
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const tabId = this.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+                if (tabId === 'tab3') loadServices();
+                if (tabId === 'tab4') { loadConnections(); loadEvents(); }
+                if (tabId === 'tab1') { loadTemperatures(); loadStartup(); }
+            });
+        });
+
+        // ----- 刷新按钮 -----
+        function refreshAll() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '⏳ 刷新中...';
+            btn.disabled = true;
+            Promise.all([
+                refreshOverview(),
+                loadProcesses(),
+                (() => { if (!document.getElementById('tab3').classList.contains('hidden')) return loadServices(); return Promise.resolve(); })(),
+                (() => { if (!document.getElementById('tab4').classList.contains('hidden')) { loadConnections(); loadEvents(); } return Promise.resolve(); })(),
+                (() => { if (!document.getElementById('tab1').classList.contains('hidden')) { loadTemperatures(); loadStartup(); } return Promise.resolve(); })()
+            ]).finally(() => {
+                btn.innerHTML = '🔄 刷新';
+                btn.disabled = false;
+                showToast('已刷新');
+            });
+        }
+
+        // ----- 概览 -----
+        async function refreshOverview() {
+            try {
+                const resp = await fetch(`${BASE_URL}/metrics?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                document.getElementById('cpu-percent').textContent = data.cpu.percent;
+                document.getElementById('cpu-queue').textContent = data.cpu.queue_length;
+                document.getElementById('mem-available').textContent = data.memory.available_gb;
+                document.getElementById('mem-total').textContent = data.memory.total_gb;
+                document.getElementById('mem-percent').textContent = data.memory.percent;
+                document.getElementById('disk-usage').textContent = data.disk.c_usage_percent;
+                document.getElementById('disk-read').textContent = data.disk.avg_read_sec;
+                document.getElementById('disk-write').textContent = data.disk.avg_write_sec;
+                document.getElementById('dpc-percent').textContent = data.cpu.dpc_percent;
+                document.getElementById('ctx-switch').textContent = data.cpu.ctx_switches_sec;
+                document.getElementById('interrupts').textContent = data.cpu.interrupts_sec;
+                document.getElementById('net-sent').textContent = data.network.sent_mb;
+                document.getElementById('net-recv').textContent = data.network.recv_mb;
+
+                const q = data.cpu.queue_length, c = data.cpu.cores;
+                const queueItem = document.getElementById('cpu-queue-item');
+                queueItem.className = 'metric-item' + (q > c ? ' danger-bg' : '');
+                const dpcItem = document.getElementById('dpc-percent').parentElement.parentElement;
+                dpcItem.className = 'metric-item' + (data.cpu.dpc_percent > 5 ? ' danger-bg' : data.cpu.dpc_percent > 2 ? ' warning-bg' : '');
+                const readItem = document.getElementById('disk-read').parentElement.parentElement;
+                readItem.className = 'metric-item' + (data.disk.avg_read_sec > 0.03 ? ' danger-bg' : data.disk.avg_read_sec > 0.02 ? ' warning-bg' : '');
+                const ctxItem = document.getElementById('ctx-switch').parentElement.parentElement;
+                ctxItem.className = 'metric-item' + (data.cpu.ctx_switches_sec > 50000 ? ' danger-bg' : '');
+            } catch (e) {
+                showToast('概览加载失败: ' + e.message, true);
+                ['cpu-percent', 'cpu-queue', 'mem-available', 'mem-total', 'mem-percent', 'disk-usage', 'disk-read', 'disk-write', 'dpc-percent', 'ctx-switch', 'interrupts', 'net-sent', 'net-recv'].forEach(id => {
+                    document.getElementById(id).textContent = '❌';
+                });
+            }
+        }
+
+        // ----- 温度 -----
+        async function loadTemperatures() {
+            try {
+                const resp = await fetch(`${BASE_URL}/temperatures?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const temps = await resp.json();
+                let html = '';
+                for (const [key, val] of Object.entries(temps)) {
+                    html += `<span style="margin-right:10px;">${key}: ${val}°C</span>`;
+                }
+                document.getElementById('temp-display').innerHTML = html || '无温度数据';
+            } catch (e) {
+                showError('temp-display', '温度加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 开机自启（卡片式列表） -----
+        async function loadStartup() {
+            try {
+                const resp = await fetch(`${BASE_URL}/startup?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const items = await resp.json();
+                const container = document.getElementById('startup-display');
+                if (!items.length) { container.innerHTML = '无自启项'; return; }
+                let html = '';
+                for (const item of items) {
+                    html += `<div class="startup-item">
+                    <div>
+                        <strong>${item.name}</strong>
+                        <div class="path" title="${item.path}">${item.path.length > 60 ? item.path.substring(0, 60) + '...' : item.path}</div>
+                    </div>
+                    <span class="location">${item.location}</span>
+                </div>`;
+                }
+                container.innerHTML = html;
+            } catch (e) {
+                showError('startup-display', '自启项加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 进程列表 -----
+        async function loadProcesses() {
+            const tbody = document.getElementById('process-tbody');
+            tbody.innerHTML = '<tr><td colspan="7"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/processes?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                allProcesses = await resp.json();
+                document.getElementById('proc-count-badge').textContent = allProcesses.length;
+                renderProcesses();
+                const hist = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
+                const datalist = document.getElementById('cmd-history');
+                datalist.innerHTML = hist.map(c => `<option value="${c}">`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="error-box">进程加载失败: ${e.message}</td></tr>`;
+                showToast('进程加载失败', true);
+            }
+        }
+
+        function renderProcesses() {
+            const list = [...allProcesses];
+            if (processSortKey) {
+                list.sort((a, b) => {
+                    let va = a[processSortKey] ?? 0, vb = b[processSortKey] ?? 0;
+                    if (typeof va === 'string') va = va.toLowerCase();
+                    if (typeof vb === 'string') vb = vb.toLowerCase();
+                    if (va < vb) return processSortAsc ? -1 : 1;
+                    if (va > vb) return processSortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+            const tbody = document.getElementById('process-tbody');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="7">无进程</td></tr>'; return; }
+            let html = '';
+            for (const p of list.slice(0, 150)) {
+                const statusClass = p.status === 'running' ? 'good' : 'warning';
+                const cmdline = p.cmdline || '';
+                const cmdDisplay = cmdline.length > 30 ? cmdline.substring(0, 30) + '...' : cmdline;
+                html += `<tr>
+                <td>${p.pid}</td>
+                <td title="${p.name}">${p.name}</td>
+                <td>${p.cpu_percent}</td>
+                <td>${p.memory_mb}</td>
+                <td class="${statusClass}">${p.status}</td>
+                <td title="${cmdline}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cmdDisplay}</td>
+                <td>
+                    <div class="flex-row" style="gap:2px; flex-wrap:wrap;">
+                        <button class="btn btn-danger btn-sm" onclick="killProc(${p.pid})">🗑️ 杀</button>
+                        <button class="btn btn-warning btn-sm" onclick="suspendProc(${p.pid})">⏸️ 挂</button>
+                        <button class="btn btn-success btn-sm" onclick="resumeProc(${p.pid})">▶️ 恢</button>
+                        <select onchange="setPriority(${p.pid}, this.value)" style="width:70px; font-size:0.6rem;">
+                            <option value="">优先级</option>
+                            <option value="realtime">实时</option>
+                            <option value="high">高</option>
+                            <option value="above_normal">高于标准</option>
+                            <option value="normal" selected>标准</option>
+                            <option value="below_normal">低于标准</option>
+                            <option value="idle">空闲</option>
+                        </select>
+                        <input placeholder="核心(如0,1)" style="width:60px; font-size:0.6rem;" id="aff_${p.pid}">
+                        <button class="btn btn-secondary btn-sm" onclick="setAffinity(${p.pid})">绑定</button>
+                    </div>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function sortProcesses(key) {
+            if (processSortKey === key) processSortAsc = !processSortAsc;
+            else { processSortKey = key; processSortAsc = false; }
+            renderProcesses();
+        }
+
+        function filterTable() {
+            const q = document.getElementById('procSearch').value.toLowerCase();
+            if (!q) { renderProcesses(); return; }
+            const filtered = allProcesses.filter(p => p.name.toLowerCase().includes(q) || String(p.pid).includes(q));
+            const tbody = document.getElementById('process-tbody');
+            if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7">无匹配进程</td></tr>'; return; }
+            let html = '';
+            for (const p of filtered.slice(0, 150)) {
+                const cmdline = p.cmdline || '';
+                const cmdDisplay = cmdline.length > 30 ? cmdline.substring(0, 30) + '...' : cmdline;
+                html += `<tr>
+                <td>${p.pid}</td>
+                <td title="${p.name}">${p.name}</td>
+                <td>${p.cpu_percent}</td>
+                <td>${p.memory_mb}</td>
+                <td class="${p.status === 'running' ? 'good' : 'warning'}">${p.status}</td>
+                <td title="${cmdline}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cmdDisplay}</td>
+                <td>
+                    <div class="flex-row" style="gap:2px; flex-wrap:wrap;">
+                        <button class="btn btn-danger btn-sm" onclick="killProc(${p.pid})">🗑️ 杀</button>
+                        <button class="btn btn-warning btn-sm" onclick="suspendProc(${p.pid})">⏸️ 挂</button>
+                        <button class="btn btn-success btn-sm" onclick="resumeProc(${p.pid})">▶️ 恢</button>
+                        <select onchange="setPriority(${p.pid}, this.value)" style="width:70px; font-size:0.6rem;">
+                            <option value="">优先级</option>
+                            <option value="realtime">实时</option>
+                            <option value="high">高</option>
+                            <option value="above_normal">高于标准</option>
+                            <option value="normal" selected>标准</option>
+                            <option value="below_normal">低于标准</option>
+                            <option value="idle">空闲</option>
+                        </select>
+                        <input placeholder="核心(如0,1)" style="width:60px; font-size:0.6rem;" id="aff_${p.pid}">
+                        <button class="btn btn-secondary btn-sm" onclick="setAffinity(${p.pid})">绑定</button>
+                    </div>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        // ----- 进程操作 -----
+        async function killProc(pid) { if (!confirm(`终止 ${pid}?`)) return; try { const r = await fetch(`${BASE_URL}/process/kill?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已终止 ${pid}`); loadProcesses(); } catch (e) { showToast('终止失败: ' + e.message, true); } }
+        async function suspendProc(pid) { if (!confirm(`挂起 ${pid}?`)) return; try { const r = await fetch(`${BASE_URL}/process/suspend?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已挂起 ${pid}`); loadProcesses(); } catch (e) { showToast('挂起失败: ' + e.message, true); } }
+        async function resumeProc(pid) { try { const r = await fetch(`${BASE_URL}/process/resume?pid=${pid}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已恢复 ${pid}`); loadProcesses(); } catch (e) { showToast('恢复失败: ' + e.message, true); } }
+        async function setPriority(pid, val) { if (!val) return; try { const r = await fetch(`${BASE_URL}/process/priority?pid=${pid}&priority=${val}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已设置 ${pid} 优先级`); } catch (e) { showToast('设置失败: ' + e.message, true); } }
+        async function setAffinity(pid) {
+            const val = document.getElementById(`aff_${pid}`).value;
+            if (!val) return showToast('请输入核心编号，如 0,1', true);
+            try { const r = await fetch(`${BASE_URL}/process/affinity?pid=${pid}&cores=${val}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`已绑定 ${pid} 到核心 ${val}`); } catch (e) { showToast('绑定失败: ' + e.message, true); }
+        }
+        async function startProc() {
+            const cmd = document.getElementById('start-cmd').value.trim();
+            if (!cmd) return showToast('输入命令', true);
+            try {
+                const r = await fetch(`${BASE_URL}/process/start?command=${encodeURIComponent(cmd)}&token=${TOKEN}`, { method: 'POST' }); if (!r.ok) throw new Error(await r.text()); showToast(`启动成功`); loadProcesses();
+                let hist = JSON.parse(localStorage.getItem('cmdHistory') || '[]');
+                hist = hist.filter(c => c !== cmd);
+                hist.unshift(cmd);
+                if (hist.length > 5) hist = hist.slice(0, 5);
+                localStorage.setItem('cmdHistory', JSON.stringify(hist));
+                const datalist = document.getElementById('cmd-history');
+                datalist.innerHTML = hist.map(c => `<option value="${c}">`).join('');
+            } catch (e) { showToast('启动失败: ' + e.message, true); }
+        }
+
+        // ----- 服务列表 -----
+        async function loadServices() {
+            const tbody = document.getElementById('service-tbody');
+            tbody.innerHTML = '<tr><td colspan="5"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/services?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                allServices = await resp.json();
+                renderServices(allServices);
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="error-box">服务加载失败: ${e.message}</td></tr>`;
+                showToast('服务加载失败', true);
+            }
+        }
+
+        function renderServices(list) {
+            const tbody = document.getElementById('service-tbody');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="5">无服务</td></tr>'; return; }
+            let html = '';
+            for (const s of list) {
+                const isRunning = s.status === 'Running';
+                html += `<tr>
+                <td title="${s.name}">${s.display_name}</td>
+                <td>${isRunning ? '🟢 运行中' : '🔴 已停止'}</td>
+                <td>${s.start_mode}</td>
+                <td>${s.process_id || '-'}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="svcControl('${s.name}','start')" ${isRunning ? 'disabled' : ''}>▶️ 启动</button>
+                    <button class="btn btn-danger btn-sm" onclick="svcControl('${s.name}','stop')" ${!isRunning ? 'disabled' : ''}>⏹ 停止</button>
+                    <button class="btn btn-warning btn-sm" onclick="svcControl('${s.name}','restart')">🔄 重启</button>
+                </td>
+            </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function filterServices() {
+            const q = document.getElementById('svcSearch').value.toLowerCase();
+            if (!q) return renderServices(allServices);
+            const filtered = allServices.filter(s => s.display_name.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+            renderServices(filtered);
+        }
+
+        async function svcControl(name, action) {
+            if (!confirm(`确定${action}服务 ${name}?`)) return;
+            try {
+                const resp = await fetch(`${BASE_URL}/service/control?name=${name}&action=${action}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(await resp.text());
+                const data = await resp.json();
+                if (data.success) showToast(`${action} 服务 ${name} 成功`);
+                else showToast(`操作失败`, true);
+                loadServices();
+            } catch (e) { showToast('操作异常: ' + e.message, true); }
+        }
+
+        // ----- 网络连接 -----
+        async function loadConnections() {
+            const tbody = document.getElementById('conn-tbody');
+            tbody.innerHTML = '<tr><td colspan="5"><span class="spinner"></span> 加载中...</td></tr>';
+            try {
+                const resp = await fetch(`${BASE_URL}/connections?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const conns = await resp.json();
+                if (!conns.length) { tbody.innerHTML = '<tr><td colspan="5">无连接</td></tr>'; return; }
+                let html = '';
+                for (const c of conns.slice(0, 100)) {
+                    const statusClass = c.status === 'ESTABLISHED' ? 'good' : '';
+                    html += `<tr><td>${c.process} (${c.pid})</td><td>${c.local}</td><td>${c.remote}</td><td>${c.type}</td><td class="${statusClass}">${c.status}</td></tr>`;
+                }
+                tbody.innerHTML = html;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="error-box">网络连接加载失败: ${e.message}</td></tr>`;
+                showToast('网络连接加载失败', true);
+            }
+        }
+
+        // ----- 事件日志 -----
+        async function loadEvents() {
+            const container = 'events-display';
+            try {
+                const resp = await fetch(`${BASE_URL}/events?token=${TOKEN}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const events = await resp.json();
+                if (!events.length) { document.getElementById(container).innerHTML = '无事件'; return; }
+                let html = '';
+                for (const e of events) {
+                    const bg = e.level === 'Error' ? '#2d1b1b' : '#2d2416';
+                    const color = e.level === 'Error' ? '#f85149' : '#d29922';
+                    html += `<div style="border-bottom:1px solid #21262d;padding:6px 0; background:${bg}; border-radius:4px; margin-bottom:4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:${color}; font-weight:bold;">[${e.level}]</span>
+                        <span style="color:#8b949e; font-size:0.7rem;">${e.time}</span>
+                        <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${e.message.replace(/'/g, "\\'")}')">📋 复制</button>
+                    </div>
+                    <div style="font-size:0.75rem; color:#e6edf3;">${e.source} (${e.event_id}): ${e.message}</div>
+                </div>`;
+                }
+                document.getElementById(container).innerHTML = html;
+            } catch (e) {
+                showError(container, '事件日志加载失败: ' + e.message);
+            }
+        }
+
+        // ----- 电源 -----
+        async function powerAction(action) {
+            const map = { reboot: '重启', shutdown: '关机', sleep: '睡眠', hibernate: '休眠' };
+            if (!confirm(`⚠️ 确定要执行 "${map[action]}" 操作吗？`)) return;
+            try {
+                const resp = await fetch(`${BASE_URL}/system/power?action=${action}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(await resp.text());
+                showToast(`正在执行 ${map[action]}`);
+            } catch (e) { showToast('操作失败: ' + e.message, true); }
+        }
+
+        // ----- 命令 -----
+        async function runCommand() {
+            const cmd = document.getElementById('cmdInput').value.trim();
+            if (!cmd) return showToast('请输入命令', true);
+            const out = document.getElementById('cmdOutput');
+            out.innerText = '⏳ 执行中...';
+            try {
+                const resp = await fetch(`${BASE_URL}/system/command?cmd=${encodeURIComponent(cmd)}&token=${TOKEN}`, { method: 'POST' });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                let result = `> ${cmd}\n`;
+                if (data.stdout) result += `[输出]\n${data.stdout}\n`;
+                if (data.stderr) result += `[错误]\n${data.stderr}\n`;
+                if (data.returncode !== undefined) result += `[返回码] ${data.returncode}`;
+                out.innerText = result;
+                out.scrollTop = out.scrollHeight;
+            } catch (e) { out.innerText = `❌ 错误: ${e.message}`; }
+        }
+
+        // ----- 初始化 -----
+        refreshAll();
+        setInterval(() => {
+            refreshOverview();
+            if (!document.getElementById('tab2').classList.contains('hidden')) loadProcesses();
+        }, 8000);
+    </script>
+</body>
+
+</html>
