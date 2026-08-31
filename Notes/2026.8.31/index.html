@@ -5,19 +5,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>黄粱一梦终成灰 · 暑假纪念</title>
-    <link href="https://cdn.jsdmirror.com?v=20260831025653" rel="preconnect" />
-    <link href="https://cdn.jsdmirror.com?v=20260831025653" rel="dns-prefetch" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="preconnect" />
+    <link href="https://cdn.jsdmirror.com?v=20260830150845" rel="dns-prefetch" />
     <link
-        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@dbe4961/preview_assets/home.ico?v=20260831025653"
+        href="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/home.ico?v=20260830150845"
         rel="icon" type="image/png" />
     <script crossorigin=""
-        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@dbe4961/preview_assets/check-update.js?v=20260831025653"
+        src="https://cdn.jsdmirror.com/gh/DyWriteCode/DyWriteCode.github.io@61c2729/preview_assets/check-update.js?v=20260830150845"
         type="module"></script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com?v=20260831025653" />
-    <link rel="preconnect" href="https://fonts.gstatic.com?v=20260831025653" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600&display=swap&v=20260831025653"
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
 
     <style>
@@ -63,7 +63,6 @@
             border-radius: 4px;
         }
 
-        /* ── 标题区 ── */
         .hero {
             text-align: center;
             margin-bottom: 2.8rem;
@@ -77,7 +76,6 @@
             line-height: 1.15;
         }
 
-        /* 金色 —— 黄粱一梦 */
         .hero h1 .gold {
             color: #d4af37;
             text-shadow: 0 0 20px rgba(212, 175, 55, 0.25), 0 2px 8px rgba(180, 140, 40, 0.15);
@@ -85,7 +83,6 @@
             letter-spacing: 12px;
         }
 
-        /* 灰色 —— 终成灰 */
         .hero h1 .light {
             font-weight: 300;
             color: #8a8078;
@@ -114,7 +111,6 @@
             font-weight: 300;
         }
 
-        /* ── 引言 ── */
         .intro {
             font-size: 1.1rem;
             color: #4a4440;
@@ -131,7 +127,6 @@
             font-weight: 600;
         }
 
-        /* ── 回忆卡片 ── 灰色调 */
         .memory-grid {
             display: flex;
             flex-direction: column;
@@ -208,7 +203,6 @@
             font-size: 2.6rem;
         }
 
-        /* ── 分隔 ── */
         .divider {
             display: flex;
             align-items: center;
@@ -226,7 +220,6 @@
             background: linear-gradient(90deg, transparent, #c8c0b8, transparent);
         }
 
-        /* ── 尾章：灰 ── 彻底灰色渲染 */
         .epilogue {
             background: linear-gradient(145deg, #e2ddd8, #eeebe7);
             border-radius: 32px;
@@ -305,7 +298,6 @@
             margin-top: -0.8rem;
         }
 
-        /* ── footer ── */
         .footer {
             text-align: center;
             font-size: 0.85rem;
@@ -322,7 +314,6 @@
             letter-spacing: 4px;
         }
 
-        /* ── 响应式 ── */
         @media (max-width: 640px) {
             .container {
                 padding: 2rem 1.2rem 3rem;
@@ -400,38 +391,49 @@
             }
         }
 
-        /* ── 入场动画 ── */
         .memory-card {
             opacity: 0;
             animation: fadeUp 0.6s ease forwards;
         }
 
         .memory-card:nth-child(1) {
-            animation-delay: 0.05s;
+            animation-delay: 0.04s;
         }
 
         .memory-card:nth-child(2) {
-            animation-delay: 0.12s;
+            animation-delay: 0.08s;
         }
 
         .memory-card:nth-child(3) {
-            animation-delay: 0.19s;
+            animation-delay: 0.12s;
         }
 
         .memory-card:nth-child(4) {
-            animation-delay: 0.26s;
+            animation-delay: 0.16s;
         }
 
         .memory-card:nth-child(5) {
-            animation-delay: 0.33s;
+            animation-delay: 0.20s;
         }
 
         .memory-card:nth-child(6) {
-            animation-delay: 0.40s;
+            animation-delay: 0.24s;
         }
 
         .memory-card:nth-child(7) {
-            animation-delay: 0.47s;
+            animation-delay: 0.28s;
+        }
+
+        .memory-card:nth-child(8) {
+            animation-delay: 0.32s;
+        }
+
+        .memory-card:nth-child(9) {
+            animation-delay: 0.36s;
+        }
+
+        .memory-card:nth-child(10) {
+            animation-delay: 0.40s;
         }
 
         @keyframes fadeUp {
@@ -448,7 +450,7 @@
 
         .epilogue {
             opacity: 0;
-            animation: fadeUp 0.7s ease 0.55s forwards;
+            animation: fadeUp 0.7s ease 0.48s forwards;
         }
     </style>
 </head>
@@ -559,7 +561,91 @@
                 </div>
             </div>
 
-            <!-- 6. 同好老师 -->
+            <!-- 6. 百万步 · 独自散步 · 自己的预算的陪伴 -->
+            <div class="memory-card">
+                <div class="icon">👣</div>
+                <div class="content">
+                    <div class="label">· 整个暑假 ·</div>
+                    <p>
+                        这个夏天，我走了 <span class="highlight">一百多万步</span>。
+                        不是刻意去数，只是手机里的健康应用安静地记下了每一个脚印。<br />
+                        那些步数 <span class="soft">铺满了整座城市的绿道</span>——
+                        清晨的滨江步道有露水的味道，傍晚的林荫道有蝉鸣的余响，
+                        午后的环湖绿道被太阳晒得发白，每一步都踩在 <span class="highlight">滚烫的现实</span> 上。<br />
+                        但奇怪的是，走得越多，那些路就越 <span class="soft">像刻在骨子里的地图</span>。
+                        哪一段有桂花香，哪一段有梧桐影，哪一段能看见落日沉进楼群，
+                        全都 <span class="highlight">印在了心里</span>，比任何导航都清晰。<br />
+                        那些路，是我 <span class="highlight">一个人走的</span>。
+                        耳机里放着歌，脚步是自己的节奏，没有人催我快一点，也没有人等我在某个路口。
+                        那是一种 <span class="soft">「自己的预算的陪伴」</span>——
+                        我把时间、体力和沉默都 <span class="highlight">预支给了自己</span>，
+                        然后用每一步去兑换一种 <span class="soft">属于一个人的自由</span>。<br />
+                        后来我想，那一百万步里藏着的自由，
+                        大概不是「想去哪里就去哪里」的自由，
+                        而是 <span class="highlight">「可以安安静静地和自己待在一起」</span> 的自由。
+                        那种感觉，比风还轻，比路还长。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 7. 家人的陪伴 · 驱散即将到来的孤独 -->
+            <div class="memory-card">
+                <div class="icon">🏠</div>
+                <div class="content">
+                    <div class="label">· 整个暑假 ·</div>
+                    <p>
+                        除了那些独自走过的路，这个夏天的大部分时光，是 <span class="highlight">和家人一起度过的</span>。<br />
+                        晚饭后一起坐在沙发上看电视，聊一些 <span class="soft">毫无营养的废话</span>；
+                        周末的午后一起收拾房间，把旧物翻出来，然后 <span class="soft">被某一件东西拉进一段共同的回忆</span>；
+                        深夜饿了，有人陪你煮一碗面，两个人坐在餐桌前 <span class="highlight">安静地吃完</span>，
+                        什么话都不用说，却觉得 <span class="soft">「有个人在旁边」</span> 这件事本身就很踏实。<br />
+                        那些 <span class="highlight">无数个日夜的陪伴</span>，
+                        安静地 <span class="soft">像夜里亮着的灯</span>，一盏一盏地亮起来，
+                        把即将到来的、住在学校宿舍里的 <span class="fade">陌生与孤独</span>，
+                        一点一点 <span class="highlight">驱赶到光的边缘</span>。<br />
+                        我知道，开学后会有很多个夜晚需要自己面对。
+                        但那些和家人一起度过的、<span class="soft">平平无奇的时刻</span>，
+                        已经在我心里 <span class="highlight">囤够了温暖</span>，
+                        足够我在以后每一个觉得孤独的晚上，<span class="soft">拿出来慢慢地用</span>。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 8. AI短剧与小说 · 新坑与人生轨迹 -->
+            <div class="memory-card">
+                <div class="icon">📖</div>
+                <div class="content">
+                    <div class="label">· 整个暑假 ·</div>
+                    <p>
+                        这个夏天，我 <span class="highlight">开始看 AI 短剧和小说</span>。
+                        起初只是好奇，后来却发现 <span class="soft">自己陷了进去</span>。<br />
+                        那些故事里，有 <span class="highlight">现实里无法实现的自由和美好</span>——
+                        主角可以毫无负担地去做任何事，可以拥有超乎常人的才华，
+                        可以 <span class="soft">在关键时刻被命运偏袒</span>，
+                        可以 <span class="highlight">轻松地成功</span>，可以 <span class="soft">不用为琐事烦恼</span>。
+                        那些在现实里 <span class="fade">遥不可及的东西</span>，
+                        在小说和短剧里 <span class="highlight">全都被实现了</span>。<br />
+                        我被感动了。
+                        不是被某个具体的情节感动，而是被那种 <span class="soft">「原来还可以这样活着」</span> 的可能性感动。
+                        好像在那些虚构的故事里，我 <span class="highlight">替自己过了一遍另一种人生</span>。<br />
+                        但同时，我也在那些故事里看到了 <span class="highlight">痛苦和悲伤</span>。
+                        刀子来得猝不及防，角色在命运里挣扎，<span class="soft">像极了现实里某些无能为力的时刻</span>。
+                        但奇妙的是，那些悲伤 <span class="soft">并不让我想逃离</span>，
+                        反而让我觉得 <span class="highlight">「原来大家都一样」</span>。<br />
+                        这个夏天，我 <span class="highlight">开了很多新坑</span>，
+                        有很多故事还没看完，有很多结局 <span class="soft">还等在那里</span>。
+                        它们像一排排 <span class="highlight">还没被点亮的路灯</span>，
+                        等着我开学后的某个周末，<span class="soft">慢慢地、一盏一盏地走过去</span>。<br />
+                        我想，我会继续看的。
+                        看那些小说和短剧里 <span class="highlight">不同的人生轨迹</span>，
+                        看别人怎么 <span class="soft">面对失去、拥抱获得、在裂缝里找到光</span>。
+                        那些故事 <span class="fade">不会因为暑假结束而结束</span>，
+                        它们会陪我 <span class="highlight">走过接下来的很长一段路</span>。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 9. 同好老师 -->
             <div class="memory-card">
                 <div class="icon">📚</div>
                 <div class="content">
@@ -577,7 +663,7 @@
                 </div>
             </div>
 
-            <!-- 7. 新东方学习 · 无笔记，但烙印极深 -->
+            <!-- 10. 新东方学习 · 无笔记，但烙印极深 -->
             <div class="memory-card">
                 <div class="icon">✏️</div>
                 <div class="content">
