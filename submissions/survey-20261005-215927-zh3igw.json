@@ -1,0 +1,49 @@
+{
+  "submittedAt": "2026-10-05T13:59:27.002Z",
+  "answers": {
+    "q1": {
+      "value": "A",
+      "label": "身边每天见面的同学/同性朋友"
+    },
+    "q2": [
+      {
+        "value": "A",
+        "label": "圈子不同，渐渐没了共同话题"
+      },
+      {
+        "value": "B",
+        "label": "联系频率下降，自然而然就淡了"
+      }
+    ],
+    "q3": [
+      {
+        "value": "A",
+        "label": "日常琐事和八卦"
+      }
+    ],
+    "q4": {
+      "value": "A",
+      "label": "放在心里默默关注，偶尔怀念但不会主动打扰"
+    },
+    "q5": {
+      "value": "A",
+      "label": "很正常，大家都有自己的生活，替他开心"
+    },
+    "q6": {
+      "value": "A",
+      "label": "很念旧，经常想起以前的日子"
+    },
+    "q7": {
+      "value": "A",
+      "label": "点赞之交"
+    },
+    "q8": "test",
+    "q9": "test"
+  },
+  "extra": {},
+  "meta": {
+    "page": "https://dywritecode.github.io/TEST_FUNCION/MD_1/index.html?v=20261005135406",
+    "userAgent": "Mozilla/5.0 (Linux; Android 16; V2453A Build/BP2A.250605.031.A3_V000L1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.189 Mobile Safari/537.36 XWEB/1500145 MMWEBSDK/20260502 MMWEBID/3031 REV/d6943dea402f265836c727631d35b44832955675 MicroMessenger/8.0.76.3141(0x28004CBF) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+    "referrer": "https://dywritecode.github.io/TEST_FUNCION/"
+  }
+}
