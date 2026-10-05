@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>校园人际交往与倾诉习惯调查问卷</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20261005135406"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
   :root{
     --bg:#f1f5f9; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8;
@@ -154,6 +154,18 @@
     min-height:36px;display:flex;align-items:center;
   }
   .repo-info.filled{color:var(--text)}
+
+  /* ✅ 新增：固定路径提示条 */
+  .fixed-info{
+    margin-top:12px;padding:10px 14px;border-radius:8px;
+    background:#f8fafc;border:1px dashed var(--border);
+    font-size:13px;color:var(--muted);line-height:1.6;
+  }
+  .fixed-info code{
+    background:#fff;border:1px solid var(--border);
+    padding:1px 6px;border-radius:4px;font-family:ui-monospace,monospace;
+    color:var(--text);font-size:12px;
+  }
 </style>
 </head>
 <body>
@@ -196,7 +208,7 @@
         </div>
       </div>
 
-      <!-- —— Owner + Repo（选项卡风格）—— -->
+      <!-- —— Owner + Repo —— -->
       <div class="row">
         <div>
           <label>👤 所有者 Owner <span style="color:var(--er-fg)">*</span></label>
@@ -211,22 +223,18 @@
       </div>
       <div class="repo-info" id="repoInfo">📋 请先验证 Token 以加载仓库列表</div>
 
-      <!-- —— 分支 + 路径 —— -->
-      <div class="row">
-        <div>
-          <label>🌿 分支 Branch</label>
-          <select id="cfgBranch">
-            <option value="">— 请先选择仓库 —</option>
-          </select>
-        </div>
-        <div>
-          <label>📁 保存路径（目录）</label>
-          <input type="text" id="cfgPath" value="submissions">
-        </div>
-      </div>
+      <!-- —— 分支（保存路径和前缀已固定，不再显示输入框） —— -->
+      <label>🌿 分支 Branch</label>
+      <select id="cfgBranch">
+        <option value="">— 请先选择仓库 —</option>
+      </select>
 
-      <label>📝 文件名前缀</label>
-      <input type="text" id="cfgPrefix" value="survey">
+      <!-- ✅ 固定信息提示条 -->
+      <div class="fixed-info">
+        📌 <strong>保存位置已固定：</strong>
+        <code>submissions/</code> 目录 · 文件名前缀 <code>survey</code><br>
+        每次提交生成一个独立 JSON 文件，命名格式：<code>survey-年月日-时分秒-随机串.json</code>
+      </div>
 
       <div class="save-row">
         <button type="button" id="saveConfigBtn">保存配置</button>
@@ -267,6 +275,12 @@
 </div>
 
 <script>
+/* ============================================================
+ *  ✅ 固定的保存位置和文件名前缀（用户不可修改）
+ * ============================================================ */
+const FIXED_SAVE_DIR = 'submissions';   // 保存目录
+const FIXED_FILE_PREFIX = 'survey';     // 文件名前缀
+
 /* ============================================================
  *  0. 从原文件提取：密文、IV、解密函数（原样保留）
  * ============================================================ */
@@ -364,7 +378,7 @@ const QUESTIONS = [
 ];
 
 /* ============================================================
- *  2. 本地存储
+ *  2. 本地存储（不再保存 path / prefix）
  * ============================================================ */
 const CFG_KEY = 'gh-survey-config';
 const EXT_KEY = 'gh-survey-extra-fields';
@@ -374,7 +388,7 @@ const loadExtra = () => { try { return JSON.parse(localStorage.getItem(EXT_KEY))
 const saveExtra = a => localStorage.setItem(EXT_KEY, JSON.stringify(a));
 
 /* ============================================================
- *  3. GitHub API 请求（简化版）
+ *  3. GitHub API 请求
  * ============================================================ */
 async function ghFetch(url, options = {}) {
   const res = await fetch(url, options);
@@ -534,13 +548,11 @@ async function verifyToken() {
       }
     });
     currentUser = user;
-
-    // 自动填充 owner
     document.getElementById('cfgOwner').value = user.login;
 
     setTokenStatus('success',
       `<div class="user-info">
-        ${user.avatar_url ? `<img class="user-avatar" src="${escapeHtml(user.avatar_url)}?v=20261005135406" alt="">` : ''}
+        ${user.avatar_url ? `<img class="user-avatar" src="${escapeHtml(user.avatar_url)}" alt="">` : ''}
         <span>✅ 已验证：<span class="username">@${escapeHtml(user.login)}</span></span>
         ${user.name ? `<span style="color:var(--muted)">${escapeHtml(user.name)}</span>` : ''}
       </div>`);
@@ -672,8 +684,6 @@ function handlePwdGetToken() {
         inp.type = 'text';
 
         setPwdStatus('success', '✅ 解密成功！Token 已填入，正在自动验证…');
-
-        // 自动验证并加载仓库列表
         const ok = await verifyToken();
         if (ok) {
           setPwdStatus('success', '✅ Token 有效，仓库列表已加载，请选择仓库。');
@@ -724,14 +734,12 @@ function collectAnswers() {
 async function handleSubmit(e) {
   e.preventDefault();
 
-  // 优先读表单里当前的值，避免用户忘了点"保存配置"
+  // 优先读表单实时值
   const cfg = {
     token: document.getElementById('cfgToken').value.trim(),
     owner: document.getElementById('cfgOwner').value.trim(),
     repo: document.getElementById('cfgRepo').value.trim(),
-    branch: document.getElementById('cfgBranch').value || '',
-    path: document.getElementById('cfgPath').value.trim() || 'submissions',
-    prefix: document.getElementById('cfgPrefix').value.trim() || 'survey'
+    branch: document.getElementById('cfgBranch').value || ''
   };
 
   if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.branch) {
@@ -760,10 +768,12 @@ async function handleSubmit(e) {
   };
 
   const base64 = toBase64(JSON.stringify(payload, null, 2));
-  const dir = cfg.path.replace(/^\/+|\/+$/g, '');
-  const prefix = cfg.prefix.replace(/[\/\\:*?"<>|]/g, '-');
+
+  // ✅ 使用固定常量，不再从表单读取
+  const dir = FIXED_SAVE_DIR;
+  const prefix = FIXED_FILE_PREFIX;
   const filename = `${prefix}-${timestamp(now)}-${Math.random().toString(36).slice(2, 8)}.json`;
-  const fullPath = dir ? `${dir}/${filename}` : filename;
+  const fullPath = `${dir}/${filename}`;
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -816,15 +826,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cfg.repo) document.getElementById('cfgRepo').value = cfg.repo;
   if (cfg.branch) {
     const sel = document.getElementById('cfgBranch');
-    // 如果分支下拉里还没有这个选项，先临时加上
     const opt = document.createElement('option');
     opt.value = cfg.branch;
     opt.textContent = cfg.branch;
     sel.appendChild(opt);
     sel.value = cfg.branch;
   }
-  document.getElementById('cfgPath').value = cfg.path || 'submissions';
-  document.getElementById('cfgPrefix').value = cfg.prefix || 'survey';
 
   if (!cfg.token || !cfg.owner || !cfg.repo) {
     document.getElementById('configPanel').open = true;
@@ -833,22 +840,19 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQuestions();
   renderExtra();
 
-  /* —— 配置区 —— */
+  /* —— 保存配置（只保存 token / owner / repo / branch）—— */
   document.getElementById('saveConfigBtn').addEventListener('click', () => {
     saveConfig({
       token: document.getElementById('cfgToken').value.trim(),
       owner: document.getElementById('cfgOwner').value.trim(),
       repo: document.getElementById('cfgRepo').value.trim(),
-      branch: document.getElementById('cfgBranch').value || '',
-      path: document.getElementById('cfgPath').value.trim() || 'submissions',
-      prefix: document.getElementById('cfgPrefix').value.trim() || 'survey'
+      branch: document.getElementById('cfgBranch').value || ''
     });
     const s = document.getElementById('configStatus');
     s.textContent = '✓ 已保存';
     setTimeout(() => s.textContent = '', 2000);
   });
 
-  /* —— Token 显示切换 —— */
   document.getElementById('toggleTokenVisibility').addEventListener('click', function () {
     const inp = document.getElementById('cfgToken');
     const showing = inp.type === 'text';
@@ -856,7 +860,6 @@ document.addEventListener('DOMContentLoaded', () => {
     this.textContent = showing ? '👁 显示' : '🙈 隐藏';
   });
 
-  /* —— Token 验证 —— */
   document.getElementById('btnVerifyToken').addEventListener('click', verifyToken);
 
   /* —— 密码解密 —— */
@@ -905,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* —— 提交 —— */
   document.getElementById('surveyForm').addEventListener('submit', handleSubmit);
 
-  /* —— 恢复已保存的 Token 时，自动验证并加载仓库列表 —— */
+  /* —— 恢复已保存的 Token 时自动验证 —— */
   if (cfg.token) {
     setTimeout(() => verifyToken(), 300);
   }
