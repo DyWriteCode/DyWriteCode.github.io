@@ -1,0 +1,69 @@
+{
+  "submittedAt": "2026-10-05T14:04:36.620Z",
+  "answers": {
+    "q1": {
+      "value": "A",
+      "label": "身边每天见面的同学/同性朋友"
+    },
+    "q2": [
+      {
+        "value": "A",
+        "label": "圈子不同，渐渐没了共同话题"
+      },
+      {
+        "value": "B",
+        "label": "联系频率下降，自然而然就淡了"
+      },
+      {
+        "value": "C",
+        "label": "学业太忙，没有精力专门去维系"
+      },
+      {
+        "value": "D",
+        "label": "有了新的朋友和新的生活重心"
+      }
+    ],
+    "q3": [
+      {
+        "value": "A",
+        "label": "日常琐事和八卦"
+      },
+      {
+        "value": "B",
+        "label": "学业压力和迷茫"
+      },
+      {
+        "value": "C",
+        "label": "自己的人际关系或情感烦恼"
+      },
+      {
+        "value": "D",
+        "label": "偶尔的情绪低落或深夜emo"
+      }
+    ],
+    "q4": {
+      "value": "B",
+      "label": "随缘，对方找我我就热情回应，不找就算了"
+    },
+    "q5": {
+      "value": "C",
+      "label": "没什么感觉，反正大家都会变"
+    },
+    "q6": {
+      "value": "B",
+      "label": "偶尔怀念，但更专注当下的生活"
+    },
+    "q7": {
+      "value": "B",
+      "label": "偶尔问候"
+    },
+    "q8": "test",
+    "q9": "test"
+  },
+  "extra": {},
+  "meta": {
+    "page": "https://dywritecode.github.io/TEST_FUNCION/MD_1/index.html?v=20261005135406",
+    "userAgent": "Mozilla/5.0 (Linux; Android 16; V2453A Build/BP2A.250605.031.A3_V000L1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.189 Mobile Safari/537.36 XWEB/1500145 MMWEBSDK/20260502 MMWEBID/3031 REV/d6943dea402f265836c727631d35b44832955675 MicroMessenger/8.0.76.3141(0x28004CBF) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+    "referrer": "https://dywritecode.github.io/TEST_FUNCION/"
+  }
+}
