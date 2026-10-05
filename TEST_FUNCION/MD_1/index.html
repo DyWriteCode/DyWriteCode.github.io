@@ -1,151 +1,589 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>终极 MD 编辑器 · 中文输出修复</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css?v=20261005084910" />
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css?v=20261005084910" />
-    <link rel="stylesheet" href="style.css?v=20261005084910" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校园人际交往与倾诉习惯调查问卷</title>
+<style>
+  :root{
+    --bg:#f1f5f9; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8;
+    --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
+    --ok-bg:#f0fdf4; --ok-fg:#15803d; --ok-bd:#86efac;
+    --er-bg:#fef2f2; --er-fg:#b91c1c; --er-bd:#fca5a5;
+    --pd-bg:#eff6ff; --pd-fg:#1d4ed8; --pd-bd:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:24px 16px 80px;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.65;
+  }
+  .container{max-width:760px;margin:0 auto}
+
+  /* 折叠面板 */
+  details.panel{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:16px;overflow:hidden;
+  }
+  details.panel>summary{
+    cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;
+    display:flex;align-items:center;gap:8px;user-select:none;
+  }
+  details.panel>summary::-webkit-details-marker{display:none}
+  details.panel>summary::after{content:"▾";margin-left:auto;transition:.2s;color:var(--muted)}
+  details.panel[open]>summary::after{transform:rotate(180deg)}
+  .panel-body{padding:0 18px 18px;border-top:1px solid var(--border)}
+
+  label{display:block;margin:12px 0 4px;font-size:14px;font-weight:500}
+  input[type=text],input[type=password],input[type=email],textarea{
+    width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
+    font-size:14px;font-family:inherit;background:#fff;outline:none;transition:.15s;
+  }
+  input:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  button{
+    padding:9px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;
+    font-size:14px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  button:hover{background:var(--primary-hover)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--er-fg);border:1px solid var(--er-bd);padding:4px 10px;font-size:12px}
+  button.ghost:hover{background:var(--er-bg)}
+  .save-row{display:flex;align-items:center;gap:12px;margin-top:16px}
+  #configStatus{color:var(--ok-fg);font-size:13px}
+
+  h1{font-size:22px;margin:28px 0 8px}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px}
+
+  /* 题目 */
+  fieldset.question{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin:0 0 14px;
+  }
+  fieldset.question legend{
+    font-weight:600;font-size:15px;padding:0 6px;color:var(--text);
+  }
+  .q-num{color:var(--primary);margin-right:4px}
+  .note{color:var(--muted);font-weight:400;font-size:13px}
+  .option{
+    display:flex;align-items:flex-start;gap:10px;padding:9px 12px;margin:6px 0;
+    border-radius:8px;cursor:pointer;font-size:14px;transition:.12s;font-weight:400;
+  }
+  .option:hover{background:#f8fafc}
+  .option input{margin-top:3px;flex-shrink:0;accent-color:var(--primary);cursor:pointer}
+  textarea{resize:vertical;min-height:90px;margin-top:8px}
+
+  /* 附加字段 */
+  .extra-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px}
+  .extra-field{margin:14px 0}
+
+  #result{
+    display:none;margin-top:20px;padding:14px 16px;border-radius:10px;
+    font-size:14px;white-space:pre-wrap;word-break:break-word;border:1px solid;
+  }
+  #result.ok{display:block;background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
+  #result.er{display:block;background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
+  #result.pd{display:block;background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
+
+  .submit-row{text-align:center;margin-top:24px}
+  .submit-row button{padding:12px 48px;font-size:15px}
+</style>
 </head>
-
 <body>
+<div class="container">
 
-    <div class="app">
-        <header class="app-header">
-            <div class="logo">📝 <span>MD</span>编辑器 <small>· 中文修复</small></div>
-            <div class="actions">
-                <button onclick="openMathBuilder()" title="图形化公式构建器">🧮 公式构建器</button>
-                <button onclick="toggleMathPanel()" title="符号面板">🔣</button>
-                <button onclick="clearAll()">清空</button>
-                <button class="btn-primary" onclick="exportHTML()">导出</button>
-            </div>
-        </header>
+  <!-- ========== 配置面板 ========== -->
+  <details class="panel" id="configPanel">
+    <summary>⚙️ GitHub 配置（首次使用请填写，保存在本机浏览器）</summary>
+    <div class="panel-body">
+      <label>GitHub Token（需目标仓库 Contents: Read and write 权限）</label>
+      <input type="password" id="cfgToken" placeholder="github_pat_... 或 ghp_..." autocomplete="off">
 
-        <div class="toolbar">
-            <div class="group">
-                <button onclick="insertWrapAtCursor('## ','\n')">H2</button>
-                <button onclick="insertWrapAtCursor('### ','\n')">H3</button>
-                <button onclick="insertWrapAtCursor('#### ','\n')">H4</button>
-            </div>
-            <div class="group">
-                <button onclick="insertWrapAtCursor('**','**')"><b>B</b></button>
-                <button onclick="insertWrapAtCursor('*','*')"><i>I</i></button>
-                <button onclick="insertWrapAtCursor('~~','~~')"><s>S</s></button>
-                <button onclick="insertWrapAtCursor('`','`')"><code>∫</code></button>
-            </div>
-            <div class="group">
-                <button onclick="insertListAtCursor('ul')">• 列表</button>
-                <button onclick="insertListAtCursor('ol')">1. 列表</button>
-                <button onclick="insertWrapAtCursor('> ','\n')">" 引用</button>
-            </div>
-            <div class="group">
-                <button onclick="insertCodeBlockAtCursor()">&lt;/&gt; 代码</button>
-                <select id="codeLangSelect">
-                    <option value="">自动</option>
-                    <option value="javascript">JavaScript (Node.js)</option>
-                    <option value="python">Python (3.8.1)</option>
-                    <option value="java">Java (OpenJDK 13.0.1)</option>
-                    <option value="cpp">C++ (GCC 9.2.0)</option>
-                    <option value="c">C (GCC 9.2.0)</option>
-                    <option value="csharp">C# (Mono 6.6.0.161)</option>
-                    <option value="go">Go (1.13.5)</option>
-                    <option value="rust">Rust (1.40.0)</option>
-                    <option value="php">PHP (7.4.1)</option>
-                    <option value="ruby">Ruby (2.7.0)</option>
-                    <option value="bash">Bash (5.0.0)</option>
-                    <option value="swift">Swift (5.2.3)</option>
-                    <option value="kotlin">Kotlin (1.3.70)</option>
-                </select>
-            </div>
-            <div class="group">
-                <button onclick="insertMathInlineAtCursor()">∑ 行内</button>
-                <button onclick="insertMathBlockAtCursor()">∑ 块级</button>
-                <span class="math-templates">
-                    <button onclick="quickMath('frac')">分数</button>
-                    <button onclick="quickMath('sqrt')">根号</button>
-                    <button onclick="quickMath('sum')">求和</button>
-                    <button onclick="quickMath('int')">积分</button>
-                    <button onclick="quickMath('matrix')">矩阵</button>
-                </span>
-            </div>
-            <div class="group">
-                <button onclick="insertTableAtCursor()">▦ 表格</button>
-                <button onclick="insertLinkAtCursor()">🔗 链接</button>
-                <button onclick="insertImageAtCursor()">🖼 图片</button>
-            </div>
-            <div class="group">
-                <button onclick="insertHrAtCursor()">— —</button>
-            </div>
+      <div class="row">
+        <div>
+          <label>仓库 Owner（用户名或组织名）</label>
+          <input type="text" id="cfgOwner" placeholder="例如 octocat">
         </div>
-
-        <div class="preview-area" id="previewArea">
-            <div class="markdown-body" id="preview"></div>
+        <div>
+          <label>仓库名 Repo</label>
+          <input type="text" id="cfgRepo" placeholder="例如 survey-data">
         </div>
+      </div>
 
-        <div class="status-bar">
-            <span><span class="dot"></span> 实时</span>
-            <span id="statusInfo">行 1 · 字 0</span>
+      <div class="row">
+        <div>
+          <label>分支 Branch</label>
+          <input type="text" id="cfgBranch" value="main">
         </div>
+        <div>
+          <label>保存路径（目录）</label>
+          <input type="text" id="cfgPath" value="submissions">
+        </div>
+      </div>
+
+      <label>文件名前缀</label>
+      <input type="text" id="cfgPrefix" value="survey">
+
+      <div class="save-row">
+        <button type="button" id="saveConfigBtn">保存配置</button>
+        <span id="configStatus"></span>
+      </div>
     </div>
+  </details>
 
-    <!-- 浮动元素 -->
-    <div class="suggest-box" id="suggestBox"></div>
-    <div class="math-panel" id="mathPanel"></div>
-    <div class="context-menu" id="contextMenu">
-        <div class="menu-item" data-action="h2?v=20261005084910">## 标题2</div>
-        <div class="menu-item" data-action="h3?v=20261005084910">### 标题3</div>
-        <div class="menu-item" data-action="h4?v=20261005084910">#### 标题4</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="list-ul?v=20261005084910">• 无序列表</div>
-        <div class="menu-item" data-action="list-ol?v=20261005084910">1. 有序列表</div>
-        <div class="menu-item" data-action="quote?v=20261005084910">" 引用</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="code-block?v=20261005084910">&lt;/&gt; 代码块</div>
-        <div class="menu-item" data-action="math-inline?v=20261005084910">∑ 行内公式</div>
-        <div class="menu-item" data-action="math-block?v=20261005084910">∑ 块级公式</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="table?v=20261005084910">▦ 表格</div>
-        <div class="menu-item" data-action="link?v=20261005084910">🔗 链接</div>
-        <div class="menu-item" data-action="image?v=20261005084910">🖼 图片</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="hr?v=20261005084910">— — 分割线</div>
-        <div class="menu-divider"></div>
-        <div class="menu-item" data-action="cancel-edit?v=20261005084910">✖ 取消编辑</div>
+  <!-- ========== 附加字段配置 ========== -->
+  <details class="panel" id="extraPanel">
+    <summary>📋 附加信息字段（自定义需要随问卷一起收集的内容）</summary>
+    <div class="panel-body">
+      <p style="color:var(--muted);font-size:13px;margin:12px 0 8px">
+        例如「姓名」「班级」「学号」。添加后，答题者会在问卷末尾看到对应输入框，内容会写进提交的文件里。
+      </p>
+      <div id="extraList"></div>
+      <div class="row" style="margin-top:12px">
+        <input type="text" id="extraNameInput" placeholder="字段名，例如：姓名">
+        <button type="button" id="addExtraBtn">添加字段</button>
+      </div>
     </div>
+  </details>
 
-    <!-- 公式构建器 -->
-    <div class="math-builder" id="mathBuilder">
-        <div class="builder-header">
-            <h3>🧮 公式构建器（零 LaTeX）</h3>
-            <button onclick="closeMathBuilder()"
-                style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
-        </div>
-        <div class="builder-body">
-            <div class="symbol-palette" id="symbolPalette"></div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
-                <div class="formula-preview" id="formulaPreview">点击左侧符号构建公式</div>
-                <div class="formula-params" id="formulaParams"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;">
-                    <button class="btn-cancel" onclick="closeMathBuilder()"
-                        style="padding:4px 12px;border:none;border-radius:4px;background:#eef2f6;cursor:pointer;">取消</button>
-                    <button id="insertFormulaBtn" class="btn-primary"
-                        style="padding:4px 16px;border:none;border-radius:4px;background:var(--accent);color:white;cursor:pointer;">插入公式</button>
-                </div>
-            </div>
-        </div>
+  <!-- ========== 问卷主体 ========== -->
+  <form id="surveyForm" novalidate>
+    <h1>校园人际交往与倾诉习惯调查问卷</h1>
+    <p class="subtitle">本问卷用于了解中学生对旧友谊与倾诉习惯的真实想法，感谢你的参与。</p>
+
+    <div id="questionsContainer"></div>
+    <div id="extraFieldsForm"></div>
+
+    <div class="submit-row">
+      <button type="submit" id="submitBtn">提交问卷</button>
     </div>
+    <div id="result"></div>
+  </form>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js?v=20261005084910">
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.pack.min.js?v=20261005084910">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js?v=20261005084910">
-    </script>
+</div>
 
-     <script src="index.js?v=20261005084910"></script>
+<script>
+/* ============================================================
+ *  1. 题目数据 —— 想改题目，改这里就行
+ * ============================================================ */
+const QUESTIONS = [
+  {
+    id: 'q1',
+    title: '遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？',
+    type: 'single',
+    options: [
+      { value: 'A', label: '身边每天见面的同学/同性朋友' },
+      { value: 'B', label: '以前很熟悉、但现在不常联系的旧友' },
+      { value: 'C', label: '网络树洞或陌生人' },
+      { value: 'D', label: '自己消化' }
+    ]
+  },
+  {
+    id: 'q2',
+    title: '你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？',
+    note: '可多选',
+    type: 'multiple',
+    options: [
+      { value: 'A', label: '圈子不同，渐渐没了共同话题' },
+      { value: 'B', label: '联系频率下降，自然而然就淡了' },
+      { value: 'C', label: '学业太忙，没有精力专门去维系' },
+      { value: 'D', label: '有了新的朋友和新的生活重心' }
+    ]
+  },
+  {
+    id: 'q3',
+    title: '你通常会和"关系很好的旧友"分享哪类事情？',
+    note: '可多选',
+    type: 'multiple',
+    options: [
+      { value: 'A', label: '日常琐事和八卦' },
+      { value: 'B', label: '学业压力和迷茫' },
+      { value: 'C', label: '自己的人际关系或情感烦恼' },
+      { value: 'D', label: '偶尔的情绪低落或深夜emo' }
+    ]
+  },
+  {
+    id: 'q4',
+    title: '对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？',
+    type: 'single',
+    options: [
+      { value: 'A', label: '放在心里默默关注，偶尔怀念但不会主动打扰' },
+      { value: 'B', label: '随缘，对方找我我就热情回应，不找就算了' },
+      { value: 'C', label: '会主动找机会聊聊天，想努力维系这段关系' },
+      { value: 'D', label: '觉得顺其自然最好，没必要强求' }
+    ]
+  },
+  {
+    id: 'q5',
+    title: '如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？',
+    type: 'single',
+    options: [
+      { value: 'A', label: '很正常，大家都有自己的生活，替他开心' },
+      { value: 'B', label: '稍微有点失落，感觉自己在对方心里的位置变了' },
+      { value: 'C', label: '没什么感觉，反正大家都会变' },
+      { value: 'D', label: '看情况，如果是特别好的朋友会有点介意' }
+    ]
+  },
+  {
+    id: 'q6',
+    title: '评价一下自己对于旧友谊的依恋程度：',
+    type: 'single',
+    options: [
+      { value: 'A', label: '很念旧，经常想起以前的日子' },
+      { value: 'B', label: '偶尔怀念，但更专注当下的生活' },
+      { value: 'C', label: '比较向前看，旧朋友淡了就淡了' },
+      { value: 'D', label: '视具体的人和事而定' }
+    ]
+  },
+  {
+    id: 'q7',
+    title: '如果用一个词来形容你和过去某位旧日异性好友现在的关系，你会选：',
+    type: 'single',
+    options: [
+      { value: 'A', label: '点赞之交' },
+      { value: 'B', label: '偶尔问候' },
+      { value: 'C', label: '熟悉的陌生人' },
+      { value: 'D', label: '依然信任的远方朋友' }
+    ]
+  },
+  {
+    id: 'q8',
+    title: '开放性填空：你觉得中学阶段，异性朋友之间真的存在纯粹的长久友谊吗？为什么？',
+    type: 'textarea',
+    placeholder: '请写下你的想法…'
+  },
+  {
+    id: 'q9',
+    title: '开放性填空：你觉得中学阶段，同性朋友之间真的存在纯粹的长久友谊吗？为什么？',
+    type: 'textarea',
+    placeholder: '请写下你的想法…'
+  }
+];
+
+/* ============================================================
+ *  2. 本地存储工具
+ * ============================================================ */
+const CFG_KEY = 'gh-survey-config';
+const EXT_KEY = 'gh-survey-extra-fields';
+
+const loadConfig = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
+const saveConfig = c => localStorage.setItem(CFG_KEY, JSON.stringify(c));
+
+const loadExtra = () => { try { return JSON.parse(localStorage.getItem(EXT_KEY)) || []; } catch { return []; } };
+const saveExtra = a => localStorage.setItem(EXT_KEY, JSON.stringify(a));
+
+/* ============================================================
+ *  3. 渲染问卷题目
+ * ============================================================ */
+function renderQuestions() {
+  const box = document.getElementById('questionsContainer');
+  box.innerHTML = '';
+
+  QUESTIONS.forEach((q, idx) => {
+    const fs = document.createElement('fieldset');
+    fs.className = 'question';
+
+    const legend = document.createElement('legend');
+    legend.innerHTML = `<span class="q-num">${idx + 1}.</span>${q.title}`
+      + (q.note ? ` <span class="note">（${q.note}）</span>` : '');
+    fs.appendChild(legend);
+
+    if (q.type === 'single' || q.type === 'multiple') {
+      q.options.forEach(opt => {
+        const label = document.createElement('label');
+        label.className = 'option';
+
+        const input = document.createElement('input');
+        input.type = q.type === 'single' ? 'radio' : 'checkbox';
+        input.name = q.id;
+        input.value = opt.value;
+
+        const span = document.createElement('span');
+        span.textContent = `${opt.value}. ${opt.label}`;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        fs.appendChild(label);
+      });
+    } else if (q.type === 'textarea') {
+      const ta = document.createElement('textarea');
+      ta.name = q.id;
+      ta.rows = 4;
+      ta.placeholder = q.placeholder || '请填写…';
+      fs.appendChild(ta);
+    }
+
+    box.appendChild(fs);
+  });
+}
+
+/* ============================================================
+ *  4. 渲染附加字段（配置区列表 + 问卷输入框）
+ * ============================================================ */
+function renderExtra() {
+  const listBox = document.getElementById('extraList');
+  const formBox = document.getElementById('extraFieldsForm');
+  const fields = loadExtra();
+
+  listBox.innerHTML = '';
+  formBox.innerHTML = '';
+
+  if (fields.length === 0) {
+    listBox.innerHTML = '<div style="color:var(--muted);font-size:13px">暂未添加任何附加字段。</div>';
+    return;
+  }
+
+  fields.forEach((name, i) => {
+    // —— 配置区的列表项
+    const row = document.createElement('div');
+    row.className = 'extra-row';
+
+    const span = document.createElement('span');
+    span.textContent = `• ${name}`;
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'ghost';
+    del.textContent = '删除';
+    del.onclick = () => {
+      const arr = loadExtra();
+      arr.splice(i, 1);
+      saveExtra(arr);
+      renderExtra();
+    };
+
+    row.appendChild(span);
+    row.appendChild(del);
+    listBox.appendChild(row);
+
+    // —— 问卷里的输入框
+    const wrap = document.createElement('div');
+    wrap.className = 'extra-field';
+
+    const lab = document.createElement('label');
+    lab.textContent = name;
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = `请填写${name}`;
+    inp.dataset.extraIdx = i;
+
+    wrap.appendChild(lab);
+    wrap.appendChild(inp);
+    formBox.appendChild(wrap);
+  });
+}
+
+/* ============================================================
+ *  5. 工具函数
+ * ============================================================ */
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+function timestamp(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
+       + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+
+function showResult(kind, msg) {
+  const el = document.getElementById('result');
+  el.className = kind === 'ok' ? 'ok' : kind === 'er' ? 'er' : 'pd';
+  el.textContent = msg;
+}
+
+function escapePath(path) {
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
+/* ============================================================
+ *  6. 收集答案
+ * ============================================================ */
+function collectAnswers() {
+  const answers = {};
+
+  for (const q of QUESTIONS) {
+    if (q.type === 'single') {
+      const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+      if (!checked) return { error: `第 ${QUESTIONS.indexOf(q) + 1} 题未作答` };
+      const opt = q.options.find(o => o.value === checked.value);
+      answers[q.id] = { value: opt.value, label: opt.label };
+
+    } else if (q.type === 'multiple') {
+      const checked = document.querySelectorAll(`input[name="${q.id}"]:checked`);
+      answers[q.id] = Array.from(checked).map(c => {
+        const opt = q.options.find(o => o.value === c.value);
+        return { value: opt.value, label: opt.label };
+      });
+
+    } else if (q.type === 'textarea') {
+      const ta = document.querySelector(`[name="${q.id}"]`);
+      answers[q.id] = ta ? ta.value.trim() : '';
+    }
+  }
+
+  const extra = {};
+  loadExtra().forEach((name, i) => {
+    const inp = document.querySelector(`[data-extra-idx="${i}"]`);
+    extra[name] = inp ? inp.value.trim() : '';
+  });
+
+  return { answers, extra };
+}
+
+/* ============================================================
+ *  7. 提交
+ * ============================================================ */
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  const cfg = loadConfig();
+  if (!cfg.token || !cfg.owner || !cfg.repo) {
+    showResult('er', '❌ 请先在顶部「GitHub 配置」面板中填写 Token、Owner、仓库名。');
+    document.getElementById('configPanel').open = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  const collected = collectAnswers();
+  if (collected.error) {
+    showResult('er', `❌ ${collected.error}`);
+    return;
+  }
+
+  const now = new Date();
+  const payload = {
+    submittedAt: now.toISOString(),
+    answers: collected.answers,
+    extra: collected.extra,
+    meta: {
+      page: location.href,
+      userAgent: navigator.userAgent,
+      referrer: document.referrer || null
+    }
+  };
+
+  const base64 = toBase64(JSON.stringify(payload, null, 2));
+
+  const branch = (cfg.branch || 'main').trim();
+  const dir = (cfg.path || 'submissions').replace(/^\/+|\/+$/g, '');
+  const prefix = (cfg.prefix || 'survey').replace(/[\/\\:*?"<>|]/g, '-');
+  const filename = `${prefix}-${timestamp(now)}-${Math.random().toString(36).slice(2, 8)}.json`;
+  const fullPath = dir ? `${dir}/${filename}` : filename;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  showResult('pd', '⏳ 正在提交，请稍候…');
+
+  try {
+    const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${escapePath(fullPath)}`;
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: JSON.stringify({
+        message: `问卷提交 ${timestamp(now)}`,
+        content: base64,
+        branch
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const hint = res.status === 401 ? '（Token 无效或已过期）'
+                 : res.status === 403 ? '（Token 权限不足或速率受限）'
+                 : res.status === 404 ? '（仓库/分支不存在，或 Token 无权限）'
+                 : res.status === 422 ? '（分支不存在或文件冲突）'
+                 : '';
+      throw new Error(`${data.message || res.status} ${hint}`);
+    }
+
+    showResult('ok',
+      `✅ 提交成功！\n` +
+      `文件路径：${data.content.path}\n` +
+      `提交时间：${now.toLocaleString('zh-CN')}\n` +
+      `可以到 GitHub 仓库里查看结果。`
+    );
+
+    // 清空问卷部分（保留配置）
+    document.getElementById('surveyForm').reset();
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+  } catch (err) {
+    showResult('er', `❌ 提交失败：${err.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ============================================================
+ *  8. 初始化
+ * ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // 回填配置
+  const cfg = loadConfig();
+  if (cfg.token) document.getElementById('cfgToken').value = cfg.token;
+  if (cfg.owner) document.getElementById('cfgOwner').value = cfg.owner;
+  if (cfg.repo) document.getElementById('cfgRepo').value = cfg.repo;
+  document.getElementById('cfgBranch').value = cfg.branch || 'main';
+  document.getElementById('cfgPath').value = cfg.path || 'submissions';
+  document.getElementById('cfgPrefix').value = cfg.prefix || 'survey';
+
+  // 首次未配置，自动展开
+  if (!cfg.token || !cfg.owner || !cfg.repo) {
+    document.getElementById('configPanel').open = true;
+  }
+
+  // 渲染
+  renderQuestions();
+  renderExtra();
+
+  // 事件绑定
+  document.getElementById('saveConfigBtn').addEventListener('click', () => {
+    saveConfig({
+      token: document.getElementById('cfgToken').value.trim(),
+      owner: document.getElementById('cfgOwner').value.trim(),
+      repo: document.getElementById('cfgRepo').value.trim(),
+      branch: document.getElementById('cfgBranch').value.trim() || 'main',
+      path: document.getElementById('cfgPath').value.trim() || 'submissions',
+      prefix: document.getElementById('cfgPrefix').value.trim() || 'survey'
+    });
+    const s = document.getElementById('configStatus');
+    s.textContent = '✓ 已保存';
+    setTimeout(() => s.textContent = '', 2000);
+  });
+
+  document.getElementById('addExtraBtn').addEventListener('click', () => {
+    const input = document.getElementById('extraNameInput');
+    const name = input.value.trim();
+    if (!name) return;
+    const arr = loadExtra();
+    if (arr.includes(name)) { alert('该字段已存在'); return; }
+    arr.push(name);
+    saveExtra(arr);
+    input.value = '';
+    renderExtra();
+  });
+
+  // 回车快捷添加
+  document.getElementById('extraNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addExtraBtn').click(); }
+  });
+
+  document.getElementById('surveyForm').addEventListener('submit', handleSubmit);
+});
+</script>
 </body>
-
 </html>
