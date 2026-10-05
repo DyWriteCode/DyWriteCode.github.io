@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>校园人际交往与倾诉习惯调查问卷</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
   :root{
     --bg:#f1f5f9; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8;
@@ -18,9 +19,8 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
     line-height:1.65;
   }
-  .container{max-width:760px;margin:0 auto}
+  .container{max-width:800px;margin:0 auto}
 
-  /* 折叠面板 */
   details.panel{
     background:var(--card);border:1px solid var(--border);border-radius:12px;
     margin-bottom:16px;overflow:hidden;
@@ -35,11 +35,15 @@
   .panel-body{padding:0 18px 18px;border-top:1px solid var(--border)}
 
   label{display:block;margin:12px 0 4px;font-size:14px;font-weight:500}
-  input[type=text],input[type=password],input[type=email],textarea{
+  input[type=text],input[type=password],input[type=email],textarea,select{
     width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
     font-size:14px;font-family:inherit;background:#fff;outline:none;transition:.15s;
+    color:var(--text);
   }
-  input:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)
+  }
+  select{cursor:pointer}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:560px){.row{grid-template-columns:1fr}}
 
@@ -47,24 +51,24 @@
     padding:9px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;
     font-size:14px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit;
   }
-  button:hover{background:var(--primary-hover)}
+  button:hover:not(:disabled){background:var(--primary-hover)}
   button:disabled{opacity:.55;cursor:not-allowed}
   button.ghost{background:transparent;color:var(--er-fg);border:1px solid var(--er-bd);padding:4px 10px;font-size:12px}
   button.ghost:hover{background:var(--er-bg)}
+  button.small{padding:7px 14px;font-size:13px}
+  button.outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+  button.outline:hover:not(:disabled){background:rgba(37,99,235,.08)}
   .save-row{display:flex;align-items:center;gap:12px;margin-top:16px}
   #configStatus{color:var(--ok-fg);font-size:13px}
 
   h1{font-size:22px;margin:28px 0 8px}
   .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px}
 
-  /* 题目 */
   fieldset.question{
     background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:16px 18px;margin:0 0 14px;
   }
-  fieldset.question legend{
-    font-weight:600;font-size:15px;padding:0 6px;color:var(--text);
-  }
+  fieldset.question legend{font-weight:600;font-size:15px;padding:0 6px;color:var(--text)}
   .q-num{color:var(--primary);margin-right:4px}
   .note{color:var(--muted);font-weight:400;font-size:13px}
   .option{
@@ -75,7 +79,6 @@
   .option input{margin-top:3px;flex-shrink:0;accent-color:var(--primary);cursor:pointer}
   textarea{resize:vertical;min-height:90px;margin-top:8px}
 
-  /* 附加字段 */
   .extra-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px}
   .extra-field{margin:14px 0}
 
@@ -89,41 +92,140 @@
 
   .submit-row{text-align:center;margin-top:24px}
   .submit-row button{padding:12px 48px;font-size:15px}
+
+  /* Token 行 */
+  .token-row{display:flex;gap:8px;align-items:stretch}
+  .token-row>input{flex:1}
+  .token-status{
+    display:none;margin-top:8px;padding:8px 12px;border-radius:8px;
+    font-size:13px;border:1px solid;
+  }
+  .token-status.visible{display:block}
+  .token-status.loading{background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
+  .token-status.success{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
+  .token-status.error{background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
+  .token-status .user-info{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .token-status .user-avatar{
+    width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--border);
+  }
+  .token-status .username{font-weight:600}
+
+  /* 密码解密块 */
+  .pwd-box{
+    margin-top:14px;border:1.5px dashed var(--border);border-radius:10px;
+    padding:12px 14px;background:#f8fafc;transition:.2s;
+  }
+  .pwd-box:hover{border-color:var(--primary)}
+  .pwd-header{
+    display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
+    color:var(--text);cursor:pointer;user-select:none;
+  }
+  .pwd-toggle{font-size:11px;color:var(--muted);transition:transform .25s}
+  .pwd-toggle.open{transform:rotate(90deg)}
+  .pwd-body{
+    display:none;margin-top:12px;flex-direction:column;gap:10px;
+  }
+  .pwd-body.open{display:flex}
+  .pwd-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .pwd-input-wrap{flex:1;min-width:160px;position:relative}
+  .pwd-input-wrap input{width:100%;padding-right:36px}
+  .pwd-eye{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:none;border:none;font-size:16px;color:var(--muted);
+    cursor:pointer;padding:4px;border-radius:4px;
+  }
+  .pwd-eye:hover{background:var(--border)}
+  .pwd-status{
+    display:none;padding:8px 12px;border-radius:8px;font-size:13px;
+    border:1px solid;
+  }
+  .pwd-status.visible{display:block}
+  .pwd-status.loading{background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
+  .pwd-status.success{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
+  .pwd-status.error{background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
+  .pwd-hint{font-size:12px;color:var(--muted)}
+
+  /* 仓库信息 */
+  .repo-info{
+    margin-top:8px;padding:8px 12px;border-radius:8px;font-size:13px;
+    background:#f8fafc;border:1px solid var(--border);color:var(--muted);
+    min-height:36px;display:flex;align-items:center;
+  }
+  .repo-info.filled{color:var(--text)}
 </style>
 </head>
 <body>
 <div class="container">
 
   <!-- ========== 配置面板 ========== -->
-  <details class="panel" id="configPanel">
+  <details class="panel" id="configPanel" open>
     <summary>⚙️ GitHub 配置（首次使用请填写，保存在本机浏览器）</summary>
     <div class="panel-body">
-      <label>GitHub Token（需目标仓库 Contents: Read and write 权限）</label>
-      <input type="password" id="cfgToken" placeholder="github_pat_... 或 ghp_..." autocomplete="off">
 
-      <div class="row">
-        <div>
-          <label>仓库 Owner（用户名或组织名）</label>
-          <input type="text" id="cfgOwner" placeholder="例如 octocat">
+      <!-- —— Token 输入 —— -->
+      <label>🔑 Personal Access Token <span style="color:var(--er-fg)">*</span></label>
+      <div class="token-row">
+        <input type="password" id="cfgToken" placeholder="github_pat_... 或 ghp_..." autocomplete="off">
+        <button type="button" class="outline small" id="toggleTokenVisibility">👁 显示</button>
+        <button type="button" class="small" id="btnVerifyToken">🔍 验证</button>
+      </div>
+      <div class="token-status" id="tokenStatus"></div>
+
+      <!-- —— 密码解密 Token —— -->
+      <div class="pwd-box">
+        <div class="pwd-header" id="pwdToggleHeader">
+          <span>🔐 通过密码获取 Token</span>
+          <span class="pwd-toggle" id="pwdToggleIcon">▶</span>
+          <span style="font-weight:400;font-size:12px;color:var(--muted);margin-left:auto;">
+            密码仅在本地解密，不上传
+          </span>
         </div>
-        <div>
-          <label>仓库名 Repo</label>
-          <input type="text" id="cfgRepo" placeholder="例如 survey-data">
+        <div class="pwd-body" id="pwdBody">
+          <div class="pwd-row">
+            <div class="pwd-input-wrap">
+              <input type="password" id="pwdInput" placeholder="请输入解密密码" autocomplete="off">
+              <button type="button" class="pwd-eye" id="pwdEyeBtn" title="显示/隐藏">👁</button>
+            </div>
+            <button type="button" class="small" id="pwdGetTokenBtn">🔑 获取 Token</button>
+            <button type="button" class="outline small" id="pwdClearBtn">✕ 清空</button>
+          </div>
+          <div class="pwd-status" id="pwdStatus"></div>
+          <div class="pwd-hint">💡 使用内置密文 + AES-CBC 10 轮解密，完成后自动填入 Token 并验证。</div>
         </div>
       </div>
 
+      <!-- —— Owner + Repo（选项卡风格）—— -->
       <div class="row">
         <div>
-          <label>分支 Branch</label>
-          <input type="text" id="cfgBranch" value="main">
+          <label>👤 所有者 Owner <span style="color:var(--er-fg)">*</span></label>
+          <input type="text" id="cfgOwner" placeholder="验证 Token 后自动填充" autocomplete="off">
         </div>
         <div>
-          <label>保存路径（目录）</label>
+          <label>📦 仓库名 Repo <span style="color:var(--er-fg)">*</span></label>
+          <input type="text" id="cfgRepo" list="repoDatalist"
+                 placeholder="选择或手动输入" autocomplete="off">
+          <datalist id="repoDatalist"></datalist>
+        </div>
+      </div>
+      <div class="repo-info" id="repoInfo">📋 请先验证 Token 以加载仓库列表</div>
+
+      <!-- —— 分支 + 路径 —— -->
+      <div class="row">
+        <div>
+          <label>🌿 分支 Branch</label>
+          <select id="cfgBranch">
+            <option value="">— 请先选择仓库 —</option>
+          </select>
+        </div>
+        <div>
+          <label>📁 保存路径（目录）</label>
           <input type="text" id="cfgPath" value="submissions">
         </div>
       </div>
 
-      <label>文件名前缀</label>
+      <label>📝 文件名前缀</label>
       <input type="text" id="cfgPrefix" value="survey">
 
       <div class="save-row">
@@ -133,12 +235,12 @@
     </div>
   </details>
 
-  <!-- ========== 附加字段配置 ========== -->
+  <!-- ========== 附加字段 ========== -->
   <details class="panel" id="extraPanel">
     <summary>📋 附加信息字段（自定义需要随问卷一起收集的内容）</summary>
     <div class="panel-body">
       <p style="color:var(--muted);font-size:13px;margin:12px 0 8px">
-        例如「姓名」「班级」「学号」。添加后，答题者会在问卷末尾看到对应输入框，内容会写进提交的文件里。
+        例如「姓名」「班级」「学号」。添加后，答题者会在问卷末尾看到对应输入框。
       </p>
       <div id="extraList"></div>
       <div class="row" style="margin-top:12px">
@@ -148,7 +250,7 @@
     </div>
   </details>
 
-  <!-- ========== 问卷主体 ========== -->
+  <!-- ========== 问卷 ========== -->
   <form id="surveyForm" novalidate>
     <h1>校园人际交往与倾诉习惯调查问卷</h1>
     <p class="subtitle">本问卷用于了解中学生对旧友谊与倾诉习惯的真实想法，感谢你的参与。</p>
@@ -166,125 +268,138 @@
 
 <script>
 /* ============================================================
- *  1. 题目数据 —— 想改题目，改这里就行
+ *  0. 从原文件提取：密文、IV、解密函数（原样保留）
+ * ============================================================ */
+var CIPHER_TEXT =
+  "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";
+
+var FIXED_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef');
+
+function multiDecrypt(ciphertext, password, times) {
+  var data = ciphertext.trim();
+  if (!data) throw new Error('密文为空');
+  for (var i = 0; i < times; i++) {
+    try {
+      var decrypted = CryptoJS.AES.decrypt(data, password, {
+        iv: FIXED_IV,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      });
+      if (decrypted.sigBytes === 0) throw new Error('第 ' + (i + 1) + ' 次解密结果为空');
+      if (i === times - 1) {
+        var result = decrypted.toString(CryptoJS.enc.Utf8);
+        if (result === '') {
+          var latin = decrypted.toString(CryptoJS.enc.Latin1);
+          if (latin) throw new Error('最终明文 UTF-8 解码为空，Latin1 解码为: ' + latin);
+          throw new Error('最终明文无法解码（sigBytes=' + decrypted.sigBytes + '）');
+        }
+        data = result;
+      } else {
+        data = decrypted.toString(CryptoJS.enc.Utf8);
+      }
+    } catch (e) {
+      throw new Error('第 ' + (i + 1) + ' 次解密失败: ' + e.message);
+    }
+  }
+  return data;
+}
+
+/* ============================================================
+ *  1. 题目数据
  * ============================================================ */
 const QUESTIONS = [
-  {
-    id: 'q1',
-    title: '遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？',
-    type: 'single',
-    options: [
-      { value: 'A', label: '身边每天见面的同学/同性朋友' },
-      { value: 'B', label: '以前很熟悉、但现在不常联系的旧友' },
-      { value: 'C', label: '网络树洞或陌生人' },
-      { value: 'D', label: '自己消化' }
-    ]
-  },
-  {
-    id: 'q2',
-    title: '你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？',
-    note: '可多选',
-    type: 'multiple',
-    options: [
-      { value: 'A', label: '圈子不同，渐渐没了共同话题' },
-      { value: 'B', label: '联系频率下降，自然而然就淡了' },
-      { value: 'C', label: '学业太忙，没有精力专门去维系' },
-      { value: 'D', label: '有了新的朋友和新的生活重心' }
-    ]
-  },
-  {
-    id: 'q3',
-    title: '你通常会和"关系很好的旧友"分享哪类事情？',
-    note: '可多选',
-    type: 'multiple',
-    options: [
-      { value: 'A', label: '日常琐事和八卦' },
-      { value: 'B', label: '学业压力和迷茫' },
-      { value: 'C', label: '自己的人际关系或情感烦恼' },
-      { value: 'D', label: '偶尔的情绪低落或深夜emo' }
-    ]
-  },
-  {
-    id: 'q4',
-    title: '对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？',
-    type: 'single',
-    options: [
-      { value: 'A', label: '放在心里默默关注，偶尔怀念但不会主动打扰' },
-      { value: 'B', label: '随缘，对方找我我就热情回应，不找就算了' },
-      { value: 'C', label: '会主动找机会聊聊天，想努力维系这段关系' },
-      { value: 'D', label: '觉得顺其自然最好，没必要强求' }
-    ]
-  },
-  {
-    id: 'q5',
-    title: '如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？',
-    type: 'single',
-    options: [
-      { value: 'A', label: '很正常，大家都有自己的生活，替他开心' },
-      { value: 'B', label: '稍微有点失落，感觉自己在对方心里的位置变了' },
-      { value: 'C', label: '没什么感觉，反正大家都会变' },
-      { value: 'D', label: '看情况，如果是特别好的朋友会有点介意' }
-    ]
-  },
-  {
-    id: 'q6',
-    title: '评价一下自己对于旧友谊的依恋程度：',
-    type: 'single',
-    options: [
-      { value: 'A', label: '很念旧，经常想起以前的日子' },
-      { value: 'B', label: '偶尔怀念，但更专注当下的生活' },
-      { value: 'C', label: '比较向前看，旧朋友淡了就淡了' },
-      { value: 'D', label: '视具体的人和事而定' }
-    ]
-  },
-  {
-    id: 'q7',
-    title: '如果用一个词来形容你和过去某位旧日异性好友现在的关系，你会选：',
-    type: 'single',
-    options: [
-      { value: 'A', label: '点赞之交' },
-      { value: 'B', label: '偶尔问候' },
-      { value: 'C', label: '熟悉的陌生人' },
-      { value: 'D', label: '依然信任的远方朋友' }
-    ]
-  },
-  {
-    id: 'q8',
-    title: '开放性填空：你觉得中学阶段，异性朋友之间真的存在纯粹的长久友谊吗？为什么？',
-    type: 'textarea',
-    placeholder: '请写下你的想法…'
-  },
-  {
-    id: 'q9',
-    title: '开放性填空：你觉得中学阶段，同性朋友之间真的存在纯粹的长久友谊吗？为什么？',
-    type: 'textarea',
-    placeholder: '请写下你的想法…'
-  }
+  { id:'q1', title:'遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？', type:'single',
+    options:[
+      { value:'A', label:'身边每天见面的同学/同性朋友' },
+      { value:'B', label:'以前很熟悉、但现在不常联系的旧友' },
+      { value:'C', label:'网络树洞或陌生人' },
+      { value:'D', label:'自己消化' }
+    ]},
+  { id:'q2', title:'你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？', note:'可多选', type:'multiple',
+    options:[
+      { value:'A', label:'圈子不同，渐渐没了共同话题' },
+      { value:'B', label:'联系频率下降，自然而然就淡了' },
+      { value:'C', label:'学业太忙，没有精力专门去维系' },
+      { value:'D', label:'有了新的朋友和新的生活重心' }
+    ]},
+  { id:'q3', title:'你通常会和"关系很好的旧友"分享哪类事情？', note:'可多选', type:'multiple',
+    options:[
+      { value:'A', label:'日常琐事和八卦' },
+      { value:'B', label:'学业压力和迷茫' },
+      { value:'C', label:'自己的人际关系或情感烦恼' },
+      { value:'D', label:'偶尔的情绪低落或深夜emo' }
+    ]},
+  { id:'q4', title:'对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？', type:'single',
+    options:[
+      { value:'A', label:'放在心里默默关注，偶尔怀念但不会主动打扰' },
+      { value:'B', label:'随缘，对方找我我就热情回应，不找就算了' },
+      { value:'C', label:'会主动找机会聊聊天，想努力维系这段关系' },
+      { value:'D', label:'觉得顺其自然最好，没必要强求' }
+    ]},
+  { id:'q5', title:'如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？', type:'single',
+    options:[
+      { value:'A', label:'很正常，大家都有自己的生活，替他开心' },
+      { value:'B', label:'稍微有点失落，感觉自己在对方心里的位置变了' },
+      { value:'C', label:'没什么感觉，反正大家都会变' },
+      { value:'D', label:'看情况，如果是特别好的朋友会有点介意' }
+    ]},
+  { id:'q6', title:'评价一下自己对于旧友谊的依恋程度：', type:'single',
+    options:[
+      { value:'A', label:'很念旧，经常想起以前的日子' },
+      { value:'B', label:'偶尔怀念，但更专注当下的生活' },
+      { value:'C', label:'比较向前看，旧朋友淡了就淡了' },
+      { value:'D', label:'视具体的人和事而定' }
+    ]},
+  { id:'q7', title:'如果用一个词来形容你和过去某位旧日异性好友现在的关系，你会选：', type:'single',
+    options:[
+      { value:'A', label:'点赞之交' },
+      { value:'B', label:'偶尔问候' },
+      { value:'C', label:'熟悉的陌生人' },
+      { value:'D', label:'依然信任的远方朋友' }
+    ]},
+  { id:'q8', title:'开放性填空：你觉得中学阶段，异性朋友之间真的存在纯粹的长久友谊吗？为什么？',
+    type:'textarea', placeholder:'请写下你的想法…' },
+  { id:'q9', title:'开放性填空：你觉得中学阶段，同性朋友之间真的存在纯粹的长久友谊吗？为什么？',
+    type:'textarea', placeholder:'请写下你的想法…' }
 ];
 
 /* ============================================================
- *  2. 本地存储工具
+ *  2. 本地存储
  * ============================================================ */
 const CFG_KEY = 'gh-survey-config';
 const EXT_KEY = 'gh-survey-extra-fields';
-
 const loadConfig = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
 const saveConfig = c => localStorage.setItem(CFG_KEY, JSON.stringify(c));
-
 const loadExtra = () => { try { return JSON.parse(localStorage.getItem(EXT_KEY)) || []; } catch { return []; } };
 const saveExtra = a => localStorage.setItem(EXT_KEY, JSON.stringify(a));
 
 /* ============================================================
- *  3. 渲染问卷题目
+ *  3. GitHub API 请求（简化版）
+ * ============================================================ */
+async function ghFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) {
+    const msg = (data && data.message) || res.statusText || ('HTTP ' + res.status);
+    const err = new Error(msg);
+    err.status = res.status;
+    err.body = data;
+    throw err;
+  }
+  return data;
+}
+
+/* ============================================================
+ *  4. 渲染问卷
  * ============================================================ */
 function renderQuestions() {
   const box = document.getElementById('questionsContainer');
   box.innerHTML = '';
-
   QUESTIONS.forEach((q, idx) => {
     const fs = document.createElement('fieldset');
     fs.className = 'question';
-
     const legend = document.createElement('legend');
     legend.innerHTML = `<span class="q-num">${idx + 1}.</span>${q.title}`
       + (q.note ? ` <span class="note">（${q.note}）</span>` : '');
@@ -294,15 +409,12 @@ function renderQuestions() {
       q.options.forEach(opt => {
         const label = document.createElement('label');
         label.className = 'option';
-
         const input = document.createElement('input');
         input.type = q.type === 'single' ? 'radio' : 'checkbox';
         input.name = q.id;
         input.value = opt.value;
-
         const span = document.createElement('span');
         span.textContent = `${opt.value}. ${opt.label}`;
-
         label.appendChild(input);
         label.appendChild(span);
         fs.appendChild(label);
@@ -314,19 +426,17 @@ function renderQuestions() {
       ta.placeholder = q.placeholder || '请填写…';
       fs.appendChild(ta);
     }
-
     box.appendChild(fs);
   });
 }
 
 /* ============================================================
- *  4. 渲染附加字段（配置区列表 + 问卷输入框）
+ *  5. 附加字段
  * ============================================================ */
 function renderExtra() {
   const listBox = document.getElementById('extraList');
   const formBox = document.getElementById('extraFieldsForm');
   const fields = loadExtra();
-
   listBox.innerHTML = '';
   formBox.innerHTML = '';
 
@@ -336,13 +446,10 @@ function renderExtra() {
   }
 
   fields.forEach((name, i) => {
-    // —— 配置区的列表项
     const row = document.createElement('div');
     row.className = 'extra-row';
-
     const span = document.createElement('span');
     span.textContent = `• ${name}`;
-
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'ghost';
@@ -353,23 +460,18 @@ function renderExtra() {
       saveExtra(arr);
       renderExtra();
     };
-
     row.appendChild(span);
     row.appendChild(del);
     listBox.appendChild(row);
 
-    // —— 问卷里的输入框
     const wrap = document.createElement('div');
     wrap.className = 'extra-field';
-
     const lab = document.createElement('label');
     lab.textContent = name;
-
     const inp = document.createElement('input');
     inp.type = 'text';
     inp.placeholder = `请填写${name}`;
     inp.dataset.extraIdx = i;
-
     wrap.appendChild(lab);
     wrap.appendChild(inp);
     formBox.appendChild(wrap);
@@ -377,7 +479,7 @@ function renderExtra() {
 }
 
 /* ============================================================
- *  5. 工具函数
+ *  6. 工具函数
  * ============================================================ */
 function toBase64(str) {
   const bytes = new TextEncoder().encode(str);
@@ -385,67 +487,255 @@ function toBase64(str) {
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
 }
-
 function timestamp(d = new Date()) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
        + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
-
 function showResult(kind, msg) {
   const el = document.getElementById('result');
   el.className = kind === 'ok' ? 'ok' : kind === 'er' ? 'er' : 'pd';
   el.textContent = msg;
 }
-
 function escapePath(path) {
   return path.split('/').map(encodeURIComponent).join('/');
 }
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 /* ============================================================
- *  6. 收集答案
+ *  7. Token 验证 + 仓库/分支加载
+ * ============================================================ */
+let repoList = [];
+let currentUser = null;
+
+function setTokenStatus(type, html) {
+  const el = document.getElementById('tokenStatus');
+  el.className = 'token-status visible ' + type;
+  el.innerHTML = html;
+}
+function hideTokenStatus() {
+  document.getElementById('tokenStatus').classList.remove('visible');
+}
+
+async function verifyToken() {
+  const token = document.getElementById('cfgToken').value.trim();
+  if (!token) {
+    setTokenStatus('error', '⚠️ 请先输入 Token');
+    return false;
+  }
+  setTokenStatus('loading', '⏳ 正在验证 Token…');
+  try {
+    const user = await ghFetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+    currentUser = user;
+
+    // 自动填充 owner
+    document.getElementById('cfgOwner').value = user.login;
+
+    setTokenStatus('success',
+      `<div class="user-info">
+        ${user.avatar_url ? `<img class="user-avatar" src="${escapeHtml(user.avatar_url)}" alt="">` : ''}
+        <span>✅ 已验证：<span class="username">@${escapeHtml(user.login)}</span></span>
+        ${user.name ? `<span style="color:var(--muted)">${escapeHtml(user.name)}</span>` : ''}
+      </div>`);
+
+    await loadUserRepos();
+    return true;
+  } catch (err) {
+    setTokenStatus('error', '❌ Token 验证失败：' + escapeHtml(err.message));
+    return false;
+  }
+}
+
+async function loadUserRepos() {
+  const token = document.getElementById('cfgToken').value.trim();
+  if (!token) return;
+  try {
+    const repos = await ghFetch(
+      'https://api.github.com/user/repos?per_page=100&sort=updated&type=all',
+      { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' } }
+    );
+    repoList = repos.map(r => ({
+      name: r.name,
+      description: r.description || '',
+      default_branch: r.default_branch || 'main'
+    }));
+    const dl = document.getElementById('repoDatalist');
+    dl.innerHTML = '';
+    repoList.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.name;
+      if (r.description) opt.label = r.description;
+      dl.appendChild(opt);
+    });
+    document.getElementById('repoInfo').innerHTML =
+      `📋 已加载 <strong>${repoList.length}</strong> 个仓库，点击输入框选择或手动输入。`;
+    document.getElementById('repoInfo').classList.add('filled');
+  } catch (err) {
+    document.getElementById('repoInfo').textContent = '⚠️ 加载仓库列表失败：' + err.message;
+  }
+}
+
+async function updateRepoInfoAndBranches() {
+  const repoName = document.getElementById('cfgRepo').value.trim();
+  const owner = document.getElementById('cfgOwner').value.trim();
+  const infoEl = document.getElementById('repoInfo');
+  const branchSel = document.getElementById('cfgBranch');
+
+  if (!repoName) {
+    infoEl.textContent = '📋 请先验证 Token 以加载仓库列表';
+    infoEl.classList.remove('filled');
+    branchSel.innerHTML = '<option value="">— 请先选择仓库 —</option>';
+    return;
+  }
+
+  const found = repoList.find(r => r.name === repoName);
+  if (found && found.description) {
+    infoEl.innerHTML = `📋 简介：${escapeHtml(found.description)}`;
+    infoEl.classList.add('filled');
+  } else {
+    infoEl.textContent = '📋 正在加载仓库信息…';
+  }
+
+  if (!owner) {
+    branchSel.innerHTML = '<option value="">— 请先填写 Owner —</option>';
+    return;
+  }
+
+  branchSel.innerHTML = '<option value="">加载中…</option>';
+  try {
+    const branches = await ghFetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/branches`,
+      { headers: { 'Authorization': 'Bearer ' + document.getElementById('cfgToken').value.trim(), 'Accept': 'application/vnd.github+json' } }
+    );
+    branchSel.innerHTML = '';
+    branches.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.name;
+      opt.textContent = b.name;
+      branchSel.appendChild(opt);
+    });
+    const defaultBranch = found ? found.default_branch : (branches[0] && branches[0].name);
+    if (defaultBranch && branches.some(b => b.name === defaultBranch)) {
+      branchSel.value = defaultBranch;
+    } else if (branches.length) {
+      branchSel.value = branches[0].name;
+    }
+  } catch (err) {
+    branchSel.innerHTML = `<option value="">⚠️ 加载失败：${escapeHtml(err.message)}</option>`;
+  }
+}
+
+/* ============================================================
+ *  8. 密码解密 Token
+ * ============================================================ */
+function setPwdStatus(type, text) {
+  const el = document.getElementById('pwdStatus');
+  el.className = 'pwd-status visible ' + type;
+  el.textContent = text;
+}
+function hidePwdStatus() {
+  document.getElementById('pwdStatus').classList.remove('visible');
+}
+function togglePwdBody() {
+  const body = document.getElementById('pwdBody');
+  const icon = document.getElementById('pwdToggleIcon');
+  body.classList.toggle('open');
+  icon.classList.toggle('open');
+  if (body.classList.contains('open')) document.getElementById('pwdInput').focus();
+}
+
+function handlePwdGetToken() {
+  const password = document.getElementById('pwdInput').value;
+  if (!password) {
+    setPwdStatus('error', '⚠️ 请输入密码');
+    return;
+  }
+  const btn = document.getElementById('pwdGetTokenBtn');
+  btn.disabled = true;
+  setPwdStatus('loading', '🔐 正在解密…（共 10 轮，请稍候）');
+
+  setTimeout(async () => {
+    try {
+      let token = multiDecrypt(CIPHER_TEXT, password, 10);
+      token = token.trim();
+
+      if (token && (token.startsWith('github_pat_') || token.startsWith('ghp_')) && token.length >= 40) {
+        const inp = document.getElementById('cfgToken');
+        inp.value = token;
+        inp.type = 'text';
+
+        setPwdStatus('success', '✅ 解密成功！Token 已填入，正在自动验证…');
+
+        // 自动验证并加载仓库列表
+        const ok = await verifyToken();
+        if (ok) {
+          setPwdStatus('success', '✅ Token 有效，仓库列表已加载，请选择仓库。');
+        } else {
+          setPwdStatus('error', '⚠️ Token 已填入，但验证失败，请检查权限。');
+        }
+      } else {
+        setPwdStatus('error', '❌ 解密结果不是有效的 GitHub Token（前缀或长度不符），请检查密码。');
+      }
+    } catch (err) {
+      setPwdStatus('error', '❌ 解密失败：' + (err.message || '未知错误'));
+    } finally {
+      btn.disabled = false;
+    }
+  }, 30);
+}
+
+/* ============================================================
+ *  9. 收集 & 提交
  * ============================================================ */
 function collectAnswers() {
   const answers = {};
-
   for (const q of QUESTIONS) {
     if (q.type === 'single') {
       const checked = document.querySelector(`input[name="${q.id}"]:checked`);
       if (!checked) return { error: `第 ${QUESTIONS.indexOf(q) + 1} 题未作答` };
       const opt = q.options.find(o => o.value === checked.value);
       answers[q.id] = { value: opt.value, label: opt.label };
-
     } else if (q.type === 'multiple') {
       const checked = document.querySelectorAll(`input[name="${q.id}"]:checked`);
       answers[q.id] = Array.from(checked).map(c => {
         const opt = q.options.find(o => o.value === c.value);
         return { value: opt.value, label: opt.label };
       });
-
     } else if (q.type === 'textarea') {
       const ta = document.querySelector(`[name="${q.id}"]`);
       answers[q.id] = ta ? ta.value.trim() : '';
     }
   }
-
   const extra = {};
   loadExtra().forEach((name, i) => {
     const inp = document.querySelector(`[data-extra-idx="${i}"]`);
     extra[name] = inp ? inp.value.trim() : '';
   });
-
   return { answers, extra };
 }
 
-/* ============================================================
- *  7. 提交
- * ============================================================ */
 async function handleSubmit(e) {
   e.preventDefault();
 
-  const cfg = loadConfig();
-  if (!cfg.token || !cfg.owner || !cfg.repo) {
-    showResult('er', '❌ 请先在顶部「GitHub 配置」面板中填写 Token、Owner、仓库名。');
+  // 优先读表单里当前的值，避免用户忘了点"保存配置"
+  const cfg = {
+    token: document.getElementById('cfgToken').value.trim(),
+    owner: document.getElementById('cfgOwner').value.trim(),
+    repo: document.getElementById('cfgRepo').value.trim(),
+    branch: document.getElementById('cfgBranch').value || '',
+    path: document.getElementById('cfgPath').value.trim() || 'submissions',
+    prefix: document.getElementById('cfgPrefix').value.trim() || 'survey'
+  };
+
+  if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.branch) {
+    showResult('er', '❌ 请先在顶部「GitHub 配置」面板中完整填写 Token、Owner、仓库和分支。');
     document.getElementById('configPanel').open = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
@@ -470,10 +760,8 @@ async function handleSubmit(e) {
   };
 
   const base64 = toBase64(JSON.stringify(payload, null, 2));
-
-  const branch = (cfg.branch || 'main').trim();
-  const dir = (cfg.path || 'submissions').replace(/^\/+|\/+$/g, '');
-  const prefix = (cfg.prefix || 'survey').replace(/[\/\\:*?"<>|]/g, '-');
+  const dir = cfg.path.replace(/^\/+|\/+$/g, '');
+  const prefix = cfg.prefix.replace(/[\/\\:*?"<>|]/g, '-');
   const filename = `${prefix}-${timestamp(now)}-${Math.random().toString(36).slice(2, 8)}.json`;
   const fullPath = dir ? `${dir}/${filename}` : filename;
 
@@ -482,9 +770,8 @@ async function handleSubmit(e) {
   showResult('pd', '⏳ 正在提交，请稍候…');
 
   try {
-    const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${escapePath(fullPath)}`;
-
-    const res = await fetch(url, {
+    const url = `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${escapePath(fullPath)}`;
+    const data = await ghFetch(url, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${cfg.token}`,
@@ -495,20 +782,9 @@ async function handleSubmit(e) {
       body: JSON.stringify({
         message: `问卷提交 ${timestamp(now)}`,
         content: base64,
-        branch
+        branch: cfg.branch
       })
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      const hint = res.status === 401 ? '（Token 无效或已过期）'
-                 : res.status === 403 ? '（Token 权限不足或速率受限）'
-                 : res.status === 404 ? '（仓库/分支不存在，或 Token 无权限）'
-                 : res.status === 422 ? '（分支不存在或文件冲突）'
-                 : '';
-      throw new Error(`${data.message || res.status} ${hint}`);
-    }
 
     showResult('ok',
       `✅ 提交成功！\n` +
@@ -516,47 +792,54 @@ async function handleSubmit(e) {
       `提交时间：${now.toLocaleString('zh-CN')}\n` +
       `可以到 GitHub 仓库里查看结果。`
     );
-
-    // 清空问卷部分（保留配置）
     document.getElementById('surveyForm').reset();
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-
   } catch (err) {
-    showResult('er', `❌ 提交失败：${err.message}`);
+    let hint = '';
+    if (err.status === 401) hint = '（Token 无效或已过期）';
+    else if (err.status === 403) hint = '（Token 权限不足或速率受限）';
+    else if (err.status === 404) hint = '（仓库/分支不存在，或 Token 无权限）';
+    else if (err.status === 422) hint = '（分支不存在或文件冲突）';
+    showResult('er', `❌ 提交失败：${err.message} ${hint}`);
   } finally {
     btn.disabled = false;
   }
 }
 
 /* ============================================================
- *  8. 初始化
+ *  10. 初始化
  * ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  // 回填配置
   const cfg = loadConfig();
   if (cfg.token) document.getElementById('cfgToken').value = cfg.token;
   if (cfg.owner) document.getElementById('cfgOwner').value = cfg.owner;
   if (cfg.repo) document.getElementById('cfgRepo').value = cfg.repo;
-  document.getElementById('cfgBranch').value = cfg.branch || 'main';
+  if (cfg.branch) {
+    const sel = document.getElementById('cfgBranch');
+    // 如果分支下拉里还没有这个选项，先临时加上
+    const opt = document.createElement('option');
+    opt.value = cfg.branch;
+    opt.textContent = cfg.branch;
+    sel.appendChild(opt);
+    sel.value = cfg.branch;
+  }
   document.getElementById('cfgPath').value = cfg.path || 'submissions';
   document.getElementById('cfgPrefix').value = cfg.prefix || 'survey';
 
-  // 首次未配置，自动展开
   if (!cfg.token || !cfg.owner || !cfg.repo) {
     document.getElementById('configPanel').open = true;
   }
 
-  // 渲染
   renderQuestions();
   renderExtra();
 
-  // 事件绑定
+  /* —— 配置区 —— */
   document.getElementById('saveConfigBtn').addEventListener('click', () => {
     saveConfig({
       token: document.getElementById('cfgToken').value.trim(),
       owner: document.getElementById('cfgOwner').value.trim(),
       repo: document.getElementById('cfgRepo').value.trim(),
-      branch: document.getElementById('cfgBranch').value.trim() || 'main',
+      branch: document.getElementById('cfgBranch').value || '',
       path: document.getElementById('cfgPath').value.trim() || 'submissions',
       prefix: document.getElementById('cfgPrefix').value.trim() || 'survey'
     });
@@ -565,6 +848,45 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => s.textContent = '', 2000);
   });
 
+  /* —— Token 显示切换 —— */
+  document.getElementById('toggleTokenVisibility').addEventListener('click', function () {
+    const inp = document.getElementById('cfgToken');
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    this.textContent = showing ? '👁 显示' : '🙈 隐藏';
+  });
+
+  /* —— Token 验证 —— */
+  document.getElementById('btnVerifyToken').addEventListener('click', verifyToken);
+
+  /* —— 密码解密 —— */
+  document.getElementById('pwdToggleHeader').addEventListener('click', togglePwdBody);
+  document.getElementById('pwdGetTokenBtn').addEventListener('click', handlePwdGetToken);
+  document.getElementById('pwdInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); handlePwdGetToken(); }
+  });
+  document.getElementById('pwdEyeBtn').addEventListener('click', function () {
+    const inp = document.getElementById('pwdInput');
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    this.textContent = showing ? '👁' : '🙈';
+  });
+  document.getElementById('pwdClearBtn').addEventListener('click', () => {
+    document.getElementById('pwdInput').value = '';
+    hidePwdStatus();
+    document.getElementById('pwdInput').focus();
+  });
+
+  /* —— 仓库选择后自动加载分支 —— */
+  let repoTimer;
+  document.getElementById('cfgRepo').addEventListener('input', () => {
+    clearTimeout(repoTimer);
+    repoTimer = setTimeout(updateRepoInfoAndBranches, 400);
+  });
+  document.getElementById('cfgRepo').addEventListener('change', updateRepoInfoAndBranches);
+  document.getElementById('cfgOwner').addEventListener('change', updateRepoInfoAndBranches);
+
+  /* —— 附加字段 —— */
   document.getElementById('addExtraBtn').addEventListener('click', () => {
     const input = document.getElementById('extraNameInput');
     const name = input.value.trim();
@@ -576,13 +898,17 @@ document.addEventListener('DOMContentLoaded', () => {
     input.value = '';
     renderExtra();
   });
-
-  // 回车快捷添加
   document.getElementById('extraNameInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addExtraBtn').click(); }
   });
 
+  /* —— 提交 —— */
   document.getElementById('surveyForm').addEventListener('submit', handleSubmit);
+
+  /* —— 恢复已保存的 Token 时，自动验证并加载仓库列表 —— */
+  if (cfg.token) {
+    setTimeout(() => verifyToken(), 300);
+  }
 });
 </script>
 </body>
