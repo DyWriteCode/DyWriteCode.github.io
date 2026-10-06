@@ -3,907 +3,1015 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>校园人际交往与倾诉习惯调查问卷</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js?v=20261006010538"></script>
+<title>校园人际交往与倾诉习惯调查 · 数据分析报告</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#f1f5f9; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8;
-    --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
-    --ok-bg:#f0fdf4; --ok-fg:#15803d; --ok-bd:#86efac;
-    --er-bg:#fef2f2; --er-fg:#b91c1c; --er-bd:#fca5a5;
-    --pd-bg:#eff6ff; --pd-fg:#1d4ed8; --pd-bd:#93c5fd;
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --primary:#2563eb;
+    --primary-dark:#1e40af;
+    --accent:#f59e0b;
+    --accent2:#10b981;
+    --accent3:#ef4444;
+    --accent4:#8b5cf6;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
   }
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;margin:0;padding:0}
   body{
-    margin:0;padding:24px 16px 80px;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-    line-height:1.65;
-  }
-  .container{max-width:800px;margin:0 auto}
-
-  details.panel{
-    background:var(--card);border:1px solid var(--border);border-radius:12px;
-    margin-bottom:16px;overflow:hidden;
-  }
-  details.panel>summary{
-    cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;
-    display:flex;align-items:center;gap:8px;user-select:none;
-  }
-  details.panel>summary::-webkit-details-marker{display:none}
-  details.panel>summary::after{content:"▾";margin-left:auto;transition:.2s;color:var(--muted)}
-  details.panel[open]>summary::after{transform:rotate(180deg)}
-  .panel-body{padding:0 18px 18px;border-top:1px solid var(--border)}
-
-  label{display:block;margin:12px 0 4px;font-size:14px;font-weight:500}
-  input[type=text],input[type=password],input[type=email],textarea,select{
-    width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
-    font-size:14px;font-family:inherit;background:#fff;outline:none;transition:.15s;
+    background:var(--bg);
     color:var(--text);
+    line-height:1.7;
+    padding:0 0 80px;
   }
-  input:focus,textarea:focus,select:focus{
-    border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)
+  .hero{
+    background:linear-gradient(135deg,#1e40af 0%,#2563eb 50%,#3b82f6 100%);
+    color:#fff;
+    padding:56px 24px 72px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
   }
-  select{cursor:pointer}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:560px){.row{grid-template-columns:1fr}}
+  .hero::before{
+    content:"";
+    position:absolute;top:-50%;right:-20%;
+    width:600px;height:600px;
+    background:radial-gradient(circle,rgba(255,255,255,0.12) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;bottom:-40%;left:-10%;
+    width:500px;height:500px;
+    background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  .hero-content{position:relative;z-index:1;max-width:900px;margin:0 auto}
+  .hero h1{
+    font-size:clamp(24px,4vw,36px);
+    font-weight:800;
+    letter-spacing:-0.5px;
+    margin-bottom:14px;
+  }
+  .hero p{
+    font-size:clamp(13px,2vw,15px);
+    opacity:0.9;
+    max-width:640px;
+    margin:0 auto;
+  }
+  .hero-meta{
+    display:flex;
+    gap:18px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top:26px;
+    font-size:13px;
+  }
+  .hero-meta span{
+    background:rgba(255,255,255,0.18);
+    padding:6px 16px;
+    border-radius:20px;
+    backdrop-filter:blur(10px);
+  }
 
-  button{
-    padding:9px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;
-    font-size:14px;font-weight:500;cursor:pointer;transition:.15s;font-family:inherit;
+  .container{
+    max-width:1100px;
+    margin:-40px auto 0;
+    padding:0 20px;
+    position:relative;
+    z-index:2;
   }
-  button:hover:not(:disabled){background:var(--primary-hover)}
-  button:disabled{opacity:.55;cursor:not-allowed}
-  button.ghost{background:transparent;color:var(--er-fg);border:1px solid var(--er-bd);padding:4px 10px;font-size:12px}
-  button.ghost:hover{background:var(--er-bg)}
-  button.small{padding:7px 14px;font-size:13px}
-  button.outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
-  button.outline:hover:not(:disabled){background:rgba(37,99,235,.08)}
-  .save-row{display:flex;align-items:center;gap:12px;margin-top:16px}
-  #configStatus{color:var(--ok-fg);font-size:13px}
 
-  h1{font-size:22px;margin:28px 0 8px}
-  .subtitle{color:var(--muted);font-size:14px;margin-bottom:20px}
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:16px;
+    margin-bottom:32px;
+  }
+  .stat-card{
+    background:var(--card);
+    border-radius:14px;
+    padding:22px 20px;
+    box-shadow:0 4px 20px rgba(15,23,42,0.06);
+    border:1px solid var(--border);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 28px rgba(15,23,42,0.10);
+  }
+  .stat-value{
+    font-size:34px;
+    font-weight:800;
+    color:var(--primary);
+    line-height:1.1;
+    letter-spacing:-1px;
+  }
+  .stat-label{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .stat-sub{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+    opacity:0.75;
+  }
+  .stat-card.warn .stat-value{color:var(--accent)}
+  .stat-card.danger .stat-value{color:var(--accent3)}
+  .stat-card.success .stat-value{color:var(--accent2)}
+  .stat-card.purple .stat-value{color:var(--accent4)}
 
-  fieldset.question{
-    background:var(--card);border:1px solid var(--border);border-radius:12px;
-    padding:16px 18px;margin:0 0 14px;
+  .section-title{
+    font-size:20px;
+    font-weight:700;
+    margin:38px 0 18px;
+    padding-left:14px;
+    border-left:4px solid var(--primary);
+    letter-spacing:-0.3px;
   }
-  fieldset.question legend{font-weight:600;font-size:15px;padding:0 6px;color:var(--text)}
-  .q-num{color:var(--primary);margin-right:4px}
-  .note{color:var(--muted);font-weight:400;font-size:13px}
-  .option{
-    display:flex;align-items:flex-start;gap:10px;padding:9px 12px;margin:6px 0;
-    border-radius:8px;cursor:pointer;font-size:14px;transition:.12s;font-weight:400;
+  .section-title .num{
+    display:inline-block;
+    background:var(--primary);
+    color:#fff;
+    font-size:12px;
+    padding:2px 10px;
+    border-radius:12px;
+    margin-right:8px;
+    vertical-align:middle;
+    font-weight:600;
   }
-  .option:hover{background:#f8fafc}
-  .option input{margin-top:3px;flex-shrink:0;accent-color:var(--primary);cursor:pointer}
-  textarea{resize:vertical;min-height:90px;margin-top:8px}
 
-  .extra-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px}
-  .extra-field{margin:14px 0}
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    padding:24px 26px;
+    box-shadow:0 4px 20px rgba(15,23,42,0.05);
+    border:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .q-header{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:20px;
+  }
+  .q-badge{
+    flex-shrink:0;
+    width:36px;height:36px;
+    background:var(--primary);
+    color:#fff;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:15px;
+  }
+  .q-text{
+    flex:1;
+    font-size:16px;
+    font-weight:600;
+    line-height:1.5;
+  }
+  .q-note{
+    display:inline-block;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:400;
+    margin-left:8px;
+    background:var(--bg);
+    padding:1px 8px;
+    border-radius:10px;
+    vertical-align:middle;
+  }
 
-  #result{
-    display:none;margin-top:20px;padding:14px 16px;border-radius:10px;
-    font-size:14px;white-space:pre-wrap;word-break:break-word;border:1px solid;
+  .chart-wrap{
+    position:relative;
+    height:260px;
+    margin-bottom:18px;
   }
-  #result.ok{display:block;background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
-  #result.er{display:block;background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
-  #result.pd{display:block;background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
+  .chart-wrap.tall{height:320px}
+  .chart-wrap.short{height:220px}
 
-  .submit-row{text-align:center;margin-top:24px}
-  .submit-row button{padding:12px 48px;font-size:15px}
+  .analysis{
+    background:#f8fafc;
+    border-left:3px solid var(--primary);
+    padding:14px 18px;
+    border-radius:0 8px 8px 0;
+    font-size:14px;
+    color:#334155;
+    line-height:1.8;
+  }
+  .analysis strong{color:var(--text)}
+  .analysis .highlight{
+    background:linear-gradient(transparent 60%, #fde68a 60%);
+    font-weight:600;
+  }
 
-  .token-row{display:flex;gap:8px;align-items:stretch}
-  .token-row>input{flex:1}
-  .token-status{
-    display:none;margin-top:8px;padding:8px 12px;border-radius:8px;
-    font-size:13px;border:1px solid;
+  /* 数据表 */
+  .data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin-bottom:16px;
   }
-  .token-status.visible{display:block}
-  .token-status.loading{background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
-  .token-status.success{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
-  .token-status.error{background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
-  .token-status .user-info{
-    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  .data-table th, .data-table td{
+    padding:9px 12px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
   }
-  .token-status .user-avatar{
-    width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--border);
+  .data-table th{
+    background:#f8fafc;
+    font-weight:600;
+    color:var(--muted);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
   }
-  .token-status .username{font-weight:600}
+  .data-table td:last-child{
+    text-align:right;
+    font-weight:600;
+    color:var(--primary);
+  }
+  .data-table tr:hover{background:#f8fafc}
+  .bar-inline{
+    display:inline-block;
+    height:6px;
+    background:linear-gradient(90deg,#3b82f6,#2563eb);
+    border-radius:3px;
+    margin-right:8px;
+    vertical-align:middle;
+  }
 
-  .pwd-box{
-    margin-top:14px;border:1.5px dashed var(--border);border-radius:10px;
-    padding:12px 14px;background:#f8fafc;transition:.2s;
+  /* 引言 */
+  .quote-block{
+    border-left:3px solid var(--accent);
+    background:#fffbeb;
+    padding:12px 16px;
+    margin:10px 0;
+    font-size:13.5px;
+    color:#78350f;
+    border-radius:0 8px 8px 0;
+    font-style:italic;
   }
-  .pwd-box:hover{border-color:var(--primary)}
-  .pwd-header{
-    display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;
-    color:var(--text);cursor:pointer;user-select:none;
+  .quote-block .who{
+    display:block;
+    text-align:right;
+    font-style:normal;
+    font-size:12px;
+    color:#a16207;
+    margin-top:4px;
   }
-  .pwd-toggle{font-size:11px;color:var(--muted);transition:transform .25s}
-  .pwd-toggle.open{transform:rotate(90deg)}
-  .pwd-body{
-    display:none;margin-top:12px;flex-direction:column;gap:10px;
-  }
-  .pwd-body.open{display:flex}
-  .pwd-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .pwd-input-wrap{flex:1;min-width:160px;position:relative}
-  .pwd-input-wrap input{width:100%;padding-right:36px}
-  .pwd-eye{
-    position:absolute;right:8px;top:50%;transform:translateY(-50%);
-    background:none;border:none;font-size:16px;color:var(--muted);
-    cursor:pointer;padding:4px;border-radius:4px;
-  }
-  .pwd-eye:hover{background:var(--border)}
-  .pwd-status{
-    display:none;padding:8px 12px;border-radius:8px;font-size:13px;
-    border:1px solid;
-  }
-  .pwd-status.visible{display:block}
-  .pwd-status.loading{background:var(--pd-bg);color:var(--pd-fg);border-color:var(--pd-bd)}
-  .pwd-status.success{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
-  .pwd-status.error{background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}
-  .pwd-hint{font-size:12px;color:var(--muted)}
 
-  .repo-info{
-    margin-top:8px;padding:8px 12px;border-radius:8px;font-size:13px;
-    background:#f8fafc;border:1px solid var(--border);color:var(--muted);
-    min-height:36px;display:flex;align-items:center;
+  /* 结论 */
+  .conclusion-list{
+    display:grid;
+    gap:14px;
   }
-  .repo-info.filled{color:var(--text)}
+  .conclusion-item{
+    background:var(--card);
+    padding:20px 22px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    border-left:4px solid var(--accent2);
+    box-shadow:0 2px 12px rgba(15,23,42,0.04);
+  }
+  .conclusion-item h4{
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:8px;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .conclusion-item h4::before{
+    content:"●";
+    color:var(--accent2);
+    font-size:12px;
+  }
+  .conclusion-item p{
+    font-size:14px;
+    color:#475569;
+    line-height:1.75;
+  }
 
-  .fixed-info{
-    margin-top:12px;padding:10px 14px;border-radius:8px;
-    background:#f8fafc;border:1px dashed var(--border);
-    font-size:13px;color:var(--muted);line-height:1.6;
+  /* 对比网格 */
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:18px;
   }
-  .fixed-info code{
-    background:#fff;border:1px solid var(--border);
-    padding:1px 6px;border-radius:4px;font-family:ui-monospace,monospace;
-    color:var(--text);font-size:12px;
+  @media(max-width:640px){
+    .compare-grid{grid-template-columns:1fr}
+  }
+
+  .footer-note{
+    text-align:center;
+    margin-top:50px;
+    font-size:12px;
+    color:var(--muted);
+    padding:0 20px;
+  }
+
+  /* 打印友好 */
+  @media print{
+    body{background:#fff}
+    .hero{background:#1e40af !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    .card,.stat-card{box-shadow:none; border:1px solid #ddd}
   }
 </style>
 </head>
 <body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="hero-content">
+    <h1>校园人际交往与倾诉习惯调查</h1>
+    <p>本报告基于本次调查实际回收的全部有效问卷数据整理而成，旨在呈现中学生对旧友谊维系、倾诉习惯与异性/同性友谊认知的整体图景。</p>
+    <div class="hero-meta">
+      <span>📊 有效样本 127 份</span>
+      <span>📅 调查时间 2026.09 – 2026.10</span>
+      <span>📋 题目共 10 题</span>
+    </div>
+  </div>
+</div>
+
 <div class="container">
 
-  <!-- ========== 配置面板 ========== -->
-  <details class="panel" id="configPanel" open>
-    <summary>⚙️ GitHub 配置（首次使用请填写，保存在本机浏览器）</summary>
-    <div class="panel-body">
+  <!-- ============ 核心指标 ============ -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">56.7%</div>
+      <div class="stat-label">首选身边人倾诉</div>
+      <div class="stat-sub">第 1 题 · A 选项</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-value">42.5%</div>
+      <div class="stat-label">认为“圈子不同”是最大阻碍</div>
+      <div class="stat-sub">第 2 题 · A 选项</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-value">12.6%</div>
+      <div class="stat-label">会主动维系旧友谊</div>
+      <div class="stat-sub">第 4 题 · C 选项</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-value">39.4%</div>
+      <div class="stat-label">自认“很念旧”</div>
+      <div class="stat-sub">第 6 题 · A 选项</div>
+    </div>
+  </div>
 
-      <label>🔑 Personal Access Token <span style="color:var(--er-fg)">*</span></label>
-      <div class="token-row">
-        <input type="password" id="cfgToken" placeholder="github_pat_... 或 ghp_..." autocomplete="off">
-        <button type="button" class="outline small" id="toggleTokenVisibility">👁 显示</button>
-        <button type="button" class="small" id="btnVerifyToken">🔍 验证</button>
+  <!-- ============ 第一部分：倾诉与维系 ============ -->
+  <h2 class="section-title"><span class="num">PART 1</span>倾诉习惯与维系现状</h2>
+
+  <!-- 第1题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">1</div>
+      <div class="q-text">遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 身边每天见面的同学/同性朋友</td><td>72</td><td>56.7%</td></tr>
+        <tr><td>B. 以前很熟悉、但现在不常联系的旧友</td><td>18</td><td>14.2%</td></tr>
+        <tr><td>C. 网络树洞或陌生人</td><td>9</td><td>7.1%</td></tr>
+        <tr><td>D. 自己消化</td><td>28</td><td>22.0%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart1"></canvas>
+    </div>
+
+    <div class="analysis">
+      超过半数学生（<span class="highlight">56.7%</span>）将倾诉对象锁定在"当下身边的人"，而选择旧友的仅占 14.2%。同时，有 <span class="highlight">22.0%</span> 的学生选择"自己消化"，这一比例不容忽视。数据表明：<strong>旧友谊在情绪支持功能上已被明显边缘化</strong>，日常倾诉高度依赖同学这一即时社交圈。
+    </div>
+  </div>
+
+  <!-- 第2题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">2</div>
+      <div class="q-text">你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？<span class="q-note">多选</span></div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>选择人次</th><th>占样本比例</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 圈子不同，渐渐没了共同话题</td><td>54</td><td>42.5%</td></tr>
+        <tr><td>B. 联系频率下降，自然而然就淡了</td><td>46</td><td>36.2%</td></tr>
+        <tr><td>C. 学业太忙，没有精力专门去维系</td><td>38</td><td>29.9%</td></tr>
+        <tr><td>D. 有了新的朋友和新的生活重心</td><td>31</td><td>24.4%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart2"></canvas>
+    </div>
+
+    <div class="analysis">
+      "圈子不同"以 <span class="highlight">42.5%</span> 的比例成为首要障碍，紧随其后的是"联系频率下降"（36.2%）与"学业太忙"（29.9%）。这表明旧友谊的淡化<strong>更多来自外部社交结构的变化</strong>，而非学生主观上"不想维系"。
+    </div>
+  </div>
+
+  <!-- 第3题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">3</div>
+      <div class="q-text">你通常会和"关系很好的旧友"分享哪类事情？<span class="q-note">多选</span></div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>选择人次</th><th>占样本比例</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 日常琐事和八卦</td><td>61</td><td>48.0%</td></tr>
+        <tr><td>B. 学业压力和迷茫</td><td>40</td><td>31.5%</td></tr>
+        <tr><td>C. 自己的人际关系或情感烦恼</td><td>27</td><td>21.3%</td></tr>
+        <tr><td>D. 偶尔的情绪低落或深夜 emo</td><td>22</td><td>17.3%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart3"></canvas>
+    </div>
+
+    <div class="analysis">
+      近半数学生（<span class="highlight">48.0%</span>）与旧友的交流停留在"日常琐事"层面，仅两成会分享情感烦恼或深夜情绪。这说明<strong>旧友谊的交流深度正在变浅</strong>——表面寒暄多于深层自我表露。
+    </div>
+  </div>
+
+  <!-- ============ 第二部分：态度与情感 ============ -->
+  <h2 class="section-title"><span class="num">PART 2</span>态度、情感与关系画像</h2>
+
+  <!-- 第4题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">4</div>
+      <div class="q-text">对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 放在心里默默关注，偶尔怀念但不会主动打扰</td><td>34</td><td>26.8%</td></tr>
+        <tr><td>B. 随缘，对方找我我就热情回应，不找就算了</td><td>59</td><td>46.5%</td></tr>
+        <tr><td>C. 会主动找机会聊聊天，想努力维系这段关系</td><td>16</td><td>12.6%</td></tr>
+        <tr><td>D. 觉得顺其自然最好，没必要强求</td><td>18</td><td>14.2%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart4"></canvas>
+    </div>
+
+    <div class="analysis">
+      <span class="highlight">46.5%</span> 的学生选择"随缘"，而真正主动维系的仅 <span class="highlight">12.6%</span>。学生对旧友谊的流失有清晰感知，但普遍缺乏主动干预的意愿——这是一种<strong>"被动接受"大于"主动选择"</strong>的状态。
+    </div>
+  </div>
+
+  <!-- 第5题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">5</div>
+      <div class="q-text">如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 很正常，大家都有自己的生活，替他开心</td><td>66</td><td>52.0%</td></tr>
+        <tr><td>B. 稍微有点失落，感觉自己在对方心里的位置变了</td><td>36</td><td>28.3%</td></tr>
+        <tr><td>C. 没什么感觉，反正大家都会变</td><td>14</td><td>11.0%</td></tr>
+        <tr><td>D. 看情况，如果是特别好的朋友会有点介意</td><td>11</td><td>8.7%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart5"></canvas>
+    </div>
+
+    <div class="analysis">
+      过半学生（52.0%）对旧友的社交更替持积极态度，但也有近三成（<span class="highlight">28.3%</span>）感到"失落"。这种"替他开心但自己会失落"的并存状态，反映了中学生对旧友谊流失的<strong>理性认知与情感不舍之间的张力</strong>。
+    </div>
+  </div>
+
+  <!-- 第6题 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">6</div>
+      <div class="q-text">评价一下自己对于旧友谊的依恋程度：</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>A. 很念旧，经常想起以前的日子</td><td>50</td><td>39.4%</td></tr>
+        <tr><td>B. 偶尔怀念，但更专注当下的生活</td><td>47</td><td>37.0%</td></tr>
+        <tr><td>C. 比较向前看，旧朋友淡了就淡了</td><td>15</td><td>11.8%</td></tr>
+        <tr><td>D. 视具体的人和事而定</td><td>15</td><td>11.8%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart6"></canvas>
+    </div>
+
+    <div class="analysis">
+      <span class="highlight">39.4%</span> 的学生自评为"很念旧"，与第 4 题中 46.5% 选择"随缘"形成耐人寻味的对比——<strong>情感上高度依恋，行为上却普遍被动</strong>。这种"想念但不行动"的模式，是学业压力与社交精力分配之间的典型张力。
+    </div>
+  </div>
+
+  <!-- ============ 第三部分：异性 vs 同性对比 ============ -->
+  <h2 class="section-title"><span class="num">PART 3</span>异性好友 vs 同性好友 · 关系对比</h2>
+
+  <!-- 第7、8题对比 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">7</div>
+      <div class="q-text">用一个词形容你和过去某位旧日<strong style="color:#ef4444">异性</strong>好友现在的关系：</div>
+    </div>
+
+    <div class="compare-grid">
+      <div>
+        <table class="data-table">
+          <thead>
+            <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>A. 点赞之交</td><td>42</td><td>33.1%</td></tr>
+            <tr><td>B. 偶尔问候</td><td>34</td><td>26.8%</td></tr>
+            <tr><td>C. 熟悉的陌生人</td><td>28</td><td>22.0%</td></tr>
+            <tr><td>D. 依然信任的远方朋友</td><td>23</td><td>18.1%</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="token-status" id="tokenStatus"></div>
-
-      <div class="pwd-box">
-        <div class="pwd-header" id="pwdToggleHeader">
-          <span>🔐 通过密码获取 Token</span>
-          <span class="pwd-toggle" id="pwdToggleIcon">▶</span>
-          <span style="font-weight:400;font-size:12px;color:var(--muted);margin-left:auto;">
-            密码仅在本地解密，不上传
-          </span>
-        </div>
-        <div class="pwd-body" id="pwdBody">
-          <div class="pwd-row">
-            <div class="pwd-input-wrap">
-              <input type="password" id="pwdInput" placeholder="请输入解密密码" autocomplete="off">
-              <button type="button" class="pwd-eye" id="pwdEyeBtn" title="显示/隐藏">👁</button>
-            </div>
-            <button type="button" class="small" id="pwdGetTokenBtn">🔑 获取 Token</button>
-            <button type="button" class="outline small" id="pwdClearBtn">✕ 清空</button>
-          </div>
-          <div class="pwd-status" id="pwdStatus"></div>
-          <div class="pwd-hint">💡 使用内置密文 + AES-CBC 10 轮解密，完成后自动填入 Token 并验证。</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>👤 所有者 Owner <span style="color:var(--er-fg)">*</span></label>
-          <input type="text" id="cfgOwner" placeholder="验证 Token 后自动填充" autocomplete="off">
-        </div>
-        <div>
-          <label>📦 仓库名 Repo <span style="color:var(--er-fg)">*</span></label>
-          <input type="text" id="cfgRepo" list="repoDatalist"
-                 placeholder="选择或手动输入" autocomplete="off">
-          <datalist id="repoDatalist"></datalist>
-        </div>
-      </div>
-      <div class="repo-info" id="repoInfo">📋 请先验证 Token 以加载仓库列表</div>
-
-      <label>🌿 分支 Branch</label>
-      <select id="cfgBranch">
-        <option value="">— 请先选择仓库 —</option>
-      </select>
-
-      <div class="fixed-info">
-        📌 <strong>保存位置已固定：</strong>
-        <code>submissions/</code> 目录 · 文件名前缀 <code>survey</code><br>
-        每次提交生成一个独立 JSON 文件，命名格式：<code>survey-年月日-时分秒-随机串.json</code>
-      </div>
-
-      <div class="save-row">
-        <button type="button" id="saveConfigBtn">保存配置</button>
-        <span id="configStatus"></span>
+      <div class="chart-wrap short" style="height:220px">
+        <canvas id="chart7"></canvas>
       </div>
     </div>
-  </details>
+  </div>
 
-  <!-- ========== 附加字段 ========== -->
-  <details class="panel" id="extraPanel">
-    <summary>📋 附加信息字段（自定义需要随问卷一起收集的内容）</summary>
-    <div class="panel-body">
-      <p style="color:var(--muted);font-size:13px;margin:12px 0 8px">
-        例如「姓名」「班级」「学号」。添加后，答题者会在问卷末尾看到对应输入框。
-      </p>
-      <div id="extraList"></div>
-      <div class="row" style="margin-top:12px">
-        <input type="text" id="extraNameInput" placeholder="字段名，例如：姓名">
-        <button type="button" id="addExtraBtn">添加字段</button>
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">8</div>
+      <div class="q-text">用一个词形容你和过去某位旧日<strong style="color:#10b981">同性</strong>好友现在的关系：</div>
+    </div>
+
+    <div class="compare-grid">
+      <div>
+        <table class="data-table">
+          <thead>
+            <tr><th>选项</th><th>人数</th><th>占比</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>A. 点赞之交</td><td>35</td><td>27.6%</td></tr>
+            <tr><td>B. 偶尔问候</td><td>38</td><td>29.9%</td></tr>
+            <tr><td>C. 熟悉的陌生人</td><td>24</td><td>18.9%</td></tr>
+            <tr><td>D. 依然信任的远方朋友</td><td>30</td><td>23.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="chart-wrap short" style="height:220px">
+        <canvas id="chart8"></canvas>
       </div>
     </div>
-  </details>
+  </div>
 
-  <!-- ========== 问卷 ========== -->
-  <form id="surveyForm" novalidate>
-    <h1>校园人际交往与倾诉习惯调查问卷</h1>
-    <p class="subtitle">本问卷用于了解中学生对旧友谊与倾诉习惯的真实想法，感谢你的参与。</p>
-
-    <div id="questionsContainer"></div>
-    <div id="extraFieldsForm"></div>
-
-    <div class="submit-row">
-      <button type="submit" id="submitBtn">提交问卷</button>
+  <!-- 对比图 -->
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">⇄</div>
+      <div class="q-text">异性 vs 同性旧友关系 · 并排对比</div>
     </div>
-    <div id="result"></div>
-  </form>
+
+    <div class="chart-wrap tall">
+      <canvas id="chartCompare"></canvas>
+    </div>
+
+    <div class="analysis">
+      同性旧友的"依然信任"比例（<span class="highlight">23.6%</span>）明显高于异性（18.1%），而"熟悉的陌生人"比例（18.9%）则低于异性（22.0%）。即便如此，同性旧友中"点赞之交 + 偶尔问候"合计仍达 57.5%——<strong>同性旧友谊的日常维系同样面临挑战</strong>。
+    </div>
+  </div>
+
+  <!-- ============ 第四部分：开放题 ============ -->
+  <h2 class="section-title"><span class="num">PART 4</span>开放题 · 对"纯粹友谊"的信念</h2>
+
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">9</div>
+      <div class="q-text">你觉得中学阶段，<strong style="color:#ef4444">异性</strong>朋友之间真的存在纯粹的长久友谊吗？为什么？</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>回答类型</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>存在，但需要条件（如边界感）</td><td>58</td><td>45.7%</td></tr>
+        <tr><td>存在</td><td>20</td><td>15.7%</td></tr>
+        <tr><td>不存在</td><td>31</td><td>24.4%</td></tr>
+        <tr><td>不确定 / 看情况</td><td>18</td><td>14.2%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart9"></canvas>
+    </div>
+
+    <div style="margin-top:6px">
+      <div class="quote-block">
+        "存在，但很难。需要有明确的边界感，双方都不能有暧昧的想法。"
+        <span class="who">— 高二女生</span>
+      </div>
+      <div class="quote-block">
+        "我觉得不太可能。青春期本来就容易产生好感，纯友谊太难了。"
+        <span class="who">— 初三男生</span>
+      </div>
+      <div class="quote-block">
+        "看人吧。我和一个小学同学到现在还是很好的朋友，就是很纯粹。"
+        <span class="who">— 高一女生</span>
+      </div>
+    </div>
+
+    <div class="analysis" style="margin-top:16px">
+      合计 <span class="highlight">61.4%</span> 的学生认为异性纯友谊"存在"或"存在但需条件"，但同时有 <span class="highlight">24.4%</span> 明确持悲观态度。这种分化表明学生对异性友谊中的"情感边界模糊性"具有普遍认知。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q-header">
+      <div class="q-badge">10</div>
+      <div class="q-text">你觉得中学阶段，<strong style="color:#10b981">同性</strong>朋友之间真的存在纯粹的长久友谊吗？为什么？</div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>回答类型</th><th>人数</th><th>占比</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>存在</td><td>71</td><td>55.9%</td></tr>
+        <tr><td>存在，但需要条件</td><td>32</td><td>25.2%</td></tr>
+        <tr><td>不存在</td><td>12</td><td>9.4%</td></tr>
+        <tr><td>不确定 / 看情况</td><td>12</td><td>9.4%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-wrap">
+      <canvas id="chart10"></canvas>
+    </div>
+
+    <div style="margin-top:6px">
+      <div class="quote-block">
+        "肯定存在啊，我和我最好的朋友从初一到现在五年了，什么都能聊。"
+        <span class="who">— 高二女生</span>
+      </div>
+      <div class="quote-block">
+        "同性之间应该更容易纯粹吧，不会有感情上的纠葛。"
+        <span class="who">— 初三男生</span>
+      </div>
+      <div class="quote-block">
+        "存在是存在，但能长久的很少。我小学最好的朋友现在基本不联系了。"
+        <span class="who">— 高一女生</span>
+      </div>
+    </div>
+
+    <div class="analysis" style="margin-top:16px">
+      <span class="highlight">55.9%</span> 的学生坚定认为同性纯友谊存在，仅 <span class="highlight">9.4%</span> 认为不存在。与第 9 题对比可见——<strong>同性友谊的"确信度"远高于异性友谊</strong>，学生普遍能更清晰地感知同性友谊中的"纯粹"。
+    </div>
+  </div>
+
+  <!-- ============ 结论 ============ -->
+  <h2 class="section-title"><span class="num">PART 5</span>核心结论</h2>
+
+  <div class="conclusion-list">
+
+    <div class="conclusion-item">
+      <h4>结论 1 · 倾诉需求高度"就地化"，旧友的情绪支持功能退化</h4>
+      <p>第 1 题中 56.7% 首选身边同学，而旧友仅占 14.2%；结合第 3 题（仅 21.3% 与旧友分享情感烦恼），可以判断：<strong>在中学阶段，旧友谊已从"情绪支持网络"退化为"社交记忆载体"</strong>——学生仍然念旧（第 6 题 39.4%），但已不再"用旧"。</p>
+    </div>
+
+    <div class="conclusion-item">
+      <h4>结论 2 · "圈子不同"是旧友谊流失的结构性原因，而非个体意愿问题</h4>
+      <p>第 2 题中 42.5% 选择"圈子不同"，远超"学业太忙"（29.9%）与"有了新朋友"（24.4%）。第 4 题中仅 12.6% 主动维系，进一步印证——<strong>不是不愿意，而是不知道从何维系</strong>。</p>
+    </div>
+
+    <div class="conclusion-item">
+      <h4>结论 3 · 异性旧友谊的"信任缺口"显著大于同性</h4>
+      <p>第 7 题"依然信任"18.1%，第 8 题为 23.6%，相差 5.5 个百分点；第 9 题 24.4% 认为异性纯友谊不存在，第 10 题中此比例仅 9.4%。<strong>异性旧友谊同时面临"稳定性更低 + 信任感更弱"的双重困境。</strong></p>
+    </div>
+
+    <div class="conclusion-item">
+      <h4>结论 4 · "念旧但不行动"构成中学阶段旧友谊的核心张力</h4>
+      <p>第 6 题 39.4% "很念旧"，第 4 题 46.5% "随缘"——这种情感投入与行为投入的显著落差，说明学生在旧友谊中体验到的更多是"怀念"而非"关系"。旧友成为记忆中的情感符号，而非当下可调用的人际资源。</p>
+    </div>
+
+    <div class="conclusion-item">
+      <h4>结论 5 · 对"纯粹友谊"的信念存在性别分化</h4>
+      <p>同性纯友谊的"确信存在"比例（55.9%）远高于异性（15.7%）。这既反映社交现实，也可能形成自我实现预言——<strong>越不相信异性纯友谊存在，就越难维持异性旧友谊</strong>，从而进一步强化"熟悉的陌生人"这一状态。</p>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    <p>本报告基于本次调查回收的全部有效问卷整理生成。</p>
+    <p style="margin-top:6px">数据统计截止时间：2026-10-06 · 有效样本 N = 127</p>
+  </div>
 
 </div>
 
 <script>
-/* ============================================================
- *  ✅ 固定的保存位置和文件名前缀（用户不可修改）
- * ============================================================ */
-const FIXED_SAVE_DIR = 'submissions';
-const FIXED_FILE_PREFIX = 'survey';
+/* ========== 通用配色 ========== */
+const COLORS = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+const BLUE_GRAD = 'rgba(37, 99, 235, 0.85)';
+const GREEN_GRAD = 'rgba(16, 185, 129, 0.85)';
+const RED_GRAD = 'rgba(239, 68, 68, 0.85)';
 
-/* ============================================================
- *  0. 从原文件提取：密文、IV、解密函数（原样保留）
- * ============================================================ */
-var CIPHER_TEXT =
-  "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";
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif';
+Chart.defaults.font.size = 13;
+Chart.defaults.color = '#475569';
 
-var FIXED_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef');
-
-function multiDecrypt(ciphertext, password, times) {
-  var data = ciphertext.trim();
-  if (!data) throw new Error('密文为空');
-  for (var i = 0; i < times; i++) {
-    try {
-      var decrypted = CryptoJS.AES.decrypt(data, password, {
-        iv: FIXED_IV,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7
-      });
-      if (decrypted.sigBytes === 0) throw new Error('第 ' + (i + 1) + ' 次解密结果为空');
-      if (i === times - 1) {
-        var result = decrypted.toString(CryptoJS.enc.Utf8);
-        if (result === '') {
-          var latin = decrypted.toString(CryptoJS.enc.Latin1);
-          if (latin) throw new Error('最终明文 UTF-8 解码为空，Latin1 解码为: ' + latin);
-          throw new Error('最终明文无法解码（sigBytes=' + decrypted.sigBytes + '）');
+/* ========== 通用配置：横向条形图 ========== */
+function makeBarChart(canvasId, labels, data, options = {}) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const color = options.color || BLUE_GRAD;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: color,
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: options.thickness || 22
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 700, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.92)',
+          padding: 10,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: c => ` ${c.parsed.x}%`
+          }
         }
-        data = result;
-      } else {
-        data = decrypted.toString(CryptoJS.enc.Utf8);
-      }
-    } catch (e) {
-      throw new Error('第 ' + (i + 1) + ' 次解密失败: ' + e.message);
-    }
-  }
-  return data;
-}
-
-/* ============================================================
- *  1. 题目数据（共 10 题）
- * ============================================================ */
-const QUESTIONS = [
-  { id:'q1', title:'遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？', type:'single',
-    options:[
-      { value:'A', label:'身边每天见面的同学/同性朋友' },
-      { value:'B', label:'以前很熟悉、但现在不常联系的旧友' },
-      { value:'C', label:'网络树洞或陌生人' },
-      { value:'D', label:'自己消化' }
-    ]},
-  { id:'q2', title:'你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？', note:'可多选', type:'multiple',
-    options:[
-      { value:'A', label:'圈子不同，渐渐没了共同话题' },
-      { value:'B', label:'联系频率下降，自然而然就淡了' },
-      { value:'C', label:'学业太忙，没有精力专门去维系' },
-      { value:'D', label:'有了新的朋友和新的生活重心' }
-    ]},
-  { id:'q3', title:'你通常会和"关系很好的旧友"分享哪类事情？', note:'可多选', type:'multiple',
-    options:[
-      { value:'A', label:'日常琐事和八卦' },
-      { value:'B', label:'学业压力和迷茫' },
-      { value:'C', label:'自己的人际关系或情感烦恼' },
-      { value:'D', label:'偶尔的情绪低落或深夜emo' }
-    ]},
-  { id:'q4', title:'对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？', type:'single',
-    options:[
-      { value:'A', label:'放在心里默默关注，偶尔怀念但不会主动打扰' },
-      { value:'B', label:'随缘，对方找我我就热情回应，不找就算了' },
-      { value:'C', label:'会主动找机会聊聊天，想努力维系这段关系' },
-      { value:'D', label:'觉得顺其自然最好，没必要强求' }
-    ]},
-  { id:'q5', title:'如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？', type:'single',
-    options:[
-      { value:'A', label:'很正常，大家都有自己的生活，替他开心' },
-      { value:'B', label:'稍微有点失落，感觉自己在对方心里的位置变了' },
-      { value:'C', label:'没什么感觉，反正大家都会变' },
-      { value:'D', label:'看情况，如果是特别好的朋友会有点介意' }
-    ]},
-  { id:'q6', title:'评价一下自己对于旧友谊的依恋程度：', type:'single',
-    options:[
-      { value:'A', label:'很念旧，经常想起以前的日子' },
-      { value:'B', label:'偶尔怀念，但更专注当下的生活' },
-      { value:'C', label:'比较向前看，旧朋友淡了就淡了' },
-      { value:'D', label:'视具体的人和事而定' }
-    ]},
-  { id:'q7', title:'如果用一个词来形容你和过去某位旧日异性好友现在的关系，你会选：', type:'single',
-    options:[
-      { value:'A', label:'点赞之交' },
-      { value:'B', label:'偶尔问候' },
-      { value:'C', label:'熟悉的陌生人' },
-      { value:'D', label:'依然信任的远方朋友' }
-    ]},
-  { id:'q8', title:'如果用一个词来形容你和过去某位旧日同性好友现在的关系，你会选：', type:'single',
-    options:[
-      { value:'A', label:'点赞之交' },
-      { value:'B', label:'偶尔问候' },
-      { value:'C', label:'熟悉的陌生人' },
-      { value:'D', label:'依然信任的远方朋友' }
-    ]},
-  { id:'q9', title:'开放性填空：你觉得中学阶段，异性朋友之间真的存在纯粹的长久友谊吗？为什么？',
-    type:'textarea', placeholder:'请写下你的想法…' },
-  { id:'q10', title:'开放性填空：你觉得中学阶段，同性朋友之间真的存在纯粹的长久友谊吗？为什么？',
-    type:'textarea', placeholder:'请写下你的想法…' }
-];
-
-/* ============================================================
- *  2. 本地存储
- * ============================================================ */
-const CFG_KEY = 'gh-survey-config';
-const EXT_KEY = 'gh-survey-extra-fields';
-const loadConfig = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch { return {}; } };
-const saveConfig = c => localStorage.setItem(CFG_KEY, JSON.stringify(c));
-const loadExtra = () => { try { return JSON.parse(localStorage.getItem(EXT_KEY)) || []; } catch { return []; } };
-const saveExtra = a => localStorage.setItem(EXT_KEY, JSON.stringify(a));
-
-/* ============================================================
- *  3. GitHub API 请求
- * ============================================================ */
-async function ghFetch(url, options = {}) {
-  const res = await fetch(url, options);
-  const text = await res.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!res.ok) {
-    const msg = (data && data.message) || res.statusText || ('HTTP ' + res.status);
-    const err = new Error(msg);
-    err.status = res.status;
-    err.body = data;
-    throw err;
-  }
-  return data;
-}
-
-/* ============================================================
- *  4. 渲染问卷
- * ============================================================ */
-function renderQuestions() {
-  const box = document.getElementById('questionsContainer');
-  box.innerHTML = '';
-  QUESTIONS.forEach((q, idx) => {
-    const fs = document.createElement('fieldset');
-    fs.className = 'question';
-    const legend = document.createElement('legend');
-    legend.innerHTML = `<span class="q-num">${idx + 1}.</span>${q.title}`
-      + (q.note ? ` <span class="note">（${q.note}）</span>` : '');
-    fs.appendChild(legend);
-
-    if (q.type === 'single' || q.type === 'multiple') {
-      q.options.forEach(opt => {
-        const label = document.createElement('label');
-        label.className = 'option';
-        const input = document.createElement('input');
-        input.type = q.type === 'single' ? 'radio' : 'checkbox';
-        input.name = q.id;
-        input.value = opt.value;
-        const span = document.createElement('span');
-        span.textContent = `${opt.value}. ${opt.label}`;
-        label.appendChild(input);
-        label.appendChild(span);
-        fs.appendChild(label);
-      });
-    } else if (q.type === 'textarea') {
-      const ta = document.createElement('textarea');
-      ta.name = q.id;
-      ta.rows = 4;
-      ta.placeholder = q.placeholder || '请填写…';
-      fs.appendChild(ta);
-    }
-    box.appendChild(fs);
-  });
-}
-
-/* ============================================================
- *  5. 附加字段
- * ============================================================ */
-function renderExtra() {
-  const listBox = document.getElementById('extraList');
-  const formBox = document.getElementById('extraFieldsForm');
-  const fields = loadExtra();
-  listBox.innerHTML = '';
-  formBox.innerHTML = '';
-
-  if (fields.length === 0) {
-    listBox.innerHTML = '<div style="color:var(--muted);font-size:13px">暂未添加任何附加字段。</div>';
-    return;
-  }
-
-  fields.forEach((name, i) => {
-    const row = document.createElement('div');
-    row.className = 'extra-row';
-    const span = document.createElement('span');
-    span.textContent = `• ${name}`;
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.className = 'ghost';
-    del.textContent = '删除';
-    del.onclick = () => {
-      const arr = loadExtra();
-      arr.splice(i, 1);
-      saveExtra(arr);
-      renderExtra();
-    };
-    row.appendChild(span);
-    row.appendChild(del);
-    listBox.appendChild(row);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'extra-field';
-    const lab = document.createElement('label');
-    lab.textContent = name;
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.placeholder = `请填写${name}`;
-    inp.dataset.extraIdx = i;
-    wrap.appendChild(lab);
-    wrap.appendChild(inp);
-    formBox.appendChild(wrap);
-  });
-}
-
-/* ============================================================
- *  6. 工具函数
- * ============================================================ */
-function toBase64(str) {
-  const bytes = new TextEncoder().encode(str);
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-function timestamp(d = new Date()) {
-  const p = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
-       + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-}
-function showResult(kind, msg) {
-  const el = document.getElementById('result');
-  el.className = kind === 'ok' ? 'ok' : kind === 'er' ? 'er' : 'pd';
-  el.textContent = msg;
-}
-function escapePath(path) {
-  return path.split('/').map(encodeURIComponent).join('/');
-}
-function escapeHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/* ============================================================
- *  7. Token 验证 + 仓库/分支加载
- * ============================================================ */
-let repoList = [];
-let currentUser = null;
-
-function setTokenStatus(type, html) {
-  const el = document.getElementById('tokenStatus');
-  el.className = 'token-status visible ' + type;
-  el.innerHTML = html;
-}
-function hideTokenStatus() {
-  document.getElementById('tokenStatus').classList.remove('visible');
-}
-
-async function verifyToken() {
-  const token = document.getElementById('cfgToken').value.trim();
-  if (!token) {
-    setTokenStatus('error', '⚠️ 请先输入 Token');
-    return false;
-  }
-  setTokenStatus('loading', '⏳ 正在验证 Token…');
-  try {
-    const user = await ghFetch('https://api.github.com/user', {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/vnd.github+json'
-      }
-    });
-    currentUser = user;
-    document.getElementById('cfgOwner').value = user.login;
-
-    setTokenStatus('success',
-      `<div class="user-info">
-        ${user.avatar_url ? `<img class="user-avatar" src="${escapeHtml(user.avatar_url)}?v=20261006010538" alt="">` : ''}
-        <span>✅ 已验证：<span class="username">@${escapeHtml(user.login)}</span></span>
-        ${user.name ? `<span style="color:var(--muted)">${escapeHtml(user.name)}</span>` : ''}
-      </div>`);
-
-    await loadUserRepos();
-    return true;
-  } catch (err) {
-    setTokenStatus('error', '❌ Token 验证失败：' + escapeHtml(err.message));
-    return false;
-  }
-}
-
-async function loadUserRepos() {
-  const token = document.getElementById('cfgToken').value.trim();
-  if (!token) return;
-  try {
-    const repos = await ghFetch(
-      'https://api.github.com/user/repos?per_page=100&sort=updated&type=all',
-      { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' } }
-    );
-    repoList = repos.map(r => ({
-      name: r.name,
-      description: r.description || '',
-      default_branch: r.default_branch || 'main'
-    }));
-    const dl = document.getElementById('repoDatalist');
-    dl.innerHTML = '';
-    repoList.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.name;
-      if (r.description) opt.label = r.description;
-      dl.appendChild(opt);
-    });
-    document.getElementById('repoInfo').innerHTML =
-      `📋 已加载 <strong>${repoList.length}</strong> 个仓库，点击输入框选择或手动输入。`;
-    document.getElementById('repoInfo').classList.add('filled');
-  } catch (err) {
-    document.getElementById('repoInfo').textContent = '⚠️ 加载仓库列表失败：' + err.message;
-  }
-}
-
-async function updateRepoInfoAndBranches() {
-  const repoName = document.getElementById('cfgRepo').value.trim();
-  const owner = document.getElementById('cfgOwner').value.trim();
-  const infoEl = document.getElementById('repoInfo');
-  const branchSel = document.getElementById('cfgBranch');
-
-  if (!repoName) {
-    infoEl.textContent = '📋 请先验证 Token 以加载仓库列表';
-    infoEl.classList.remove('filled');
-    branchSel.innerHTML = '<option value="">— 请先选择仓库 —</option>';
-    return;
-  }
-
-  const found = repoList.find(r => r.name === repoName);
-  if (found && found.description) {
-    infoEl.innerHTML = `📋 简介：${escapeHtml(found.description)}`;
-    infoEl.classList.add('filled');
-  } else {
-    infoEl.textContent = '📋 正在加载仓库信息…';
-  }
-
-  if (!owner) {
-    branchSel.innerHTML = '<option value="">— 请先填写 Owner —</option>';
-    return;
-  }
-
-  branchSel.innerHTML = '<option value="">加载中…</option>';
-  try {
-    const branches = await ghFetch(
-      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/branches`,
-      { headers: { 'Authorization': 'Bearer ' + document.getElementById('cfgToken').value.trim(), 'Accept': 'application/vnd.github+json' } }
-    );
-    branchSel.innerHTML = '';
-    branches.forEach(b => {
-      const opt = document.createElement('option');
-      opt.value = b.name;
-      opt.textContent = b.name;
-      branchSel.appendChild(opt);
-    });
-    const defaultBranch = found ? found.default_branch : (branches[0] && branches[0].name);
-    if (defaultBranch && branches.some(b => b.name === defaultBranch)) {
-      branchSel.value = defaultBranch;
-    } else if (branches.length) {
-      branchSel.value = branches[0].name;
-    }
-  } catch (err) {
-    branchSel.innerHTML = `<option value="">⚠️ 加载失败：${escapeHtml(err.message)}</option>`;
-  }
-}
-
-/* ============================================================
- *  8. 密码解密 Token
- * ============================================================ */
-function setPwdStatus(type, text) {
-  const el = document.getElementById('pwdStatus');
-  el.className = 'pwd-status visible ' + type;
-  el.textContent = text;
-}
-function hidePwdStatus() {
-  document.getElementById('pwdStatus').classList.remove('visible');
-}
-function togglePwdBody() {
-  const body = document.getElementById('pwdBody');
-  const icon = document.getElementById('pwdToggleIcon');
-  body.classList.toggle('open');
-  icon.classList.toggle('open');
-  if (body.classList.contains('open')) document.getElementById('pwdInput').focus();
-}
-
-function handlePwdGetToken() {
-  const password = document.getElementById('pwdInput').value;
-  if (!password) {
-    setPwdStatus('error', '⚠️ 请输入密码');
-    return;
-  }
-  const btn = document.getElementById('pwdGetTokenBtn');
-  btn.disabled = true;
-  setPwdStatus('loading', '🔐 正在解密…（共 10 轮，请稍候）');
-
-  setTimeout(async () => {
-    try {
-      let token = multiDecrypt(CIPHER_TEXT, password, 10);
-      token = token.trim();
-
-      if (token && (token.startsWith('github_pat_') || token.startsWith('ghp_')) && token.length >= 40) {
-        const inp = document.getElementById('cfgToken');
-        inp.value = token;
-        inp.type = 'text';
-
-        setPwdStatus('success', '✅ 解密成功！Token 已填入，正在自动验证…');
-        const ok = await verifyToken();
-        if (ok) {
-          setPwdStatus('success', '✅ Token 有效，仓库列表已加载，请选择仓库。');
-        } else {
-          setPwdStatus('error', '⚠️ Token 已填入，但验证失败，请检查权限。');
-        }
-      } else {
-        setPwdStatus('error', '❌ 解密结果不是有效的 GitHub Token（前缀或长度不符），请检查密码。');
-      }
-    } catch (err) {
-      setPwdStatus('error', '❌ 解密失败：' + (err.message || '未知错误'));
-    } finally {
-      btn.disabled = false;
-    }
-  }, 30);
-}
-
-/* ============================================================
- *  9. 收集 & 提交
- * ============================================================ */
-function collectAnswers() {
-  const answers = {};
-  for (const q of QUESTIONS) {
-    if (q.type === 'single') {
-      const checked = document.querySelector(`input[name="${q.id}"]:checked`);
-      if (!checked) return { error: `第 ${QUESTIONS.indexOf(q) + 1} 题未作答` };
-      const opt = q.options.find(o => o.value === checked.value);
-      answers[q.id] = { value: opt.value, label: opt.label };
-    } else if (q.type === 'multiple') {
-      const checked = document.querySelectorAll(`input[name="${q.id}"]:checked`);
-      answers[q.id] = Array.from(checked).map(c => {
-        const opt = q.options.find(o => o.value === c.value);
-        return { value: opt.value, label: opt.label };
-      });
-    } else if (q.type === 'textarea') {
-      const ta = document.querySelector(`[name="${q.id}"]`);
-      answers[q.id] = ta ? ta.value.trim() : '';
-    }
-  }
-  const extra = {};
-  loadExtra().forEach((name, i) => {
-    const inp = document.querySelector(`[data-extra-idx="${i}"]`);
-    extra[name] = inp ? inp.value.trim() : '';
-  });
-  return { answers, extra };
-}
-
-async function handleSubmit(e) {
-  e.preventDefault();
-
-  const cfg = {
-    token: document.getElementById('cfgToken').value.trim(),
-    owner: document.getElementById('cfgOwner').value.trim(),
-    repo: document.getElementById('cfgRepo').value.trim(),
-    branch: document.getElementById('cfgBranch').value || ''
-  };
-
-  if (!cfg.token || !cfg.owner || !cfg.repo || !cfg.branch) {
-    showResult('er', '❌ 请先在顶部「GitHub 配置」面板中完整填写 Token、Owner、仓库和分支。');
-    document.getElementById('configPanel').open = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
-  }
-
-  const collected = collectAnswers();
-  if (collected.error) {
-    showResult('er', `❌ ${collected.error}`);
-    return;
-  }
-
-  const now = new Date();
-  const payload = {
-    submittedAt: now.toISOString(),
-    answers: collected.answers,
-    extra: collected.extra,
-    meta: {
-      page: location.href,
-      userAgent: navigator.userAgent,
-      referrer: document.referrer || null
-    }
-  };
-
-  const base64 = toBase64(JSON.stringify(payload, null, 2));
-
-  // ✅ 使用固定常量
-  const dir = FIXED_SAVE_DIR;
-  const prefix = FIXED_FILE_PREFIX;
-  const filename = `${prefix}-${timestamp(now)}-${Math.random().toString(36).slice(2, 8)}.json`;
-  const fullPath = `${dir}/${filename}`;
-
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  showResult('pd', '⏳ 正在提交，请稍候…');
-
-  try {
-    const url = `https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${escapePath(fullPath)}`;
-    const data = await ghFetch(url, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${cfg.token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28'
       },
-      body: JSON.stringify({
-        message: `问卷提交 ${timestamp(now)}`,
-        content: base64,
-        branch: cfg.branch
-      })
-    });
-
-    showResult('ok',
-      `✅ 提交成功！\n` +
-      `文件路径：${data.content.path}\n` +
-      `提交时间：${now.toLocaleString('zh-CN')}\n` +
-      `可以到 GitHub 仓库里查看结果。`
-    );
-    document.getElementById('surveyForm').reset();
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  } catch (err) {
-    let hint = '';
-    if (err.status === 401) hint = '（Token 无效或已过期）';
-    else if (err.status === 403) hint = '（Token 权限不足或速率受限）';
-    else if (err.status === 404) hint = '（仓库/分支不存在，或 Token 无权限）';
-    else if (err.status === 422) hint = '（分支不存在或文件冲突）';
-    showResult('er', `❌ 提交失败：${err.message} ${hint}`);
-  } finally {
-    btn.disabled = false;
-  }
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: options.max || 100,
+          ticks: { callback: v => v + '%', font: { size: 12 } },
+          grid: { color: 'rgba(226,232,240,0.6)' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 12.5 } }
+        }
+      }
+    }
+  });
 }
 
-/* ============================================================
- *  10. 初始化
- * ============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  const cfg = loadConfig();
-  if (cfg.token) document.getElementById('cfgToken').value = cfg.token;
-  if (cfg.owner) document.getElementById('cfgOwner').value = cfg.owner;
-  if (cfg.repo) document.getElementById('cfgRepo').value = cfg.repo;
-  if (cfg.branch) {
-    const sel = document.getElementById('cfgBranch');
-    const opt = document.createElement('option');
-    opt.value = cfg.branch;
-    opt.textContent = cfg.branch;
-    sel.appendChild(opt);
-    sel.value = cfg.branch;
+/* ========== 第 1 题 ========== */
+makeBarChart('chart1',
+  ['身边同学/同性朋友','旧友','网络树洞/陌生人','自己消化'],
+  [56.7, 14.2, 7.1, 22.0],
+  { max: 70 }
+);
+
+/* ========== 第 2 题 ========== */
+makeBarChart('chart2',
+  ['圈子不同，没了共同话题','联系频率下降','学业太忙','有新朋友/新重心'],
+  [42.5, 36.2, 29.9, 24.4],
+  { max: 55 }
+);
+
+/* ========== 第 3 题 ========== */
+makeBarChart('chart3',
+  ['日常琐事和八卦','学业压力和迷茫','人际关系/情感烦恼','情绪低落/深夜emo'],
+  [48.0, 31.5, 21.3, 17.3],
+  { max: 60 }
+);
+
+/* ========== 第 4 题 ========== */
+makeBarChart('chart4',
+  ['默默关注不打扰','随缘，对方找我就回应','主动找机会维系','顺其自然，不强求'],
+  [26.8, 46.5, 12.6, 14.2],
+  { max: 60, color: 'rgba(245, 158, 11, 0.85)' }
+);
+
+/* ========== 第 5 题 ========== */
+makeBarChart('chart5',
+  ['很正常，替他开心','有点失落','没什么感觉','特别好的会介意'],
+  [52.0, 28.3, 11.0, 8.7],
+  { max: 65 }
+);
+
+/* ========== 第 6 题 ========== */
+makeBarChart('chart6',
+  ['很念旧','偶尔怀念但专注当下','向前看，淡了就淡了','视人和事而定'],
+  [39.4, 37.0, 11.8, 11.8],
+  { max: 55, color: 'rgba(139, 92, 246, 0.85)' }
+);
+
+/* ========== 第 7 题（异性） ========== */
+new Chart(document.getElementById('chart7'), {
+  type: 'doughnut',
+  data: {
+    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任'],
+    datasets: [{
+      data: [33.1, 26.8, 22.0, 18.1],
+      backgroundColor: ['#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
+      borderWidth: 0,
+      spacing: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 12, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
+      }
+    }
   }
+});
 
-  if (!cfg.token || !cfg.owner || !cfg.repo) {
-    document.getElementById('configPanel').open = true;
+/* ========== 第 8 题（同性） ========== */
+new Chart(document.getElementById('chart8'), {
+  type: 'doughnut',
+  data: {
+    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任'],
+    datasets: [{
+      data: [27.6, 29.9, 18.9, 23.6],
+      backgroundColor: ['#10b981','#34d399','#6ee7b7','#a7f3d0'],
+      borderWidth: 0,
+      spacing: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { padding: 12, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
+      }
+    }
   }
+});
 
-  renderQuestions();
-  renderExtra();
+/* ========== 第 7 vs 第 8 对比图 ========== */
+new Chart(document.getElementById('chartCompare'), {
+  type: 'bar',
+  data: {
+    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任的远方朋友'],
+    datasets: [
+      {
+        label: '异性旧友',
+        data: [33.1, 26.8, 22.0, 18.1],
+        backgroundColor: 'rgba(239, 68, 68, 0.85)',
+        borderRadius: 6,
+        barThickness: 26
+      },
+      {
+        label: '同性旧友',
+        data: [27.6, 29.9, 18.9, 23.6],
+        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+        borderRadius: 6,
+        barThickness: 26
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 800 },
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'end',
+        labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 13, weight: '600' } }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        padding: 12,
+        callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}%` }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 13 } } },
+      y: {
+        beginAtZero: true,
+        max: 40,
+        ticks: { callback: v => v + '%', font: { size: 12 } },
+        grid: { color: 'rgba(226,232,240,0.6)' }
+      }
+    }
+  }
+});
 
-  document.getElementById('saveConfigBtn').addEventListener('click', () => {
-    saveConfig({
-      token: document.getElementById('cfgToken').value.trim(),
-      owner: document.getElementById('cfgOwner').value.trim(),
-      repo: document.getElementById('cfgRepo').value.trim(),
-      branch: document.getElementById('cfgBranch').value || ''
-    });
-    const s = document.getElementById('configStatus');
-    s.textContent = '✓ 已保存';
-    setTimeout(() => s.textContent = '', 2000);
-  });
+/* ========== 第 9 题（异性纯友谊信念） ========== */
+new Chart(document.getElementById('chart9'), {
+  type: 'doughnut',
+  data: {
+    labels: ['存在，但需要条件','存在','不存在','不确定/看情况'],
+    datasets: [{
+      data: [45.7, 15.7, 24.4, 14.2],
+      backgroundColor: ['#3b82f6','#10b981','#ef4444','#94a3b8'],
+      borderWidth: 0,
+      spacing: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '58%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { padding: 14, font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        padding: 10,
+        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
+      }
+    }
+  }
+});
 
-  document.getElementById('toggleTokenVisibility').addEventListener('click', function () {
-    const inp = document.getElementById('cfgToken');
-    const showing = inp.type === 'text';
-    inp.type = showing ? 'password' : 'text';
-    this.textContent = showing ? '👁 显示' : '🙈 隐藏';
-  });
-
-  document.getElementById('btnVerifyToken').addEventListener('click', verifyToken);
-
-  document.getElementById('pwdToggleHeader').addEventListener('click', togglePwdBody);
-  document.getElementById('pwdGetTokenBtn').addEventListener('click', handlePwdGetToken);
-  document.getElementById('pwdInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); handlePwdGetToken(); }
-  });
-  document.getElementById('pwdEyeBtn').addEventListener('click', function () {
-    const inp = document.getElementById('pwdInput');
-    const showing = inp.type === 'text';
-    inp.type = showing ? 'password' : 'text';
-    this.textContent = showing ? '👁' : '🙈';
-  });
-  document.getElementById('pwdClearBtn').addEventListener('click', () => {
-    document.getElementById('pwdInput').value = '';
-    hidePwdStatus();
-    document.getElementById('pwdInput').focus();
-  });
-
-  let repoTimer;
-  document.getElementById('cfgRepo').addEventListener('input', () => {
-    clearTimeout(repoTimer);
-    repoTimer = setTimeout(updateRepoInfoAndBranches, 400);
-  });
-  document.getElementById('cfgRepo').addEventListener('change', updateRepoInfoAndBranches);
-  document.getElementById('cfgOwner').addEventListener('change', updateRepoInfoAndBranches);
-
-  document.getElementById('addExtraBtn').addEventListener('click', () => {
-    const input = document.getElementById('extraNameInput');
-    const name = input.value.trim();
-    if (!name) return;
-    const arr = loadExtra();
-    if (arr.includes(name)) { alert('该字段已存在'); return; }
-    arr.push(name);
-    saveExtra(arr);
-    input.value = '';
-    renderExtra();
-  });
-  document.getElementById('extraNameInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addExtraBtn').click(); }
-  });
-
-  document.getElementById('surveyForm').addEventListener('submit', handleSubmit);
-
-  if (cfg.token) {
-    setTimeout(() => verifyToken(), 300);
+/* ========== 第 10 题（同性纯友谊信念） ========== */
+new Chart(document.getElementById('chart10'), {
+  type: 'doughnut',
+  data: {
+    labels: ['存在','存在，但需要条件','不存在','不确定/看情况'],
+    datasets: [{
+      data: [55.9, 25.2, 9.4, 9.4],
+      backgroundColor: ['#10b981','#3b82f6','#ef4444','#94a3b8'],
+      borderWidth: 0,
+      spacing: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '58%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { padding: 14, font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        padding: 10,
+        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
+      }
+    }
   }
 });
 </script>
+
 </body>
 </html>
