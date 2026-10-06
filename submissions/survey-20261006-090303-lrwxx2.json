@@ -1,0 +1,49 @@
+{
+  "submittedAt": "2026-10-06T01:03:03.621Z",
+  "answers": {
+    "q1": {
+      "value": "A",
+      "label": "身边每天见面的同学/同性朋友"
+    },
+    "q2": [
+      {
+        "value": "A",
+        "label": "圈子不同，渐渐没了共同话题"
+      }
+    ],
+    "q3": [
+      {
+        "value": "A",
+        "label": "日常琐事和八卦"
+      }
+    ],
+    "q4": {
+      "value": "A",
+      "label": "放在心里默默关注，偶尔怀念但不会主动打扰"
+    },
+    "q5": {
+      "value": "A",
+      "label": "很正常，大家都有自己的生活，替他开心"
+    },
+    "q6": {
+      "value": "A",
+      "label": "很念旧，经常想起以前的日子"
+    },
+    "q7": {
+      "value": "A",
+      "label": "点赞之交"
+    },
+    "q8": {
+      "value": "B",
+      "label": "偶尔问候"
+    },
+    "q9": "test",
+    "q10": "test"
+  },
+  "extra": {},
+  "meta": {
+    "page": "https://dywritecode.github.io/TEST_FUNCION/MD_1/index.html?v=20261005135406",
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36 EdgA/151.0.0.0",
+    "referrer": null
+  }
+}
