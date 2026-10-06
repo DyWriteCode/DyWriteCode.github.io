@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>校园人际交往与倾诉习惯调查 · 数据分析报告</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js?v=20261006013224"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -213,7 +213,6 @@
     font-weight:600;
   }
 
-  /* 数据表 */
   .data-table{
     width:100%;
     border-collapse:collapse;
@@ -239,16 +238,7 @@
     color:var(--primary);
   }
   .data-table tr:hover{background:#f8fafc}
-  .bar-inline{
-    display:inline-block;
-    height:6px;
-    background:linear-gradient(90deg,#3b82f6,#2563eb);
-    border-radius:3px;
-    margin-right:8px;
-    vertical-align:middle;
-  }
 
-  /* 引言 */
   .quote-block{
     border-left:3px solid var(--accent);
     background:#fffbeb;
@@ -268,7 +258,6 @@
     margin-top:4px;
   }
 
-  /* 结论 */
   .conclusion-list{
     display:grid;
     gap:14px;
@@ -301,7 +290,6 @@
     line-height:1.75;
   }
 
-  /* 对比网格 */
   .compare-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -320,7 +308,6 @@
     padding:0 20px;
   }
 
-  /* 打印友好 */
   @media print{
     body{background:#fff}
     .hero{background:#1e40af !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -354,7 +341,7 @@
     </div>
     <div class="stat-card warn">
       <div class="stat-value">42.5%</div>
-      <div class="stat-label">认为“圈子不同”是最大阻碍</div>
+      <div class="stat-label">认为"圈子不同"是最大阻碍</div>
       <div class="stat-sub">第 2 题 · A 选项</div>
     </div>
     <div class="stat-card danger">
@@ -364,12 +351,12 @@
     </div>
     <div class="stat-card purple">
       <div class="stat-value">39.4%</div>
-      <div class="stat-label">自认“很念旧”</div>
+      <div class="stat-label">自认"很念旧"</div>
       <div class="stat-sub">第 6 题 · A 选项</div>
     </div>
   </div>
 
-  <!-- ============ 第一部分：倾诉与维系 ============ -->
+  <!-- ============ PART 1 ============ -->
   <h2 class="section-title"><span class="num">PART 1</span>倾诉习惯与维系现状</h2>
 
   <!-- 第1题 -->
@@ -456,7 +443,7 @@
     </div>
   </div>
 
-  <!-- ============ 第二部分：态度与情感 ============ -->
+  <!-- ============ PART 2 ============ -->
   <h2 class="section-title"><span class="num">PART 2</span>态度、情感与关系画像</h2>
 
   <!-- 第4题 -->
@@ -543,10 +530,10 @@
     </div>
   </div>
 
-  <!-- ============ 第三部分：异性 vs 同性对比 ============ -->
+  <!-- ============ PART 3 ============ -->
   <h2 class="section-title"><span class="num">PART 3</span>异性好友 vs 同性好友 · 关系对比</h2>
 
-  <!-- 第7、8题对比 -->
+  <!-- 第7题 -->
   <div class="card">
     <div class="q-header">
       <div class="q-badge">7</div>
@@ -573,6 +560,7 @@
     </div>
   </div>
 
+  <!-- 第8题 -->
   <div class="card">
     <div class="q-header">
       <div class="q-badge">8</div>
@@ -615,9 +603,10 @@
     </div>
   </div>
 
-  <!-- ============ 第四部分：开放题 ============ -->
+  <!-- ============ PART 4 ============ -->
   <h2 class="section-title"><span class="num">PART 4</span>开放题 · 对"纯粹友谊"的信念</h2>
 
+  <!-- 第9题 -->
   <div class="card">
     <div class="q-header">
       <div class="q-badge">9</div>
@@ -653,6 +642,10 @@
         "看人吧。我和一个小学同学到现在还是很好的朋友，就是很纯粹。"
         <span class="who">— 高一女生</span>
       </div>
+      <div class="quote-block">
+        "一切尽在不言中。"
+        <span class="who">— 高二女生</span>
+      </div>
     </div>
 
     <div class="analysis" style="margin-top:16px">
@@ -660,6 +653,7 @@
     </div>
   </div>
 
+  <!-- 第10题 -->
   <div class="card">
     <div class="q-header">
       <div class="q-badge">10</div>
@@ -695,6 +689,10 @@
         "存在是存在，但能长久的很少。我小学最好的朋友现在基本不联系了。"
         <span class="who">— 高一女生</span>
       </div>
+      <div class="quote-block">
+        "有些情谊，不必说出口，也都懂。"
+        <span class="who">— 高二男生</span>
+      </div>
     </div>
 
     <div class="analysis" style="margin-top:16px">
@@ -702,7 +700,7 @@
     </div>
   </div>
 
-  <!-- ============ 结论 ============ -->
+  <!-- ============ PART 5 ============ -->
   <h2 class="section-title"><span class="num">PART 5</span>核心结论</h2>
 
   <div class="conclusion-list">
@@ -743,10 +741,7 @@
 
 <script>
 /* ========== 通用配色 ========== */
-const COLORS = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
 const BLUE_GRAD = 'rgba(37, 99, 235, 0.85)';
-const GREEN_GRAD = 'rgba(16, 185, 129, 0.85)';
-const RED_GRAD = 'rgba(239, 68, 68, 0.85)';
 
 Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif';
 Chart.defaults.font.size = 13;
