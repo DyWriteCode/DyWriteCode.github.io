@@ -38,7 +38,7 @@
 
         .terminal-window {
             width: 100%;
-            max-width: 850px;
+            max-width: 900px;
             height: 85vh;
             background: var(--term-bg);
             border: 1px solid var(--border);
@@ -58,11 +58,7 @@
             position: relative;
         }
 
-        .window-controls {
-            display: flex;
-            gap: 8px;
-        }
-
+        .window-controls { display: flex; gap: 8px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; }
         .dot-red { background: #ff5f56; }
         .dot-yellow { background: #ffbd2e; }
@@ -83,12 +79,11 @@
             overflow-y: auto;
             overflow-x: hidden;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.8;
             color: var(--text-main);
             scroll-behavior: smooth;
         }
 
-        /* 自定义滚动条 */
         .terminal-body::-webkit-scrollbar { width: 8px; }
         .terminal-body::-webkit-scrollbar-track { background: var(--term-bg); }
         .terminal-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
@@ -97,7 +92,7 @@
         .line {
             display: flex;
             gap: 12px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             animation: fadeIn 0.1s ease-out;
         }
 
@@ -121,21 +116,22 @@
         .output {
             color: var(--text-main);
             white-space: pre-wrap;
-            word-break: break-all;
+            word-break: break-word;
             flex: 1;
         }
 
-        /* 语法高亮 */
-        .c-comment { color: var(--text-muted); font-style: italic; }
-        .c-keyword { color: var(--purple); }
-        .c-string { color: var(--green); }
-        .c-number { color: var(--yellow); }
-        .c-func { color: var(--blue); }
+        /* 完整语法高亮色板 */
+        .c-comment { color: #8b949e; font-style: italic; }
+        .c-keyword { color: #ff7b72; } /* 关键字红色 */
+        .c-string { color: #a5d6ff; }  /* 字符串蓝色 */
+        .c-number { color: #79c0ff; }  /* 数字浅蓝 */
+        .c-func { color: #d2a8ff; }    /* 函数紫色 */
+        .c-operator { color: #ff7b72; }
         
-        .log-info { color: var(--blue); }
-        .log-warn { color: var(--yellow); }
-        .log-err { color: var(--red); }
-        .log-success { color: var(--green); }
+        .log-info { color: #58a6ff; }
+        .log-warn { color: #d29922; }
+        .log-err { color: #f85149; }
+        .log-success { color: #3fb950; }
 
         .data-highlight {
             color: #ff7b72;
@@ -155,7 +151,6 @@
             font-style: italic;
         }
 
-        /* 光标 */
         .cursor {
             display: inline-block;
             width: 8px;
@@ -171,13 +166,12 @@
             50% { opacity: 0; }
         }
 
-        /* 进度条 */
         .progress-bar {
             display: inline-block;
-            width: 200px;
-            height: 12px;
+            width: 250px;
+            height: 14px;
             background: #21262d;
-            border-radius: 6px;
+            border-radius: 7px;
             overflow: hidden;
             vertical-align: middle;
             margin-right: 10px;
@@ -187,7 +181,7 @@
             height: 100%;
             width: 0%;
             background: var(--green);
-            transition: width 0.3s ease;
+            transition: width 0.4s ease;
         }
     </style>
 </head>
@@ -200,23 +194,23 @@
                 <div class="dot dot-yellow"></div>
                 <div class="dot dot-green"></div>
             </div>
-            <div class="terminal-title">bash — birthday_gift_final_compilation — 120×40</div>
+            <div class="terminal-title">bash — final_goodbye_compilation — 120×40</div>
         </div>
         
         <div class="terminal-body" id="terminal-body">
-            <!-- 终端内容将由 JS 动态生成 -->
+            <!-- 内容由 JS 动态生成 -->
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 终端执行引擎
+        // 终端核心渲染引擎
         // ==========================================
         
         const termBody = document.getElementById('terminal-body');
         
-        // 模拟打字机效果
-        async function typeCommand(text, speed = 40) {
+        // 1. 模拟打字机输入（仅用于纯文本命令，无高亮代码）
+        async function typeCommand(text, speed = 80) {
             const line = document.createElement('div');
             line.className = 'line';
             line.innerHTML = `<div class="prompt"></div><div class="output"></div>`;
@@ -231,53 +225,66 @@
                 outputDiv.textContent = text.substring(0, i + 1);
                 outputDiv.appendChild(cursorSpan);
                 termBody.scrollTop = termBody.scrollHeight;
-                await sleep(speed + Math.random() * 30);
+                // 随机延迟，模拟真实键盘敲击
+                await sleep(speed + Math.random() * 60);
             }
             
-            // 换行时移除光标，准备下一个命令
             cursorSpan.remove();
             outputDiv.textContent = text;
-            await sleep(300); // 回车后的停顿
+            await sleep(800); // 回车后的停顿
         }
 
-        // 模拟直接输出日志（带短暂延迟或逐行显示）
-        async function printLog(text, type = 'info') {
+        // 2. 模拟代码执行输出（支持完整的 HTML 语法高亮）
+        async function printCode(code, delay = 400) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            // 将代码中的特殊 HTML 符号进行转义，避免影响渲染
+            let safeCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // 正则替换，实现高亮
+            // 注释
+            safeCode = safeCode.replace(/\/\/.*/g, '<span class="c-comment">$&</span>');
+            safeCode = safeCode.replace(/#.*/g, '<span class="c-comment">$&</span>');
+            // 字符串
+            safeCode = safeCode.replace(/"([^"]*)"/g, '<span class="c-string">"$1"</span>');
+            safeCode = safeCode.replace(/'([^']*)'/g, '<span class="c-string">\'$1\'</span>');
+            // 关键字
+            const keywords = /\b(const|let|await|async|class|new|function|try|catch|return|if|else|for|process|require|console|log|warn|error|exit|this)\b/g;
+            safeCode = safeCode.replace(keywords, '<span class="c-keyword">$1</span>');
+            // 数字
+            safeCode = safeCode.replace(/\b(\d+(\.\d+)?%?)\b/g, '<span class="c-number">$1</span>');
+            // 数据高亮（特定词汇）
+            safeCode = safeCode.replace(/(42\.5%|46\.5%|22\.0%|127)/g, '<span class="data-highlight">$1</span>');
+
+            line.innerHTML = `<div class="output">${safeCode}</div>`;
+            termBody.appendChild(line);
+            termBody.scrollTop = termBody.scrollHeight;
+            await sleep(delay);
+        }
+
+        // 3. 模拟日志输出（非代码，带颜色）
+        async function printLog(text, type = 'info', delay = 500) {
             const line = document.createElement('div');
             line.className = 'line';
             let colorClass = 'log-info';
             if (type === 'warn') colorClass = 'log-warn';
             if (type === 'error') colorClass = 'log-err';
             if (type === 'success') colorClass = 'log-success';
+            if (type === 'debug') colorClass = 'c-comment';
+
+            let coloredText = text.replace(/\[(INFO|WARN|ERROR|SUCCESS|DEBUG)\]/g, `<span class="${colorClass}">[$1]</span>`);
             
-            // 简单的语法高亮替换
-            let htmlContent = text
-                .replace(/\[INFO\]/g, '<span class="log-info">[INFO]</span>')
-                .replace(/\[WARN\]/g, '<span class="log-warn">[WARN]</span>')
-                .replace(/\[ERROR\]/g, '<span class="log-err">[ERROR]</span>')
-                .replace(/\[SUCCESS\]/g, '<span class="log-success">[SUCCESS]</span>')
-                .replace(/\[DEBUG\]/g, '<span class="c-comment">[DEBUG]</span>')
-                .replace(/42.5%/g, '<span class="data-highlight">42.5%</span>')
-                .replace(/46.5%/g, '<span class="data-highlight">46.5%</span>')
-                .replace(/22.0%/g, '<span class="data-highlight">22.0%</span>')
-                .replace(/127/g, '<span class="c-number">127</span>')
-                .replace(/const/g, '<span class="c-keyword">const</span>')
-                .replace(/let/g, '<span class="c-keyword">let</span>')
-                .replace(/await/g, '<span class="c-keyword">await</span>')
-                .replace(/function/g, '<span class="c-keyword">function</span>')
-                .replace(/class/g, '<span class="c-keyword">class</span>')
-                .replace(/require/g, '<span class="c-func">require</span>')
-                .replace(/console.log/g, '<span class="c-func">console.log</span>')
-                .replace(/process.exit/g, '<span class="c-func">process.exit</span>')
-                .replace(/"([^"]*)"/g, '<span class="c-string">"$1"</span>');
-                
-            line.innerHTML = `<div class="output">${htmlContent}</div>`;
+            line.innerHTML = `<div class="output">${coloredText}</div>`;
             termBody.appendChild(line);
             termBody.scrollTop = termBody.scrollHeight;
-            await sleep(150); // 日志输出的微小停顿
+            await sleep(delay);
         }
 
-        // 进度条模拟
-        async function runProgressBar(label, duration = 1500) {
+        // 4. 模拟进度条
+        async function runProgressBar(label, duration = 3000) {
             const line = document.createElement('div');
             line.className = 'line';
             line.innerHTML = `<div class="output"><span class="c-comment">${label}</span> <span class="progress-bar"><div class="progress-fill"></div></span><span class="progress-text">0%</span></div>`;
@@ -286,106 +293,106 @@
             const fill = line.querySelector('.progress-fill');
             const text = line.querySelector('.progress-text');
             
-            for (let i = 0; i <= 100; i += 5) {
+            for (let i = 0; i <= 100; i += 2) {
                 fill.style.width = i + '%';
                 text.textContent = i + '%';
                 termBody.scrollTop = termBody.scrollHeight;
-                await sleep(duration / 20);
+                await sleep(duration / 50);
             }
             text.textContent = '完成';
+            await sleep(500);
         }
 
-        // 简单延迟
+        // 核心延迟函数
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         // ==========================================
-        // 主执行流程
+        // 主执行流程（放慢节奏版）
         // ==========================================
         
         async function executeProgram() {
-            await sleep(500); // 初始加载等待
+            await sleep(1000); // 初始加载等待
 
-            // 1. 初始化
-            await typeCommand('git checkout -b final_goodbye', 35);
-            await printLog('Switched to a new branch \'final_goodbye\'');
-            await sleep(800);
+            // 1. 初始化环境
+            await typeCommand('git checkout -b final_goodbye', 100);
+            await printLog('Switched to a new branch \'final_goodbye\'', 'info', 1200);
 
-            await typeCommand('node questionnaire_analysis.js', 35);
-            await printLog('[INFO] 正在加载 127 份真实样本...');
-            await sleep(600);
-            await printLog('[INFO] 解析数据中...');
-            await sleep(800);
+            // 2. 执行数据分析
+            await typeCommand('node questionnaire_analysis.js', 100);
+            await printLog('[INFO] 正在加载 127 份真实样本...', 'info', 1500);
+            await printLog('[DEBUG] 读取数据源 questionnaire_data.json...', 'debug', 800);
+            await printLog('[INFO] 解析数据中...', 'info', 1200);
+            await sleep(1500);
 
-            // 2. 数据呈现
-            await printLog('==================================================');
-            await printLog('数据剖析结果：');
-            await printLog('原来，42.5% 的青春，都会输给“圈子不同”。');
-            await printLog('原来，46.5% 的旧友，最终都会走向“随缘”。');
-            await printLog('原来，无论异性还是同性，都有 22.0% 的概率，最终变成“熟悉的陌生人”。');
-            await printLog('==================================================');
+            // 3. 输出高亮代码与数据真相
+            await printCode('// 数据剖析结果：', 1000);
+            await printCode('const targetData = report.filter(item => item.target === "K&I");', 800);
+            await printCode('console.log("匹配到 42.5% 的青春输给圈子不同");', 800);
+            await printCode('console.log("匹配到 46.5% 的旧友走向随缘");', 800);
+            await printCode('console.log("匹配到 22.0% 的结局是熟悉的陌生人");', 1500);
+            
+            await printLog('==================================================', 'info', 1000);
+            await printLog('你没有选错，你只是刚好和我，一起走进了那 22% 的规律里。', 'info', 1500);
+            await printLog('这不是背叛，这只是青春的自然代谢。', 'info', 1500);
+            await printLog('==================================================', 'info', 2000);
+
+            // 4. 情绪处理（回滚操作）
+            await typeCommand('python manage_emotions.py', 100);
+            await printLog('[DEBUG] 扫描未发送的生日礼物文件...', 'debug', 1500);
+            await sleep(1000);
+            await printLog('[WARN] 警告：检测到未发送的报告数据，发送可能导致关系系统崩溃。', 'warn', 2000);
+            await sleep(1500);
+            await printLog('[INFO] 正在执行回滚操作 (rollback)...', 'info', 1200);
+            await printCode('try { sendReportToKandI(); } catch (e) { console.warn("拒绝执行"); }', 1200);
+            await printLog('[SUCCESS] 已删除发送企图。保留过去三年真挚数据。', 'success', 1500);
             await sleep(1000);
 
-            // 3. 情绪处理
-            await typeCommand('python manage_emotions.py', 35);
-            await printLog('[DEBUG] Scanning for unsent birthday gifts...');
-            await sleep(800);
-            await printLog('[WARN] 警告：检测到未发送的报告数据，发送可能导致关系系统崩溃。');
-            await sleep(1000);
-            await printLog('[INFO] 正在执行回滚操作 (rollback)...');
-            await sleep(600);
-            await printLog('[SUCCESS] 已删除发送企图。保留过去三年真挚数据。');
-            await sleep(800);
-
-            // 4. 内心独白（特殊输出）
+            // 5. 内心独白（以日志形式逐行输出）
             const monologue = [
-                '不用冰冷的数据去覆盖曾经真挚的三年，',
-                '不让你看到我深夜内耗的偏执，',
-                '是我能给你，也能给我自己，最后的温柔。'
+                '> 不用冰冷的数据去覆盖曾经真挚的三年，',
+                '> 不让你看到我深夜内耗的偏执，',
+                '> 是我能给你，也能给我自己，最后的温柔。'
             ];
             for (let line of monologue) {
-                await printLog('> ' + line);
-                await sleep(500);
+                await printLog(line, 'info', 1500);
             }
+            await sleep(2000);
+
+            // 6. 重新编译人生
+            await typeCommand('bash start_new_life.sh', 100);
+            await printLog('[INFO] 正在编译新的未来...', 'info', 1000);
+            await runProgressBar('[====================] 进度:', 4000); // 4秒进度条
+            await printLog('[SUCCESS] 编译完成，版本号：v2.0.0', 'success', 1500);
             await sleep(1000);
 
-            // 5. 重新编译人生
-            await typeCommand('bash start_new_life.sh', 35);
-            await printLog('[INFO] 正在编译新的未来...');
-            await runProgressBar('[====================] 进度:', 2000);
-            await sleep(500);
-            await printLog('[SUCCESS] 编译完成，版本号：v2.0.0');
-            await sleep(500);
+            // 7. 核心代码块展示（重点语法高亮）
+            await printCode('class NewLife {', 800);
+            await printCode('  constructor() {', 500);
+            await printCode('    this.role = "自己的主角";', 800);
+            await printCode('    this.location = "重点高中";', 800);
+            await printCode('  }', 500);
+            await printCode('  sail() {', 500);
+            await printCode('    console.log("生日快乐，我曾经在乎的女孩。");', 1200);
+            await printCode('    console.log("这艘船曾在你港湾停靠，现在，它要去征服自己的海域了。");', 1500);
+            await printCode('  }', 800);
+            await printCode('}', 1500);
 
-            await printLog('> class NewLife {');
-            await printLog('>   constructor() {');
-            await printLog('>     this.role = "自己的主角";');
-            await printLog('>     this.location = "重点高中";');
-            await printLog('>   }');
-            await printLog('>   sail() {');
-            await printLog('>     console.log("生日快乐，我曾经在乎的女孩。");');
-            await printLog('>     console.log("这艘船曾在你港湾停靠，现在，它要去征服自己的海域了。");');
-            await printLog('>   }');
-            await printLog('> }');
-            await sleep(800);
+            // 8. 执行新实例
+            await typeCommand('node start_new_life.js', 100);
+            await printLog('[INFO] 执行新实例...', 'info', 1000);
+            await printLog('生日快乐，我曾经在乎的女孩。', 'success', 1500);
+            await printLog('这艘船曾在你港湾停靠，现在，它要去征服自己的海域了。', 'success', 1500);
+            await sleep(2000);
 
-            await typeCommand('node start_new_life.js', 35);
-            await printLog('[INFO] 执行新实例...');
-            await sleep(500);
-            await printLog('生日快乐，我曾经在乎的女孩。');
-            await printLog('这艘船曾在你港湾停靠，现在，它要去征服自己的海域了。');
-            await sleep(1000);
+            // 9. 完美退出
+            await printLog('[INFO] 正在退出旧进程...', 'info', 1000);
+            await printCode('System.exit(0); // 进程正常终止，状态：已释怀', 2000);
+            await printLog('状态：剧本杀青。', 'success', 1500);
+            await sleep(1500);
 
-            // 6. 完美退出
-            await printLog('[INFO] 正在退出旧进程...');
-            await sleep(800);
-            await printLog('System.exit(0); // 进程正常终止，状态：已释怀');
-            await sleep(1000);
-            await printLog('状态：剧本杀青。');
-            await sleep(500);
-
-            // 最后的闪烁光标
+            // 10. 最终光标
             const finalLine = document.createElement('div');
             finalLine.className = 'line';
             finalLine.innerHTML = `<div class="prompt"></div><div class="output"><span class="cursor"></span></div>`;
