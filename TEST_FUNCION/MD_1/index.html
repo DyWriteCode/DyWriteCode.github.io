@@ -1,1012 +1,337 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>校园人际交往与倾诉习惯调查 · 数据分析报告</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js?v=20261007031439"></script>
-<style>
-  :root{
-    --bg:#f5f7fb;
-    --card:#ffffff;
-    --primary:#2563eb;
-    --primary-dark:#1e40af;
-    --accent:#f59e0b;
-    --accent2:#10b981;
-    --accent3:#ef4444;
-    --accent4:#8b5cf6;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#e2e8f0;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    line-height:1.7;
-    padding:0 0 80px;
-  }
-  .hero{
-    background:linear-gradient(135deg,#1e40af 0%,#2563eb 50%,#3b82f6 100%);
-    color:#fff;
-    padding:56px 24px 72px;
-    text-align:center;
-    position:relative;
-    overflow:hidden;
-  }
-  .hero::before{
-    content:"";
-    position:absolute;top:-50%;right:-20%;
-    width:600px;height:600px;
-    background:radial-gradient(circle,rgba(255,255,255,0.12) 0%,transparent 70%);
-    border-radius:50%;
-  }
-  .hero::after{
-    content:"";
-    position:absolute;bottom:-40%;left:-10%;
-    width:500px;height:500px;
-    background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 70%);
-    border-radius:50%;
-  }
-  .hero-content{position:relative;z-index:1;max-width:900px;margin:0 auto}
-  .hero h1{
-    font-size:clamp(24px,4vw,36px);
-    font-weight:800;
-    letter-spacing:-0.5px;
-    margin-bottom:14px;
-  }
-  .hero p{
-    font-size:clamp(13px,2vw,15px);
-    opacity:0.9;
-    max-width:640px;
-    margin:0 auto;
-  }
-  .hero-meta{
-    display:flex;
-    gap:18px;
-    justify-content:center;
-    flex-wrap:wrap;
-    margin-top:26px;
-    font-size:13px;
-  }
-  .hero-meta span{
-    background:rgba(255,255,255,0.18);
-    padding:6px 16px;
-    border-radius:20px;
-    backdrop-filter:blur(10px);
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System.exit(0) - 青春毕业答卷</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --terminal-bg: #161b22;
+            --border: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
 
-  .container{
-    max-width:1100px;
-    margin:-40px auto 0;
-    padding:0 20px;
-    position:relative;
-    z-index:2;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  .stats-row{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:16px;
-    margin-bottom:32px;
-  }
-  .stat-card{
-    background:var(--card);
-    border-radius:14px;
-    padding:22px 20px;
-    box-shadow:0 4px 20px rgba(15,23,42,0.06);
-    border:1px solid var(--border);
-    transition:transform .2s, box-shadow .2s;
-  }
-  .stat-card:hover{
-    transform:translateY(-3px);
-    box-shadow:0 10px 28px rgba(15,23,42,0.10);
-  }
-  .stat-value{
-    font-size:34px;
-    font-weight:800;
-    color:var(--primary);
-    line-height:1.1;
-    letter-spacing:-1px;
-  }
-  .stat-label{
-    font-size:13px;
-    color:var(--muted);
-    margin-top:6px;
-  }
-  .stat-sub{
-    font-size:11px;
-    color:var(--muted);
-    margin-top:2px;
-    opacity:0.75;
-  }
-  .stat-card.warn .stat-value{color:var(--accent)}
-  .stat-card.danger .stat-value{color:var(--accent3)}
-  .stat-card.success .stat-value{color:var(--accent2)}
-  .stat-card.purple .stat-value{color:var(--accent4)}
+        body {
+            background-color: var(--bg);
+            /* 极客网格背景 */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 15px;
+            overflow-x: hidden;
+        }
 
-  .section-title{
-    font-size:20px;
-    font-weight:700;
-    margin:38px 0 18px;
-    padding-left:14px;
-    border-left:4px solid var(--primary);
-    letter-spacing:-0.3px;
-  }
-  .section-title .num{
-    display:inline-block;
-    background:var(--primary);
-    color:#fff;
-    font-size:12px;
-    padding:2px 10px;
-    border-radius:12px;
-    margin-right:8px;
-    vertical-align:middle;
-    font-weight:600;
-  }
+        .terminal-window {
+            width: 100%;
+            max-width: 800px;
+            background: var(--terminal-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-  .card{
-    background:var(--card);
-    border-radius:14px;
-    padding:24px 26px;
-    box-shadow:0 4px 20px rgba(15,23,42,0.05);
-    border:1px solid var(--border);
-    margin-bottom:20px;
-  }
-  .q-header{
-    display:flex;
-    align-items:flex-start;
-    gap:14px;
-    margin-bottom:20px;
-  }
-  .q-badge{
-    flex-shrink:0;
-    width:36px;height:36px;
-    background:var(--primary);
-    color:#fff;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    font-size:15px;
-  }
-  .q-text{
-    flex:1;
-    font-size:16px;
-    font-weight:600;
-    line-height:1.5;
-  }
-  .q-note{
-    display:inline-block;
-    font-size:12px;
-    color:var(--muted);
-    font-weight:400;
-    margin-left:8px;
-    background:var(--bg);
-    padding:1px 8px;
-    border-radius:10px;
-    vertical-align:middle;
-  }
+        /* 终端顶部控制栏 */
+        .terminal-header {
+            background: #21262d;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-  .chart-wrap{
-    position:relative;
-    height:260px;
-    margin-bottom:18px;
-  }
-  .chart-wrap.tall{height:320px}
-  .chart-wrap.short{height:220px}
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
 
-  .analysis{
-    background:#f8fafc;
-    border-left:3px solid var(--primary);
-    padding:14px 18px;
-    border-radius:0 8px 8px 0;
-    font-size:14px;
-    color:#334155;
-    line-height:1.8;
-  }
-  .analysis strong{color:var(--text)}
-  .analysis .highlight{
-    background:linear-gradient(transparent 60%, #fde68a 60%);
-    font-weight:600;
-  }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
 
-  .data-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-    margin-bottom:16px;
-  }
-  .data-table th, .data-table td{
-    padding:9px 12px;
-    text-align:left;
-    border-bottom:1px solid var(--border);
-  }
-  .data-table th{
-    background:#f8fafc;
-    font-weight:600;
-    color:var(--muted);
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:0.5px;
-  }
-  .data-table td:last-child{
-    text-align:right;
-    font-weight:600;
-    color:var(--primary);
-  }
-  .data-table tr:hover{background:#f8fafc}
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-right: 60px; /* 平衡左侧圆点 */
+            user-select: none;
+        }
 
-  .quote-block{
-    border-left:3px solid var(--accent);
-    background:#fffbeb;
-    padding:12px 16px;
-    margin:10px 0;
-    font-size:13.5px;
-    color:#78350f;
-    border-radius:0 8px 8px 0;
-    font-style:italic;
-  }
-  .quote-block .who{
-    display:block;
-    text-align:right;
-    font-style:normal;
-    font-size:12px;
-    color:#a16207;
-    margin-top:4px;
-  }
+        /* 终端主体 */
+        .terminal-body {
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
 
-  .conclusion-list{
-    display:grid;
-    gap:14px;
-  }
-  .conclusion-item{
-    background:var(--card);
-    padding:20px 22px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    border-left:4px solid var(--accent2);
-    box-shadow:0 2px 12px rgba(15,23,42,0.04);
-  }
-  .conclusion-item h4{
-    font-size:15px;
-    font-weight:700;
-    margin-bottom:8px;
-    color:var(--text);
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .conclusion-item h4::before{
-    content:"●";
-    color:var(--accent2);
-    font-size:12px;
-  }
-  .conclusion-item p{
-    font-size:14px;
-    color:#475569;
-    line-height:1.75;
-  }
+        .line {
+            display: flex;
+            gap: 15px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
 
-  .compare-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-bottom:18px;
-  }
-  @media(max-width:640px){
-    .compare-grid{grid-template-columns:1fr}
-  }
+        .line.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-  .footer-note{
-    text-align:center;
-    margin-top:50px;
-    font-size:12px;
-    color:var(--muted);
-    padding:0 20px;
-  }
+        .prompt {
+            color: var(--accent-green);
+            font-weight: bold;
+            user-select: none;
+            flex-shrink: 0;
+        }
 
-  @media print{
-    body{background:#fff}
-    .hero{background:#1e40af !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
-    .card,.stat-card{box-shadow:none; border:1px solid #ddd}
-  }
-</style>
+        .prompt::before {
+            content: "$ ";
+            color: var(--text-muted);
+        }
+
+        .output {
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        /* 高亮与代码样式 */
+        .comment { color: var(--text-muted); font-style: italic; }
+        .keyword { color: var(--accent-purple); }
+        .string { color: var(--accent-green); }
+        .number { color: var(--accent-yellow); }
+        .func { color: var(--accent-blue); }
+        
+        .data-highlight {
+            color: #ff7b72;
+            background: rgba(255, 123, 114, 0.1);
+            padding: 0 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .box-quote {
+            border-left: 3px solid var(--accent-blue);
+            background: rgba(88, 166, 255, 0.05);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 10px 0;
+            color: #a5d6ff;
+            font-style: italic;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: var(--accent-green);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* 滚动淡入触发 */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .terminal-body { padding: 20px 15px; gap: 20px; }
+            .terminal-title { margin-right: 0; font-size: 12px; }
+            .dot { width: 10px; height: 10px; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ============ HERO ============ -->
-<div class="hero">
-  <div class="hero-content">
-    <h1>校园人际交往与倾诉习惯调查</h1>
-    <p>本报告基于本次调查实际回收的全部有效问卷数据整理而成，旨在呈现中学生对旧友谊维系、倾诉习惯与异性/同性友谊认知的整体图景。</p>
-    <div class="hero-meta">
-      <span>📊 有效样本 127 份</span>
-      <span>📅 调查时间 2026.09 – 2026.10</span>
-      <span>📋 题目共 10 题</span>
-    </div>
-  </div>
-</div>
+    <div class="terminal-window">
+        <!-- 顶部装饰 -->
+        <div class="terminal-header">
+            <div class="window-controls">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+            </div>
+            <div class="terminal-title">bash — 127_samples_analysis — 80×24</div>
+        </div>
 
-<div class="container">
+        <div class="terminal-body">
 
-  <!-- ============ 核心指标 ============ -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-value">56.7%</div>
-      <div class="stat-label">首选身边人倾诉</div>
-      <div class="stat-sub">第 1 题 · A 选项</div>
-    </div>
-    <div class="stat-card warn">
-      <div class="stat-value">42.5%</div>
-      <div class="stat-label">认为"圈子不同"是最大阻碍</div>
-      <div class="stat-sub">第 2 题 · A 选项</div>
-    </div>
-    <div class="stat-card danger">
-      <div class="stat-value">12.6%</div>
-      <div class="stat-label">会主动维系旧友谊</div>
-      <div class="stat-sub">第 4 题 · C 选项</div>
-    </div>
-    <div class="stat-card purple">
-      <div class="stat-value">39.4%</div>
-      <div class="stat-label">自认"很念旧"</div>
-      <div class="stat-sub">第 6 题 · A 选项</div>
-    </div>
-  </div>
+            <!-- 序章 -->
+            <div class="line fade-in-section is-visible">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment"># 初始化青春退场程序...</span><br>
+                    git checkout -b <span class="string">"final_goodbye"</span>
+                </div>
+            </div>
 
-  <!-- ============ PART 1 ============ -->
-  <h2 class="section-title"><span class="num">PART 1</span>倾诉习惯与维系现状</h2>
+            <div class="line fade-in-section is-visible">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment"># 加载127份真实样本数据</span><br>
+                    <span class="keyword">const</span> report = <span class="keyword">require</span>(<span class="string">'./questionnaire_data.json'</span>);<br>
+                    <span class="keyword">let</span> heartCache = report.filter(item => item.target === <span class="string">"K&I"</span>);<br>
+                    <span class="comment">// 状态：分析中...</span>
+                </div>
+            </div>
 
-  <!-- 第1题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">1</div>
-      <div class="q-text">遇到学习或生活上的烦恼时，你一般倾向于找谁倾诉？</div>
-    </div>
+            <!-- 数据真相 -->
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment"># 运行数据匹配逻辑...</span><br>
+                    <span class="keyword">if</span> (report.totalSamples === <span class="number">127</span>) {<br>
+                    &nbsp;&nbsp;<span class="func">console</span>.log(<span class="string">"匹配到 42.5% 的青春输给圈子不同"</span>);<br>
+                    &nbsp;&nbsp;<span class="func">console</span>.log(<span class="string">"匹配到 46.5% 的旧友走向随缘"</span>);<br>
+                    &nbsp;&nbsp;<span class="func">console</span>.log(<span class="string">"匹配到 22.0% 的结局是熟悉的陌生人"</span>);<br>
+                    }
+                </div>
+            </div>
 
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 身边每天见面的同学/同性朋友</td><td>72</td><td>56.7%</td></tr>
-        <tr><td>B. 以前很熟悉、但现在不常联系的旧友</td><td>18</td><td>14.2%</td></tr>
-        <tr><td>C. 网络树洞或陌生人</td><td>9</td><td>7.1%</td></tr>
-        <tr><td>D. 自己消化</td><td>28</td><td>22.0%</td></tr>
-      </tbody>
-    </table>
+            <!-- 数据高亮 -->
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment">// 数据剖析结果：</span><br>
+                    原来，<span class="data-highlight">42.5%</span> 的青春，都会输给“圈子不同”。<br>
+                    原来，<span class="data-highlight">46.5%</span> 的旧友，最终都会走向“随缘”。<br>
+                    原来，无论异性还是同性，都有 <span class="data-highlight">22%</span> 的概率，最终变成“熟悉的陌生人”。<br>
+                    <div class="box-quote">
+                        "你没有选错，你只是刚好和我，一起走进了那 22% 的规律里。这不是背叛，这只是青春的自然代谢。"
+                    </div>
+                </div>
+            </div>
 
-    <div class="chart-wrap">
-      <canvas id="chart1"></canvas>
-    </div>
+            <!-- 告别的决定 -->
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment"># 处理未发送的生日礼物文件...</span><br>
+                    <span class="keyword">try</span> {<br>
+                    &nbsp;&nbsp;<span class="func">sendReportToKandI</span>(); <span class="comment">// 原本想发送这份冰冷的报告去质问</span><br>
+                    } <span class="keyword">catch</span> (error) {<br>
+                    &nbsp;&nbsp;<span class="func">console</span>.<span class="func">warn</span>(<span class="string">"⚠️ 警告：发送可能导致系统崩溃，覆盖过去三年的真挚数据。"</span>);<br>
+                    &nbsp;&nbsp;<span class="func">console</span>.<span class="func">log</span>(<span class="string">"🔄 正在执行回滚操作..."</span>);<br>
+                    }
+                </div>
+            </div>
 
-    <div class="analysis">
-      超过半数学生（<span class="highlight">56.7%</span>）将倾诉对象锁定在"当下身边的人"，而选择旧友的仅占 14.2%。同时，有 <span class="highlight">22.0%</span> 的学生选择"自己消化"，这一比例不容忽视。数据表明：<strong>旧友谊在情绪支持功能上已被明显边缘化</strong>，日常倾诉高度依赖同学这一即时社交圈。
-    </div>
-  </div>
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment">// 最终决策：</span><br>
+                    不用冰冷的数据去覆盖曾经真挚的三年，<br>
+                    不让你看到我深夜内耗的偏执，<br>
+                    是我能给你，也能给我自己，最后的温柔。<br>
+                    <span class="keyword">delete</span> window.reportLink; <span class="comment">// 删除发送企图</span>
+                </div>
+            </div>
 
-  <!-- 第2题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">2</div>
-      <div class="q-text">你觉得维系一段"跨班/跨校"的旧友谊，最现实的阻碍是什么？<span class="q-note">多选</span></div>
-    </div>
+            <!-- 远航与新生 -->
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="comment"># 编译新的未来...</span><br>
+                    <span class="keyword">class</span> <span class="func">NewLife</span> {<br>
+                    &nbsp;&nbsp;<span class="func">constructor</span>() {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.role = <span class="string">"自己的主角"</span>;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">this</span>.location = <span class="string">"重点高中"</span>;<br>
+                    &nbsp;&nbsp;}<br>
+                    &nbsp;&nbsp;<span class="func">sail</span>() {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="func">console</span>.log(<span class="string">"生日快乐，我曾经在乎的女孩。"</span>);<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="func">console</span>.log(<span class="string">"这艘船曾在你港湾停靠，现在，它要去征服自己的海域了。"</span>);<br>
+                    &nbsp;&nbsp;}<br>
+                    }
+                </div>
+            </div>
 
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>选择人次</th><th>占样本比例</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 圈子不同，渐渐没了共同话题</td><td>54</td><td>42.5%</td></tr>
-        <tr><td>B. 联系频率下降，自然而然就淡了</td><td>46</td><td>36.2%</td></tr>
-        <tr><td>C. 学业太忙，没有精力专门去维系</td><td>38</td><td>29.9%</td></tr>
-        <tr><td>D. 有了新的朋友和新的生活重心</td><td>31</td><td>24.4%</td></tr>
-      </tbody>
-    </table>
+            <!-- 终端结束语 -->
+            <div class="line fade-in-section">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="keyword">const</span> myNewChapter = <span class="keyword">new</span> <span class="func">NewLife</span>();<br>
+                    myNewChapter.<span class="func">sail</span>();<br>
+                    <br>
+                    <span class="comment">// 进度: [████████████████████] 100%</span><br>
+                    <span class="comment">// 状态: 已释怀，剧本杀青</span><br>
+                    <span class="func">process</span>.exit(<span class="number">0</span>); <span class="comment">// 退出旧进程，准备重载新生活...</span>
+                </div>
+            </div>
 
-    <div class="chart-wrap">
-      <canvas id="chart2"></canvas>
-    </div>
+            <div class="line fade-in-section" style="margin-top: 20px;">
+                <div class="prompt"></div>
+                <div class="output">
+                    <span class="cursor"></span>
+                </div>
+            </div>
 
-    <div class="analysis">
-      "圈子不同"以 <span class="highlight">42.5%</span> 的比例成为首要障碍，紧随其后的是"联系频率下降"（36.2%）与"学业太忙"（29.9%）。这表明旧友谊的淡化<strong>更多来自外部社交结构的变化</strong>，而非学生主观上"不想维系"。
-    </div>
-  </div>
-
-  <!-- 第3题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">3</div>
-      <div class="q-text">你通常会和"关系很好的旧友"分享哪类事情？<span class="q-note">多选</span></div>
-    </div>
-
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>选择人次</th><th>占样本比例</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 日常琐事和八卦</td><td>61</td><td>48.0%</td></tr>
-        <tr><td>B. 学业压力和迷茫</td><td>40</td><td>31.5%</td></tr>
-        <tr><td>C. 自己的人际关系或情感烦恼</td><td>27</td><td>21.3%</td></tr>
-        <tr><td>D. 偶尔的情绪低落或深夜 emo</td><td>22</td><td>17.3%</td></tr>
-      </tbody>
-    </table>
-
-    <div class="chart-wrap">
-      <canvas id="chart3"></canvas>
-    </div>
-
-    <div class="analysis">
-      近半数学生（<span class="highlight">48.0%</span>）与旧友的交流停留在"日常琐事"层面，仅两成会分享情感烦恼或深夜情绪。这说明<strong>旧友谊的交流深度正在变浅</strong>——表面寒暄多于深层自我表露。
-    </div>
-  </div>
-
-  <!-- ============ PART 2 ============ -->
-  <h2 class="section-title"><span class="num">PART 2</span>态度、情感与关系画像</h2>
-
-  <!-- 第4题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">4</div>
-      <div class="q-text">对于一个曾经关系很好、但现在联系变少的朋友，你通常的态度是？</div>
+        </div>
     </div>
 
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 放在心里默默关注，偶尔怀念但不会主动打扰</td><td>34</td><td>26.8%</td></tr>
-        <tr><td>B. 随缘，对方找我我就热情回应，不找就算了</td><td>59</td><td>46.5%</td></tr>
-        <tr><td>C. 会主动找机会聊聊天，想努力维系这段关系</td><td>16</td><td>12.6%</td></tr>
-        <tr><td>D. 觉得顺其自然最好，没必要强求</td><td>18</td><td>14.2%</td></tr>
-      </tbody>
-    </table>
+    <script>
+        // 滚动触发动画（极客风格：元素进入视口时执行编译显示）
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                        entry.target.classList.add('is-visible'); // 兼容两种类名
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            });
 
-    <div class="chart-wrap">
-      <canvas id="chart4"></canvas>
-    </div>
-
-    <div class="analysis">
-      <span class="highlight">46.5%</span> 的学生选择"随缘"，而真正主动维系的仅 <span class="highlight">12.6%</span>。学生对旧友谊的流失有清晰感知，但普遍缺乏主动干预的意愿——这是一种<strong>"被动接受"大于"主动选择"</strong>的状态。
-    </div>
-  </div>
-
-  <!-- 第5题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">5</div>
-      <div class="q-text">如果曾经的旧友有了新的圈子或新的倾诉对象，你的第一反应是？</div>
-    </div>
-
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 很正常，大家都有自己的生活，替他开心</td><td>66</td><td>52.0%</td></tr>
-        <tr><td>B. 稍微有点失落，感觉自己在对方心里的位置变了</td><td>36</td><td>28.3%</td></tr>
-        <tr><td>C. 没什么感觉，反正大家都会变</td><td>14</td><td>11.0%</td></tr>
-        <tr><td>D. 看情况，如果是特别好的朋友会有点介意</td><td>11</td><td>8.7%</td></tr>
-      </tbody>
-    </table>
-
-    <div class="chart-wrap">
-      <canvas id="chart5"></canvas>
-    </div>
-
-    <div class="analysis">
-      过半学生（52.0%）对旧友的社交更替持积极态度，但也有近三成（<span class="highlight">28.3%</span>）感到"失落"。这种"替他开心但自己会失落"的并存状态，反映了中学生对旧友谊流失的<strong>理性认知与情感不舍之间的张力</strong>。
-    </div>
-  </div>
-
-  <!-- 第6题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">6</div>
-      <div class="q-text">评价一下自己对于旧友谊的依恋程度：</div>
-    </div>
-
-    <table class="data-table">
-      <thead>
-        <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>A. 很念旧，经常想起以前的日子</td><td>50</td><td>39.4%</td></tr>
-        <tr><td>B. 偶尔怀念，但更专注当下的生活</td><td>47</td><td>37.0%</td></tr>
-        <tr><td>C. 比较向前看，旧朋友淡了就淡了</td><td>15</td><td>11.8%</td></tr>
-        <tr><td>D. 视具体的人和事而定</td><td>15</td><td>11.8%</td></tr>
-      </tbody>
-    </table>
-
-    <div class="chart-wrap">
-      <canvas id="chart6"></canvas>
-    </div>
-
-    <div class="analysis">
-      <span class="highlight">39.4%</span> 的学生自评为"很念旧"，与第 4 题中 46.5% 选择"随缘"形成耐人寻味的对比——<strong>情感上高度依恋，行为上却普遍被动</strong>。这种"想念但不行动"的模式，是学业压力与社交精力分配之间的典型张力。
-    </div>
-  </div>
-
-  <!-- ============ PART 3 ============ -->
-  <h2 class="section-title"><span class="num">PART 3</span>异性好友 vs 同性好友 · 关系对比</h2>
-
-  <!-- 第7题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">7</div>
-      <div class="q-text">用一个词形容你和过去某位旧日<strong style="color:#ef4444">异性</strong>好友现在的关系：</div>
-    </div>
-
-    <div class="compare-grid">
-      <div>
-        <table class="data-table">
-          <thead>
-            <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>A. 点赞之交</td><td>42</td><td>33.1%</td></tr>
-            <tr><td>B. 偶尔问候</td><td>34</td><td>26.8%</td></tr>
-            <tr><td>C. 熟悉的陌生人</td><td>28</td><td>22.0%</td></tr>
-            <tr><td>D. 依然信任的远方朋友</td><td>23</td><td>18.1%</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="chart-wrap short" style="height:220px">
-        <canvas id="chart7"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- 第8题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">8</div>
-      <div class="q-text">用一个词形容你和过去某位旧日<strong style="color:#10b981">同性</strong>好友现在的关系：</div>
-    </div>
-
-    <div class="compare-grid">
-      <div>
-        <table class="data-table">
-          <thead>
-            <tr><th>选项</th><th>人数</th><th>占比</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>A. 点赞之交</td><td>35</td><td>27.6%</td></tr>
-            <tr><td>B. 偶尔问候</td><td>38</td><td>29.9%</td></tr>
-            <tr><td>C. 熟悉的陌生人</td><td>24</td><td>18.9%</td></tr>
-            <tr><td>D. 依然信任的远方朋友</td><td>30</td><td>23.6%</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="chart-wrap short" style="height:220px">
-        <canvas id="chart8"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- 对比图 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">⇄</div>
-      <div class="q-text">异性 vs 同性旧友关系 · 并排对比</div>
-    </div>
-
-    <div class="chart-wrap tall">
-      <canvas id="chartCompare"></canvas>
-    </div>
-
-    <div class="analysis">
-      同性旧友的"依然信任"比例（<span class="highlight">23.6%</span>）明显高于异性（18.1%），而"熟悉的陌生人"比例（18.9%）则低于异性（22.0%）。即便如此，同性旧友中"点赞之交 + 偶尔问候"合计仍达 57.5%——<strong>同性旧友谊的日常维系同样面临挑战</strong>。
-    </div>
-  </div>
-
-  <!-- ============ PART 4 ============ -->
-  <h2 class="section-title"><span class="num">PART 4</span>开放题 · 对"纯粹友谊"的信念</h2>
-
-  <!-- 第9题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">9</div>
-      <div class="q-text">你觉得中学阶段，<strong style="color:#ef4444">异性</strong>朋友之间真的存在纯粹的长久友谊吗？为什么？</div>
-    </div>
-
-    <table class="data-table">
-      <thead>
-        <tr><th>回答类型</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>存在，但需要条件（如边界感）</td><td>58</td><td>45.7%</td></tr>
-        <tr><td>存在</td><td>20</td><td>15.7%</td></tr>
-        <tr><td>不存在</td><td>31</td><td>24.4%</td></tr>
-        <tr><td>不确定 / 看情况</td><td>18</td><td>14.2%</td></tr>
-      </tbody>
-    </table>
-
-    <div class="chart-wrap">
-      <canvas id="chart9"></canvas>
-    </div>
-
-    <div style="margin-top:6px">
-      <div class="quote-block">
-        "存在，但很难。需要有明确的边界感，双方都不能有暧昧的想法。"
-        <span class="who">— 高二女生</span>
-      </div>
-      <div class="quote-block">
-        "我觉得不太可能。青春期本来就容易产生好感，纯友谊太难了。"
-        <span class="who">— 初三男生</span>
-      </div>
-      <div class="quote-block">
-        "看人吧。我和一个小学同学到现在还是很好的朋友，就是很纯粹。"
-        <span class="who">— 高一女生</span>
-      </div>
-      <div class="quote-block">
-        "一切尽在不言中。"
-        <span class="who">— 高二女生</span>
-      </div>
-    </div>
-
-    <div class="analysis" style="margin-top:16px">
-      合计 <span class="highlight">61.4%</span> 的学生认为异性纯友谊"存在"或"存在但需条件"，但同时有 <span class="highlight">24.4%</span> 明确持悲观态度。这种分化表明学生对异性友谊中的"情感边界模糊性"具有普遍认知。
-    </div>
-  </div>
-
-  <!-- 第10题 -->
-  <div class="card">
-    <div class="q-header">
-      <div class="q-badge">10</div>
-      <div class="q-text">你觉得中学阶段，<strong style="color:#10b981">同性</strong>朋友之间真的存在纯粹的长久友谊吗？为什么？</div>
-    </div>
-
-    <table class="data-table">
-      <thead>
-        <tr><th>回答类型</th><th>人数</th><th>占比</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>存在</td><td>71</td><td>55.9%</td></tr>
-        <tr><td>存在，但需要条件</td><td>32</td><td>25.2%</td></tr>
-        <tr><td>不存在</td><td>12</td><td>9.4%</td></tr>
-        <tr><td>不确定 / 看情况</td><td>12</td><td>9.4%</td></tr>
-      </tbody>
-    </table>
-
-    <div class="chart-wrap">
-      <canvas id="chart10"></canvas>
-    </div>
-
-    <div style="margin-top:6px">
-      <div class="quote-block">
-        "肯定存在啊，我和我最好的朋友从初一到现在五年了，什么都能聊。"
-        <span class="who">— 高二女生</span>
-      </div>
-      <div class="quote-block">
-        "同性之间应该更容易纯粹吧，不会有感情上的纠葛。"
-        <span class="who">— 初三男生</span>
-      </div>
-      <div class="quote-block">
-        "存在是存在，但能长久的很少。我小学最好的朋友现在基本不联系了。"
-        <span class="who">— 高一女生</span>
-      </div>
-      <div class="quote-block">
-        "有些情谊，不必说出口，也都懂。"
-        <span class="who">— 高二男生</span>
-      </div>
-    </div>
-
-    <div class="analysis" style="margin-top:16px">
-      <span class="highlight">55.9%</span> 的学生坚定认为同性纯友谊存在，仅 <span class="highlight">9.4%</span> 认为不存在。与第 9 题对比可见——<strong>同性友谊的"确信度"远高于异性友谊</strong>，学生普遍能更清晰地感知同性友谊中的"纯粹"。
-    </div>
-  </div>
-
-  <!-- ============ PART 5 ============ -->
-  <h2 class="section-title"><span class="num">PART 5</span>核心结论</h2>
-
-  <div class="conclusion-list">
-
-    <div class="conclusion-item">
-      <h4>结论 1 · 倾诉需求高度"就地化"，旧友的情绪支持功能退化</h4>
-      <p>第 1 题中 56.7% 首选身边同学，而旧友仅占 14.2%；结合第 3 题（仅 21.3% 与旧友分享情感烦恼），可以判断：<strong>在中学阶段，旧友谊已从"情绪支持网络"退化为"社交记忆载体"</strong>——学生仍然念旧（第 6 题 39.4%），但已不再"用旧"。</p>
-    </div>
-
-    <div class="conclusion-item">
-      <h4>结论 2 · "圈子不同"是旧友谊流失的结构性原因，而非个体意愿问题</h4>
-      <p>第 2 题中 42.5% 选择"圈子不同"，远超"学业太忙"（29.9%）与"有了新朋友"（24.4%）。第 4 题中仅 12.6% 主动维系，进一步印证——<strong>不是不愿意，而是不知道从何维系</strong>。</p>
-    </div>
-
-    <div class="conclusion-item">
-      <h4>结论 3 · 异性旧友谊的"信任缺口"显著大于同性</h4>
-      <p>第 7 题"依然信任"18.1%，第 8 题为 23.6%，相差 5.5 个百分点；第 9 题 24.4% 认为异性纯友谊不存在，第 10 题中此比例仅 9.4%。<strong>异性旧友谊同时面临"稳定性更低 + 信任感更弱"的双重困境。</strong></p>
-    </div>
-
-    <div class="conclusion-item">
-      <h4>结论 4 · "念旧但不行动"构成中学阶段旧友谊的核心张力</h4>
-      <p>第 6 题 39.4% "很念旧"，第 4 题 46.5% "随缘"——这种情感投入与行为投入的显著落差，说明学生在旧友谊中体验到的更多是"怀念"而非"关系"。旧友成为记忆中的情感符号，而非当下可调用的人际资源。</p>
-    </div>
-
-    <div class="conclusion-item">
-      <h4>结论 5 · 对"纯粹友谊"的信念存在性别分化</h4>
-      <p>同性纯友谊的"确信存在"比例（55.9%）远高于异性（15.7%）。这既反映社交现实，也可能形成自我实现预言——<strong>越不相信异性纯友谊存在，就越难维持异性旧友谊</strong>，从而进一步强化"熟悉的陌生人"这一状态。</p>
-    </div>
-
-  </div>
-
-  <div class="footer-note">
-    <p>本报告基于本次调查回收的全部有效问卷整理生成。</p>
-    <p style="margin-top:6px">数据统计截止时间：2026-10-06 · 有效样本 N = 127</p>
-  </div>
-
-</div>
-
-<script>
-/* ========== 通用配色 ========== */
-const BLUE_GRAD = 'rgba(37, 99, 235, 0.85)';
-
-Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif';
-Chart.defaults.font.size = 13;
-Chart.defaults.color = '#475569';
-
-/* ========== 通用配置：横向条形图 ========== */
-function makeBarChart(canvasId, labels, data, options = {}) {
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  const color = options.color || BLUE_GRAD;
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: color,
-        borderRadius: 6,
-        borderSkipped: false,
-        barThickness: options.thickness || 22
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 700, easing: 'easeOutQuart' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(15,23,42,0.92)',
-          padding: 10,
-          titleFont: { size: 13, weight: '600' },
-          bodyFont: { size: 13 },
-          callbacks: {
-            label: c => ` ${c.parsed.x}%`
-          }
-        }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          max: options.max || 100,
-          ticks: { callback: v => v + '%', font: { size: 12 } },
-          grid: { color: 'rgba(226,232,240,0.6)' }
-        },
-        y: {
-          grid: { display: false },
-          ticks: { font: { size: 12.5 } }
-        }
-      }
-    }
-  });
-}
-
-/* ========== 第 1 题 ========== */
-makeBarChart('chart1',
-  ['身边同学/同性朋友','旧友','网络树洞/陌生人','自己消化'],
-  [56.7, 14.2, 7.1, 22.0],
-  { max: 70 }
-);
-
-/* ========== 第 2 题 ========== */
-makeBarChart('chart2',
-  ['圈子不同，没了共同话题','联系频率下降','学业太忙','有新朋友/新重心'],
-  [42.5, 36.2, 29.9, 24.4],
-  { max: 55 }
-);
-
-/* ========== 第 3 题 ========== */
-makeBarChart('chart3',
-  ['日常琐事和八卦','学业压力和迷茫','人际关系/情感烦恼','情绪低落/深夜emo'],
-  [48.0, 31.5, 21.3, 17.3],
-  { max: 60 }
-);
-
-/* ========== 第 4 题 ========== */
-makeBarChart('chart4',
-  ['默默关注不打扰','随缘，对方找我就回应','主动找机会维系','顺其自然，不强求'],
-  [26.8, 46.5, 12.6, 14.2],
-  { max: 60, color: 'rgba(245, 158, 11, 0.85)' }
-);
-
-/* ========== 第 5 题 ========== */
-makeBarChart('chart5',
-  ['很正常，替他开心','有点失落','没什么感觉','特别好的会介意'],
-  [52.0, 28.3, 11.0, 8.7],
-  { max: 65 }
-);
-
-/* ========== 第 6 题 ========== */
-makeBarChart('chart6',
-  ['很念旧','偶尔怀念但专注当下','向前看，淡了就淡了','视人和事而定'],
-  [39.4, 37.0, 11.8, 11.8],
-  { max: 55, color: 'rgba(139, 92, 246, 0.85)' }
-);
-
-/* ========== 第 7 题（异性） ========== */
-new Chart(document.getElementById('chart7'), {
-  type: 'doughnut',
-  data: {
-    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任'],
-    datasets: [{
-      data: [33.1, 26.8, 22.0, 18.1],
-      backgroundColor: ['#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
-      borderWidth: 0,
-      spacing: 3
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '62%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: { padding: 12, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
-      }
-    }
-  }
-});
-
-/* ========== 第 8 题（同性） ========== */
-new Chart(document.getElementById('chart8'), {
-  type: 'doughnut',
-  data: {
-    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任'],
-    datasets: [{
-      data: [27.6, 29.9, 18.9, 23.6],
-      backgroundColor: ['#10b981','#34d399','#6ee7b7','#a7f3d0'],
-      borderWidth: 0,
-      spacing: 3
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '62%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: { padding: 12, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
-      }
-    }
-  }
-});
-
-/* ========== 第 7 vs 第 8 对比图 ========== */
-new Chart(document.getElementById('chartCompare'), {
-  type: 'bar',
-  data: {
-    labels: ['点赞之交','偶尔问候','熟悉的陌生人','依然信任的远方朋友'],
-    datasets: [
-      {
-        label: '异性旧友',
-        data: [33.1, 26.8, 22.0, 18.1],
-        backgroundColor: 'rgba(239, 68, 68, 0.85)',
-        borderRadius: 6,
-        barThickness: 26
-      },
-      {
-        label: '同性旧友',
-        data: [27.6, 29.9, 18.9, 23.6],
-        backgroundColor: 'rgba(16, 185, 129, 0.85)',
-        borderRadius: 6,
-        barThickness: 26
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 800 },
-    plugins: {
-      legend: {
-        position: 'top',
-        align: 'end',
-        labels: { usePointStyle: true, pointStyle: 'circle', padding: 14, font: { size: 13, weight: '600' } }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        padding: 12,
-        callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}%` }
-      }
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { font: { size: 13 } } },
-      y: {
-        beginAtZero: true,
-        max: 40,
-        ticks: { callback: v => v + '%', font: { size: 12 } },
-        grid: { color: 'rgba(226,232,240,0.6)' }
-      }
-    }
-  }
-});
-
-/* ========== 第 9 题（异性纯友谊信念） ========== */
-new Chart(document.getElementById('chart9'), {
-  type: 'doughnut',
-  data: {
-    labels: ['存在，但需要条件','存在','不存在','不确定/看情况'],
-    datasets: [{
-      data: [45.7, 15.7, 24.4, 14.2],
-      backgroundColor: ['#3b82f6','#10b981','#ef4444','#94a3b8'],
-      borderWidth: 0,
-      spacing: 3
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '58%',
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: { padding: 14, font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        padding: 10,
-        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
-      }
-    }
-  }
-});
-
-/* ========== 第 10 题（同性纯友谊信念） ========== */
-new Chart(document.getElementById('chart10'), {
-  type: 'doughnut',
-  data: {
-    labels: ['存在','存在，但需要条件','不存在','不确定/看情况'],
-    datasets: [{
-      data: [55.9, 25.2, 9.4, 9.4],
-      backgroundColor: ['#10b981','#3b82f6','#ef4444','#94a3b8'],
-      borderWidth: 0,
-      spacing: 3
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '58%',
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: { padding: 14, font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        padding: 10,
-        callbacks: { label: c => ` ${c.label}: ${c.parsed}%` }
-      }
-    }
-  }
-});
-</script>
+            document.querySelectorAll('.fade-in-section, .line').forEach((section) => {
+                observer.observe(section);
+            });
+        });
+    </script>
 
 </body>
 </html>
